@@ -14,7 +14,6 @@
     "**/dist/**": true,
     "**/node_modules/**": true
   },
-  "javascript.format.enable": false,
   "js/ts.experimental.useTsgo": true,
   "js/ts.tsdk.path": "./node_modules/typescript",
   "npm.packageManager": "pnpm",
@@ -24,7 +23,6 @@
     "**/dist": true,
     "**/node_modules": true
   },
-  "typescript.format.enable": false,
   "[markdown]": {
     "files.trimTrailingWhitespace": false
   }
