@@ -45,7 +45,7 @@ lockfile under the pinned Node version, runs `pnpm check`, then runs `pnpm test`
 
 ## VS Code
 
-Install the workspace's recommended extensions for Oxc, TypeScript 7, EditorConfig and YAML. Shared
+Install the workspace's recommended extensions for Oxc, TypeScript 7 and YAML. Shared
 settings enable Oxfmt formatting and safe Oxlint fixes on save, and point the native TypeScript
 language server at the installed TypeScript 7 package. Tool configuration discovery stays enabled so
 future package-local overrides work. The CLI and GitHub Actions remain the authoritative checks.
