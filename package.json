@@ -19,6 +19,7 @@
     "@commitlint/cli": "catalog:",
     "@commitlint/config-conventional": "catalog:",
     "@types/node": "catalog:",
+    "effect": "catalog:",
     "klarity": "catalog:",
     "lefthook": "catalog:",
     "oxfmt": "catalog:",

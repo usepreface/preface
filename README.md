@@ -50,5 +50,12 @@ settings enable Oxfmt formatting and safe Oxlint fixes on save, and point the na
 language server at the installed TypeScript 7 package. Tool configuration discovery stays enabled so
 future package-local overrides work. The CLI and GitHub Actions remain the authoritative checks.
 
+## Effect guidance
+
+Effect 4 is installed as a root development dependency so its version-matched guidance and source are
+available before application implementation. Read `node_modules/effect/AGENTS.md` and its relevant
+`ai-docs` examples before writing Effect code. Future workspaces that use Effect must declare their
+own dependency through `catalog:`; the root installation does not replace package-owned dependencies.
+
 Local research, populated environment files, dependencies and generated artifacts remain Git-ignored.
 Sanitized `.env.example` and `.env.*.example` files may be committed.
