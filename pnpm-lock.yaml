@@ -119,6 +119,9 @@ importers:
       '@effect/sql-pg':
         specifier: 'catalog:'
         version: 4.0.5(effect@4.0.5)
+      '@usepreface/protocol':
+        specifier: workspace:*
+        version: link:../protocol
       drizzle-orm:
         specifier: 'catalog:'
         version: 1.0.0-rc.4(patch_hash=1566adf2bdae96497887f6464c2b8539b7a12b1b4487b1336598ecda4f22e847)(@effect/sql-pg@4.0.5(effect@4.0.5))(@effect/sql-pglite@4.0.5(effect@4.0.5))(@electric-sql/pglite@0.5.10)(effect@4.0.5)(pg@8.23.1)
@@ -169,6 +172,9 @@ importers:
         specifier: 'catalog:'
         version: 4.0.5
     devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.2
       klarity:
         specifier: 'catalog:'
         version: 0.3.0(@commitlint/cli@21.2.3(@types/node@24.19.2)(conventional-commits-parser@7.1.3)(typescript@7.0.2))(@commitlint/config-conventional@21.2.3)(lefthook@2.2.2)(oxfmt@0.73.0)(oxlint@1.88.0)(publint@0.3.25)(tsdown@0.23.1(publint@0.3.25)(typescript@7.0.2))(turbo@2.11.8)(typescript@7.0.2)(vitest@5.0.5(@types/node@24.19.2)(vite@8.3.4(@types/node@24.19.2)(jiti@2.6.1)))
@@ -181,6 +187,9 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.5(@types/node@24.19.2)(vite@8.3.4(@types/node@24.19.2)(jiti@2.6.1))
 
   packages/template:
     devDependencies:

@@ -1,2 +1,3 @@
-// Replace this placeholder with the new package's public exports.
-export const packageName = "@usepreface/protocol";
+export { InstallationId, InstanceOwnerId } from "#/identifiers/instance";
+export { UserId } from "#/identifiers/user";
+export { InstanceStateError } from "#/errors/instance";

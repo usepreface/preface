@@ -1,12 +1,15 @@
+import { fileURLToPath } from "node:url";
+
 import defineConfig from "klarity/tsdown/library";
 import type { UserConfig } from "tsdown";
 
 export default defineConfig({
   alias: {
-    "#/": "./src/",
+    "#": fileURLToPath(new URL("./src", import.meta.url)),
   },
   entry: {
     index: "src/index.ts",
+    "model/index": "src/model/index.ts",
   },
   exports: {
     devExports: "preface-source",

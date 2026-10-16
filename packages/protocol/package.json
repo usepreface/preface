@@ -18,6 +18,10 @@
       "preface-source": "./src/index.ts",
       "default": "./dist/index.js"
     },
+    "./model": {
+      "preface-source": "./src/model/index.ts",
+      "default": "./dist/model/index.js"
+    },
     "./package.json": "./package.json"
   },
   "publishConfig": {
@@ -26,6 +30,7 @@
     },
     "exports": {
       ".": "./dist/index.js",
+      "./model": "./dist/model/index.js",
       "./package.json": "./package.json"
     }
   },
@@ -37,15 +42,18 @@
     "lint": "oxlint --deny-warnings .",
     "lint:fix": "oxlint --fix .",
     "prepack": "pnpm run build",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.test.json",
+    "test": "NODE_OPTIONS=--conditions=preface-source vitest run"
   },
   "dependencies": {
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@types/node": "catalog:",
     "klarity": "catalog:",
     "publint": "catalog:",
     "tsdown": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

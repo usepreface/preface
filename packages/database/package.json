@@ -54,6 +54,7 @@
   "dependencies": {
     "@effect/platform-node": "catalog:",
     "@effect/sql-pg": "catalog:",
+    "@usepreface/protocol": "workspace:*",
     "drizzle-orm": "catalog:",
     "effect": "catalog:",
     "uuid": "catalog:"
