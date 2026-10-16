@@ -9,8 +9,9 @@ This repository contains monorepo tooling and the first internal package scaffol
 - [template](packages/template/README.md): reusable starter for internal packages.
 
 The database package includes connection/transaction services, error mapping, migration tooling,
-and PGlite/PostgreSQL test layers. Its first migration creates empty `instance` and `auth` schemas.
-Domain tables, contracts and applications have not been implemented yet.
+PGlite/PostgreSQL test layers, and the installation, settings and owner-grant tables/repositories
+inside the `instance` schema. Protocol provides their shared schemas and branded identities.
+Authentication, organization tables and applications have not been implemented yet.
 
 ## Setup
 

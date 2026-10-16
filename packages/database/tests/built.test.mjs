@@ -22,8 +22,14 @@ test("built exports load and apply packaged migrations without deployment config
         ["auth", "instance"],
       );
       const tables = yield* database.$client`
-        select tablename from pg_tables where schemaname in ('auth', 'instance')`;
-      assert.deepEqual(tables, []);
+        select schemaname, tablename from pg_tables where schemaname in ('auth', 'instance')
+        order by schemaname, tablename`;
+      assert.deepEqual(tables, [
+        { schemaname: "instance", tablename: "installation" },
+        { schemaname: "instance", tablename: "owner" },
+        { schemaname: "instance", tablename: "settings" },
+      ]);
+      assert.equal(yield* database.query.installation.findFirst(), undefined);
     }).pipe(Effect.provide(TestDatabase.layer)),
   );
 });

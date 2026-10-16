@@ -1,2 +1,7 @@
 export { authSchema } from "#/schema/auth/index";
-export { instanceSchema } from "#/schema/instance/index";
+export {
+  instanceSchema,
+  installation,
+  instanceSettings,
+  instanceOwner,
+} from "#/schema/instance/index";

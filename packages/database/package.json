@@ -48,7 +48,7 @@
     "prepack": "pnpm run build",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.test.json",
     "test": "NODE_OPTIONS=--conditions=preface-source vitest run",
-    "test:built": "pnpm build && node --test tests/built.test.mjs",
+    "test:built": "pnpm --workspace-root exec turbo run build --filter=@usepreface/database && node --test tests/built.test.mjs",
     "test:watch": "NODE_OPTIONS=--conditions=preface-source vitest"
   },
   "dependencies": {

@@ -1,0 +1,486 @@
+{
+  "version": "8",
+  "dialect": "postgres",
+  "id": "27dd7385-0bad-49b9-b398-1edf460b2472",
+  "prevIds": ["ecae395b-0047-47d0-926d-484288c31df7"],
+  "ddl": [
+    {
+      "name": "auth",
+      "entityType": "schemas"
+    },
+    {
+      "name": "instance",
+      "entityType": "schemas"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "installation",
+      "entityType": "tables",
+      "schema": "instance"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "owner",
+      "entityType": "tables",
+      "schema": "instance"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "settings",
+      "entityType": "tables",
+      "schema": "instance"
+    },
+    {
+      "type": "smallint",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "1",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "instance",
+      "table": "installation"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "installation_id",
+      "entityType": "columns",
+      "schema": "instance",
+      "table": "installation"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "instance",
+      "table": "installation"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "bootstrap_completed_at",
+      "entityType": "columns",
+      "schema": "instance",
+      "table": "installation"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "bootstrap_token_hash",
+      "entityType": "columns",
+      "schema": "instance",
+      "table": "installation"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "bootstrap_token_issued_at",
+      "entityType": "columns",
+      "schema": "instance",
+      "table": "installation"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "bootstrap_token_expires_at",
+      "entityType": "columns",
+      "schema": "instance",
+      "table": "installation"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "instance",
+      "table": "owner"
+    },
+    {
+      "type": "smallint",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "1",
+      "generated": null,
+      "identity": null,
+      "name": "installation_id",
+      "entityType": "columns",
+      "schema": "instance",
+      "table": "owner"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "user_id",
+      "entityType": "columns",
+      "schema": "instance",
+      "table": "owner"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "grant_source",
+      "entityType": "columns",
+      "schema": "instance",
+      "table": "owner"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "granted_by_user_id",
+      "entityType": "columns",
+      "schema": "instance",
+      "table": "owner"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "granted_at",
+      "entityType": "columns",
+      "schema": "instance",
+      "table": "owner"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "revoked_at",
+      "entityType": "columns",
+      "schema": "instance",
+      "table": "owner"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "revoked_by_user_id",
+      "entityType": "columns",
+      "schema": "instance",
+      "table": "owner"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "revocation_reason",
+      "entityType": "columns",
+      "schema": "instance",
+      "table": "owner"
+    },
+    {
+      "type": "smallint",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "1",
+      "generated": null,
+      "identity": null,
+      "name": "installation_id",
+      "entityType": "columns",
+      "schema": "instance",
+      "table": "settings"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'Preface'",
+      "generated": null,
+      "identity": null,
+      "name": "display_name",
+      "entityType": "columns",
+      "schema": "instance",
+      "table": "settings"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "1",
+      "generated": null,
+      "identity": null,
+      "name": "revision",
+      "entityType": "columns",
+      "schema": "instance",
+      "table": "settings"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "instance",
+      "table": "settings"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "schema": "instance",
+      "table": "settings"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "user_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": true,
+      "where": "\"revoked_at\" is null",
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "owner_active_user_uidx",
+      "entityType": "indexes",
+      "schema": "instance",
+      "table": "owner"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "installation_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": true,
+      "where": "\"grant_source\" = 'bootstrap'",
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "owner_bootstrap_uidx",
+      "entityType": "indexes",
+      "schema": "instance",
+      "table": "owner"
+    },
+    {
+      "nameExplicit": false,
+      "columns": ["installation_id"],
+      "schemaTo": "instance",
+      "tableTo": "installation",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "RESTRICT",
+      "name": "owner_installation_id_installation_id_fkey",
+      "entityType": "fks",
+      "schema": "instance",
+      "table": "owner"
+    },
+    {
+      "nameExplicit": false,
+      "columns": ["installation_id"],
+      "schemaTo": "instance",
+      "tableTo": "installation",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "RESTRICT",
+      "name": "settings_installation_id_installation_id_fkey",
+      "entityType": "fks",
+      "schema": "instance",
+      "table": "settings"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "installation_pkey",
+      "schema": "instance",
+      "table": "installation",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "owner_pkey",
+      "schema": "instance",
+      "table": "owner",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["installation_id"],
+      "nameExplicit": false,
+      "name": "settings_pkey",
+      "schema": "instance",
+      "table": "settings",
+      "entityType": "pks"
+    },
+    {
+      "nameExplicit": true,
+      "columns": ["installation_id"],
+      "nullsNotDistinct": false,
+      "name": "installation_identity_unique",
+      "schema": "instance",
+      "table": "installation",
+      "entityType": "uniques"
+    },
+    {
+      "value": "\"id\" = 1",
+      "name": "installation_singleton_check",
+      "entityType": "checks",
+      "schema": "instance",
+      "table": "installation"
+    },
+    {
+      "value": "\n    (\"bootstrap_token_hash\" is null and \"bootstrap_token_issued_at\" is null and \"bootstrap_token_expires_at\" is null)\n    or (\"bootstrap_token_hash\" is not null and \"bootstrap_token_hash\" <> ''\n      and \"bootstrap_token_issued_at\" is not null and \"bootstrap_token_expires_at\" is not null)",
+      "name": "installation_token_fields_check",
+      "entityType": "checks",
+      "schema": "instance",
+      "table": "installation"
+    },
+    {
+      "value": "\"bootstrap_token_expires_at\" > \"bootstrap_token_issued_at\"",
+      "name": "installation_token_expiry_check",
+      "entityType": "checks",
+      "schema": "instance",
+      "table": "installation"
+    },
+    {
+      "value": "\"bootstrap_completed_at\" is null or \"bootstrap_token_hash\" is null",
+      "name": "installation_completed_token_check",
+      "entityType": "checks",
+      "schema": "instance",
+      "table": "installation"
+    },
+    {
+      "value": "\"grant_source\" in ('bootstrap', 'owner', 'operator_recovery')",
+      "name": "owner_grant_source_check",
+      "entityType": "checks",
+      "schema": "instance",
+      "table": "owner"
+    },
+    {
+      "value": "(\"grant_source\" = 'owner' and \"granted_by_user_id\" is not null)\n    or (\"grant_source\" in ('bootstrap', 'operator_recovery') and \"granted_by_user_id\" is null)",
+      "name": "owner_grant_actor_check",
+      "entityType": "checks",
+      "schema": "instance",
+      "table": "owner"
+    },
+    {
+      "value": "\"revoked_at\" >= \"granted_at\"",
+      "name": "owner_revocation_time_check",
+      "entityType": "checks",
+      "schema": "instance",
+      "table": "owner"
+    },
+    {
+      "value": "\"revoked_at\" is not null\n    or (\"revoked_by_user_id\" is null and \"revocation_reason\" is null)",
+      "name": "owner_revocation_metadata_check",
+      "entityType": "checks",
+      "schema": "instance",
+      "table": "owner"
+    },
+    {
+      "value": "\"revocation_reason\" is null or \"revocation_reason\" <> ''",
+      "name": "owner_revocation_reason_check",
+      "entityType": "checks",
+      "schema": "instance",
+      "table": "owner"
+    },
+    {
+      "value": "char_length(\"display_name\") between 1 and 120 and \"display_name\" = btrim(\"display_name\")",
+      "name": "settings_display_name_check",
+      "entityType": "checks",
+      "schema": "instance",
+      "table": "settings"
+    },
+    {
+      "value": "\"revision\" > 0",
+      "name": "settings_revision_check",
+      "entityType": "checks",
+      "schema": "instance",
+      "table": "settings"
+    }
+  ],
+  "renames": []
+}

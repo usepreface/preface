@@ -1,12 +1,52 @@
 # @usepreface/database
 
 Node.js persistence for Preface using Effect SQL and Drizzle. Owns connection setup,
-database schemas, relations, migrations, transaction boundaries and future repositories.
+database schemas, relations, migrations, transaction boundaries and typed repositories.
 Shared domain contracts belong in [protocol](../protocol/README.md); business workflows,
 authorization and transport policy belong in application packages.
 
-The foundation is implemented. The first generated migration creates the empty `instance`
-and `auth` PostgreSQL schemas. There are no domain tables or repositories yet.
+The foundation and the first three instance tables are implemented. The original migration creates
+the `instance` and `auth` PostgreSQL schemas; the next adds `instance.installation`,
+`instance.settings`, and `instance.owner`. Auth tables and application/server workflows are not implemented.
+
+## Instance persistence
+
+`InstanceRepository.layer` groups the installation, settings and owner repositories. It requires
+`Database` and `TransactionService`; provide both from the same database composition.
+Its `initialize()` atomically creates the singleton installation and default settings, returning
+whether the installation was newly created. Repeated or concurrent initialization preserves
+the existing installation identity, bootstrap state, and edited settings. Migration execution
+creates tables only; initialization is an explicit operation for the future startup workflow.
+
+- `installation` stores the fixed row key `1`, UUIDv7 installation identity, creation time,
+  bootstrap completion, and an optional setup-token digest/issuance/expiry tuple. Check constraints
+  enforce complete token metadata, expiry ordering, and token removal after completion.
+- `settings` references the installation and stores display name, revision, and timestamps.
+  `update` requires the expected revision, increments it atomically, and uses the Effect clock
+  for `updatedAt`. A missing row or stale revision returns `undefined`.
+- `owner` stores UUIDv7 grant IDs, user IDs, grant source/actor/time, and revocation history.
+  Partial unique indexes allow one active grant per user and one historical bootstrap grant.
+  Regranting creates a new row. Owner-issued grants require an actor; bootstrap and operator
+  recovery grants have no Preface actor. Repository mutations serialize on the installation row;
+  revocation refuses to remove its last active owner grant.
+
+`installation.issueBootstrapToken` accepts an already-computed digest and future expiry; it never
+generates or logs a raw token. Replacement invalidates the previous token. `completeBootstrap`
+locks the installation, checks the current digest and fresh Effect time, requires an active owner,
+and atomically clears token metadata while closing bootstrap. Invalid, expired, future-issued,
+replayed, or replaced tokens return `undefined`. `installation.lock()` requires an active
+`TransactionService.run`; use it to coordinate the future full bootstrap workflow.
+
+User foreign keys and user relations are deliberately deferred until `auth.user` exists. The owner
+UUID fields are branded `UserId` values, but storage cannot yet verify user existence or usability.
+The last-owner safeguard protects active grants only; future authentication/lifecycle workflows
+must also check suspension and other user states. Repositories do not authorize a caller.
+
+Full bootstrap must create the user, password credential, owner grant, session and installation
+completion in one outer transaction, with its required audit event. This change does not implement
+authentication, recovery commands, authorization, audit storage, startup token generation/logging,
+or HTTP/UI flows. Signup remains invitation-only, and only instance owners may create organizations;
+neither policy is a configurable settings column.
 
 ## Services and composition
 
@@ -110,6 +150,8 @@ Builds emit unbundled ESM, declarations and maps into `dist/`; `migrations/` is 
 as a runtime asset. The migration folder resolves relative to the module in both source
 and built output. A deployed build can run `node dist/migrations/run.js` from this package.
 Consumers use `preface-source` for source development; default exports use built output.
+Build workspace dependencies through root `pnpm build` or Turbo when consuming built output;
+`test:built` builds the database and protocol dependency graph automatically.
 
 ## Testing
 

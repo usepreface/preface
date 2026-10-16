@@ -6,3 +6,9 @@ export { generateUuid7 } from "#/id";
 export { DatabaseMigration, runDatabaseMigrations } from "#/migrations/layer";
 export { authSchema, instanceSchema } from "#/schema/index";
 export { timestampColumns } from "#/schema/timestamps";
+export {
+  InstanceRepository,
+  InstallationRepository,
+  InstanceSettingsRepository,
+  InstanceOwnerRepository,
+} from "#/repositories/instance/index";
