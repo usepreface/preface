@@ -6,12 +6,15 @@ catalogMode: strict
 engineStrict: true
 
 allowBuilds:
+  esbuild: true
   lefthook: true
 
 catalog:
   "@commitlint/cli": 21.2.3
   "@commitlint/config-conventional": 21.2.3
   "@types/node": 24.19.2
+  "drizzle-kit": 1.0.0-rc.4
+  "drizzle-orm": 1.0.0-rc.4
   "effect": 4.0.5
   "klarity": 0.3.0
   "lefthook": 2.2.2

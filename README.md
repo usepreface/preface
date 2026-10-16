@@ -2,8 +2,13 @@
 
 Open-source, self-hosted knowledge infrastructure built with TypeScript and Effect.
 
-This repository contains monorepo tooling and a reusable [package template](packages/template/README.md).
-Application implementation has not started yet.
+This repository contains monorepo tooling and the first internal package scaffolds:
+
+- [protocol](packages/protocol/README.md): runtime-neutral shared Effect schemas, models and errors.
+- [database](packages/database/README.md): Node.js persistence with Effect and Drizzle ORM/Kit.
+- [template](packages/template/README.md): reusable starter for internal packages.
+
+Domain contracts, persistence features and applications have not been implemented yet.
 
 ## Setup
 
@@ -35,7 +40,7 @@ source-first development with the `preface-source` condition.
 | `pnpm test`         | Run workspace tests through Turborepo                                                                      |
 | `pnpm dev`          | Run workspace development tasks through Turborepo                                                          |
 
-Workspace checks and builds currently run against the template; there are no automated tests yet.
+Workspace checks and builds run against all three packages; there are no automated tests yet.
 Klarity supplies the strict TypeScript, tsdown, Oxlint, Oxfmt, Conventional Commit and Lefthook presets.
 Each package should choose its own environment-appropriate Klarity TypeScript preset; the root config
 checks root and workspace tooling files only.
