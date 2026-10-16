@@ -4,7 +4,8 @@
   "private": true,
   "license": "Apache-2.0",
   "files": [
-    "dist"
+    "dist",
+    "migrations"
   ],
   "type": "module",
   "imports": {
@@ -18,6 +19,10 @@
       "preface-source": "./src/index.ts",
       "default": "./dist/index.js"
     },
+    "./testing": {
+      "preface-source": "./src/testing/index.ts",
+      "default": "./dist/testing/index.js"
+    },
     "./package.json": "./package.json"
   },
   "publishConfig": {
@@ -26,29 +31,44 @@
     },
     "exports": {
       ".": "./dist/index.js",
+      "./testing": "./dist/testing/index.js",
       "./package.json": "./package.json"
     }
   },
   "scripts": {
     "build": "tsdown --config tsdown.config.ts",
+    "db:generate": "NODE_OPTIONS=--conditions=preface-source drizzle-kit generate",
+    "db:migrate": "node --env-file-if-exists=.env --conditions=preface-source src/migrations/run.ts",
+    "db:studio": "node --env-file-if-exists=.env --conditions=preface-source ./node_modules/drizzle-kit/bin.cjs studio --config drizzle.studio.config.ts",
     "dev": "tsdown --config tsdown.config.ts --watch",
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check .",
     "lint": "oxlint --deny-warnings .",
     "lint:fix": "oxlint --fix .",
     "prepack": "pnpm run build",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.test.json",
+    "test": "NODE_OPTIONS=--conditions=preface-source vitest run",
+    "test:built": "pnpm build && node --test tests/built.test.mjs",
+    "test:watch": "NODE_OPTIONS=--conditions=preface-source vitest"
   },
   "dependencies": {
+    "@effect/platform-node": "catalog:",
+    "@effect/sql-pg": "catalog:",
     "drizzle-orm": "catalog:",
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "uuid": "catalog:"
   },
   "devDependencies": {
+    "@effect/sql-pglite": "catalog:",
+    "@effect/vitest": "catalog:",
+    "@electric-sql/pglite": "catalog:",
     "@types/node": "catalog:",
     "drizzle-kit": "catalog:",
     "klarity": "catalog:",
+    "pg": "catalog:",
     "publint": "catalog:",
     "tsdown": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

@@ -8,7 +8,9 @@ This repository contains monorepo tooling and the first internal package scaffol
 - [database](packages/database/README.md): Node.js persistence with Effect and Drizzle ORM/Kit.
 - [template](packages/template/README.md): reusable starter for internal packages.
 
-Domain contracts, persistence features and applications have not been implemented yet.
+The database package includes connection/transaction services, error mapping, migration tooling,
+and PGlite/PostgreSQL test layers. Its first migration creates empty `instance` and `auth` schemas.
+Domain tables, contracts and applications have not been implemented yet.
 
 ## Setup
 
@@ -40,7 +42,9 @@ source-first development with the `preface-source` condition.
 | `pnpm test`         | Run workspace tests through Turborepo                                                                      |
 | `pnpm dev`          | Run workspace development tasks through Turborepo                                                          |
 
-Workspace checks and builds run against all three packages; there are no automated tests yet.
+Workspace checks and builds run against all three packages. Database tests cover configuration,
+error mapping, transactions and migrations with PGlite; an opt-in PostgreSQL lane verifies the
+real driver and migration locking. See the [database README](packages/database/README.md).
 Klarity supplies the strict TypeScript, tsdown, Oxlint, Oxfmt, Conventional Commit and Lefthook presets.
 Each package should choose its own environment-appropriate Klarity TypeScript preset; the root config
 checks root and workspace tooling files only.
