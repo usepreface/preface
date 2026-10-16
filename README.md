@@ -2,7 +2,8 @@
 
 Open-source, self-hosted knowledge infrastructure built with TypeScript and Effect.
 
-This repository currently contains root tooling only. There are no applications or workspace packages.
+This repository contains monorepo tooling and a reusable [package template](packages/template/README.md).
+Application implementation has not started yet.
 
 ## Setup
 
@@ -15,8 +16,9 @@ pnpm install
 ```
 
 Installation enables Lefthook's Git hooks. Dependency versions live in the default catalog in
-`pnpm-workspace.yaml`; package manifests reference them with `catalog:`. The workspace globs reserve
-`apps/*` and `packages/*` for future work without creating placeholder directories.
+`pnpm-workspace.yaml`; package manifests reference them with `catalog:`. Workspace packages live under
+`apps/*` and `packages/*`. Copy `packages/template` to start an internal package; its README covers setup and
+source-first development with the `preface-source` condition.
 
 ## Commands
 
@@ -33,10 +35,10 @@ Installation enables Lefthook's Git hooks. Dependency versions live in the defau
 | `pnpm test`         | Run workspace tests through Turborepo                                                                      |
 | `pnpm dev`          | Run workspace development tasks through Turborepo                                                          |
 
-Workspace tasks have nothing to execute until packages are added. No application build or tests exist
-yet; root lint/typechecking still perform real checks. Klarity supplies the strict TypeScript,
-Oxlint, Oxfmt, Conventional Commit and Lefthook presets. Each future package should choose its own
-environment-appropriate Klarity TypeScript preset; the root config checks tooling files only.
+Workspace checks and builds currently run against the template; there are no automated tests yet.
+Klarity supplies the strict TypeScript, tsdown, Oxlint, Oxfmt, Conventional Commit and Lefthook presets.
+Each package should choose its own environment-appropriate Klarity TypeScript preset; the root config
+checks root and workspace tooling files only.
 
 Pre-commit hooks format staged files and lint staged JavaScript/TypeScript. Commit messages must use
 Conventional Commits, for example `chore: bootstrap repository tooling`. Pre-push runs root checks
