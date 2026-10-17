@@ -8,6 +8,7 @@ export const OidcIdentityClaims = Schema.Struct({
   subject: Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(255)),
   email: Schema.NullOr(Schema.String),
   emailVerified: Schema.NullOr(Schema.Boolean),
+  authenticatedAt: Schema.optionalKey(Schema.NullOr(Schema.DateTimeUtcFromDate)),
 });
 export type OidcIdentityClaims = typeof OidcIdentityClaims.Type;
 export type OidcConfiguration = typeof OidcConfiguration.Type;
@@ -28,6 +29,7 @@ export class OidcIdentity extends Context.Service<
         readonly nonce: Redacted.Redacted<string>;
         readonly codeChallenge: string;
         readonly reauthenticate: boolean;
+        readonly maxAgeSeconds?: number | null;
       },
     ) => Effect.Effect<string, IdentityError>;
     readonly exchangeAndVerify: (
@@ -37,6 +39,7 @@ export class OidcIdentity extends Context.Service<
         readonly nonce: Redacted.Redacted<string>;
         readonly verifier: Redacted.Redacted<string>;
         readonly reauthenticate: boolean;
+        readonly maxAgeSeconds?: number | null;
       },
     ) => Effect.Effect<OidcIdentityClaims, IdentityError>;
   }

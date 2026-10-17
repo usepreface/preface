@@ -1,6 +1,7 @@
 import { DateTime, Effect, Layer } from "effect";
 
 import { renderInvitationEmail } from "#/invitation-renderer";
+import { renderOrganizationSecurityEmail } from "#/organization-security-renderer";
 import { EmailRenderer } from "#/renderer";
 import { renderSetupEmail } from "#/setup-renderer";
 
@@ -9,6 +10,8 @@ export const AuthenticationEmailRenderer = {
     EmailRenderer,
     EmailRenderer.of({
       render: Effect.fn("EmailRenderer.authentication")(function* (payload) {
+        if (payload.type === "organization-security")
+          return yield* renderOrganizationSecurityEmail(payload);
         if (payload.type === "organization-invitation")
           return yield* renderInvitationEmail(payload);
         if (payload.type === "instance-setup") return yield* renderSetupEmail(payload);

@@ -9,12 +9,16 @@ import {
 import type { SessionActor } from "@usepreface/protocol/dto";
 
 import { OrganizationAccess } from "#/organization/access";
+import { makeOrganizationOwnerPaths } from "#/organization/authentication/owner-paths";
+import { makeRecoveryCredentialRevocation } from "#/organization/authentication/recovery-credential";
 import { makeBindingAudit } from "#/organization/binding-audit";
 
 export const makeOrganizationOwnershipApplication = Effect.gen(function* () {
   const repository = yield* DatabaseRepository;
   const transaction = yield* TransactionService;
   const access = yield* OrganizationAccess;
+  const paths = yield* makeOrganizationOwnerPaths;
+  const revokeCredentials = yield* makeRecoveryCredentialRevocation;
   const recordBindingEvent = yield* makeBindingAudit;
   const grant = Effect.fn("Application.organization.ownership.grant")(function* (
     actor: SessionActor,
@@ -41,6 +45,13 @@ export const makeOrganizationOwnershipApplication = Effect.gen(function* () {
         const usable = yield* repository.organization.roleBinding.listUsableOwners(organizationId);
         if (!usable.some((owner) => owner.id === memberId))
           return yield* new OrganizationError({ code: "MEMBER_NOT_ACTIVE" });
+        if (
+          resolved.policy.ssoMode === "required" &&
+          !(yield* paths.list(organizationId)).some(
+            (owner) => owner.memberId === memberId && owner.ssoLinked,
+          )
+        )
+          return yield* new OrganizationError({ code: "LAST_AUTHENTICATION_PATH" });
         if (result.created) {
           yield* recordBindingEvent(actor, result.binding, "organization.role_granted");
           yield* repository.audit.event.append({
@@ -83,6 +94,7 @@ export const makeOrganizationOwnershipApplication = Effect.gen(function* () {
         );
         if (binding === undefined)
           return yield* Effect.die(new Error("Locked owner revocation returned no row"));
+        yield* revokeCredentials(actor, organizationId, memberId);
         yield* recordBindingEvent(actor, binding, "organization.role_revoked");
         yield* repository.audit.event.append({
           organizationId,

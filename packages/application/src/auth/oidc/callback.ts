@@ -132,6 +132,7 @@ export const makeOidcFlowCallback = Effect.gen(function* () {
       const identity = yield* provider.exchangeAndVerify({
         configuration: connection.configuration,
         reauthenticate: flow.intent === "reauthenticate",
+        maxAgeSeconds: flow.requestedMaxAgeSeconds,
         clientSecret: yield* secrets.decryptConnection(connection),
         redirectUri: new URL("/api/v1/auth/oidc/callback", links.publicOrigin).href,
         code: decoded.code,
@@ -188,6 +189,22 @@ export const makeOidcFlowCallback = Effect.gen(function* () {
           yield* repository.organization.organization.lockById(current.organizationId);
           if (flow.intent !== "link")
             yield* organizationAccess.requireApproved(current.organizationId, current.id);
+          const policy = yield* repository.organization.authPolicy.findByOrganizationId(
+            current.organizationId,
+          );
+          if (policy === undefined)
+            return yield* Effect.die(new Error("Organization has no authentication policy"));
+          if (policy.ssoMode === "required") {
+            const now = DateTime.toEpochMillis(yield* DateTime.now);
+            const providerTime = identity.authenticatedAt;
+            if (
+              providerTime === undefined ||
+              providerTime === null ||
+              DateTime.toEpochMillis(providerTime) > now + 60_000 ||
+              now - DateTime.toEpochMillis(providerTime) > policy.ssoMaxAgeSeconds * 1000
+            )
+              return yield* new IdentityError({ code: "RECENT_SSO_REQUIRED" });
+          }
           let account = yield* repository.auth.account.findByIdentity(
             current.id,
             identity.subject,
@@ -300,7 +317,7 @@ export const makeOidcFlowCallback = Effect.gen(function* () {
           }
           if (account === undefined || sessionActor === undefined)
             return yield* Effect.die(new Error("Oidc completion has no account or session"));
-          yield* recordEvidence(sessionActor, account, current);
+          yield* recordEvidence(sessionActor, account, current, identity.authenticatedAt ?? null);
           if ((yield* repository.auth.authFlow.consume(flow.id)) === undefined)
             return yield* new IdentityError({ code: "INVALID_FLOW" });
           return {

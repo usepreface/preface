@@ -68,6 +68,7 @@ export const InvitationPreview = Schema.Struct({
   expiresAt: Schema.DateTimeUtcFromString,
 });
 export const InvitationAcceptance = Schema.Struct({
+  nextAction: Schema.Literals(["continue", "authenticate_with_sso"]),
   actor: SessionActor,
   organizationId: OrganizationId,
   memberId: OrganizationMemberId,

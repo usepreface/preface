@@ -2,6 +2,7 @@ import { Context, Effect, Layer } from "effect";
 
 import { OrganizationAuthPolicyRepository } from "#/repositories/organization/auth-policy";
 import { OrganizationAuthPolicyConnectionRepository } from "#/repositories/organization/auth-policy-connection";
+import { OrganizationAuthRecoveryTokenRepository } from "#/repositories/organization/auth-recovery-token";
 import { InvitationRepository } from "#/repositories/organization/invitation";
 import { OrganizationMemberRepository } from "#/repositories/organization/member";
 import { OrganizationRepository } from "#/repositories/organization/organization";
@@ -18,6 +19,7 @@ const makeOrganizationRepositories = Effect.gen(function* () {
     role: yield* OrganizationRoleRepository,
     roleBinding: yield* OrganizationRoleBindingRepository,
     authPolicy: yield* OrganizationAuthPolicyRepository,
+    authRecoveryToken: yield* OrganizationAuthRecoveryTokenRepository,
     authPolicyConnection: yield* OrganizationAuthPolicyConnectionRepository,
   } as const;
 });
@@ -35,12 +37,14 @@ export class OrganizationRepositories extends Context.Service<
         OrganizationRoleRepository.layer,
         OrganizationRoleBindingRepository.layer,
         OrganizationAuthPolicyRepository.layer,
+        OrganizationAuthRecoveryTokenRepository.layer,
         OrganizationAuthPolicyConnectionRepository.layer,
       ),
     ),
   );
 }
 export {
+  OrganizationAuthRecoveryTokenRepository,
   InvitationRepository,
   OrganizationRepository,
   OrganizationMemberRepository,

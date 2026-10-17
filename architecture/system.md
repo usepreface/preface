@@ -4,9 +4,9 @@ Preface is self-hosted knowledge infrastructure with installation-wide identity
 and multiple organizations as its product model. The implemented backend currently
 supports installation preparation, first-owner setup, email code/link sign-in,
 session resolution, session management, organization creation, membership lifecycle,
-roles, ownership management, verified organization invitations, direct teams, versioned profiles, Google account linking/sign-in, organization-owned OIDC and optional organization authentication connections.
+roles, ownership management, verified organization invitations, direct teams, versioned profiles, Google account linking/sign-in, organization-owned OIDC, optional/required organization authentication and owner-bound offline SSO recovery.
 Setup verifies mailbox ownership through an encrypted email outbox, minimal renderer
-and scoped worker. Required SSO, SAML, image uploads
+and scoped worker. SAML, image uploads
 and knowledge ingestion are not implemented. The landing page illustrates the product independently of
 those backend capabilities.
 

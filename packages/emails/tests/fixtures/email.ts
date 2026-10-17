@@ -30,7 +30,11 @@ export const FixtureRenderer = Layer.succeed(
         subject: `Fixture: ${payload.type}`,
         html: "<p>Test fixture</p>",
         text:
-          "code" in payload.variables ? payload.variables.code : payload.variables.invitationUrl,
+          payload.type === "organization-security"
+            ? payload.variables.action
+            : "code" in payload.variables
+              ? payload.variables.code
+              : payload.variables.invitationUrl,
       }),
   }),
 );

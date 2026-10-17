@@ -81,3 +81,5 @@ export {
   GoogleStartResult as ExternalIdentityStartResult,
   GoogleCallbackQuery as ExternalIdentityCallbackQuery,
 } from "#/dto/auth/identity";
+
+export * from "#/dto/organization/authentication";

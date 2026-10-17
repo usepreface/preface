@@ -39,6 +39,7 @@ export const sessionAuthentication = authSchema.table(
     accountId: uuid("account_id").$type<AccountId>(),
     connectionRevision: integer("connection_revision"),
     method: text("method").$type<SessionAuthentication["method"]>().notNull(),
+    providerAuthenticatedAt: timestamp("provider_authenticated_at", { withTimezone: true }),
     authenticatedAt: timestamp("authenticated_at", { withTimezone: true }).notNull(),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     assurance: jsonb("assurance").$type<SessionAuthentication["assurance"]>().notNull(),
@@ -62,6 +63,10 @@ export const sessionAuthentication = authSchema.table(
     check(
       "session_authentication_method_check",
       sql`(${table.method} in ('bootstrap_email_code', 'email_code', 'email_link') and ${table.userEmailId} is not null and ${table.accountId} is null and ${table.connectionRevision} is null) or (${table.method} in ('google','oidc') and ${table.userEmailId} is null and ${table.accountId} is not null and ${table.connectionRevision} is not null and ${table.connectionRevision} > 0)`,
+    ),
+    check(
+      "session_authentication_provider_time_check",
+      sql`${table.providerAuthenticatedAt} is null or ${table.method} = 'oidc'`,
     ),
     check(
       "session_authentication_expiry_check",

@@ -21,6 +21,7 @@ import { IdentityConnectionsRoutes } from "#/http/routes/identity-connections";
 import { InstanceSetupRoutes } from "#/http/routes/instance-setup";
 import { InvitationsRoutes } from "#/http/routes/invitations";
 import { OidcRoutes } from "#/http/routes/oidc";
+import { OrganizationAuthRecoveryRoutes } from "#/http/routes/organization-auth-recovery";
 import { OrganizationIdentityConnectionsRoutes } from "#/http/routes/organization-identity-connections";
 import { OrganizationInvitationsRoutes } from "#/http/routes/organization-invitations";
 import { OrganizationMembersRoutes } from "#/http/routes/organization-members";
@@ -44,6 +45,7 @@ const ProductRoutes = HttpApiBuilder.layer(PrefaceApi, { openapiPath: "/api/open
       AccountsRoutes,
       ReauthenticationRoutes,
       AuthenticationPolicyRoutes,
+      OrganizationAuthRecoveryRoutes,
       TeamsRoutes,
       ProfileRoutes,
       InstanceSetupRoutes,

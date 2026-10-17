@@ -44,3 +44,8 @@ export {
   GoogleStartInput as ExternalIdentityStartInput,
   GoogleCallbackInput as ExternalIdentityCallbackInput,
 } from "#/input/auth/identity";
+
+export {
+  UpdateOrganizationAuthPolicyInput,
+  RecoverOrganizationAuthInput,
+} from "#/input/organization/authentication";

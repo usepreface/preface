@@ -12,9 +12,11 @@ import { AuthenticationLinks } from "#/auth/links";
 import { makeOidcAccess } from "#/auth/oidc/access";
 import { OidcIdentity } from "#/auth/oidc/provider";
 import { OrganizationAccess } from "#/organization/access";
+import { makeOrganizationOwnerPaths } from "#/organization/authentication/owner-paths";
 
 export const makeOidcConnectionApplication = Effect.gen(function* () {
   const repository = yield* DatabaseRepository;
+  const ownerPaths = yield* makeOrganizationOwnerPaths;
   const transaction = yield* TransactionService;
   const access = yield* makeOidcAccess;
   const identities = yield* makeIdentityAccess;
@@ -178,6 +180,7 @@ export const makeOidcConnectionApplication = Effect.gen(function* () {
         };
         yield* repository.auth.identityConnection.update(next, current.revision);
         if (changesTrust) {
+          yield* ownerPaths.requireRecoverable(organizationId);
           yield* repository.auth.authFlow.revokeByConnection(id);
           yield* repository.auth.sessionAuthentication.revokeByConnection(id);
         }
@@ -240,6 +243,7 @@ export const makeOidcConnectionApplication = Effect.gen(function* () {
               };
         yield* repository.auth.identityConnection.update(next, current.revision);
         if (action === "disable") {
+          yield* ownerPaths.requireRecoverable(organizationId);
           yield* repository.auth.authFlow.revokeByConnection(id);
           yield* repository.auth.sessionAuthentication.revokeByConnection(id);
         }

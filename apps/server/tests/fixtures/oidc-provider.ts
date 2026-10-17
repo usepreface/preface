@@ -1,4 +1,4 @@
-import { Effect, Layer, Redacted } from "effect";
+import { DateTime, Effect, Layer, Redacted } from "effect";
 
 import { OidcIdentity } from "@usepreface/application";
 
@@ -33,6 +33,7 @@ export const HttpOidcProvider = Layer.succeed(
         subject: "employee-42",
         email: "company@example.test",
         emailVerified: true,
+        authenticatedAt: yield* DateTime.now,
       };
     }),
   }),

@@ -14,6 +14,9 @@ export type OrganizationInvitationId = typeof OrganizationInvitationId.Type;
 export const InvitationAssignmentId = createBrandedId("InvitationAssignmentId");
 export type InvitationAssignmentId = typeof InvitationAssignmentId.Type;
 
+export const OrganizationAuthRecoveryTokenId = createBrandedId("OrganizationAuthRecoveryTokenId");
+export type OrganizationAuthRecoveryTokenId = typeof OrganizationAuthRecoveryTokenId.Type;
+
 export const TeamId = createBrandedId("TeamId");
 export type TeamId = typeof TeamId.Type;
 export const TeamMemberId = createBrandedId("TeamMemberId");

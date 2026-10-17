@@ -1,4 +1,4 @@
-import { Effect, Layer, Redacted } from "effect";
+import { DateTime, Effect, Layer, Redacted } from "effect";
 
 import { describe, expect, it } from "vitest";
 
@@ -39,6 +39,7 @@ describe("OIDC SDK adapter", () => {
       subject: "employee-42",
       email: "provider@example.test",
       emailVerified: true,
+      authenticatedAt: null,
     });
     expect(issuer.tokenParameters?.get("code_verifier")).toBe(Redacted.value(proof.verifier));
     expect(issuer.tokenParameters?.get("redirect_uri")).toBe(proof.redirectUri);
@@ -122,6 +123,52 @@ describe("OIDC SDK adapter", () => {
         expect(new URL(url).searchParams.get("max_age")).toBe("0");
         return yield* provider
           .exchangeAndVerify({ ...proof, configuration, reauthenticate: true })
+          .pipe(Effect.flip);
+      }).pipe(
+        Effect.provide(NodeOidcIdentity.layerWithTransport),
+        Effect.provide(Layer.succeed(OidcHttp, { fetch: issuer.fetch, checkUrl: async () => {} })),
+      ),
+    );
+    expect(error).toMatchObject({ code: "INVALID_FLOW" });
+  });
+  it("requests the persisted maximum age and retains the signed provider authentication time", async () => {
+    const issuer = new OidcIssuerFixture();
+    const providerTime = Math.floor(Date.now() / 1000) - 120;
+    issuer.claims.auth_time = providerTime;
+    const identity = await Effect.runPromise(
+      Effect.gen(function* () {
+        const provider = yield* OidcIdentity;
+        const configuration = yield* provider.discover(input);
+        const url = yield* provider.authorizationUrl({
+          ...proof,
+          configuration,
+          codeChallenge: "challenge",
+          maxAgeSeconds: 300,
+        });
+        expect(new URL(url).searchParams.get("max_age")).toBe("300");
+        return yield* provider.exchangeAndVerify({ ...proof, configuration, maxAgeSeconds: 300 });
+      }).pipe(
+        Effect.provide(NodeOidcIdentity.layerWithTransport),
+        Effect.provide(Layer.succeed(OidcHttp, { fetch: issuer.fetch, checkUrl: async () => {} })),
+      ),
+    );
+    expect(
+      identity.authenticatedAt === null || identity.authenticatedAt === undefined
+        ? null
+        : DateTime.toEpochMillis(identity.authenticatedAt),
+    ).toBe(providerTime * 1000);
+  });
+  it("rejects a signed token missing authentication time when a maximum age was requested", async () => {
+    const issuer = new OidcIssuerFixture();
+    const error = await Effect.runPromise(
+      Effect.gen(function* () {
+        const provider = yield* OidcIdentity;
+        return yield* provider
+          .exchangeAndVerify({
+            ...proof,
+            configuration: yield* provider.discover(input),
+            maxAgeSeconds: 300,
+          })
           .pipe(Effect.flip);
       }).pipe(
         Effect.provide(NodeOidcIdentity.layerWithTransport),

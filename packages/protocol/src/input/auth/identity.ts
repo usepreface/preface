@@ -1,8 +1,7 @@
 import { Schema, SchemaGetter } from "effect";
 
-import { IdentityRevision, AuthenticationReturnPath } from "#/common/identity";
+import { AuthenticationReturnPath } from "#/common/identity";
 import { SecretTokenFromString } from "#/common/secret-token";
-import { IdentityConnectionId } from "#/identifiers/identity";
 
 export const SaveGoogleConnectionInput = Schema.Struct({
   expectedRevision: Schema.Natural,
@@ -29,14 +28,7 @@ export const GoogleStartInput = Schema.Struct({
   returnPath: Schema.optionalKey(AuthenticationReturnPath),
 });
 export type GoogleStartInput = typeof GoogleStartInput.Type;
-export const UpdateGooglePolicyInput = Schema.Struct({
-  expectedRevision: IdentityRevision,
-  googleEnabled: Schema.optionalKey(Schema.Boolean),
-  oidcConnectionIds: Schema.optionalKey(
-    Schema.Array(IdentityConnectionId).check(Schema.isMaxLength(20)),
-  ),
-});
-export type UpdateGooglePolicyInput = typeof UpdateGooglePolicyInput.Type;
+export { UpdateOrganizationAuthPolicyInput as UpdateGooglePolicyInput } from "#/input/organization/authentication";
 
 export const GoogleCallbackInput = Schema.Struct({
   state: SecretTokenFromString,

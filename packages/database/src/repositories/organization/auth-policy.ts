@@ -40,22 +40,16 @@ const makeOrganizationAuthPolicyRepository = Effect.gen(function* () {
     },
     mapToDatabaseError,
   );
-  const updateGoogle = Effect.fn("OrganizationAuthPolicyRepository.updateGoogle")(function* (
+  const update = Effect.fn("OrganizationAuthPolicyRepository.update")(function* (
     organizationId: OrganizationId,
     memberId: OrganizationMemberId,
     expectedRevision: number,
-    googleEnabled: boolean,
-    oidcEnabled = false,
+    settings: Pick<OrganizationAuthPolicy, "allowedMethods" | "ssoMode" | "ssoMaxAgeSeconds">,
   ) {
     const [row] = yield* database
       .update(organizationAuthPolicy)
       .set({
-        allowedMethods: [
-          "email_code",
-          "email_link",
-          ...(googleEnabled ? ["google" as const] : []),
-          ...(oidcEnabled ? ["oidc" as const] : []),
-        ],
+        ...settings,
         revision: sql`${organizationAuthPolicy.revision}+1`,
         updatedByMemberId: memberId,
         updatedAt: DateTime.toDateUtc(yield* DateTime.now),
@@ -69,7 +63,27 @@ const makeOrganizationAuthPolicyRepository = Effect.gen(function* () {
       .returning();
     return row === undefined ? undefined : decode(row);
   }, mapToDatabaseError);
-  return { createDefault, findByOrganizationId, updateGoogle } as const;
+  const updateGoogle = Effect.fn("OrganizationAuthPolicyRepository.updateGoogle")(function* (
+    organizationId: OrganizationId,
+    memberId: OrganizationMemberId,
+    expectedRevision: number,
+    googleEnabled: boolean,
+    oidcEnabled = false,
+  ) {
+    const policy = yield* findByOrganizationId(organizationId);
+    if (policy === undefined) return undefined;
+    return yield* update(organizationId, memberId, expectedRevision, {
+      ssoMode: policy.ssoMode,
+      ssoMaxAgeSeconds: policy.ssoMaxAgeSeconds,
+      allowedMethods: [
+        "email_code",
+        "email_link",
+        ...(googleEnabled ? ["google" as const] : []),
+        ...(oidcEnabled ? ["oidc" as const] : []),
+      ],
+    });
+  });
+  return { createDefault, findByOrganizationId, update, updateGoogle } as const;
 });
 export class OrganizationAuthPolicyRepository extends Context.Service<
   OrganizationAuthPolicyRepository,

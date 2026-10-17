@@ -6,11 +6,13 @@ import type { SessionActor } from "@usepreface/protocol/dto";
 
 import { makeIdentityAccess } from "#/auth/identity-access";
 import { OrganizationAccess } from "#/organization/access";
+import { makeOrganizationOwnerPaths } from "#/organization/authentication/owner-paths";
 export const makeAccountApplication = Effect.gen(function* () {
   const repository = yield* DatabaseRepository;
   const transaction = yield* TransactionService;
   const access = yield* makeIdentityAccess;
   const actors = yield* OrganizationAccess;
+  const ownerPaths = yield* makeOrganizationOwnerPaths;
   const list = Effect.fn("Application.auth.account.list")(function* (actor: SessionActor) {
     yield* actors.requireActor(actor);
     const accounts = yield* repository.auth.account.listByUserId(actor.user.id);
@@ -64,10 +66,14 @@ export const makeAccountApplication = Effect.gen(function* () {
         const connection = yield* repository.auth.identityConnection.lockById(
           previous.identityConnectionId,
         );
+        if (connection?.organizationId !== null && connection?.organizationId !== undefined)
+          yield* repository.organization.organization.lockById(connection.organizationId);
         yield* repository.auth.user.lockById(actor.user.id);
         yield* access.requireRecentEmail(actor);
         const account = yield* repository.auth.account.unlink(id, actor.user.id);
         if (account === undefined) return;
+        if (connection?.organizationId !== null && connection?.organizationId !== undefined)
+          yield* ownerPaths.requireRecoverable(connection.organizationId);
         yield* repository.auth.sessionAuthentication.revokeByAccount(id);
         yield* repository.auth.authFlow.revokeByUser(actor.user.id);
         yield* repository.audit.event.append({

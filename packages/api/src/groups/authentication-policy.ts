@@ -4,7 +4,8 @@ import { OrganizationId } from "@usepreface/protocol";
 import {
   PublicOrganizationAuthPolicy,
   OrganizationAuthenticationMethods,
-  UpdateGooglePolicyRequest,
+  UpdateOrganizationAuthPolicyRequest,
+  OrganizationSsoReadiness,
 } from "@usepreface/protocol/dto";
 
 import { identityErrors, organizationErrors, requestErrors } from "#/http-errors";
@@ -17,9 +18,14 @@ export class AuthenticationPolicyApi extends HttpApiGroup.make("authenticationPo
       success: OrganizationAuthenticationMethods,
       error: errors,
     }),
+    HttpApiEndpoint.get("readiness", "/:organizationId/auth-policy/readiness", {
+      params: { organizationId: OrganizationId },
+      success: OrganizationSsoReadiness,
+      error: errors,
+    }),
     HttpApiEndpoint.patch("update", "/:organizationId/auth-policy", {
       params: { organizationId: OrganizationId },
-      payload: UpdateGooglePolicyRequest,
+      payload: UpdateOrganizationAuthPolicyRequest,
       success: PublicOrganizationAuthPolicy,
       error: errors,
     }),

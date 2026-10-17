@@ -313,13 +313,13 @@ layer(ApplicationTestLayer)("organization invitations", (it) => {
         );
         const allowedProof = yield* requestInvitationProof(allowed.input);
         yield* database.$client`update organization.auth_policy set allowed_methods = '["email_link"]'::jsonb where organization_id = ${fixture.organization.id}`;
+        const admitted = yield* application.organization.invitation.accept(allowedProof);
+        expect(admitted.actor.user.email).toBe("allowed@example.test");
         expect(
-          yield* application.organization.invitation.accept(allowedProof).pipe(Effect.flip),
-        ).toMatchObject({ _tag: "InvitationError", code: "ASSIGNMENT_UNAVAILABLE" });
-        yield* application.organization.invitation.accept({
-          ...allowedProof,
-          method: "magic_link",
-        });
+          yield* application.organization.organization
+            .get(admitted.actor, fixture.organization.id)
+            .pipe(Effect.flip),
+        ).toMatchObject({ code: "AUTHENTICATION_REQUIRED" });
       }),
   );
 

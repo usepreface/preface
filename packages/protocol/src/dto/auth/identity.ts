@@ -6,6 +6,7 @@ import {
   IdentityRevision,
   AuthenticationReturnPath,
 } from "#/common/identity";
+import { OrganizationSsoMode, SsoMaxAgeSeconds } from "#/common/organization-authentication";
 import { OrganizationOidcMethod } from "#/dto/auth/oidc";
 import { IdentityConnectionId, AccountId } from "#/identifiers/identity";
 import { OrganizationId } from "#/identifiers/organization";
@@ -57,6 +58,16 @@ export const AuthenticationMethods = Schema.Struct({
   google: Schema.Boolean,
 });
 export const OrganizationAuthenticationMethods = Schema.Struct({
+  ssoMode: OrganizationSsoMode,
+  ssoMaxAgeSeconds: SsoMaxAgeSeconds,
+  authenticationSatisfied: Schema.Boolean,
+  nextAction: Schema.Literals([
+    "continue",
+    "authenticate_with_sso",
+    "reauthenticate_with_sso",
+    "authenticate_with_email",
+  ]),
+  emailSatisfiesOrganization: Schema.Boolean,
   revision: IdentityRevision,
   googleEnabled: Schema.Boolean,
   googleAvailable: Schema.Boolean,
@@ -64,10 +75,4 @@ export const OrganizationAuthenticationMethods = Schema.Struct({
   oidc: Schema.Array(OrganizationOidcMethod),
   email: Schema.Literal(true),
 });
-export const UpdateGooglePolicyRequest = Schema.Struct({
-  expectedRevision: IdentityRevision,
-  googleEnabled: Schema.optionalKey(Schema.Boolean),
-  oidcConnectionIds: Schema.optionalKey(
-    Schema.Array(IdentityConnectionId).check(Schema.isMaxLength(20)),
-  ),
-});
+export { UpdateOrganizationAuthPolicyRequest as UpdateGooglePolicyRequest } from "#/dto/organization/authentication";

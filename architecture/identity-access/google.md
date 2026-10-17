@@ -138,7 +138,7 @@ cancellation and reauthentication. Real deployments must complete the actual Goo
 before activation; repository tests do not use operator credentials or send live mail.
 
 This is a backend API with Scalar as its working completion destination. Dashboard integration,
-required SSO, SAML, Google Workspace domain enforcement, Google-only organization policies,
+SAML, Google Workspace domain enforcement, Google-only organization policies,
 provider logout and Google account-deprovisioning notifications are not implemented. A valid
 Google login establishes bounded local evidence; later external provider changes do not instantly
 revoke an already issued Preface session. Local disable/unlink and normal session expiry do.
@@ -154,3 +154,6 @@ revoke an already issued Preface session. Local disable/unlink and normal sessio
 - [HTTP handlers](../../apps/server/src/http/routes/google.ts)
 - [Workflow tests](../../packages/application/tests/integration/auth/google.test.ts)
 - [Provider validation tests](../../packages/application/tests/unit/auth/google-provider.test.ts)
+
+The installation Google connection does not satisfy [required organization SSO](required-sso.md).
+Organizations use their own approved OIDC connections for that requirement.

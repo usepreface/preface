@@ -110,3 +110,8 @@ and failure before binding. Migration locking retains its database-owned regress
 - [Reference CSP](../../apps/server/src/http/documentation.ts)
 - [Built process tests](../../apps/server/tests/smoke/built.test.mjs)
 - [Compose](../../compose.yaml)
+
+Required SSO and offline owner recovery use the existing session, Origin, JSON and no-store response
+policies. Recovery secrets are decoded to redacted application inputs and explicitly unwrapped only
+for the one-time issuance response. The runtime adds no provider dependency or environment variable.
+See [required SSO](../identity-access/required-sso.md).

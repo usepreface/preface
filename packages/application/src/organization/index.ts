@@ -1,6 +1,7 @@
 import { Effect } from "effect";
 
 import { makeAuthenticationPolicyApplication } from "#/organization/authentication-policy";
+import { makeOrganizationAuthRecovery } from "#/organization/authentication/recovery";
 import { makeInvitationApplication } from "#/organization/invitation/index";
 import { makeOrganizationMemberApplication } from "#/organization/member";
 import { makeOrganizationApplication } from "#/organization/organization";
@@ -16,6 +17,7 @@ export const makeOrganizationsApplication = Effect.gen(function* () {
     capabilities,
     organization: {
       organization,
+      authRecovery: yield* makeOrganizationAuthRecovery,
       authPolicy: { ...authPolicy, ...(yield* makeAuthenticationPolicyApplication) },
       team: { ...(yield* makeTeamApplication), member: yield* makeTeamMemberApplication },
       invitation: yield* makeInvitationApplication,

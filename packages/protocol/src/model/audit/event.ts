@@ -12,6 +12,7 @@ import { BootstrapChallengeId } from "#/identifiers/bootstrap";
 import { IdentityConnectionId, AccountId, AuthFlowId } from "#/identifiers/identity";
 import { InstallationId, InstanceOwnerId } from "#/identifiers/instance";
 import {
+  OrganizationAuthRecoveryTokenId,
   TeamId,
   TeamMemberId,
   OrganizationInvitationId,
@@ -283,10 +284,24 @@ const policyFields = {
   metadata: Schema.Struct({
     revision: Schema.Int,
     googleEnabled: Schema.Boolean,
+    ssoMode: Schema.optionalKey(Schema.Literals(["optional", "required"])),
+    ssoMaxAgeSeconds: Schema.optionalKey(Schema.Natural),
     oidcConnectionIds: Schema.optionalKey(Schema.Array(IdentityConnectionId)),
   }),
 };
+const recoveryFields = {
+  ...organizationActor,
+  eventType: Schema.Literals([
+    "organization.auth_recovery_issued",
+    "organization.auth_recovery_revoked",
+    "organization.auth_recovered",
+  ]),
+  targetType: Schema.Literal("organization_auth_recovery_token"),
+  targetId: OrganizationAuthRecoveryTokenId,
+  metadata: Schema.Struct({ memberId: OrganizationMemberId }),
+};
 export const RecordAuditEvent = Schema.Union([
+  Schema.Struct(recoveryFields),
   Schema.Struct(connectionFields),
   Schema.Struct(accountFields),
   Schema.Struct(flowFields),
@@ -326,6 +341,7 @@ const identityStoredFields = {
 };
 const organizationStoredFields = { id: AuditEventId, occurredAt: Schema.DateTimeUtcFromDate };
 export const AuditEvent = Schema.Union([
+  Schema.Struct({ ...recoveryFields, ...organizationStoredFields }),
   Schema.Struct({ ...connectionFields, ...identityStoredFields }),
   Schema.Struct({ ...accountFields, ...identityStoredFields }),
   Schema.Struct({ ...flowFields, ...identityStoredFields }),

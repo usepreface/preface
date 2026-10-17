@@ -1,6 +1,7 @@
 # Organization OIDC
 
-Organization owners can configure optional OIDC login connections. An existing member explicitly
+Organization owners can configure OIDC login connections and approve them for optional or
+[required SSO](required-sso.md). An existing member explicitly
 links an external identity, then uses it for sign-in or reauthentication. Preface continues to own
 users, verified email, admission, roles and teams. OIDC callbacks never create users or memberships
 and never merge accounts by email. Instance ownership grants no organization connection authority. Conversely, organization OIDC
@@ -45,8 +46,8 @@ Composite foreign keys require organization ownership and a same-organization ap
 The policy revision coordinates relation replacement and audit. Up to 20 distinct connections can
 be accepted. A method named `oidc` alone never accepts another connection or tenant's proof.
 
-Activation and approval are separate. Approval adds an optional login method; both email methods
-remain enabled. Existing Google-only updates preserve OIDC approvals. New approvals require active
+Activation and approval are separate. Approval adds a login method; both email methods remain configured. Required mode additionally
+requires approved organization proof for access, as described in [required SSO](required-sso.md). Existing Google-only updates preserve OIDC approvals. New approvals require active
 connections; existing disabled approvals remain visible as unavailable. Discovery requires a current
 session and active membership, but not acceptable organization evidence, so a member can choose a
 reauthentication path. It returns labels, IDs, availability and the current user's link status,
@@ -138,9 +139,9 @@ A disposable Dex 2.46.0 run also verified discovery, test, activation, linking, 
 reauthentication against the built backend and PostgreSQL. Its development connector used a
 CA-verified HTTPS client; callbacks/session cookies completed in an incognito browser.
 
-This is optional OIDC with a backend-only Scalar completion destination. Required SSO, offline
-recovery credentials, domain routing, SAML, SCIM, provider logout and immediate external employee
-revocation notifications are not implemented. A provider disabling an employee does not instantly
+OIDC has a backend-only Scalar completion destination. Required SSO and offline recovery are
+implemented in the [enforcement boundary](required-sso.md). Domain routing, SAML, SCIM, provider
+logout and immediate external employee revocation notifications are not implemented. A provider disabling an employee does not instantly
 revoke existing local evidence; local source checks and session expiry still apply. Provider
 compatibility is limited to the documented profile and must be verified against the deployment's
 actual provider using the built-in browser test before activation.

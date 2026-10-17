@@ -74,3 +74,7 @@ export { CreateAuthFlow, AuthFlow } from "#/model/auth/auth-flow";
 export { OrganizationAuthPolicyConnection } from "#/model/organization/auth-policy-connection";
 
 export { OidcConfiguration } from "#/common/oidc";
+
+export { OrganizationAuthRecoveryToken } from "#/model/organization/auth-recovery-token";
+
+export { OrganizationSecurityEmailVariables } from "#/model/email/payload";

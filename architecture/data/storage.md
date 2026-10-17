@@ -29,7 +29,7 @@ write schemas; they do not authorize business actors or deliver HTTP responses.
 | `organization.invitation_assignment` | Tenant- and scope-bound organization/team role assignments                                  |
 | `organization.team`                  | Organization-scoped slug, versioned metadata, creator and archive state                     |
 | `organization.team_member`           | Direct team membership of an organization member with removal history                       |
-| `organization.auth_policy`           | Current allowed local email methods and policy revision                                     |
+| `organization.auth_policy`           | Configured methods, SSO requirement/freshness and policy revision                           |
 | `audit.event`                        | Typed actor/event/target metadata and occurrence time                                       |
 | `jobs.email`                         | Encrypted email intent, deduplication, attempt state and token-owned delivery lease         |
 
@@ -121,3 +121,10 @@ Organization OIDC extends identity connection ownership and provider-aware flow/
 `organization.auth_policy_connection` uses composite references to its owning connection and
 approving member. The additive organization-OIDC migration preserves existing Google rows/flows.
 See [OIDC](../identity-access/oidc.md) for trust revision, policy locking and source invalidation.
+
+`organization.auth_policy` also owns optional/required SSO mode and maximum provider authentication
+age. `auth.auth_flow` persists the requested maximum age; `auth.session_authentication` stores
+validated provider authentication time separately from evidence acquisition. The additive required-SSO
+migration creates `organization.auth_recovery_token`, with same-organization member references and
+one active credential per member. Consumption, policy transitions, audit and encrypted security
+notifications share application transactions. See [required SSO](../identity-access/required-sso.md).

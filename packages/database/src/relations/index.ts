@@ -5,6 +5,7 @@ import { authRelations } from "#/relations/auth";
 import { identityRelations } from "#/relations/identity";
 import { instanceRelations } from "#/relations/instance";
 import { organizationRelations } from "#/relations/organization";
+import { organizationAuthenticationRelations } from "#/relations/organization-authentication";
 import { teamRelations } from "#/relations/team";
 import * as schema from "#/schema/index";
 
@@ -15,6 +16,7 @@ export const relations = {
   ...authRelations,
   ...instanceRelations,
   ...organizationRelations,
+  ...organizationAuthenticationRelations,
   ...teamRelations,
   ...auditRelations,
   ...identityRelations,

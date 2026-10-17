@@ -19,8 +19,8 @@ The `organization` PostgreSQL schema contains its authority tables, plus invitat
 - `role_binding`: direct member grant, role, granting member, time and revocation.
   Separate partial indexes admit one active grant per member/role at each organization or team scope.
   Team grants additionally reference a same-organization direct team membership.
-- `auth_policy`: one policy per organization, positive revision, allowed email/Google
-  methods, updating member and timestamps.
+- `auth_policy`: one policy per organization, positive revision, configured login methods,
+  optional/required SSO mode, provider authentication age, updating member and timestamps.
 
 Composite foreign keys include organization identity for roles, members, granting
 members and policy updaters. All referenced history uses restrictive deletion.
@@ -135,8 +135,7 @@ strings. Logs normalize parameterized routes rather than retaining tenant IDs.
 There is no public direct-member-creation endpoint. Organization creation admits
 its first member; [invitations](invitations.md) own additional admission and readmission.
 Authority tests can seed members through persistence fixtures; invitation tests
-exercise the actual admission workflow. [Teams](teams-profiles.md) use direct memberships without groups. SSO, required-provider
-policy enforcement, permanent deletion, organization content and dashboard integration
+exercise the actual admission workflow. [Teams](teams-profiles.md) use direct memberships without groups. Permanent deletion, organization content and dashboard integration
 are outside this implemented phase.
 
 ## Verification and source
@@ -158,6 +157,6 @@ repositories and cover JSON mutations, cookie authentication, CORS and managemen
 - [HTTP tests](../../apps/server/tests/integration/http/organizations.test.ts)
 
 Organization owners can approve optional [OIDC connections](oidc.md) through the existing revisioned
-policy editor. The connection relation enforces same-organization ownership. Email remains enabled;
-required SSO and recovery are not implemented. Every organization/team access checks exact accepted
+policy editor. The connection relation enforces same-organization ownership. Email remains available for global login;
+[required SSO and owner recovery](required-sso.md) add enforced provider freshness. Every organization/team access checks exact accepted
 evidence, and method discovery remains available to active members before satisfying that policy.

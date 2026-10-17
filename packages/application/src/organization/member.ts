@@ -9,6 +9,7 @@ import {
 import type { SessionActor, ListOrganizationMembersQuery } from "@usepreface/protocol/dto";
 
 import { OrganizationAccess } from "#/organization/access";
+import { makeRecoveryCredentialRevocation } from "#/organization/authentication/recovery-credential";
 import { makeBindingAudit } from "#/organization/binding-audit";
 import { publicMember } from "#/organization/views";
 
@@ -16,6 +17,7 @@ export const makeOrganizationMemberApplication = Effect.gen(function* () {
   const repository = yield* DatabaseRepository;
   const transaction = yield* TransactionService;
   const access = yield* OrganizationAccess;
+  const revokeCredentials = yield* makeRecoveryCredentialRevocation;
   const recordBindingEvent = yield* makeBindingAudit;
   const list = Effect.fn("Application.organization.member.list")(function* (
     actor: SessionActor,
@@ -92,6 +94,9 @@ export const makeOrganizationMemberApplication = Effect.gen(function* () {
               ? yield* repository.organization.member.reinstate(organizationId, target.id)
               : yield* repository.organization.member.remove(organizationId, target.id);
         if (changed === undefined) return;
+        if (action !== "reinstate") {
+          yield* revokeCredentials(actor, organizationId, target.id);
+        }
         if (action === "remove" || action === "leave") {
           yield* repository.organization.team.member.removeAllByMember(organizationId, target.id);
           const revoked = yield* repository.organization.roleBinding.revokeAllByMemberId(

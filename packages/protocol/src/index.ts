@@ -95,3 +95,7 @@ export {
   AuthenticationReturnPath,
   GoogleSubject,
 } from "#/common/identity";
+
+export { OrganizationAuthRecoveryTokenId } from "#/identifiers/organization";
+
+export { SsoReadinessBlocker } from "#/common/organization-authentication";

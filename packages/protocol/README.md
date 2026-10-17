@@ -107,7 +107,8 @@ safe code/status metadata. Google configuration is versioned, and authentication
 currently permit only `/api/docs`. Organization OIDC configuration/flow/evidence variants and policy connection models extend these
 contracts. `CreateOidcConnectionInput`/`UpdateOidcConnectionInput` redact credentials; safe DTOs never
 contain stored secrets. Common external-flow exports retain Google compatibility. The schemas
-alone grant no membership or provider support; required SSO and SAML remain unimplemented.
+alone grant no membership or provider support; application implements optional/required OIDC SSO
+and owner recovery. SAML remains unimplemented.
 
 ## Development
 
@@ -126,3 +127,9 @@ development. Default exports resolve to `dist/`. The neutral, unbundled tsdown b
 declarations and maps; watch mode rebuilds these outputs. Use `#/*` for internal imports and explicit
 public entry points for workspace consumers. See the [template](../template/README.md) for export and
 packing conventions.
+
+Required-SSO contracts add policy mode/maximum age, provider authentication timestamps, persisted
+flow age requirements, readiness and member next actions. `UpdateOrganizationAuthPolicyInput` and
+`RecoverOrganizationAuthInput` redact recovery credentials. Rotation has a distinct one-time public
+response; ordinary recovery status and policy DTOs contain no secret. Typed `organization-security`
+email payloads and recovery audit variants contain only fixed actions, identifiers and safe context.

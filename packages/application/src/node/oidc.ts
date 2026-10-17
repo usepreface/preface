@@ -131,8 +131,9 @@ const makeOidcIdentity = Effect.gen(function* () {
     ),
     authorizationUrl: Effect.fn("OidcIdentity.authorizationUrl")((input) =>
       Effect.try({
-        try: () =>
-          oidc.buildAuthorizationUrl(configuration(input), {
+        try: () => {
+          const maxAgeSeconds = input.maxAgeSeconds ?? (input.reauthenticate ? 0 : null);
+          return oidc.buildAuthorizationUrl(configuration(input), {
             redirect_uri: input.redirectUri,
             scope: "openid email",
             response_type: "code",
@@ -140,8 +141,10 @@ const makeOidcIdentity = Effect.gen(function* () {
             nonce: Redacted.value(input.nonce),
             code_challenge: input.codeChallenge,
             code_challenge_method: "S256",
-            ...(input.reauthenticate ? { prompt: "login", max_age: "0" } : {}),
-          }).href,
+            ...(input.reauthenticate ? { prompt: "login" } : {}),
+            ...(maxAgeSeconds === null ? {} : { max_age: String(maxAgeSeconds) }),
+          }).href;
+        },
         catch: providerError,
       }),
     ),
@@ -159,12 +162,13 @@ const makeOidcIdentity = Effect.gen(function* () {
             const callback = new URL(input.redirectUri);
             callback.searchParams.set("code", Redacted.value(input.code));
             callback.searchParams.set("state", Redacted.value(input.state));
+            const maxAgeSeconds = input.maxAgeSeconds ?? (input.reauthenticate ? 0 : null);
             const tokens = await oidc.authorizationCodeGrant(config, callback, {
               expectedState: Redacted.value(input.state),
               expectedNonce: Redacted.value(input.nonce),
               pkceCodeVerifier: Redacted.value(input.verifier),
               idTokenExpected: true,
-              ...(input.reauthenticate ? { maxAge: 0 } : {}),
+              ...(maxAgeSeconds === null ? {} : { maxAge: maxAgeSeconds }),
             });
             const cache = oidc.getJwksCache(config);
             if (cache !== undefined) {
@@ -183,6 +187,8 @@ const makeOidcIdentity = Effect.gen(function* () {
           subject: claims?.sub,
           email: claims?.email ?? null,
           emailVerified: claims?.email_verified ?? null,
+          authenticatedAt:
+            claims?.auth_time === undefined ? null : new Date(claims.auth_time * 1000),
         }).pipe(Effect.mapError(() => new IdentityError({ code: "INVALID_FLOW" })));
       },
       Effect.timeoutOrElse({

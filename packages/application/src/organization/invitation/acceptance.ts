@@ -87,7 +87,7 @@ export const makeInvitationAcceptance = Effect.gen(function* () {
           const policy = yield* repository.organization.authPolicy.findByOrganizationId(
             invitation.organizationId,
           );
-          if (policy === undefined || !policy.allowedMethods.includes(method))
+          if (policy === undefined)
             return yield* new InvitationError({ code: "ASSIGNMENT_UNAVAILABLE" });
           let address = yield* repository.auth.userEmail.findActiveByEmail(invitation.email);
           let user =
@@ -225,7 +225,15 @@ export const makeInvitationAcceptance = Effect.gen(function* () {
           yield* emails.cancel(proof.emailJobId);
           yield* emails.cancel(invitation.emailJobId);
           yield* audit.record(invitation, "organization.invitation_accepted", issued.actor);
-          return { ...issued, organizationId: invitation.organizationId, memberId: member.id };
+          return {
+            ...issued,
+            organizationId: invitation.organizationId,
+            memberId: member.id,
+            nextAction:
+              policy.ssoMode === "required"
+                ? ("authenticate_with_sso" as const)
+                : ("continue" as const),
+          };
         }),
       )
       .pipe(

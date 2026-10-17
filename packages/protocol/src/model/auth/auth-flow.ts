@@ -13,6 +13,7 @@ export const CreateAuthFlow = Schema.Struct({
   identityConnectionId: IdentityConnectionId,
   connectionRevision: IdentityRevision,
   intent: AuthFlowIntent,
+  requestedMaxAgeSeconds: Schema.optionalKey(Schema.NullOr(Schema.Natural)),
   initiatingSessionId: Schema.NullOr(SessionId),
   expectedUserId: Schema.NullOr(UserId),
   targetOrganizationId: Schema.NullOr(OrganizationId),
@@ -27,6 +28,7 @@ export type CreateAuthFlow = typeof CreateAuthFlow.Type;
 export const AuthFlow = Schema.Struct({
   ...CreateAuthFlow.fields,
   provider: IdentityProvider,
+  requestedMaxAgeSeconds: Schema.NullOr(Schema.Natural),
   pkceVerifierCiphertext: Schema.NullOr(Schema.NonEmptyString),
   createdAt: Schema.DateTimeUtcFromDate,
   claimedAt: Schema.NullOr(Schema.DateTimeUtcFromDate),

@@ -10,10 +10,14 @@ import {
 } from "@usepreface/protocol";
 import type { SessionActor } from "@usepreface/protocol/dto";
 
+import { makeOrganizationAuthenticationEvidence } from "#/organization/authentication/evidence";
+import { makeOrganizationOwnerPaths } from "#/organization/authentication/owner-paths";
 import { sessionIdleTimeout } from "#/security/policy";
 
 const makeOrganizationAccess = Effect.gen(function* () {
   const repository = yield* DatabaseRepository;
+  const evaluateAuthentication = yield* makeOrganizationAuthenticationEvidence;
+  const ownerPaths = yield* makeOrganizationOwnerPaths;
   const requireActor = Effect.fn("OrganizationAccess.requireActor")(function* (
     actor: SessionActor,
   ) {
@@ -66,26 +70,13 @@ const makeOrganizationAccess = Effect.gen(function* () {
       return yield* Effect.die(new Error("Organization has no authentication policy"));
     const approved =
       yield* repository.organization.authPolicyConnection.listByOrganization(organizationId);
-    let accepted = false;
-    for (const proof of current.evidence) {
-      if (proof.method !== "oidc") {
-        if (
-          policy.allowedMethods.includes(
-            proof.method === "bootstrap_email_code" ? "email_code" : proof.method,
-          )
-        )
-          accepted = true;
-        continue;
-      }
-      if (!policy.allowedMethods.includes("oidc")) continue;
-      const account = yield* repository.auth.account.findById(proof.accountId);
-      if (
-        account !== undefined &&
-        approved.some((entry) => entry.identityConnectionId === account.identityConnectionId)
-      )
-        accepted = true;
-    }
-    if (!accepted) return yield* new OrganizationError({ code: "AUTHENTICATION_REQUIRED" });
+    const authentication = yield* evaluateAuthentication(
+      policy,
+      current.evidence,
+      approved.map((entry) => entry.identityConnectionId),
+    );
+    if (!authentication.accepted)
+      return yield* new OrganizationError({ code: "AUTHENTICATION_REQUIRED" });
     const grants = yield* repository.organization.roleBinding.listActiveByMemberId(
       organizationId,
       member.id,
@@ -135,6 +126,7 @@ const makeOrganizationAccess = Effect.gen(function* () {
     const owners = yield* repository.organization.roleBinding.listUsableOwners(organizationId);
     if (!owners.some((owner) => owner.id !== excludedMemberId))
       return yield* new OrganizationError({ code: "LAST_OWNER" });
+    yield* ownerPaths.requireRecoverable(organizationId, excludedMemberId);
   });
   return {
     requireActor,

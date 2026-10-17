@@ -3,11 +3,17 @@ import { Effect, Schema } from "effect";
 import { DatabaseRepository, TransactionService } from "@usepreface/database";
 import { IdentityError, type OrganizationId } from "@usepreface/protocol";
 import type { SessionActor } from "@usepreface/protocol/dto";
-import { UpdateGooglePolicyInput } from "@usepreface/protocol/input";
+import { UpdateOrganizationAuthPolicyInput } from "@usepreface/protocol/input";
 
 import { makeIdentityAccess } from "#/auth/identity-access";
 import { makeOidcAccess } from "#/auth/oidc/access";
 import { OrganizationAccess } from "#/organization/access";
+import { makeOrganizationAuthenticationEvidence } from "#/organization/authentication/evidence";
+import { makeOrganizationSecurityNotifications } from "#/organization/authentication/notifications";
+import { makeOrganizationOwnerPaths } from "#/organization/authentication/owner-paths";
+import { makeOrganizationSsoReadiness } from "#/organization/authentication/readiness";
+import { makeRecoveryCredentialVerification } from "#/organization/authentication/recovery-credential";
+import { organizationAuthPolicyView } from "#/organization/authentication/views";
 
 export const makeAuthenticationPolicyApplication = Effect.gen(function* () {
   const repository = yield* DatabaseRepository;
@@ -15,31 +21,51 @@ export const makeAuthenticationPolicyApplication = Effect.gen(function* () {
   const organizations = yield* OrganizationAccess;
   const oidcAccess = yield* makeOidcAccess;
   const access = yield* makeIdentityAccess;
+  const evaluate = yield* makeOrganizationAuthenticationEvidence;
+  const paths = yield* makeOrganizationOwnerPaths;
+  const verifyRecovery = yield* makeRecoveryCredentialVerification;
+  const notify = yield* makeOrganizationSecurityNotifications;
+  const readiness = yield* makeOrganizationSsoReadiness;
   const methods = Effect.fn("Application.organization.authPolicy.methods")(function* (
     actor: SessionActor,
     organizationId: OrganizationId,
   ) {
-    // Discovery allows choosing a proof before satisfying the organization's method policy.
+    // Enrollment and discovery remain available before the member satisfies organization policy.
     yield* oidcAccess.requireActorMember(actor, organizationId);
+    const { evidence } = yield* organizations.requireActor(actor);
     const policy = yield* repository.organization.authPolicy.findByOrganizationId(organizationId);
     if (policy === undefined)
       return yield* Effect.die(new Error("Organization has no authentication policy"));
     const google = yield* repository.auth.identityConnection.findGoogle();
     const approved =
       yield* repository.organization.authPolicyConnection.listByOrganization(organizationId);
+    const ids = approved.map((entry) => entry.identityConnectionId);
     const connections =
       yield* repository.auth.identityConnection.listByOrganization(organizationId);
     const accounts = yield* repository.auth.account.listByUserId(actor.user.id);
+    const authentication = yield* evaluate(policy, evidence, ids);
     return {
       revision: policy.revision,
+      ssoMode: policy.ssoMode,
+      ssoMaxAgeSeconds: policy.ssoMaxAgeSeconds,
+      authenticationSatisfied: authentication.accepted,
+      nextAction: authentication.accepted
+        ? ("continue" as const)
+        : policy.ssoMode === "optional"
+          ? ("authenticate_with_email" as const)
+          : authentication.ssoLinkedEvidence
+            ? ("reauthenticate_with_sso" as const)
+            : ("authenticate_with_sso" as const),
       email: true as const,
+      emailSatisfiesOrganization: policy.ssoMode === "optional",
       googleEnabled: policy.allowedMethods.includes("google"),
       googleAvailable: google?.status === "active",
-      googleEffective: policy.allowedMethods.includes("google") && google?.status === "active",
+      googleEffective:
+        policy.ssoMode === "optional" &&
+        policy.allowedMethods.includes("google") &&
+        google?.status === "active",
       oidc: connections
-        .filter((connection) =>
-          approved.some((entry) => entry.identityConnectionId === connection.id),
-        )
+        .filter((connection) => ids.includes(connection.id))
         .map((connection) => ({
           id: connection.id,
           name: connection.name,
@@ -54,22 +80,25 @@ export const makeAuthenticationPolicyApplication = Effect.gen(function* () {
   const update = Effect.fn("Application.organization.authPolicy.update")(function* (
     actor: SessionActor,
     organizationId: OrganizationId,
-    input: UpdateGooglePolicyInput,
+    input: UpdateOrganizationAuthPolicyInput,
   ) {
-    const decoded = yield* Schema.decodeUnknownEffect(UpdateGooglePolicyInput)(input).pipe(
-      Effect.mapError(() => new IdentityError({ code: "INVALID_INPUT" })),
-    );
+    const decoded = yield* Schema.decodeUnknownEffect(
+      Schema.toType(UpdateOrganizationAuthPolicyInput),
+    )(input).pipe(Effect.mapError(() => new IdentityError({ code: "INVALID_INPUT" })));
     if (
-      (decoded.googleEnabled === undefined && decoded.oidcConnectionIds === undefined) ||
+      (decoded.googleEnabled === undefined &&
+        decoded.oidcConnectionIds === undefined &&
+        decoded.ssoMode === undefined &&
+        decoded.ssoMaxAgeSeconds === undefined) ||
       (decoded.oidcConnectionIds !== undefined &&
         new Set(decoded.oidcConnectionIds).size !== decoded.oidcConnectionIds.length)
     )
       return yield* new IdentityError({ code: "INVALID_INPUT" });
-    // Check authority before acquiring locks on client-supplied connection identities.
     yield* organizations.requireOwner(actor, organizationId);
     yield* access.requireRecentEmail(actor);
     return yield* transaction.run(
       Effect.gen(function* () {
+        // Lock connection trust before organization authority, matching OIDC completion/configuration.
         const google = yield* repository.auth.identityConnection.findGoogle();
         const ids = [
           ...new Set([
@@ -104,22 +133,44 @@ export const makeAuthenticationPolicyApplication = Effect.gen(function* () {
           locked.find((connection) => connection?.id === google?.id)?.status !== "active"
         )
           return yield* new IdentityError({ code: "CONNECTION_UNAVAILABLE" });
+        const ssoMode = decoded.ssoMode ?? resolved.policy.ssoMode;
+        const ssoMaxAgeSeconds = decoded.ssoMaxAgeSeconds ?? resolved.policy.ssoMaxAgeSeconds;
+        const allowedMethods = [
+          "email_code" as const,
+          "email_link" as const,
+          ...(googleEnabled ? ["google" as const] : []),
+          ...(oidcConnectionIds.length > 0 ? ["oidc" as const] : []),
+        ];
         if (
+          ssoMode === resolved.policy.ssoMode &&
+          ssoMaxAgeSeconds === resolved.policy.ssoMaxAgeSeconds &&
           googleEnabled === resolved.policy.allowedMethods.includes("google") &&
           JSON.stringify(oidcConnectionIds) === JSON.stringify([...previous].toSorted())
         )
-          return {
-            revision: resolved.policy.revision,
-            allowedMethods: resolved.policy.allowedMethods,
+          return organizationAuthPolicyView(resolved.policy, oidcConnectionIds);
+        const enabling = ssoMode === "required" && resolved.policy.ssoMode !== "required";
+        if (enabling) {
+          if (decoded.recoveryCredential === undefined)
+            return yield* new IdentityError({ code: "RECOVERY_CREDENTIAL_REQUIRED" });
+          yield* verifyRecovery(organizationId, resolved.member.id, decoded.recoveryCredential);
+          const { evidence } = yield* organizations.requireActor(actor);
+          const proof = yield* evaluate(
+            { ...resolved.policy, allowedMethods },
+            evidence,
             oidcConnectionIds,
-            updatedAt: resolved.policy.updatedAt,
-          };
-        const policy = yield* repository.organization.authPolicy.updateGoogle(
+            300,
+          );
+          if (!proof.freshSso) return yield* new IdentityError({ code: "RECENT_SSO_REQUIRED" });
+        }
+        const policy = yield* repository.organization.authPolicy.update(
           organizationId,
           resolved.member.id,
           decoded.expectedRevision,
-          googleEnabled,
-          oidcConnectionIds.length > 0,
+          {
+            allowedMethods,
+            ssoMode,
+            ssoMaxAgeSeconds,
+          },
         );
         if (policy === undefined) return yield* new IdentityError({ code: "REVISION_CONFLICT" });
         if (decoded.oidcConnectionIds !== undefined)
@@ -128,6 +179,13 @@ export const makeAuthenticationPolicyApplication = Effect.gen(function* () {
             resolved.member.id,
             oidcConnectionIds,
           );
+        yield* paths.requireRecoverable(organizationId);
+        // Policy changes must leave the acting owner able to access the resulting required policy.
+        if (ssoMode === "required") {
+          const { evidence } = yield* organizations.requireActor(actor);
+          const proof = yield* evaluate(policy, evidence, oidcConnectionIds);
+          if (!proof.accepted) return yield* new IdentityError({ code: "RECENT_SSO_REQUIRED" });
+        }
         yield* repository.audit.event.append({
           actorKind: "user",
           actorUserId: actor.user.id,
@@ -135,16 +193,26 @@ export const makeAuthenticationPolicyApplication = Effect.gen(function* () {
           eventType: "organization.auth_policy_updated",
           targetType: "organization",
           targetId: organizationId,
-          metadata: { revision: policy.revision, googleEnabled, oidcConnectionIds },
+          metadata: {
+            revision: policy.revision,
+            googleEnabled,
+            oidcConnectionIds,
+            ssoMode,
+            ssoMaxAgeSeconds,
+          },
         });
-        return {
-          revision: policy.revision,
-          allowedMethods: policy.allowedMethods,
-          oidcConnectionIds,
-          updatedAt: policy.updatedAt,
-        };
+        yield* notify(
+          resolved.organization,
+          enabling
+            ? "sso-required"
+            : ssoMode !== resolved.policy.ssoMode
+              ? "sso-optional"
+              : "sso-policy-updated",
+          `policy-${policy.revision}`,
+        );
+        return organizationAuthPolicyView(policy, oidcConnectionIds);
       }),
     );
   });
-  return { methods, update };
+  return { methods, update, readiness };
 });

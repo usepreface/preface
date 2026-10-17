@@ -35,7 +35,25 @@ export const OrganizationInvitationEmailVariables = Schema.Struct({
 export type OrganizationInvitationEmailVariables = typeof OrganizationInvitationEmailVariables.Type;
 
 // Storage contracts only: rendering and subject selection belong to the email package.
+export const OrganizationSecurityEmailVariables = Schema.Struct({
+  organizationName: Schema.NonEmptyString,
+  action: Schema.Literals([
+    "sso-required",
+    "sso-optional",
+    "sso-policy-updated",
+    "sso-recovered",
+    "recovery-rotated",
+    "recovery-revoked",
+  ]),
+  occurredAt: Schema.DateTimeUtcFromString,
+});
+export type OrganizationSecurityEmailVariables = typeof OrganizationSecurityEmailVariables.Type;
 export const EmailPayload = Schema.Union([
+  Schema.Struct({
+    type: Schema.Literal("organization-security"),
+    to: UserEmail,
+    variables: OrganizationSecurityEmailVariables,
+  }),
   Schema.Struct({
     type: Schema.Literal("email-reauthentication"),
     to: UserEmail,

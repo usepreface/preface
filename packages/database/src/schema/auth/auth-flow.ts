@@ -33,6 +33,7 @@ export const authFlow = authSchema.table(
       .notNull()
       .references(() => identityConnection.id, { onDelete: "restrict" }),
     connectionRevision: integer("connection_revision").notNull(),
+    requestedMaxAgeSeconds: integer("requested_max_age_seconds"),
     intent: text("intent").$type<AuthFlow["intent"]>().notNull(),
     initiatingSessionId: uuid("initiating_session_id").$type<SessionId>(),
     expectedUserId: uuid("expected_user_id")
@@ -65,6 +66,7 @@ export const authFlow = authSchema.table(
       columns: [t.identityConnectionId, t.targetOrganizationId],
       foreignColumns: [identityConnection.id, identityConnection.organizationId],
     }).onDelete("restrict"),
+    check("auth_flow_max_age_check", sql`${t.requestedMaxAgeSeconds} >= 0`),
     check(
       "auth_flow_owner_check",
       sql`(${t.provider} = 'google' and ${t.targetOrganizationId} is null) or (${t.provider} = 'oidc' and ${t.targetOrganizationId} is not null)`,

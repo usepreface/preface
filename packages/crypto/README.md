@@ -56,3 +56,7 @@ credentials and temporary PKCE context. `TokenCrypto.pkceChallenge(verifier)` re
 S256 base64url challenge using platform crypto. Email reauthentication has independent browser,
 link, challenge-code and session-subject purposes. Application envelopes bind recoverable
 credentials to connection/revision or flow identity; this package does not decide account policy.
+
+Organization offline recovery uses `cryptoPurpose.organizationAuthRecovery` with the existing
+32-byte `randomToken`, `digestToken` and `verifyToken` operations. Application owns owner binding,
+single use, rotation and recovery policy; raw credentials remain redacted outside explicit issuance.

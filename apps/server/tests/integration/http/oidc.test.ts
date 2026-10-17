@@ -4,9 +4,11 @@ import { FetchHttpClient, HttpClient, HttpClientRequest } from "effect/http";
 import { HttpApiClient } from "effect/http-api";
 
 import { PrefaceApi } from "@usepreface/api";
+import { DatabaseRepository } from "@usepreface/database";
 
 import { completeTestSetup } from "../../fixtures/authenticated-user.js";
 import { makeBackendTestLayer } from "../../fixtures/backend.js";
+import { readEmailJob } from "../../fixtures/email-job.js";
 import { makeHttpTestLayer } from "../../fixtures/http.js";
 import { HttpOidcProvider } from "../../fixtures/oidc-provider.js";
 
@@ -145,6 +147,98 @@ layer(makeHttpTestLayer(makeBackendTestLayer(HttpOidcProvider)), { excludeTestSe
           );
           expect(current.status).toBe(200);
           expect(JSON.stringify(yield* current.json)).not.toContain(sessionCookie.value);
+          const [recovery, issued] = yield* api.organizationAuthRecovery.rotate({
+            params: { organizationId },
+            payload: {},
+            responseMode: "decoded-and-response",
+          });
+          expect(issued.headers["cache-control"]).toBe("no-store");
+          const status = yield* api.organizationAuthRecovery.get({ params: { organizationId } });
+          expect(status.credential?.id).toBe(recovery.id);
+          expect(JSON.stringify(status)).not.toContain(recovery.recoveryCredential);
+          expect(
+            (yield* api.authenticationPolicy.readiness({ params: { organizationId } })).ready,
+          ).toBe(true);
+          const enforced = yield* api.authenticationPolicy.update({
+            params: { organizationId },
+            payload: {
+              expectedRevision: 2,
+              ssoMode: "required",
+              recoveryCredential: recovery.recoveryCredential,
+            },
+          });
+          expect(enforced.ssoMode).toBe("required");
+          const [challenge, requested] = yield* signedOut.emailSignIn.request({
+            payload: { email: owner.actor.user.email },
+            responseMode: "decoded-and-response",
+          });
+          const verification = yield* (yield* DatabaseRepository).auth.verification.findById(
+            challenge.challengeId,
+          );
+          if (verification?.emailJobId === null || verification?.emailJobId === undefined)
+            throw new Error("Expected sign-in email job");
+          const email = yield* readEmailJob(verification.emailJobId);
+          if (email.type !== "sign-in") throw new Error("Expected sign-in email");
+          const verifying = yield* HttpApiClient.make(PrefaceApi, {
+            transformClient: (client) =>
+              HttpClient.mapRequest(
+                client,
+                HttpClientRequest.setHeaders({
+                  origin: "https://preface.example.test",
+                  cookie: `preface_sign_in=${requested.cookies.cookies.preface_sign_in?.value}`,
+                }),
+              ),
+          });
+          const [, verified] = yield* verifying.emailSignIn.verify({
+            payload: {
+              challengeId: challenge.challengeId,
+              method: "code",
+              code: email.variables.code,
+            },
+            responseMode: "decoded-and-response",
+          });
+          const emailApi = yield* HttpApiClient.make(PrefaceApi, {
+            transformClient: (client) =>
+              HttpClient.mapRequest(
+                client,
+                HttpClientRequest.setHeaders({
+                  origin: "https://preface.example.test",
+                  cookie: `preface_session=${verified.cookies.cookies.preface_session?.value}`,
+                }),
+              ),
+          });
+          expect(
+            yield* emailApi.organizations.get({ params: { organizationId } }).pipe(Effect.flip),
+          ).toMatchObject({ code: "AUTHENTICATION_REQUIRED" });
+          expect(
+            yield* emailApi.authenticationPolicy.methods({ params: { organizationId } }),
+          ).toMatchObject({
+            email: true,
+            emailSatisfiesOrganization: false,
+            authenticationSatisfied: false,
+          });
+          const recovered = yield* emailApi.organizationAuthRecovery.recover({
+            params: { organizationId },
+            payload: {
+              expectedRevision: enforced.revision,
+              recoveryCredential: recovery.recoveryCredential,
+            },
+          });
+          expect(recovered.ssoMode).toBe("optional");
+          expect(
+            (yield* emailApi.organizations.get({ params: { organizationId } })).organization.id,
+          ).toBe(organizationId);
+          expect(
+            yield* emailApi.organizationAuthRecovery
+              .recover({
+                params: { organizationId },
+                payload: {
+                  expectedRevision: recovered.revision,
+                  recoveryCredential: recovery.recoveryCredential,
+                },
+              })
+              .pipe(Effect.flip),
+          ).toMatchObject({ code: "INVALID_RECOVERY_CREDENTIAL" });
         }),
     );
   },

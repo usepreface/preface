@@ -62,7 +62,8 @@ Acceptance locks the organization, reloads the current invitation, and checks:
   member-management/role-assignment authority. The inviter need not have a live session.
 - Current assignments, role lifecycle and inviter delegation envelope.
 - Matching invitation/version binding, browser token, code/link, proof expiry and attempts.
-- Current organization policy permits the chosen email authentication method.
+- The organization has a current authentication policy; mailbox admission is independent of
+  whether the resulting email evidence grants organization access.
 - Recipient identity is enabled and its existing address is verified and login-enabled.
 
 An existing active email reuses its existing user identity. A signed-in actor must
@@ -141,3 +142,8 @@ escaping of untrusted names.
 - [Management contract](../../packages/api/src/groups/organization-invitations.ts)
 - [Acceptance handlers](../../apps/server/src/http/routes/invitations.ts)
 - [Application tests](../../packages/application/tests/integration/organization/invitations.test.ts)
+
+For [required SSO](required-sso.md), acceptance returns `nextAction: "authenticate_with_sso"`.
+The member and assignments exist, but organization access remains blocked until explicit linking
+and suitable approved provider authentication. Optional-policy acceptance returns `continue`;
+current policy still controls whether the issued session can access organization resources.

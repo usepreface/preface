@@ -27,10 +27,14 @@ export class EmailService extends Context.Service<
         send: Effect.fn("EmailService.send")(
           function* (input) {
             const rendered = yield* renderer.render(input);
+            const payloadExpiresAt =
+              input.type === "organization-security"
+                ? DateTime.addDuration(input.variables.occurredAt, "7 days")
+                : input.variables.expiresAt;
             if (
               Math.min(
-                DateTime.toEpochMillis(input.variables.expiresAt),
-                DateTime.toEpochMillis(input.expiresAt ?? input.variables.expiresAt),
+                DateTime.toEpochMillis(payloadExpiresAt),
+                DateTime.toEpochMillis(input.expiresAt ?? payloadExpiresAt),
               ) <= DateTime.toEpochMillis(yield* DateTime.now)
             ) {
               return yield* new EmailError({ code: "INVALID_EXPIRY" });

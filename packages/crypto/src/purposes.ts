@@ -1,4 +1,5 @@
 export const cryptoPurpose = {
+  organizationAuthRecovery: "preface/organization/auth-recovery/v1",
   identityConnection: "preface/identity/connection/v1",
   authFlowVerifier: "preface/identity/pkce/v1",
   authFlowState: "preface/identity/state/v1",
@@ -25,6 +26,7 @@ export const cryptoPurpose = {
 } as const;
 
 export type TokenPurpose =
+  | typeof cryptoPurpose.organizationAuthRecovery
   | typeof cryptoPurpose.authFlowState
   | typeof cryptoPurpose.authFlowBrowser
   | typeof cryptoPurpose.authFlowNonce

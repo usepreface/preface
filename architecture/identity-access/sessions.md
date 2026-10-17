@@ -98,3 +98,7 @@ checks these proofs on every access. Logout also revokes pending authenticated p
 Source validation requires its current linked account, active trust revision and usable organization.
 Organization policy additionally checks the exact approved connection. OIDC proof cannot satisfy
 local recent-email requirements or another organization's connection policy.
+
+Required organization policy additionally evaluates the signed provider authentication time,
+independently of the callback/evidence creation time. Stale SSO evidence may still identify the
+global user while organization access requires reauthentication. See [required SSO](required-sso.md).

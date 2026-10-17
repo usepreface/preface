@@ -9,6 +9,7 @@ import { InstanceCapabilitiesApi } from "#/groups/instance-capabilities";
 import { InstanceSetupApi } from "#/groups/instance-setup";
 import { InvitationsApi } from "#/groups/invitations";
 import { OidcApi } from "#/groups/oidc";
+import { OrganizationAuthRecoveryApi } from "#/groups/organization-auth-recovery";
 import { OrganizationIdentityConnectionsApi } from "#/groups/organization-identity-connections";
 import { OrganizationInvitationsApi } from "#/groups/organization-invitations";
 import { OrganizationMembersApi } from "#/groups/organization-members";
@@ -31,6 +32,7 @@ export class PrefaceApi extends HttpApi.make("PrefaceApi")
     AccountsApi,
     ReauthenticationApi,
     AuthenticationPolicyApi,
+    OrganizationAuthRecoveryApi,
     TeamsApi,
     ProfileApi,
     InstanceSetupApi,

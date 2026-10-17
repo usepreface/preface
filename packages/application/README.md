@@ -175,8 +175,8 @@ atomically. Custom roles cannot manufacture ownership or delegate permissions th
 actor lacks. Role retirement and member removal revoke assignments transactionally;
 suspension preserves them for explicit reinstatement.
 
-Teams use direct memberships and explicitly scoped roles. SSO, policy editing and
-content permissions are not supplied by these workflows. See the
+Teams use direct memberships and explicitly scoped roles. The authentication workflows below own
+SSO and policy editing. Organization content permissions are not implemented. See the
 [organization architecture](../../architecture/identity-access/organizations.md) for boundaries.
 
 ## Invitations
@@ -287,7 +287,7 @@ and session lifecycle. The explicit PostgreSQL lane uses disposable test configu
 and sequential files; never target a deployment database. Built tests exercise packaged
 migrations and the verification/session lifecycle.
 
-Backend-connected onboarding/sign-in UI, image uploads, account recovery, required SSO
+Backend-connected onboarding/sign-in UI, image uploads, global account recovery
 and SAML are not implemented. See the [instance setup architecture](../../architecture/identity-access/instance-setup.md)
 and [server README](../../apps/server/README.md) for current transport and deployment.
 
@@ -324,3 +324,31 @@ provider email never merges accounts. Organization access requires the exact app
 See [OIDC architecture](../../architecture/identity-access/oidc.md) for transactions, outbound
 restrictions and supported limits. Adapter HTTPS tests require `openssl` to generate an ephemeral
 certificate; they change certificate trust only inside their test process and clean it up.
+
+## Required SSO and owner recovery
+
+`organization.authPolicy.update` accepts decoded `UpdateOrganizationAuthPolicyInput`, including
+`ssoMode: "optional" | "required"` and `ssoMaxAgeSeconds` (default 43,200; range 300–604,800).
+Existing Google policy input names remain aliases. Omitted settings are preserved. The installation
+Google connection does not satisfy required organization SSO.
+
+Before enabling, approve an active tested OIDC connection, link the owner's identity, complete
+`auth.oidc.startReauthentication`/callback, and issue a credential through
+`organization.authRecovery.rotate(actor, organizationId)`. Save the redacted credential securely;
+ordinary reads cannot retrieve it. Pass it as `recoveryCredential` with the current policy revision
+and `ssoMode: "required"`. Enablement requires provider authentication and local email evidence no
+older than five minutes. `authPolicy.readiness` reports current blockers; `authPolicy.methods`
+remains available to active members before satisfying SSO and reports the next action.
+
+`organization.authRecovery.get` returns the current owner's active credential identity/time.
+`rotate` replaces it atomically; `revoke` rejects removal of the final required recovery path.
+`recover(actor, organizationId, decoded RecoverOrganizationAuthInput)` requires current ownership,
+recent email, current policy revision and the offline credential, independently of provider access.
+It consumes the credential, makes SSO optional, and commits audit plus owner email jobs together.
+Recovery also permits archived organizations without restoring them. There is no automatic fallback.
+
+Invitations still verify the mailbox and admit membership/assignments. Required organizations return
+`nextAction: "authenticate_with_sso"`; the member must link and authenticate before using their roles.
+Owner/connection/account mutations preserve a prepared recovery owner under the organization lock.
+See [required SSO architecture](../../architecture/identity-access/required-sso.md) for boundaries,
+credential loss, archival and provider revocation limits.

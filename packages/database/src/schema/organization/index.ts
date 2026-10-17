@@ -12,3 +12,5 @@ export { team } from "#/schema/organization/team";
 export { teamMember } from "#/schema/organization/team-member";
 
 export { organizationAuthPolicyConnection } from "#/schema/organization/auth-policy-connection";
+
+export { organizationAuthRecoveryToken } from "#/schema/organization/auth-recovery-token";

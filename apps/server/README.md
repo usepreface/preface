@@ -39,7 +39,7 @@ verification with instance name, owner name and email, then submit the emailed e
 code with the returned challenge ID. Only verified completion creates the owner/session cookie.
 It creates no organization. Email code/link sign-in and session management are available
 through the API, together with organization creation and administration.
-Invitations provide verified email admission. Direct teams, scoped roles and profile editing are available. Backend-connected UI, image uploads and enterprise SSO remain pending. Google identity and organization opt-in are available through the API.
+Invitations provide verified email admission. Direct teams, scoped roles and profile editing are available. Backend-connected UI and image uploads remain pending. Google identity, organization OIDC, required SSO and owner recovery are available through the API.
 Invitation links reserve `/invitations/accept` for the future client; codes work on internal hosts.
 Magic links reserve `/auth/email/verify` for the future client. For local/internal hosts,
 enter the emailed code in the browser that requested it.
@@ -194,8 +194,8 @@ changes. Ordinary signed-out email sign-in remains separate.
 Disabling the instance connection invalidates Google evidence everywhere; unlinking an account
 invalidates its evidence. Independent email proof remains usable. Maintenance scrubs expired
 external-flow context and removes old flows after startup, alongside existing email proofs.
-Enterprise SSO enforcement, Google Workspace domain admission and Google-side logout/deprovisioning
-notifications are not implemented. See [Google architecture](../../architecture/identity-access/google.md).
+Google Workspace domain admission and Google-side logout/deprovisioning notifications are not
+implemented. Required organization OIDC SSO is described below. See [Google architecture](../../architecture/identity-access/google.md).
 
 ## Verification
 
@@ -246,5 +246,20 @@ CA certificates in the deployment when an internal CA is used. Redirects and ove
 responses are rejected; credentials and callback query values stay out of request logging.
 
 The browser flow cookie is separate from Google. Successful callbacks return 303 to `/api/docs`
-and deliver a new session only in an HttpOnly cookie. See [OIDC architecture](../../architecture/identity-access/oidc.md) for source revocation and limits. Required SSO, SAML, domain routing,
-provider logout and immediate external employee revocation notifications are not implemented.
+and deliver a new session only in an HttpOnly cookie. See [OIDC architecture](../../architecture/identity-access/oidc.md) for source revocation and limits. SAML, domain routing, provider logout and immediate external employee revocation notifications
+are not implemented.
+
+## Required SSO and recovery
+
+Owners can require approved organization OIDC connections through the policy editor after preparing
+a tested active connection, fresh provider/email evidence and an offline recovery credential.
+The [API usage](../../packages/api/README.md#required-organization-sso) documents readiness, policy
+settings and `/auth-recovery` endpoints. Existing sessions remain global; email alone cannot access
+an organization requiring SSO. Invitation acceptance directs members to complete SSO after verifying
+their mailbox. The installation Google connection is not enterprise organization SSO evidence.
+
+If the provider is unavailable, an existing organization owner signs in by email, verifies recently,
+and redeems their offline credential. Recovery makes SSO optional, consumes the credential and
+queues owner alerts atomically. It grants no new authority and adds no automatic fallback. This
+works for archived organizations without restoring them. Recovery secrets are shown only at
+rotation; store them securely. No additional environment variables or dependencies are needed.

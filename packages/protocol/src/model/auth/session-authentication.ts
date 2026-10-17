@@ -33,6 +33,7 @@ const externalFields = {
   userEmailId: Schema.Null,
   accountId: AccountId,
   connectionRevision: Schema.Int.check(Schema.isGreaterThan(0)),
+  providerAuthenticatedAt: Schema.optionalKey(Schema.NullOr(Schema.DateTimeUtcFromDate)),
   authenticatedAt: Schema.DateTimeUtcFromDate,
   expiresAt: Schema.DateTimeUtcFromDate,
   assurance: Schema.Struct({

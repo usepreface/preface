@@ -26,6 +26,8 @@ Executable schemas, migrations, source and tests settle disagreements with prose
   browser callbacks, source-bound evidence, organization opt-in and reauthentication.
 - [Organization OIDC](identity-access/oidc.md): provider configuration, explicit account linking, optional
   organization acceptance, outbound network restrictions and source-bound sessions.
+- [Required SSO](identity-access/required-sso.md): organization authentication age, invitation enrollment,
+  owner safeguards and offline recovery.
 - [Sessions](identity-access/sessions.md): credential resolution, expiry, activity,
   cookie delivery and audited revocation.
 

@@ -3,7 +3,7 @@ import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema, OpenApi } from "effect/ht
 import { AccountId } from "@usepreface/protocol";
 import { AccountList, GoogleStartRequest, GoogleStartResult } from "@usepreface/protocol/dto";
 
-import { identityErrors, requestErrors } from "#/http-errors";
+import { identityErrors, organizationErrors, requestErrors } from "#/http-errors";
 import { SessionAuthentication } from "#/middleware/session-authentication";
 export class AccountsApi extends HttpApiGroup.make("accounts")
   .add(
@@ -19,7 +19,7 @@ export class AccountsApi extends HttpApiGroup.make("accounts")
     HttpApiEndpoint.delete("unlink", "/:accountId", {
       params: { accountId: AccountId },
       success: HttpApiSchema.NoContent,
-      error: [...identityErrors, ...requestErrors],
+      error: [...identityErrors, ...organizationErrors, ...requestErrors],
     }),
   )
   .middleware(SessionAuthentication)

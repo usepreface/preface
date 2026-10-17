@@ -155,3 +155,10 @@ The PostgreSQL lane uses the database package's explicit disposable test
 configuration; never point it at a deployment database. Tests exercise real migrated
 repositories and encryption with a test-only renderer, and intercept SDK network
 boundaries without sending live email. No React Email templates are created by tests.
+
+The typed `organization-security` payload reports SSO policy changes, offline credential
+rotation/revocation and recovery. Variables are `{ organizationName, action, occurredAt }`; they
+never contain credentials. Application workflows enqueue these alerts transactionally for current
+usable owners, with a seven-day delivery deadline. `AuthenticationEmailRenderer.layer` supplies the
+minimal escaped renderer. The service checks notification age independently of credential deadlines;
+existing verification messages retain their credential-bound expiration checks.

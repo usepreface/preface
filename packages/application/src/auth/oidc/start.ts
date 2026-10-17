@@ -88,6 +88,16 @@ export const makeOidcFlowStart = Effect.gen(function* () {
           if (organization?.archivedAt !== null)
             return yield* new IdentityError({ code: "CONNECTION_UNAVAILABLE" });
         }
+        const policy =
+          yield* repository.organization.authPolicy.findByOrganizationId(organizationId);
+        if (policy === undefined)
+          return yield* Effect.die(new Error("Organization has no authentication policy"));
+        const requestedMaxAgeSeconds =
+          intent === "reauthenticate"
+            ? 0
+            : intent !== "test" && policy.ssoMode === "required"
+              ? policy.ssoMaxAgeSeconds
+              : null;
         const authorizationUrl = yield* provider.authorizationUrl({
           configuration: connection.configuration,
           clientSecret: yield* secrets.decryptConnection(connection),
@@ -96,6 +106,7 @@ export const makeOidcFlowStart = Effect.gen(function* () {
           nonce,
           codeChallenge,
           reauthenticate: intent === "reauthenticate",
+          maxAgeSeconds: requestedMaxAgeSeconds,
         });
         const expiresAt = DateTime.addDuration(yield* DateTime.now, "10 minutes");
         yield* repository.auth.authFlow.create({
@@ -104,6 +115,7 @@ export const makeOidcFlowStart = Effect.gen(function* () {
           identityConnectionId: connectionId,
           connectionRevision: connection.revision,
           intent,
+          requestedMaxAgeSeconds,
           initiatingSessionId: actor?.session.id ?? null,
           expectedUserId: actor?.user.id ?? null,
           targetOrganizationId: organizationId,

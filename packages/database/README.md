@@ -382,3 +382,11 @@ connections with composite tenant references. Replacement requires an ambient tr
 be coordinated by the application's policy revision/organization lock. Evidence queries reject
 OIDC sources with inactive membership, archived organization, unlinked account or obsolete trust.
 The additive organization-OIDC migration preserves previous migrations and existing Google data.
+
+Required SSO adds `ssoMode`/`ssoMaxAgeSeconds` to policy, `requestedMaxAgeSeconds` to auth flows,
+and `providerAuthenticatedAt` to external evidence. Its additive migration preserves existing rows
+with optional policy and unknown provider authentication time. `organization.authRecoveryToken`
+provides owner-bound credential creation, active lookup, conditional consumption and revocation.
+The repository stores digests only. `organization.authPolicy.update` writes complete settings with
+an expected revision; the existing `updateGoogle` adapter preserves current SSO settings. Authorization,
+owner safeguards, recovery and email enqueueing remain application responsibilities.

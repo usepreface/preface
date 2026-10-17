@@ -10,6 +10,7 @@ import type {
 import { CreateOrganizationInput, UpdateOrganizationInput } from "@usepreface/protocol/input";
 
 import { OrganizationAccess } from "#/organization/access";
+import { organizationAuthPolicyView } from "#/organization/authentication/views";
 import { builtinOrganizationRoles, builtinTeamRoles } from "#/organization/builtin-roles";
 import { publicAccess, publicMember, publicOrganization } from "#/organization/views";
 import { mergeOrganizationMetadata } from "#/profile/metadata";
@@ -247,14 +248,10 @@ export const makeOrganizationApplication = Effect.gen(function* () {
     const { policy } = yield* access.requirePermissions(actor, organizationId, [
       "organization.read",
     ]);
-    return {
-      revision: policy.revision,
-      allowedMethods: policy.allowedMethods,
-      oidcConnectionIds: (yield* repository.organization.authPolicyConnection.listByOrganization(
-        organizationId,
-      )).map((entry) => entry.identityConnectionId),
-      updatedAt: policy.updatedAt,
-    };
+    const ids = (yield* repository.organization.authPolicyConnection.listByOrganization(
+      organizationId,
+    )).map((entry) => entry.identityConnectionId);
+    return organizationAuthPolicyView(policy, ids);
   });
   return {
     organization: { create, listMine, get, update, archive, restore, getAccess },

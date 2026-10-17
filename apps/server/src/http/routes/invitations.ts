@@ -58,6 +58,7 @@ export const InvitationsRoutes = HttpApiBuilder.group(PrefaceApi, "invitations",
           actor: result.actor,
           organizationId: result.organizationId,
           memberId: result.memberId,
+          nextAction: result.nextAction,
         };
       }),
     });

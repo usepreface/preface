@@ -9,6 +9,7 @@ export const makeOidcEvidence = Effect.gen(function* () {
     actor: SessionActor,
     account: Account,
     connection: OidcConnection,
+    providerAuthenticatedAt: DateTime.Utc | null,
   ) {
     yield* repository.auth.sessionAuthentication.create({
       sessionId: actor.session.id,
@@ -18,6 +19,7 @@ export const makeOidcEvidence = Effect.gen(function* () {
       accountId: account.id,
       connectionRevision: connection.revision,
       authenticatedAt: yield* DateTime.now,
+      providerAuthenticatedAt,
       expiresAt: actor.session.expiresAt,
       assurance: { version: 1, provider: "oidc" },
     });

@@ -37,8 +37,9 @@ export class EmailJobs extends Context.Service<
           if (
             DateTime.toEpochMillis(input.expiresAt) <= DateTime.toEpochMillis(now) ||
             DateTime.toEpochMillis(availableAt) >= DateTime.toEpochMillis(input.expiresAt) ||
-            DateTime.toEpochMillis(input.expiresAt) >
-              DateTime.toEpochMillis(input.variables.expiresAt)
+            (input.type !== "organization-security" &&
+              DateTime.toEpochMillis(input.expiresAt) >
+                DateTime.toEpochMillis(input.variables.expiresAt))
           ) {
             return yield* new EmailError({ code: "INVALID_EXPIRY" });
           }

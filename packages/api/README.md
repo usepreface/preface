@@ -129,7 +129,7 @@ accept `includeRemoved`. Archived organization discovery is owner-only. Detail r
 
 Owner-only transitions preserve a usable owner. Custom roles/assignments are bounded
 by the actor's delegation rights. Invitations own additional admission; there is no
-direct member-creation endpoint. Owners can opt into Google with the policy editor below; organization OIDC is available as described below; required SSO and SAML remain pending. These endpoints are backend-only.
+direct member-creation endpoint. Owners can opt into Google with the policy editor below; organization OIDC is available as described below; required SSO and recovery are described below; SAML remains pending. These endpoints are backend-only.
 
 `OrganizationError` codes map invalid input to 400, insufficient authority/evidence
 to 403, scoped missing organization/member/role/binding to 404, and lifecycle or
@@ -296,4 +296,56 @@ The existing policy PATCH accepts `{ expectedRevision, oidcConnectionIds }`, opt
 accepts up to 20 distinct same-organization connections. Policy responses include connection IDs.
 Member method discovery returns an `oidc` array of `{ id, name, available, linked }`. The existing
 account list includes OIDC provider/connection/organization summaries, and DELETE account unlinks
-with recent email proof. Email remains enabled; required SSO and recovery are not provided here.
+with recent email proof. Email remains available for global login. Required SSO and recovery are described below.
+
+## Required organization SSO
+
+All following paths are relative to `/api/v1` and use the existing session cookie and trusted-Origin
+mutation policy. `authenticationPolicy.readiness` reads
+`GET /organizations/:organizationId/auth-policy/readiness` as a current owner, even before satisfying
+SSO. It returns `policyRevision`, `ready`, typed `blockers`, approved connection availability and
+owner link/recovery readiness. Member `authenticationPolicy.methods` adds `ssoMode`,
+`ssoMaxAgeSeconds`, `authenticationSatisfied`, `emailSatisfiesOrganization` and `nextAction`.
+Email login stays available even when it cannot authorize organization access.
+
+After testing/activating/approving a connection, linking the owner's account, completing provider
+reauthentication and issuing an offline recovery credential, enable SSO through the existing
+`authenticationPolicy.update` PATCH with:
+
+```json
+{
+  "expectedRevision": 2,
+  "ssoMode": "required",
+  "ssoMaxAgeSeconds": 43200,
+  "recoveryCredential": "<credential-returned-by-rotation>"
+}
+```
+
+The credential is checked but not consumed. Local email and provider authentication must both be
+within five minutes. The age range is 300–604,800 seconds, with 43,200 as the default. Policy responses
+include mode/age and no credentials. The approved organization connections satisfy SSO; installation
+Google and email do not. Expired provider authentication requires the existing OIDC reauthentication
+flow, without extending the Preface session's absolute expiry.
+
+`organizationAuthRecovery` exposes the current owner's recovery credential:
+
+- `get`: GET `/organizations/:organizationId/auth-recovery`, returning `{ credential: null }` or
+  `{ credential: { id, createdAt } }`.
+- `rotate`: POST its `/rotate` action with `{}`, returning `{ id, createdAt, recoveryCredential }`.
+  This is the only response containing the secret. Store it in a password manager; the response
+  uses `Cache-Control: no-store`. Rotation revokes the previous credential.
+- `revoke`: DELETE the base path, returning 204. Removing the final required recovery path fails.
+- `recover`: POST its `/recover` action with `{ expectedRevision, recoveryCredential }`, returning
+  the updated public authentication policy. Requires current ownership and recent local email,
+  but no provider proof. It consumes the owner-bound credential and makes SSO optional atomically
+  with audit and owner notifications. It does not restore an archived organization.
+
+Normal rotation/revocation require owner access satisfying current policy and recent local email.
+Recovery status/readiness and credential redemption use narrowly scoped owner checks. Credential
+redemption cannot grant membership or ownership. Credentials have no automatic expiry and are
+revoked on owner suspension, removal or demotion. A lost issuance response requires another rotation.
+After recovery, issue a new credential before re-enabling required SSO.
+
+Invitation acceptance now includes `nextAction: "continue" | "authenticate_with_sso"`. Mailbox
+verification admits the member; required SSO must still be completed before organization access.
+Signed-out callers receive no organization provider directory.
