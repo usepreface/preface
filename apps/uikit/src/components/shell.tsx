@@ -110,6 +110,7 @@ function SearchMenu({
       onOpenChange={onOpenChange}
       title="Search the kit"
       description="Jump to a page, a component or a theme"
+      className="sm:max-w-2xl"
     >
       <Command loop>
         <CommandInput placeholder="Search pages, components, themes…" />
@@ -250,7 +251,7 @@ export function Shell() {
             <SidebarGroup key={section.label}>
               <SidebarGroupLabel>{section.label}</SidebarGroupLabel>
               <SidebarGroupContent>
-                <SidebarMenu>
+                <SidebarMenu className="gap-0.5">
                   {section.items.map((entry) => (
                     <SidebarMenuItem key={entry.to}>
                       <SidebarMenuButton
@@ -269,7 +270,7 @@ export function Shell() {
           <SidebarGroup>
             <SidebarGroupLabel>Component lab</SidebarGroupLabel>
             <SidebarGroupContent>
-              <SidebarMenu>
+              <SidebarMenu className="gap-0.5">
                 {labEntries.map(([name, page]) => (
                   <SidebarMenuItem key={name}>
                     <SidebarMenuButton
