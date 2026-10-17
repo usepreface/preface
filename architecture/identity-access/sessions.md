@@ -1,0 +1,68 @@
+# Sessions
+
+Setup creates the initial browser session. Authentication resolves an opaque cookie
+credential through the application on every protected request. A successful actor
+identifies the current user/session, without asserting instance ownership or future
+organization membership. There is no sign-in or session-management UI yet.
+
+## Credential and resolution
+
+The Node token adapter generates 32 random bytes and derives purpose/version-separated
+SHA-256 digests. Only digests persist. Setup proofs and session credentials use separate
+purposes. No JWT or operator-provided session-signing secret is needed.
+
+Resolution hashes the presented redacted credential, looks up an active session and
+loads its current user. Missing, revoked, absolutely expired, idle-expired and
+disabled-user sessions all produce `AuthenticationError` with `UNAUTHENTICATED`.
+Storage/security failures remain distinct and must not be treated as invalid login.
+
+| Policy                  | Implemented value |
+| ----------------------- | ----------------- |
+| Absolute lifetime       | 30 days           |
+| Idle timeout            | 7 days            |
+| Activity-write interval | 5 minutes         |
+
+Activity writes are throttled and monotonic. Their conditional update rechecks expiry,
+revocation and idle eligibility, so a session cannot be revived after becoming invalid
+between lookup and activity recording. Activity never extends absolute expiry.
+Authority is not cached across requests. Future sensitive workflows must perform
+their own fresh grant/resource checks rather than infer permission from this actor.
+
+## HTTP boundary
+
+The `preface_session` cookie is host-only, `HttpOnly`, `SameSite=Lax`, `Path=/` and
+expires with the session's absolute expiry. HTTPS `PUBLIC_URL` also enables `Secure`
+and HSTS even when an internal reverse-proxy connection uses HTTP. HTTP public
+origins are accepted only for loopback development.
+
+Authentication middleware decodes the cookie and resolves the actor before providing
+`CurrentActor`. Invalid credentials produce 401 and expire the cookie. The handler
+returns only `PublicUser` and `PublicSession`. Mutations require the server's exact
+trusted Origin, including requests from non-browser clients. Additional CORS origins
+do not change browser SameSite rules.
+
+## Revocation and failure
+
+Logout optionally resolves the cookie, revokes a valid matching user/session and
+appends `auth.session_revoked` in one transaction. Only after success does the server
+expire the cookie. Missing, malformed or already-invalid credentials return 204 and
+clear it. Repeated revocation does not append another audit event.
+
+An operational failure still fails logout; it must not report successful revocation.
+The application accepts actors from authentication, never caller-controlled user or
+session IDs in the request body. Account disabling is represented in storage and
+checked during resolution, but its management workflow is not implemented.
+
+Application tests cover expiry/activity, disabled users and audited revocation. HTTP
+tests cover safe response fields, cookie flags, authenticated lookup, logout and
+rejection of the old credential after revocation.
+
+## Source
+
+- [Session workflow](../../packages/application/src/auth/session.ts)
+- [Credential policy](../../packages/application/src/security/policy.ts)
+- [Token implementation](../../packages/application/src/node/token.ts)
+- [Session repository](../../packages/database/src/repositories/auth/session.ts)
+- [Authentication middleware](../../apps/server/src/http/middleware/session-authentication.ts)
+- [Cookie boundary](../../apps/server/src/http/cookies/session.ts)
+- [HTTP lifecycle test](../../apps/server/tests/integration/http/onboarding.test.ts)

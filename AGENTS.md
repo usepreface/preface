@@ -68,6 +68,11 @@ Git history as a side effect of a refactor.
   middleware declarations and OpenAPI metadata, shared by server and clients.
 - [`apps/server`](apps/server/README.md) — Node runtime composition, HTTP handlers,
   request policy, startup preparation, health/reference routes and operator CLI.
+- [`apps/landing`](apps/landing/README.md) — public marketing page and prerendering.
+  Page sections/components stay beside their route; shared site layout and motion
+  hooks live at the app boundary. Development defaults to port 4000.
+- [`packages/ui`](packages/ui/README.md) — shared presentation, tokens, controls,
+  artwork and icons. [`apps/uikit`](apps/uikit/README.md) is its interactive reference.
 - [`packages/template`](packages/template/README.md) — starter for new workspace
   packages.
 
@@ -149,19 +154,25 @@ Apply these conventions to public documentation when it is introduced.
 
 ## Architecture knowledge
 
-Package READMEs currently document implemented boundaries and remaining work.
-Keep stable cross-package architecture in `architecture/` as it is introduced;
-keep temporary investigation in gitignored `research/`.
+Start at [`architecture/README.md`](architecture/README.md) and the
+[system model](architecture/system.md), then read the owning boundary page.
+Architecture documents describe verified current behavior, authority, contracts,
+state transitions, transactions, recovery and practical limits, with source links.
 
-See [`architecture/backend-http.md`](architecture/backend-http.md) for startup ordering,
-dependency direction and the implemented setup/session transport boundaries.
-
-- Update the owning documentation in the same change as a contract, table,
-  repository, workflow, route, authorization rule, audit event, or lifecycle change.
-- Package-local structure and commands remain in package READMEs. Repository
-  rules remain in `AGENTS.md`; do not duplicate them into feature documents.
-- A schema or placeholder alone is not an implemented feature. State which
-  boundaries are wired and tested.
+- After every major feature or architectural change, update the owning architecture
+  pages in the same feature batch. Add a page only when the topic needs a distinct
+  owner; keep the index synchronized and link related flows instead of repeating them.
+- Update `AGENTS.md` after major work only when package ownership, contributor rules
+  or the working sequence actually changes. Do not rewrite it for each feature.
+- Small fixes, styling adjustments and local refactors do not require new architecture
+  pages or guide edits. Correct existing prose whenever a change makes it inaccurate.
+- Package READMEs own supported usage, configuration and package-local commands;
+  update affected public behavior there. Architecture owns cross-package reasoning.
+  Repository rules stay here; temporary investigation stays in ignored `research/`.
+- Write concise technical explanations of what is wired and tested. Include relevant
+  failure/recovery behavior and remaining limitations. Keep change logs, completed
+  checklists and speculative roadmaps out of architecture pages.
+- A schema, placeholder or marketing demonstration alone is not an implemented feature.
 
 ## Feature flow
 
@@ -177,8 +188,9 @@ introducing new package boundaries only when they have a concrete responsibility
    the actor, apply transport policy such as rate limiting or cookies, call the
    application workflow, and map the result.
 5. Add frontend state, hooks, loader prefetching, and UI against that contract.
-6. Update the owning documentation with implemented boundaries, tests, and
-   concrete remaining work.
+6. After a major feature, update the owning architecture pages with implemented
+   boundaries, verification and concrete limits. Update this guide only if its
+   contributor rules or ownership changed; keep affected usage docs accurate.
 
 Build complete features incrementally. Sketch the overall data model first,
 then implement the tables required by the next workflow instead of finishing
@@ -232,8 +244,12 @@ follow its linked local documentation when relevant. Search
   trusted configuration.
 - Brand values only when identity or confusion between values would cause a real
   defect. Do not brand every string.
-- Put public request/response schemas and typed errors in `protocol`. Keep
-  sensitive persistence fields out of public DTOs.
+- Organize protocol by purpose, then domain: `identifiers/`, `values/`, `model/`,
+  `dto/`, `input/` and `errors/`. Public DTOs import shared values/identities,
+  never storage models. Use `/dto`, `/input` and `/model` package exports for new
+  consumers; root DTO/input exports remain compatible. Keep sensitive persistence
+  fields out of public DTOs. Error/status metadata belongs beside the protocol
+  error; API owns status-specific HTTP encoding and middleware declarations.
 - Put business workflows in `application`, transport definitions in `api`, HTTP
   handlers and authorization in `apps/server`, and queries in `database`.
 - Repository methods must work with both the normal database and

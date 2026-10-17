@@ -8,6 +8,8 @@ This repository contains monorepo tooling and these workspace packages and appli
 - [database](packages/database/README.md): Node.js persistence with Effect and Drizzle ORM/Kit.
 - [application](packages/application/README.md): transactional instance setup and session workflows,
   with password and token security capabilities.
+- [api](packages/api/README.md): shared Effect HTTP contract and typed client metadata.
+- [server](apps/server/README.md): migration-gated backend, setup/session HTTP and operator CLI.
 - [template](packages/template/README.md): reusable starter for internal packages.
 - [ui](packages/ui/README.md): the design system - Base UI components in the shadcn/ui structure, Preface tokens,
   icons, company logos and brand marks.
@@ -17,8 +19,14 @@ This repository contains monorepo tooling and these workspace packages and appli
 The database package includes connection/transaction services, error mapping, migration tooling,
 PGlite/PostgreSQL test layers, and instance, auth and audit tables/repositories grouped in PostgreSQL
 schemas. Protocol provides storage models, public bootstrap/session contracts and branded identities.
-Application implements first-owner setup and session resolution/revocation. Server startup,
-operator-link logging, HTTP APIs, sign-in and organization creation remain unwired.
+Application implements first-owner setup and session resolution/revocation. The server wires
+startup preparation, operator links, HTTP handlers, always-available Scalar/OpenAPI and Compose
+on port 8080. The landing page defaults to port 4000. Sign-in, onboarding UI and organization
+creation remain subsequent features.
+
+Start with the [architecture index](architecture/README.md) for system boundaries, contracts,
+identity flows, storage, runtime and frontend ownership. The [server README](apps/server/README.md)
+explains deployment configuration and starting the Compose stack.
 
 ## Setup
 

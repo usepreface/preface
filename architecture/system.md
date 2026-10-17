@@ -1,0 +1,65 @@
+# System model
+
+Preface is self-hosted knowledge infrastructure with installation-wide identity
+and multiple organizations as its product model. The implemented backend currently
+supports installation preparation, first-owner setup, session resolution and logout.
+Organization storage, invitations, sign-in, email delivery and knowledge ingestion
+are not implemented. The landing page illustrates the product independently of
+those backend capabilities.
+
+## Ownership
+
+| Boundary       | Owns                                                                              | Does not own                                            |
+| -------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| `protocol`     | Runtime schemas, IDs, reusable values, models, DTOs, inputs and expected errors   | I/O, business workflows or authority decisions          |
+| `api`          | HTTP methods, paths, middleware declarations, status-specific schemas and OpenAPI | Handlers, repositories or runtime configuration         |
+| `database`     | PostgreSQL schema, migrations, queries, transaction context and storage failures  | HTTP policy, password hashing or business authorization |
+| `application`  | Business invariants, security capabilities, transactions and required audit       | Cookies, listener configuration or browser state        |
+| `apps/server`  | Node implementations, configuration, startup, HTTP enforcement and operator CLI   | Query implementations or frontend rendering             |
+| `ui`           | Shared presentation, controls, tokens, icons and artwork                          | Backend authority or application API calls              |
+| `apps/landing` | Marketing page, metadata, demonstrations and browser interactions                 | Authenticated product workflows or persistence          |
+| `apps/uikit`   | Interactive design-system reference                                               | Product state or backend behavior                       |
+
+The dependency direction is `api → protocol`, `database → protocol`, and
+`application → database + protocol`. The server composes these packages and Node
+security adapters. Frontends consume presentation and public contracts; they
+never import database services. Runtime-neutral does not mean safe to expose every
+field: persistence models still contain password hashes and credential digests.
+
+## Identity and authority
+
+Installation identity describes one deployment. User identity spans that deployment.
+Instance-owner grants are separate from future organization memberships. Being an
+instance owner must not imply access to organization content.
+
+Signup is invitation-only and only instance owners may create organizations. These
+are fixed product rules, not configurable settings. The current setup proof is a
+special authority to create the first owner, not a general signup invitation.
+A resolved session identifies a usable user and session; it is not evidence of
+an instance-owner grant or organization permissions.
+
+## Runtime and durable state
+
+One server composition shares the PostgreSQL pool, transaction service,
+repositories, migrations and application workflows. The listener opens only after
+migrations and committed instance preparation. The current Compose stack contains
+PostgreSQL and this backend; it contains no dashboard or worker service.
+
+Business state and required audit rows commit in one transaction. Password hashing
+and random credential generation happen outside SQL locks. One-time proof
+consumption and owner changes use database coordination rather than process-local
+locks. Request admission limits are process-local and serve a separate purpose.
+
+Detailed workflows belong to [instance setup](identity-access/instance-setup.md)
+and [sessions](identity-access/sessions.md); persistence consistency belongs to
+[storage](data/storage.md). Logs summarize safe operational decisions. Audit rows
+record durable product events. Metrics and remote telemetry exporters are not
+currently wired.
+
+## Source
+
+- [Protocol exports](../packages/protocol/src/index.ts)
+- [Application aggregate](../packages/application/src/index.ts)
+- [Server composition](../apps/server/src/runtime.ts)
+- [Compose stack](../compose.yaml)
+- [Landing composition](../apps/landing/src/routes/-home/home-page.tsx)
