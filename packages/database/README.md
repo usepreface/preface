@@ -5,9 +5,56 @@ database schemas, relations, migrations, transaction boundaries and typed reposi
 Shared domain contracts belong in [protocol](../protocol/README.md); business workflows,
 authorization and transport policy belong in application packages.
 
-The foundation, three instance tables and initial auth/audit storage are implemented. Migrations
+The foundation, instance/auth/audit tables, and their repositories are implemented. Migrations
 create the `instance`, `auth` and `audit` PostgreSQL schemas and their tables. Application/server
 workflows are not implemented.
+
+## Repository API
+
+`DatabaseRepository.layer` composes the existing instance repository with auth and audit
+repositories. It requires `Database` and `TransactionService` from the same database composition.
+Application code can acquire one service:
+
+```ts
+import { Effect } from "effect";
+
+import { DatabaseRepository } from "@usepreface/database";
+
+const loadOwner = Effect.gen(function* () {
+  const repository = yield* DatabaseRepository;
+  return yield* repository.auth.user.findByEmail("owner@example.com");
+});
+```
+
+| Group                     | Operations                                                                                                    |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `instance`                | `initialize`, `installation`, `settings`, `owner` (documented below)                                          |
+| `auth.user`               | `findById(userId)`, `findByEmail(canonicalEmail)`, `create(input)`                                            |
+| `auth.passwordCredential` | `findByUserId(userId)`, `create(input)`                                                                       |
+| `auth.session`            | `create(input)`, `findActiveByTokenHash(tokenHash)`, `recordActivity(sessionId)`, `revoke(sessionId, userId)` |
+| `audit.event`             | `append(input)`                                                                                               |
+
+Writes encode the focused protocol input, and every returned row decodes into its protocol model,
+including `DateTime.Utc` timestamps and branded identities. Missing lookups and conditional
+mutations return `undefined`. Unexpected missing insert results and codec mismatches are defects;
+known SQL/Drizzle failures become `DatabaseError`. Individual repository services remain exported.
+
+User creation stores the supplied canonical email without provider-specific rewriting. Credential
+creation stores an already-generated hash and never replaces an existing credential. Session
+creation stores a digest and an absolute expiry. Related creation timestamps come from the same
+Effect clock instant rather than database defaults.
+
+Active session lookup excludes revoked sessions and expiry at or before the current Effect time.
+Activity updates use a conditional write, cannot move activity backwards, and never extend expiry
+or update an expired/revoked session. Revocation requires a matching user ID and an unrevoked row;
+it can revoke an expired session, and repeated revocation preserves the original timestamp.
+User enablement, idle expiry, write throttling, and caller authorization belong to the application.
+
+Audit append validates the typed event/target/metadata relationship and records occurrence time
+from the Effect clock. It does not expose updates or deletion. Required audit writes must share
+the application's outer `TransactionService.run` with the state change; repositories do not append
+business audit events automatically. The aggregate and individual repositories use the same ambient
+transaction without accepting raw transaction clients.
 
 ## Instance persistence
 
@@ -67,12 +114,13 @@ neither policy is a configurable settings column.
   typed targets and metadata; SQL enforces actor attribution and object metadata. Polymorphic
   targets have no foreign key. Indexes support chronology, actor history and target history.
   Audit is append-only by application convention; this migration adds no database immutability
-  trigger or privilege policy. Future repositories must expose append/query operations only and
-  keep secrets out of event metadata. Organization scoping comes with organization persistence.
+  trigger or privilege policy. Its repository exposes append only; queries can be added with the
+  workflows that need them. Keep secrets out of event metadata. Organization scoping comes with
+  organization persistence.
 
 All auth user foreign keys use `on delete restrict`; account disabling preserves references and
-history. There is no account-disable workflow yet. Auth and audit repositories, public DTOs,
-bootstrap/login/logout, password reset and authorization are still pending. Write related lifecycle
+history. There is no account-disable workflow yet. Public DTOs, bootstrap/login/logout, password
+reset and authorization are still pending. Write related lifecycle
 timestamps explicitly from the same Effect clock instant, including `createdAt` when checking
 against it; do not mix an earlier test/application time with a later database insertion default.
 The auth/audit migration deliberately fails if older owner rows reference nonexistent users; it
@@ -82,6 +130,8 @@ does not fabricate users or silently remove historical grants.
 
 - `Database.layer` acquires one scoped PostgreSQL pool and the typed Drizzle database.
   Importing or building the package does not read deployment configuration or connect.
+- `DatabaseRepository.layer` exposes the instance, auth, and audit repositories without acquiring
+  another pool. Its internal services capture the shared database and perform queries at call time.
 - `TransactionService.layer` depends on `Database`. `run(effect)` uses the underlying
   Effect SQL client's transaction context, so repositories can capture `Database` once
   and query it directly. No separate transaction executor lookup is needed.
@@ -91,8 +141,18 @@ does not fabricate users or silently remove historical grants.
 Compose one shared database Layer:
 
 ```ts
-const PersistenceLive = Layer.mergeAll(TransactionService.layer, DatabaseMigration.layer).pipe(
-  Layer.provideMerge(Database.layer),
+import { Layer } from "effect";
+
+import {
+  Database,
+  DatabaseMigration,
+  DatabaseRepository,
+  TransactionService,
+} from "@usepreface/database";
+
+const PersistenceLive = Layer.mergeAll(DatabaseRepository.layer, DatabaseMigration.layer).pipe(
+  Layer.provideMerge(TransactionService.layer),
+  Layer.provide(Database.layer),
 );
 ```
 
@@ -192,9 +252,10 @@ in-memory database, applies the real migrations, and provides `Database`, `Trans
 PostgreSQL advisory lock. `reset` truncates tables in `auth`, `instance` and `audit` and preserves
 migration history. Tests use real tables and repositories, with shared database Layers and user
 fixtures under `tests/fixtures/`. Unit tests cover configuration/error boundaries;
-`tests/integration/` groups transaction, migration, auth persistence and instance scenarios by
-domain. `tests/smoke/built.test.mjs` checks built exports and packaged migrations. The suite focuses
-on rollback, token lifecycle and concurrency; it does not repeat ordinary SQL constraint checks.
+`tests/integration/` groups transaction, migration, auth persistence/session lifecycle and instance
+scenarios by domain. `tests/smoke/built.test.mjs` checks the built aggregate and packaged migrations.
+The suite focuses on cross-repository rollback, token lifecycle, monotonic session activity,
+expiry/revocation and concurrency; it does not repeat ordinary SQL constraint checks.
 PGlite dependencies are development-only and are not imported by the main package entry.
 
 For real driver, migration-lock and transaction coverage, run the same suites against a

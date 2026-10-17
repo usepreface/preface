@@ -7,8 +7,13 @@ export { DatabaseMigration, runDatabaseMigrations } from "#/migrations/layer";
 export { authSchema, instanceSchema, auditSchema } from "#/schema/index";
 export { timestampColumns } from "#/schema/timestamps";
 export {
+  DatabaseRepository,
+  UserRepository,
+  PasswordCredentialRepository,
+  SessionRepository,
+  AuditEventRepository,
   InstanceRepository,
   InstallationRepository,
   InstanceSettingsRepository,
   InstanceOwnerRepository,
-} from "#/repositories/instance/index";
+} from "#/repositories/index";
