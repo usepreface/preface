@@ -161,6 +161,7 @@ explicit owner grant and default local-email auth policy with required audit.
 - `roleBinding`: `grant`, `revoke` for direct member assignments.
 - `ownership`: protected `grant`, `revoke`, `transfer` workflows.
 - `authPolicy.get`: read the currently enforced policy.
+- `invitation`: `create`, `list`, `inspect`, `resend`, `revoke`, `requestVerification`, `accept`.
 
 List inputs use an exclusive ID `cursor` and `limit` (default 25, maximum 100).
 Organization/role lists accept `includeArchived`; member lists accept `includeRemoved`.
@@ -173,9 +174,35 @@ atomically. Custom roles cannot manufacture ownership or delegate permissions th
 actor lacks. Role retirement and member removal revoke assignments transactionally;
 suspension preserves them for explicit reinstatement.
 
-Additional member admission, invitations, groups/teams, SSO, policy editing and
+Groups/teams, SSO, policy editing and
 content permissions are not supplied by these workflows. See the
 [organization architecture](../../architecture/identity-access/organizations.md) for boundaries.
+
+## Invitations
+
+`invitation.create(actor, organizationId, { email, roleIds })` requires current member
+management and role assignment permissions. It returns a safe invitation summary;
+the token is delivered only in the encrypted invitation email. Roles must be active,
+delegable and belong to the organization; ownership is excluded. Creating another
+pending invitation for that email revokes the previous one atomically.
+
+`list(actor, organizationId, { cursor?, limit? })` includes lifecycle history.
+`resend(actor, organizationId, invitationId)` rotates the token and retires old proofs;
+`revoke` uses the same arguments and permanently closes a pending invitation.
+
+Decode `{ invitationId, token }` with `InvitationTokenInput`. `inspect(input)` returns
+organization identity/name and expiry. `requestVerification(input)` emails a code/link
+and returns `{ challenge, browserToken }` for a separate HttpOnly cookie.
+Decode acceptance with `AcceptInvitationInput`: invitation ID/token, challenge ID,
+browser token, display name, and either `method: "code", code` or
+`method: "magic_link", proofToken`. `accept(input, actor?)` requires the matching
+mailbox proof, rechecks current inviter/roles/policy and returns
+`{ actor, sessionToken, organizationId, memberId }`. Deliver the session token only
+as a cookie. A supplied signed-in actor must match the invited existing identity.
+New identities are created only here or by first-owner setup. Existing profiles are
+preserved; suspended members cannot bypass suspension; removed members regain only
+approved invitation roles. Audit failure rolls back admission and consumption.
+See [invitation architecture](../../architecture/identity-access/invitations.md).
 
 ## Credential policy
 
@@ -183,6 +210,8 @@ content permissions are not supplied by these workflows. See the
 | ------------------------- | ------------------------------------------- |
 | Operator proof            | 30 minutes                                  |
 | Setup code                | 10 minutes, bounded by proof expiry         |
+| Organization invitation   | 7 days; resend replaces token and expiry    |
+| Invitation email proof    | 10 minutes, bounded by invitation expiry    |
 | Email sign-in proof       | 10 minutes; code and link share consumption |
 | Setup resend cooldown     | 1 minute                                    |
 | Code attempt budget       | 5 per challenge                             |
@@ -210,6 +239,6 @@ and session lifecycle. The explicit PostgreSQL lane uses disposable test configu
 and sequential files; never target a deployment database. Built tests exercise packaged
 migrations and the verification/session lifecycle.
 
-Backend-connected onboarding/sign-in UI, account recovery, invitations, teams
+Backend-connected onboarding/sign-in UI, account recovery, teams
 and SSO are not implemented. See the [instance setup architecture](../../architecture/identity-access/instance-setup.md)
 and [server README](../../apps/server/README.md) for current transport and deployment.

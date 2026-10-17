@@ -51,7 +51,10 @@ export const verification = authSchema.table(
       .where(sql`${table.consumedAt} is null and ${table.revokedAt} is null`),
     uniqueIndex("verification_token_uidx").on(table.tokenHash),
     index("verification_expiry_idx").on(table.expiresAt),
-    check("verification_purpose_check", sql`${table.purpose} = 'email_sign_in'`),
+    check(
+      "verification_purpose_check",
+      sql`${table.purpose} in ('email_sign_in', 'invitation_email')`,
+    ),
     check("verification_attempts_check", sql`${table.attempts} between 0 and 5`),
     check("verification_expiry_check", sql`${table.expiresAt} > ${table.createdAt}`),
     check(
@@ -64,12 +67,15 @@ export const verification = authSchema.table(
     ),
     check(
       "verification_source_check",
-      sql`(${table.userId} is null and ${table.userEmailId} is null and ${table.emailJobId} is null) or (${table.userId} is not null and ${table.userEmailId} is not null and ${table.emailJobId} is not null)`,
+      sql`(${table.purpose} = 'email_sign_in' and ((${table.userId} is null and ${table.userEmailId} is null and ${table.emailJobId} is null) or (${table.userId} is not null and ${table.userEmailId} is not null and ${table.emailJobId} is not null))) or (${table.purpose} = 'invitation_email' and ${table.userId} is null and ${table.userEmailId} is null and ${table.emailJobId} is not null)`,
     ),
     check(
       "verification_digest_check",
       sql`${table.subjectKey} ~ '^[0-9a-f]{64}$' and ${table.browserBindingHash} ~ '^[0-9a-f]{64}$' and ${table.codeHash} ~ '^[0-9a-f]{64}$' and ${table.tokenHash} ~ '^[0-9a-f]{64}$'`,
     ),
-    check("verification_context_check", sql`${table.context} = '{"version":1}'::jsonb`),
+    check(
+      "verification_context_check",
+      sql`(${table.purpose} = 'email_sign_in' and ${table.context} = '{"version":1}'::jsonb) or (${table.purpose} = 'invitation_email' and jsonb_typeof(${table.context}) = 'object' and ${table.context}->>'version' = '1' and ${table.context}->>'invitationId' ~ '^[0-9a-f-]{36}$')`,
+    ),
   ],
 );

@@ -11,6 +11,7 @@ import { VerificationId, UserEmailId } from "#/identifiers/auth";
 import { BootstrapChallengeId } from "#/identifiers/bootstrap";
 import { InstallationId, InstanceOwnerId } from "#/identifiers/instance";
 import {
+  OrganizationInvitationId,
   OrganizationId,
   OrganizationMemberId,
   OrganizationRoleId,
@@ -157,7 +158,35 @@ const ownershipTransferFields = {
   metadata: Schema.Struct({ fromMemberId: OrganizationMemberId, toMemberId: OrganizationMemberId }),
 };
 
+const invitationFields = {
+  ...organizationActor,
+  eventType: Schema.Literals([
+    "organization.invitation_created",
+    "organization.invitation_resent",
+    "organization.invitation_revoked",
+    "organization.invitation_accepted",
+  ]),
+  targetType: Schema.Literal("organization_invitation"),
+  targetId: OrganizationInvitationId,
+  metadata: Schema.Struct({ roleIds: Schema.Array(OrganizationRoleId) }),
+};
+
+const invitationVerificationFields = {
+  actorKind: Schema.Literal("system"),
+  actorUserId: Schema.Null,
+  organizationId: OrganizationId,
+  eventType: Schema.Literals([
+    "organization.invitation_verification_requested",
+    "organization.invitation_verification_failed",
+  ]),
+  targetType: Schema.Literal("organization_invitation"),
+  targetId: OrganizationInvitationId,
+  metadata: Schema.Struct({ challengeId: VerificationId, attempts: Schema.Natural }),
+};
+
 export const RecordAuditEvent = Schema.Union([
+  Schema.Struct(invitationFields),
+  Schema.Struct(invitationVerificationFields),
   Schema.Struct(organizationFields),
   Schema.Struct(organizationMemberFields),
   Schema.Struct(organizationRoleFields),
@@ -181,6 +210,8 @@ const storedFields = {
 };
 const organizationStoredFields = { id: AuditEventId, occurredAt: Schema.DateTimeUtcFromDate };
 export const AuditEvent = Schema.Union([
+  Schema.Struct({ ...invitationFields, ...organizationStoredFields }),
+  Schema.Struct({ ...invitationVerificationFields, ...organizationStoredFields }),
   Schema.Struct({ ...organizationFields, ...organizationStoredFields }),
   Schema.Struct({ ...organizationMemberFields, ...organizationStoredFields }),
   Schema.Struct({ ...organizationRoleFields, ...organizationStoredFields }),

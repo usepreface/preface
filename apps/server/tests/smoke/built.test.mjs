@@ -16,6 +16,7 @@ import {
   testEnvironment,
   waitForReadiness,
   waitForDevelopmentCode,
+  waitForDevelopmentInvitationLink,
 } from "../fixtures/process.mjs";
 
 const execute = promisify(execFile);
@@ -185,6 +186,58 @@ test(
       body: "{}",
     });
     assert.equal(restored.status, 200);
+
+    const rolesResponse = await fetch(`${organizationPath}/roles`, {
+      headers: { cookie: sessionCookie },
+    });
+    assert.equal(rolesResponse.status, 200);
+    const memberRole = (await rolesResponse.json()).roles.find((role) => role.key === "member");
+    assert.ok(memberRole);
+    const invitationOffset = restarted.stdout.length;
+    const invited = await fetch(`${organizationPath}/invitations`, {
+      method: "POST",
+      headers: { origin, "content-type": "application/json", cookie: sessionCookie },
+      body: JSON.stringify({ email: "colleague@example.test", roleIds: [memberRole.id] }),
+    });
+    assert.equal(invited.status, 201);
+    const invitation = await invited.json();
+    const invitationUrl = await waitForDevelopmentInvitationLink(restarted, invitationOffset);
+    const fragment = new URLSearchParams(invitationUrl.hash.slice(1));
+    assert.equal(fragment.get("invitationId"), invitation.id);
+    const proofOffset = restarted.stdout.length;
+    const invitationProof = await fetch(`${base}/api/v1/invitations/verification/request`, {
+      method: "POST",
+      headers: { origin, "content-type": "application/json" },
+      body: JSON.stringify({ invitationId: invitation.id, token: fragment.get("token") }),
+    });
+    assert.equal(invitationProof.status, 202);
+    const invitationChallenge = await invitationProof.json();
+    const invitationCookie = invitationProof.headers.get("set-cookie").split(";", 1)[0];
+    const invitationCode = await waitForDevelopmentCode(restarted, proofOffset);
+    const accepted = await fetch(`${base}/api/v1/invitations/accept`, {
+      method: "POST",
+      headers: { origin, "content-type": "application/json", cookie: invitationCookie },
+      body: JSON.stringify({
+        invitationId: invitation.id,
+        token: fragment.get("token"),
+        challengeId: invitationChallenge.challengeId,
+        method: "code",
+        code: invitationCode,
+        displayName: "Colleague",
+      }),
+    });
+    assert.equal(accepted.status, 201);
+    const invitedActor = await accepted.json();
+    assert.equal(invitedActor.organizationId, organization.organization.id);
+    const colleagueCookie = accepted.headers
+      .getSetCookie()
+      .find((cookie) => cookie.startsWith("preface_session="))
+      ?.split(";", 1)[0];
+    assert.ok(colleagueCookie);
+    assert.equal(
+      (await fetch(organizationPath, { headers: { cookie: colleagueCookie } })).status,
+      200,
+    );
 
     assert.equal(
       (

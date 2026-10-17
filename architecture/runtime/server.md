@@ -23,7 +23,7 @@ first-owner transaction belong to [instance setup](../identity-access/instance-s
 Node receives SIGTERM/SIGINT through the scoped Effect runtime. Shutdown stops new
 requests, allows up to 15 seconds for active requests and releases resources. Compose
 allows 20 seconds before forcing exit. The scoped email worker starts after startup preparation and stops with the runtime.
-A second scoped task removes expired sign-in proofs in bounded batches.
+A second scoped task removes expired sign-in and invitation proofs in bounded batches.
 The operator CLI starts neither worker.
 
 ## Request boundary

@@ -119,3 +119,18 @@ export async function waitForDevelopmentCode(running, outputOffset = 0) {
   }
   throw new Error("Expected a rendered code from the development worker");
 }
+
+export async function waitForDevelopmentInvitationLink(running, outputOffset) {
+  const deadline = Date.now() + 5000;
+  while (Date.now() < deadline) {
+    const link = running.stdout
+      .slice(outputOffset)
+      .match(
+        /http:\/\/localhost:\d+\/invitations\/accept#invitationId=[0-9a-f-]+&token=[A-Za-z0-9_-]+/,
+      )?.[0];
+    if (link !== undefined) return new URL(link);
+    // oxlint-disable-next-line no-await-in-loop -- Wait for the worker's explicit development output.
+    await setTimeout(25);
+  }
+  throw new Error("Expected a rendered invitation from the development worker");
+}

@@ -16,3 +16,9 @@ export {
   CreateOrganizationRoleInput,
   UpdateOrganizationRoleInput,
 } from "#/input/organization/organization";
+
+export {
+  CreateInvitationInput,
+  InvitationTokenInput,
+  AcceptInvitationInput,
+} from "#/input/organization/invitation";

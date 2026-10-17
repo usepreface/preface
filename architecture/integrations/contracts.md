@@ -56,7 +56,7 @@ body. Internal inputs redact credentials and forbid their encoding. Storage sepa
 `User`, `UserEmailAddress`, `Verification` and `SessionAuthentication`; `UserProfile`
 is a joined repository projection rather than another email authority.
 
-Expected failures use `Schema.TaggedError`. Bootstrap, email sign-in and request errors define
+Expected failures use `Schema.TaggedError`. Bootstrap, email sign-in, organization, invitation and request errors define
 their code/status mapping once alongside the protocol error. Allowed codes are
 derived from that mapping; the API creates narrowed schema variants with the
 corresponding static HTTP status. Protocol stores plain metadata and imports no

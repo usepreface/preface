@@ -3,6 +3,8 @@ import { HttpApi, OpenApi } from "effect/http-api";
 import { EmailSignInApi } from "#/groups/email-sign-in";
 import { InstanceCapabilitiesApi } from "#/groups/instance-capabilities";
 import { InstanceSetupApi } from "#/groups/instance-setup";
+import { InvitationsApi } from "#/groups/invitations";
+import { OrganizationInvitationsApi } from "#/groups/organization-invitations";
 import { OrganizationMembersApi } from "#/groups/organization-members";
 import { OrganizationOwnershipApi } from "#/groups/organization-ownership";
 import { OrganizationRoleBindingsApi } from "#/groups/organization-role-bindings";
@@ -16,6 +18,8 @@ export class PrefaceApi extends HttpApi.make("PrefaceApi")
     InstanceSetupApi,
     SessionApi,
     EmailSignInApi,
+    InvitationsApi,
+    OrganizationInvitationsApi,
     SessionsApi,
     OrganizationsApi,
     OrganizationMembersApi,

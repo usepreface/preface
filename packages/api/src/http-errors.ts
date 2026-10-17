@@ -5,6 +5,7 @@ import {
   BootstrapError,
   EmailSignInError,
   OrganizationError,
+  InvitationError,
   RequestError,
 } from "@usepreface/protocol";
 
@@ -31,5 +32,11 @@ export const emailSignInErrors = Record.keys(EmailSignInError.statuses).map((cod
 export const organizationErrors = Record.keys(OrganizationError.statuses).map((code) =>
   Schema.Struct({ ...OrganizationError.fields, code: Schema.Literal(code) }).pipe(
     HttpApiSchema.status(OrganizationError.statuses[code]),
+  ),
+);
+
+export const invitationErrors = Record.keys(InvitationError.statuses).map((code) =>
+  Schema.Struct({ ...InvitationError.fields, code: Schema.Literal(code) }).pipe(
+    HttpApiSchema.status(InvitationError.statuses[code]),
   ),
 );

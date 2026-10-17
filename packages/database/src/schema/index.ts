@@ -17,6 +17,8 @@ export {
 } from "#/schema/instance/index";
 
 export {
+  organizationInvitation,
+  invitationAssignment,
   organizationSchema,
   organization,
   organizationMember,

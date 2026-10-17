@@ -3,6 +3,34 @@ import { defineRelationsPart } from "drizzle-orm";
 import * as schema from "#/schema/index";
 
 export const organizationRelations = defineRelationsPart(schema, (r) => ({
+  organizationInvitation: {
+    organization: r.one.organization({
+      from: r.organizationInvitation.organizationId,
+      to: r.organization.id,
+      optional: false,
+    }),
+    invitedBy: r.one.organizationMember({
+      from: [r.organizationInvitation.invitedByMemberId, r.organizationInvitation.organizationId],
+      to: [r.organizationMember.id, r.organizationMember.organizationId],
+      optional: false,
+    }),
+    assignments: r.many.invitationAssignment({
+      from: [r.organizationInvitation.id, r.organizationInvitation.organizationId],
+      to: [r.invitationAssignment.invitationId, r.invitationAssignment.organizationId],
+    }),
+  },
+  invitationAssignment: {
+    invitation: r.one.organizationInvitation({
+      from: [r.invitationAssignment.invitationId, r.invitationAssignment.organizationId],
+      to: [r.organizationInvitation.id, r.organizationInvitation.organizationId],
+      optional: false,
+    }),
+    role: r.one.organizationRole({
+      from: [r.invitationAssignment.roleId, r.invitationAssignment.organizationId],
+      to: [r.organizationRole.id, r.organizationRole.organizationId],
+      optional: false,
+    }),
+  },
   organization: {
     createdBy: r.one.user({ from: r.organization.createdByUserId, to: r.user.id, optional: false }),
     members: r.many.organizationMember({

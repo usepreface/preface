@@ -37,3 +37,5 @@ export {
   OrganizationRoleBindingRepository,
   OrganizationAuthPolicyRepository,
 } from "#/repositories/organization/index";
+
+export { InvitationRepository } from "#/repositories/organization/invitation";

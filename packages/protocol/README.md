@@ -36,7 +36,7 @@ grants, access, pagination and the default local-email authentication policy.
 `OrganizationError` owns its code/status mapping alongside other protocol errors.
 
 Internal email models define typed `instance-setup`, `sign-in` and
-`organization-invitation` payloads plus encrypted outbox lifecycle records. Their
+`organization-invitation` and `invitation-verification` payloads plus encrypted outbox lifecycle records. Their
 variable schemas are exported for template props. These contracts do not provide
 templates, grant access or implement passwordless authentication.
 
@@ -74,7 +74,10 @@ digests are 64 lowercase hexadecimal characters, representing SHA-256 of a rando
 Normalized `User` owns identity, while `UserEmailAddress` owns email verification
 and login eligibility. `UserProfile` is a joined repository projection. `Verification`
 and `SessionAuthentication` represent single-use proofs and session evidence.
-Password storage is absent.
+Password storage is absent. Invitation verification is a distinct proof purpose with
+invitation context and no pre-existing identity source. Invitation models include
+recipient, inviter, digest, email job and terminal state; public DTOs omit storage credentials.
+Invitation inputs normalize email/display names and redact invitation/proof tokens.
 
 Audit contracts correlate event types with their target identities and metadata. Current events
 cover bootstrap proof issuance/replacement, bootstrap completion, owner grants and session

@@ -1,5 +1,6 @@
 import { Effect } from "effect";
 
+import { makeInvitationApplication } from "#/organization/invitation/index";
 import { makeOrganizationMemberApplication } from "#/organization/member";
 import { makeOrganizationApplication } from "#/organization/organization";
 import { makeOrganizationOwnershipApplication } from "#/organization/ownership";
@@ -13,6 +14,7 @@ export const makeOrganizationsApplication = Effect.gen(function* () {
     organization: {
       organization,
       authPolicy,
+      invitation: yield* makeInvitationApplication,
       member: yield* makeOrganizationMemberApplication,
       role: yield* makeOrganizationRoleApplication,
       roleBinding: yield* makeOrganizationRoleBindingApplication,

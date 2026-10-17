@@ -20,7 +20,7 @@ export const createTestIdentity = Effect.fnUntraced(function* (email: string, di
   return yield* signInTestUser(email);
 });
 
-// Admission is fixture setup until the invitation workflow owns member creation.
+// Authority tests seed membership directly; invitation tests exercise verified admission.
 export const admitTestMember = Effect.fnUntraced(function* (
   organizationId: OrganizationId,
   userId: UserId,

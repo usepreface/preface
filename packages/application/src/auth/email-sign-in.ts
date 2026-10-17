@@ -76,6 +76,7 @@ export const makeEmailSignInApplication = Effect.gen(function* () {
           if (
             "challengeId" in input &&
             (previous === undefined ||
+              previous.purpose !== "email_sign_in" ||
               previous.consumedAt !== null ||
               previous.revokedAt !== null ||
               DateTime.toEpochMillis(previous.expiresAt) <=
@@ -197,6 +198,7 @@ export const makeEmailSignInApplication = Effect.gen(function* () {
         const proof = yield* repository.auth.verification.lockById(decoded.challengeId);
         if (
           proof === undefined ||
+          proof.purpose !== "email_sign_in" ||
           proof.consumedAt !== null ||
           proof.revokedAt !== null ||
           proof.attempts >= 5 ||

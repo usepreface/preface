@@ -4,9 +4,9 @@ Preface is self-hosted knowledge infrastructure with installation-wide identity
 and multiple organizations as its product model. The implemented backend currently
 supports installation preparation, first-owner setup, email code/link sign-in,
 session resolution, session management, organization creation, membership lifecycle,
-roles and ownership management.
+roles, ownership management and verified organization invitations.
 Setup verifies mailbox ownership through an encrypted email outbox, minimal renderer
-and scoped worker. Invitations, teams, Google/SSO
+and scoped worker. Teams, Google/SSO
 and knowledge ingestion are not implemented. The landing page illustrates the product independently of
 those backend capabilities.
 
@@ -34,7 +34,7 @@ field: persistence models still contain verification HMACs and credential digest
 ## Identity and authority
 
 Installation identity describes one deployment. User identity spans that deployment.
-Instance-owner grants are separate from future organization memberships. Being an
+Instance-owner grants are separate from organization memberships. Being an
 instance owner must not imply access to organization content.
 
 Signup is invitation-only and only instance owners may create organizations. These

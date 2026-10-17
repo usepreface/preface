@@ -7,9 +7,8 @@ claims and conditional state changes. Email payload schemas are internal models
 in protocol, not public HTTP DTOs.
 
 The server wires a minimal `AuthenticationEmailRenderer` and a scoped worker for
-instance setup and ordinary email sign-in. The renderer supplies plain text and simple HTML for setup
-codes and sign-in code/link messages; invitation payloads fail rendering until their actual
-workflows/templates exist. React Email presentation can replace this capability
+instance setup, ordinary email sign-in, invitation messages and invitation email proofs.
+The renderer supplies plain text and simple HTML, escaping invitation names and URLs. React Email presentation can replace this capability
 without changing enqueueing, provider adapters or HTTP contracts.
 
 ## Transaction and storage boundary
@@ -100,7 +99,8 @@ boundary tests intercept requests without sending email.
 Setup and sign-in request/resend and code/link verification are implemented. No
 template preview, provider webhook, reconciliation workflow or delivery-management
 UI exists yet. Payload contracts
-alone do not implement passwordless authentication or invitations.
+alone do not establish admission; [invitation workflows](../identity-access/invitations.md)
+own current authority and proof consumption.
 
 ## Source
 

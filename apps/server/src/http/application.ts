@@ -15,6 +15,8 @@ import { SetupProtectionLive } from "#/http/middleware/setup-protection";
 import { EmailSignInRoutes } from "#/http/routes/email-sign-in";
 import { HealthRoutes } from "#/http/routes/health";
 import { InstanceSetupRoutes } from "#/http/routes/instance-setup";
+import { InvitationsRoutes } from "#/http/routes/invitations";
+import { OrganizationInvitationsRoutes } from "#/http/routes/organization-invitations";
 import { OrganizationMembersRoutes } from "#/http/routes/organization-members";
 import { OrganizationOwnershipRoutes } from "#/http/routes/organization-ownership";
 import { OrganizationRoleBindingsRoutes } from "#/http/routes/organization-role-bindings";
@@ -29,6 +31,8 @@ const ProductRoutes = HttpApiBuilder.layer(PrefaceApi, { openapiPath: "/api/open
       InstanceSetupRoutes,
       SessionRoutes,
       EmailSignInRoutes,
+      InvitationsRoutes,
+      OrganizationInvitationsRoutes,
       SessionsRoutes,
       OrganizationsRoutes,
       InstanceCapabilitiesRoutes,

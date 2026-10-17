@@ -125,13 +125,43 @@ accept `includeRemoved`. Archived organization discovery is owner-only. Detail r
 `{ organization, membership, access }`; access is `{ memberId, isOwner, permissions }`.
 
 Owner-only transitions preserve a usable owner. Custom roles/assignments are bounded
-by the actor's delegation rights. There is no direct admission endpoint or policy editor;
-invitations and SSO configuration are subsequent features. These endpoints are backend-only.
+by the actor's delegation rights. Invitations own additional admission; there is no
+direct member-creation endpoint or policy editor. SSO configuration remains pending. These endpoints are backend-only.
 
 `OrganizationError` codes map invalid input to 400, insufficient authority/evidence
 to 403, scoped missing organization/member/role/binding to 404, and lifecycle or
 uniqueness conflicts to 409. Outsiders and removed/suspended memberships receive
 `ORGANIZATION_NOT_FOUND`; completed instance ownership is not membership.
+
+## Invitations
+
+| Method | Path                                                              | Result                                                    |
+| ------ | ----------------------------------------------------------------- | --------------------------------------------------------- |
+| POST   | `/organizations/:organizationId/invitations`                      | 201 `PublicInvitation`                                    |
+| GET    | `/organizations/:organizationId/invitations`                      | `InvitationList`                                          |
+| POST   | `/organizations/:organizationId/invitations/:invitationId/resend` | `PublicInvitation`                                        |
+| DELETE | `/organizations/:organizationId/invitations/:invitationId`        | 204                                                       |
+| POST   | `/invitations/inspect`                                            | `InvitationPreview`                                       |
+| POST   | `/invitations/verification/request`                               | 202 challenge identity/expiry; browser cookie             |
+| POST   | `/invitations/accept`                                             | 201 `{ actor, organizationId, memberId }`; session cookie |
+
+Paths use the same `/api/v1` prefix. Typed-client groups are `organizationInvitations`
+and `invitations`. Management requires cookie authentication; listing/revocation need
+`members.manage`, creation/resend also need `roles.assign`. Creation takes
+`{ email, roleIds }` (1–20 unique role IDs); resend takes `{}`. Lists use `cursor` and
+`limit` and return `{ invitations, nextCursor }`, including lifecycle history.
+
+Inspect and verification request take `{ invitationId, token }`. Acceptance adds
+`challengeId`, `displayName`, and either `{ method: "code", code }` or
+`{ method: "magic_link", proofToken }`. Browser binding is cookie-only. A matching
+existing session is supported; account mismatch is rejected. No raw credentials
+are returned in JSON. New accounts require a valid invitation and mailbox proof.
+All POST routes require the exact trusted Origin and JSON.
+
+`InvitationError` codes: `INVALID_INPUT` (400), `INVALID_INVITATION`/`INVALID_PROOF`
+(401), `INVITATION_NOT_FOUND` (404), and `ACCOUNT_MISMATCH`, `RECIPIENT_UNAVAILABLE`,
+`INVITER_NOT_AUTHORIZED`, `ASSIGNMENT_UNAVAILABLE` (409). Management also returns
+normal organization/authentication errors. Operational failures remain private.
 
 ## Errors and documentation
 

@@ -144,18 +144,18 @@ installation lock. Codes and email delivery are not repository responsibilities.
 All auth user foreign keys use `on delete restrict`; account disabling preserves references and
 history. There is no account-disable workflow yet. Public DTOs and application bootstrap/session
 workflows are implemented in protocol/application. The server implements cookie authentication;
-email sign-in, session and organization administration are implemented; invitations and content authorization remain
+email sign-in, sessions, invitations and organization administration are implemented; content authorization remains
 pending. Write related lifecycle timestamps from the same Effect clock instant.
 
 The development history starts with the regenerated initial migration, followed by
-organization authority. Databases using the deleted older development history need
+organization authority and invitations. Databases using the deleted older development history need
 a reset; databases on the current initial baseline apply subsequent migrations normally.
 Generation and tests do not reset a developer database automatically.
 
 ## Organization persistence
 
 `DatabaseRepository.organization` groups `organization`, `member`, `role`,
-`roleBinding` and `authPolicy`. These are storage APIs; application owns authorization,
+`roleBinding`, `authPolicy` and `invitation`. These are storage APIs; application owns authorization,
 last-owner checks, admission, permission delegation and required audit.
 
 - `organization` supports creation, ID/slug lookup, transaction-only locking,
@@ -228,6 +228,24 @@ Effect SQL reason remain available internally, including unique constraint names
 retryability. The error message is generic; causes/reasons can contain sensitive SQL or
 parameters and must never become public DTOs or unfiltered logs. HTTP/domain translation
 belongs at the boundary that knows the error's meaning.
+
+## Invitation persistence
+
+`repository.organization.invitation` exposes `create`, `findById`, `locate`, `list`,
+`assignments`, `findPendingByEmail`, `replaceCredential`, `revoke` and `accept`.
+`create(input, roleIds)` atomically writes invitation and proposed role assignments.
+All management writes/lookups are tenant-scoped; `locate(id)` is reserved for token
+entry points that need to discover the tenant before verifying credentials.
+The application holds the organization lock for every invitation mutation.
+`member.readmit(organizationId, memberId)` clears removal only, preserving identity
+and join history; invitation workflows authorize it and apply new grants.
+
+Invitation records store token digests and encrypted-email job references. Composite
+assignment/inviter foreign keys enforce tenant ownership. Pending recipients are
+unique per organization; terminal history is retained. Verification storage supports
+separate sign-in and invitation purposes with distinct source/context contracts.
+Invitation email proofs have no existing user source and require an email job.
+Cleanup handles both proof purposes without deleting invitation history.
 
 ## Configuration
 

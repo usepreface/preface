@@ -39,7 +39,8 @@ verification with instance name, owner name and email, then submit the emailed e
 code with the returned challenge ID. Only verified completion creates the owner/session cookie.
 It creates no organization. Email code/link sign-in and session management are available
 through the API, together with organization creation and administration.
-Backend-connected UI, invitations, teams and SSO remain pending.
+Invitations provide verified email admission. Backend-connected UI, teams and SSO remain pending.
+Invitation links reserve `/invitations/accept` for the future client; codes work on internal hosts.
 Magic links reserve `/auth/email/verify` for the future client. For local/internal hosts,
 enter the emailed code in the browser that requested it.
 
@@ -127,7 +128,7 @@ absolute expiry. HTTPS installations also use `Secure` and HSTS. Additional CORS
 override browser SameSite rules; use a same-site frontend for cookie authentication.
 
 Migration history begins with the regenerated initial baseline and includes organization
-authority. Databases using deleted earlier development history need a reset; databases
+authority and invitation admission. Databases using deleted earlier development history need a reset; databases
 on the current baseline apply new migrations normally. Startup never resets a database.
 
 ## Request policy

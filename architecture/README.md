@@ -18,6 +18,8 @@ Executable schemas, migrations, source and tests settle disagreements with prose
   proof replacement, durable attempts, returning operators and proof cleanup.
 - [Organizations](identity-access/organizations.md): creation, current authority,
   membership lifecycle, delegation, ownership, policy and tenant-safe storage.
+- [Invitations](identity-access/invitations.md): verified mailbox admission, current delegation,
+  readmission, credential replacement and one-use acceptance.
 - [Sessions](identity-access/sessions.md): credential resolution, expiry, activity,
   cookie delivery and audited revocation.
 

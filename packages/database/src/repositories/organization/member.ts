@@ -138,7 +138,26 @@ const makeOrganizationMemberRepository = Effect.gen(function* () {
       .returning();
     return row === undefined ? undefined : decode(row);
   }, mapToDatabaseError);
+  const readmit = Effect.fn("OrganizationMemberRepository.readmit")(function* (
+    organizationId: OrganizationId,
+    id: OrganizationMemberId,
+  ) {
+    const [row] = yield* database
+      .update(organizationMember)
+      .set({ removedAt: null, updatedAt: DateTime.toDateUtc(yield* DateTime.now) })
+      .where(
+        and(
+          eq(organizationMember.organizationId, organizationId),
+          eq(organizationMember.id, id),
+          isNotNull(organizationMember.removedAt),
+          isNull(organizationMember.suspendedAt),
+        ),
+      )
+      .returning();
+    return row === undefined ? undefined : decode(row);
+  }, mapToDatabaseError);
   return {
+    readmit,
     create,
     findById,
     findByUserId,

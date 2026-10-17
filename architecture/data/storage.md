@@ -1,30 +1,32 @@
 # Storage and consistency
 
 `packages/database` owns PostgreSQL, Drizzle, migrations, transaction context and
-repositories. Its aggregate `DatabaseRepository` exposes `instance`, `auth` and
+repositories. Its aggregate `DatabaseRepository` exposes `instance`, `auth`, `organization`,
 `audit` and `jobs.email`. Repositories decode storage rows with protocol models and accept focused
 write schemas; they do not authorize business actors or deliver HTTP responses.
 
 ## Domain schemas
 
-| Table                          | Durable responsibility                                                                      |
-| ------------------------------ | ------------------------------------------------------------------------------------------- |
-| `instance.installation`        | Fixed singleton row, UUIDv7 installation identity, setup proof window and completion        |
-| `instance.settings`            | Instance display name, optimistic revision and lifecycle timestamps                         |
-| `instance.bootstrap_challenge` | One pending setup challenge, code HMAC, proof binding, expiry, attempt budget and email job |
-| `instance.owner`               | Owner grants, attribution and revocation history                                            |
-| `auth.user`                    | Installation-wide identity, display name, disabled state and lifecycle                      |
-| `auth.user_email`              | Active email ownership, primary designation, verification and login eligibility             |
-| `auth.verification`            | Browser-bound single-use code/link proofs and durable attempt budget                        |
-| `auth.session_authentication`  | Session authentication method, email source, assurance and expiry                           |
-| `auth.session`                 | Credential digest, activity, absolute expiry and revocation                                 |
-| `organization.organization`    | Name, unique slug, creator attribution, archive state and lifecycle                         |
-| `organization.member`          | Stable user/organization relationship, suspension and removal                               |
-| `organization.role`            | Protected built-ins and custom code-owned permission sets                                   |
-| `organization.role_binding`    | Attributed member grants and revocation history                                             |
-| `organization.auth_policy`     | Current allowed local email methods and policy revision                                     |
-| `audit.event`                  | Typed actor/event/target metadata and occurrence time                                       |
-| `jobs.email`                   | Encrypted email intent, deduplication, attempt state and token-owned delivery lease         |
+| Table                                | Durable responsibility                                                                      |
+| ------------------------------------ | ------------------------------------------------------------------------------------------- |
+| `instance.installation`              | Fixed singleton row, UUIDv7 installation identity, setup proof window and completion        |
+| `instance.settings`                  | Instance display name, optimistic revision and lifecycle timestamps                         |
+| `instance.bootstrap_challenge`       | One pending setup challenge, code HMAC, proof binding, expiry, attempt budget and email job |
+| `instance.owner`                     | Owner grants, attribution and revocation history                                            |
+| `auth.user`                          | Installation-wide identity, display name, disabled state and lifecycle                      |
+| `auth.user_email`                    | Active email ownership, primary designation, verification and login eligibility             |
+| `auth.verification`                  | Browser-bound single-use code/link proofs and durable attempt budget                        |
+| `auth.session_authentication`        | Session authentication method, email source, assurance and expiry                           |
+| `auth.session`                       | Credential digest, activity, absolute expiry and revocation                                 |
+| `organization.organization`          | Name, unique slug, creator attribution, archive state and lifecycle                         |
+| `organization.member`                | Stable user/organization relationship, suspension and removal                               |
+| `organization.role`                  | Protected built-ins and custom code-owned permission sets                                   |
+| `organization.role_binding`          | Attributed member grants and revocation history                                             |
+| `organization.invitation`            | Intended email, inviter, token digest, email job, deadline and acceptance/revocation        |
+| `organization.invitation_assignment` | Tenant-scoped proposed role assignments                                                     |
+| `organization.auth_policy`           | Current allowed local email methods and policy revision                                     |
+| `audit.event`                        | Typed actor/event/target metadata and occurrence time                                       |
+| `jobs.email`                         | Encrypted email intent, deduplication, attempt state and token-owned delivery lease         |
 
 Tables use singular SQL names and UUIDv7 identities generated by the shared UUID
 function. Application defaults do not generate IDs for arbitrary direct SQL writers.
@@ -78,7 +80,7 @@ connection, with automatic release on completion/failure. They reject execution
 inside an existing transaction. The migration Layer completes before application
 acquisition and listener startup. Migration files ship as runtime assets and resolve
 relative to the source or built module. The development history starts with the regenerated initial baseline, followed by
-the organization-authority migration. Databases using the deleted earlier history
+organization authority and invitation migrations. Databases using the deleted earlier history
 need a reset; no upgrade/backfill from that history is supplied. Databases on the
 current baseline apply subsequent migrations normally.
 

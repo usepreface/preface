@@ -1,6 +1,7 @@
 import { Context, Effect, Layer } from "effect";
 
 import { OrganizationAuthPolicyRepository } from "#/repositories/organization/auth-policy";
+import { InvitationRepository } from "#/repositories/organization/invitation";
 import { OrganizationMemberRepository } from "#/repositories/organization/member";
 import { OrganizationRepository } from "#/repositories/organization/organization";
 import { OrganizationRoleRepository } from "#/repositories/organization/role";
@@ -8,6 +9,7 @@ import { OrganizationRoleBindingRepository } from "#/repositories/organization/r
 
 const makeOrganizationRepositories = Effect.gen(function* () {
   return {
+    invitation: yield* InvitationRepository,
     organization: yield* OrganizationRepository,
     member: yield* OrganizationMemberRepository,
     role: yield* OrganizationRoleRepository,
@@ -22,6 +24,7 @@ export class OrganizationRepositories extends Context.Service<
   static readonly layer = Layer.effect(OrganizationRepositories, makeOrganizationRepositories).pipe(
     Layer.provide(
       Layer.mergeAll(
+        InvitationRepository.layer,
         OrganizationRepository.layer,
         OrganizationMemberRepository.layer,
         OrganizationRoleRepository.layer,
@@ -32,6 +35,7 @@ export class OrganizationRepositories extends Context.Service<
   );
 }
 export {
+  InvitationRepository,
   OrganizationRepository,
   OrganizationMemberRepository,
   OrganizationRoleRepository,

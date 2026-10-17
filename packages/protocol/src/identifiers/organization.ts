@@ -8,3 +8,8 @@ export const OrganizationRoleId = createBrandedId("OrganizationRoleId");
 export type OrganizationRoleId = typeof OrganizationRoleId.Type;
 export const OrganizationRoleBindingId = createBrandedId("OrganizationRoleBindingId");
 export type OrganizationRoleBindingId = typeof OrganizationRoleBindingId.Type;
+
+export const OrganizationInvitationId = createBrandedId("OrganizationInvitationId");
+export type OrganizationInvitationId = typeof OrganizationInvitationId.Type;
+export const InvitationAssignmentId = createBrandedId("InvitationAssignmentId");
+export type InvitationAssignmentId = typeof InvitationAssignmentId.Type;

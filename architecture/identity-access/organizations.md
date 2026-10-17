@@ -7,7 +7,8 @@ keep their installation-wide identity and session across organizations.
 
 ## Storage and contracts
 
-The `organization` PostgreSQL schema contains five tables:
+The `organization` PostgreSQL schema contains its authority tables, plus invitation tables documented in
+[invitation admission](invitations.md):
 
 - `organization`: UUIDv7 identity, name, unique normalized slug, creating user,
   archive state and timestamps.
@@ -128,10 +129,10 @@ POST/PUT/PATCH bodies are JSON, including `{}` for bodyless action payloads. COR
 permits PUT/PATCH. Public responses select safe fields and encode dates as ISO
 strings. Logs normalize parameterized routes rather than retaining tenant IDs.
 
-There is no public direct-member-creation endpoint: only organization creation
-admits its first member. Invitations will own additional admission and readmission.
-Tests seed additional members through explicit persistence fixtures to exercise
-administration without inventing an invitation bypass. Teams/groups, SSO, custom
+There is no public direct-member-creation endpoint. Organization creation admits
+its first member; [invitations](invitations.md) own additional admission and readmission.
+Authority tests can seed members through persistence fixtures; invitation tests
+exercise the actual admission workflow. Teams/groups, SSO, custom
 policy editing, permanent deletion, organization content and dashboard integration
 are outside this implemented phase.
 

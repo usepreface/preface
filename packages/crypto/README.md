@@ -31,6 +31,9 @@ verification-code fingerprints derive from `CRYPTO_HMAC_KEY`. Email sign-in adds
 separate purposes for link and browser token digests, challenge-bound code HMACs,
 and recipient HMACs used to coordinate pending proofs without storing unknown emails.
 
+Invitation tokens, browser bindings, link proofs, challenge-bound codes and
+invitation-version subjects have separate purposes in the same services.
+
 Generate each key separately and store it in deployment secrets:
 
 ```sh

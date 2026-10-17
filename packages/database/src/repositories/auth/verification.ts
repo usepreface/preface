@@ -29,16 +29,12 @@ const makeVerificationRepository = Effect.gen(function* () {
     return row === undefined ? undefined : decode(row);
   }, mapToDatabaseError);
   const retirePendingBySubject = Effect.fn("VerificationRepository.retirePendingBySubject")(
-    function* (subjectKey: string) {
+    function* (subjectKey: string, purpose: Verification["purpose"] = "email_sign_in") {
       const rows = yield* database
         .update(verification)
         .set({ revokedAt: DateTime.toDateUtc(yield* DateTime.now) })
         .where(
-          and(
-            eq(verification.purpose, "email_sign_in"),
-            eq(verification.subjectKey, subjectKey),
-            pending,
-          ),
+          and(eq(verification.purpose, purpose), eq(verification.subjectKey, subjectKey), pending),
         )
         .returning();
       return rows.map((row) => decode(row));
