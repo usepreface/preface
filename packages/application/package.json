@@ -51,7 +51,8 @@
     "@usepreface/database": "workspace:*",
     "@usepreface/emails": "workspace:*",
     "@usepreface/protocol": "workspace:*",
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "openid-client": "^6.8.8"
   },
   "devDependencies": {
     "@effect/platform-node": "catalog:",

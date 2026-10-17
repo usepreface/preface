@@ -8,11 +8,11 @@ coordinates business policy, transactions and audit without starting a server.
 
 Install workspace dependencies with `pnpm install`. Supply `DatabaseRepository`,
 `TransactionService`, completed `DatabaseMigration`, `TokenService`, `TokenCrypto`,
-`SecretCrypto`, `EmailJobs` and `AuthenticationLinks` to `Application.layer`. Supply platform crypto from
+`SecretCrypto`, `EmailJobs`, `GoogleIdentity` and `AuthenticationLinks` to `Application.layer`. Supply platform crypto from
 the Node runtime edge. The server's complete composition is in
 [its runtime module](../../apps/server/src/runtime.ts).
 
-`@usepreface/application/node` exports `NodeToken.layer`, adapting shared token
+`@usepreface/application/node` exports `NodeToken.layer` and `NodeGoogleIdentity.layer`, adapting shared token
 primitives while preserving Preface credential formats. Cryptographic operations
 belong to `@usepreface/crypto`; durable email intent belongs to `@usepreface/emails`.
 Application workflows require neither a delivery provider nor renderer. The server
@@ -111,7 +111,7 @@ fragment at `/auth/email/verify`; the backend does not render that page.
 
 `application.auth.session.resolve(token)` accepts a redacted credential and returns
 `SessionActor`. It freshly checks digest, revocation, absolute/idle expiry and user
-usability, usable authentication evidence and its current email source. Throttled activity writes cannot revive idle-expired sessions or extend
+usability, usable authentication evidence and its current email or linked-account/connection source. Throttled activity writes cannot revive idle-expired sessions or extend
 absolute expiry. Invalid credentials produce `AuthenticationError/UNAUTHENTICATED`;
 operational failures retain their type.
 
@@ -240,6 +240,36 @@ permissions. See [teams and profiles](../../architecture/identity-access/teams-p
 Opaque tokens use 32 random bytes and purpose-separated SHA-256 digests. Shared crypto
 owns secure randomness, constant-time verification, HMAC and encryption. Keep its two
 independent keys stable across replicas/restarts and back them up with the database.
+
+## Google identity
+
+Supply `GoogleIdentity` to `Application.layer`; the Node entry exports `NodeGoogleIdentity.layer`
+backed by `openid-client`. The adapter validates the code/PKCE/nonce exchange and signed identity
+against fixed Google endpoints. Tokens and provider credentials are not public results.
+
+`instance.authentication.google` exposes `get`, `save`, `test`, `activate` and `disable`.
+Save input comes from `SaveGoogleConnectionInput`: expected revision (zero for first save), client
+ID, optional redacted client secret and name. First save requires the secret; omission on update
+preserves it. A save creates a draft/new revision and invalidates prior flows/evidence. Complete
+the returned test authorization URL in a browser, then activate its tested revision. Mutations
+require current instance ownership and email evidence no older than five minutes.
+
+`auth.account.list(actor)` returns safe connection summaries. `startGoogle(actor, {})` starts
+explicit linking; `unlink(actor, accountId)` retains history and revokes Google evidence. Linking
+and unlinking require recent email proof. `auth.google.start({}, actor?)` is signed-out only;
+`callback(input, actor?)` is for the server's browser-bound transport. Callback results can contain
+an internal session token: unwrap only for cookie delivery. Unknown Google identities create no
+users or memberships. Provider email never merges accounts or replaces Preface email/profile.
+
+`auth.reauthentication.google(actor, {})` adds Google proof for the current user.
+`auth.reauthentication.email.request/resend/verify` uses existing email proof inputs and binds them
+to the current session. Success adds email evidence without a new session or expiry extension.
+`organization.authPolicy.methods/update` exposes effective availability and revision-checked
+`{ expectedRevision, googleEnabled }` updates. Only organization owners may update; email remains
+available and global Google configuration must be active to enable it.
+
+See [Google architecture](../../architecture/identity-access/google.md) for transactions,
+revocation, test behavior, safe errors and remaining enterprise SSO limits.
 
 ## Verification
 

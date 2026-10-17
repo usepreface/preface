@@ -19,7 +19,7 @@ The `organization` PostgreSQL schema contains its authority tables, plus invitat
 - `role_binding`: direct member grant, role, granting member, time and revocation.
   Separate partial indexes admit one active grant per member/role at each organization or team scope.
   Team grants additionally reference a same-organization direct team membership.
-- `auth_policy`: one policy per organization, positive revision, allowed local email
+- `auth_policy`: one policy per organization, positive revision, allowed email/Google
   methods, updating member and timestamps.
 
 Composite foreign keys include organization identity for roles, members, granting
@@ -36,7 +36,7 @@ schema-wide empty part, preserving inference for tables without explicit relatio
 ## Authorization and discovery
 
 `OrganizationAccess` is an internal application service. It checks a current usable
-session, enabled user, usable email evidence, active membership, organization state,
+session, enabled user, usable authentication evidence, active membership, organization state,
 current policy and active role bindings. Mutations check again after obtaining the
 organization lock. Roles and permissions are never cached in a session or accepted
 from request bodies. Handlers supply the cookie-authenticated actor.
@@ -48,7 +48,8 @@ organization authentication evidence produces `AUTHENTICATION_REQUIRED`.
 
 The default policy accepts email code and email link authentication. Bootstrap
 email-code evidence counts as email-code authentication. The policy is enforced on
-access; this phase exposes reading it, with no public policy editor or SSO fields.
+access; owners can additionally opt into Google through the revision-checked policy editor. Both email
+methods remain enabled. [Google identity](google.md) owns configuration and evidence semantics.
 
 `GET /api/v1/organizations` is membership discovery, not content authorization.
 It returns active memberships' organization summaries, ordered by UUIDv7 ID descending,
@@ -123,7 +124,7 @@ last-usable-owner invariant; this phase provides no account-disable endpoint.
 
 The shared HTTP contract provides create/list/detail/access/update/archive/restore,
 member list/suspend/reinstate/remove/leave, custom role CRUD, direct role bindings,
-owner grants/revocations/transfer and policy reading. Member and role lists are
+owner grants/revocations/transfer, policy reading and owner-controlled Google opt-in. Member and role lists are
 cursor-paginated; removed members/retired roles are explicitly opt-in.
 
 All endpoints use the existing session cookie. Mutations require the trusted Origin;
@@ -134,8 +135,8 @@ strings. Logs normalize parameterized routes rather than retaining tenant IDs.
 There is no public direct-member-creation endpoint. Organization creation admits
 its first member; [invitations](invitations.md) own additional admission and readmission.
 Authority tests can seed members through persistence fixtures; invitation tests
-exercise the actual admission workflow. [Teams](teams-profiles.md) use direct memberships without groups. SSO, custom
-policy editing, permanent deletion, organization content and dashboard integration
+exercise the actual admission workflow. [Teams](teams-profiles.md) use direct memberships without groups. SSO, required-provider
+policy enforcement, permanent deletion, organization content and dashboard integration
 are outside this implemented phase.
 
 ## Verification and source

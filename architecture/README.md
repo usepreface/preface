@@ -22,6 +22,8 @@ Executable schemas, migrations, source and tests settle disagreements with prose
   readmission, credential replacement and one-use acceptance.
 - [Teams and profiles](identity-access/teams-profiles.md): versioned metadata, direct team membership,
   scoped delegation and invitation assignments.
+- [Google identity](identity-access/google.md): operator configuration, explicit linking,
+  browser callbacks, source-bound evidence, organization opt-in and reauthentication.
 - [Sessions](identity-access/sessions.md): credential resolution, expiry, activity,
   cookie delivery and audited revocation.
 

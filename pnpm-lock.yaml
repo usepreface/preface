@@ -228,7 +228,7 @@ importers:
         version: 4.0.5
       klarity:
         specifier: 'catalog:'
-        version: 0.3.0(@commitlint/cli@21.2.3(@types/node@24.19.2)(conventional-commits-parser@7.1.3)(typescript@7.0.2))(@commitlint/config-conventional@21.2.3)(lefthook@2.2.2)(oxfmt@0.73.0)(oxlint@1.88.0)(publint@0.3.25)(tsdown@0.23.1(publint@0.3.25)(typescript@7.0.2))(turbo@2.11.8)(typescript@7.0.2)(vitest@5.0.5(@types/node@24.19.2)(vite@8.3.4(@types/node@24.19.2)(esbuild@0.25.12)(jiti@2.7.0)))
+        version: 0.3.0(@commitlint/cli@21.2.3(@types/node@24.19.2)(conventional-commits-parser@7.1.3)(typescript@7.0.2))(@commitlint/config-conventional@21.2.3)(lefthook@2.2.2)(oxfmt@0.73.0)(oxlint@1.88.0)(publint@0.3.25)(tsdown@0.23.1(publint@0.3.25)(typescript@7.0.2))(turbo@2.11.8)(typescript@7.0.2)(vitest@5.0.5(@types/node@24.19.2)(vite@8.3.4(@types/node@24.19.2)(jiti@2.7.0)))
       lefthook:
         specifier: 2.2.2
         version: 2.2.2
@@ -492,19 +492,22 @@ importers:
       effect:
         specifier: 'catalog:'
         version: 4.0.5
+      openid-client:
+        specifier: ^6.8.8
+        version: 6.8.8
     devDependencies:
       '@effect/platform-node':
         specifier: 'catalog:'
         version: 4.0.5(effect@4.0.5)(redis@6.3.0)
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.5(effect@4.0.5)(vitest@5.0.5(@types/node@24.19.2)(vite@8.3.4(@types/node@24.19.2)(esbuild@0.25.12)(jiti@2.7.0)))
+        version: 4.0.5(effect@4.0.5)(vitest@5.0.5(@types/node@24.19.2)(vite@8.3.4(@types/node@24.19.2)(jiti@2.7.0)))
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2
       klarity:
         specifier: 'catalog:'
-        version: 0.3.0(@commitlint/cli@21.2.3(@types/node@24.19.2)(conventional-commits-parser@7.1.3)(typescript@7.0.2))(@commitlint/config-conventional@21.2.3)(lefthook@2.2.2)(oxfmt@0.73.0)(oxlint@1.88.0)(publint@0.3.25)(tsdown@0.23.1(publint@0.3.25)(typescript@7.0.2))(turbo@2.11.8)(typescript@7.0.2)(vitest@5.0.5(@types/node@24.19.2)(vite@8.3.4(@types/node@24.19.2)(esbuild@0.25.12)(jiti@2.7.0)))
+        version: 0.3.0(@commitlint/cli@21.2.3(@types/node@24.19.2)(conventional-commits-parser@7.1.3)(typescript@7.0.2))(@commitlint/config-conventional@21.2.3)(lefthook@2.2.2)(oxfmt@0.73.0)(oxlint@1.88.0)(publint@0.3.25)(tsdown@0.23.1(publint@0.3.25)(typescript@7.0.2))(turbo@2.11.8)(typescript@7.0.2)(vitest@5.0.5(@types/node@24.19.2)(vite@8.3.4(@types/node@24.19.2)(jiti@2.7.0)))
       publint:
         specifier: 'catalog:'
         version: 0.3.25
@@ -516,7 +519,7 @@ importers:
         version: 7.0.2
       vitest:
         specifier: 'catalog:'
-        version: 5.0.5(@types/node@24.19.2)(vite@8.3.4(@types/node@24.19.2)(esbuild@0.25.12)(jiti@2.7.0))
+        version: 5.0.5(@types/node@24.19.2)(vite@8.3.4(@types/node@24.19.2)(jiti@2.7.0))
 
   packages/crypto:
     dependencies:
@@ -3098,6 +3101,9 @@ packages:
     resolution: {integrity: sha512-AC/7JofJvZGrrneWNaEnJeOLUx+JlGt7tNa0wZiRPT4MY1wmfKjt2+6O2p2uz2+skll8OZZmJMNqeke7kKbNgQ==}
     hasBin: true
 
+  jose@6.2.12:
+    resolution: {integrity: sha512-9NiFmJEex0sy2Dk58j2UGBSHgUs2ypF9eZSu4L6vjOX3Dp96Sw1F3uL+H+D1sx02jZZdzUT0HgvCy59CuvXcWw==}
+
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
 
@@ -3431,6 +3437,9 @@ packages:
     resolution: {integrity: sha512-rnQn9Rzh8RAwcp42MVsIvxbsv6YZ2a2/av+uyJ/LPU1+2QSlrRgFsWWZTKenyRUqkIl8urOI0c4+CEcmFdsvQw==}
     engines: {node: '>=20.0.0'}
 
+  oauth4webapi@3.8.8:
+    resolution: {integrity: sha512-8N28E+a/oxfXWBgOMt+ZP/JUf/XR+IFbvkAEPP3gznXOMv9BpAAwiIj0TFNz3tGTPc0ZQ8zmWBNgN1nAys0gng==}
+
   obug@3.0.0:
     resolution: {integrity: sha512-5vvB5+W7ePv+p3uqxi+RcW1XAzLW0/hxt3/4X4Lc4qHudzOhmBiBwOY6DRob4WnanAEGvNcLjF+KNOufrUoEQw==}
     engines: {node: '>=12.20.0'}
@@ -3443,6 +3452,9 @@ packages:
 
   oniguruma-to-es@4.3.6:
     resolution: {integrity: sha512-csuQ9x3Yr0cEIs/Zgx/OEt9iBw9vqIunAPQkx19R/fiMq2oGVTgcMqO/V3Ybqefr1TBvosI6jU539ksaBULJyA==}
+
+  openid-client@6.8.8:
+    resolution: {integrity: sha512-ZsucJA5Ad04Uv7YN4ql+s4GXNmb9uAYQwyJTsJx7CH/MX3JZioLE2pVKi1SC+YrbSLA4Px3Gi30dMjgOZtb6pA==}
 
   oxfmt@0.73.0:
     resolution: {integrity: sha512-Ke4xbpuzqIBP4bkd48q815RhqWNJqOBzxVA9199M4qcF0y0LtpUv7UTg1dJ5ea6jw0RBUDZvX3qOUMNmmxfxbw==}
@@ -4612,6 +4624,11 @@ snapshots:
       effect: 4.0.5
       vitest: 5.0.5(@types/node@24.19.2)(vite@8.3.4(@types/node@24.19.2)(esbuild@0.25.12)(jiti@2.7.0))
 
+  '@effect/vitest@4.0.5(effect@4.0.5)(vitest@5.0.5(@types/node@24.19.2)(vite@8.3.4(@types/node@24.19.2)(jiti@2.7.0)))':
+    dependencies:
+      effect: 4.0.5
+      vitest: 5.0.5(@types/node@24.19.2)(vite@8.3.4(@types/node@24.19.2)(jiti@2.7.0))
+
   '@electric-sql/pglite@0.5.10': {}
 
   '@esbuild/aix-ppc64@0.25.12':
@@ -5652,6 +5669,15 @@ snapshots:
     optionalDependencies:
       vite: 8.3.4(@types/node@24.19.2)(esbuild@0.25.12)(jiti@2.7.0)
 
+  '@vitest/mocker@5.0.5(vite@8.3.4(@types/node@24.19.2)(jiti@2.7.0))':
+    dependencies:
+      '@jridgewell/trace-mapping': 0.3.31
+      '@vitest/spy': 5.0.5
+      estree-walker: 3.0.3
+      magic-string: 1.4.3
+    optionalDependencies:
+      vite: 8.3.4(@types/node@24.19.2)(jiti@2.7.0)
+
   '@vitest/spy@5.0.5': {}
 
   '@yuku-core/binding-android-arm64@0.19.0':
@@ -6116,6 +6142,8 @@ snapshots:
 
   jiti@2.7.0: {}
 
+  jose@6.2.12: {}
+
   js-tokens@4.0.0: {}
 
   js-yaml@4.3.2:
@@ -6144,6 +6172,19 @@ snapshots:
       turbo: 2.11.8
       typescript: 7.0.2
       vitest: 5.0.5(@types/node@24.19.2)(vite@8.3.4(@types/node@24.19.2)(esbuild@0.25.12)(jiti@2.7.0))
+
+  klarity@0.3.0(@commitlint/cli@21.2.3(@types/node@24.19.2)(conventional-commits-parser@7.1.3)(typescript@7.0.2))(@commitlint/config-conventional@21.2.3)(lefthook@2.2.2)(oxfmt@0.73.0)(oxlint@1.88.0)(publint@0.3.25)(tsdown@0.23.1(publint@0.3.25)(typescript@7.0.2))(turbo@2.11.8)(typescript@7.0.2)(vitest@5.0.5(@types/node@24.19.2)(vite@8.3.4(@types/node@24.19.2)(jiti@2.7.0))):
+    optionalDependencies:
+      '@commitlint/cli': 21.2.3(@types/node@24.19.2)(conventional-commits-parser@7.1.3)(typescript@7.0.2)
+      '@commitlint/config-conventional': 21.2.3
+      lefthook: 2.2.2
+      oxfmt: 0.73.0
+      oxlint: 1.88.0
+      publint: 0.3.25
+      tsdown: 0.23.1(publint@0.3.25)(typescript@7.0.2)
+      turbo: 2.11.8
+      typescript: 7.0.2
+      vitest: 5.0.5(@types/node@24.19.2)(vite@8.3.4(@types/node@24.19.2)(jiti@2.7.0))
 
   leac@0.6.0: {}
 
@@ -6363,6 +6404,8 @@ snapshots:
 
   nodemailer@10.1.2: {}
 
+  oauth4webapi@3.8.8: {}
+
   obug@3.0.0: {}
 
   ocache@0.3.0: {}
@@ -6374,6 +6417,11 @@ snapshots:
       oniguruma-parser: 0.12.2
       regex: 6.1.0
       regex-recursion: 6.0.2
+
+  openid-client@6.8.8:
+    dependencies:
+      jose: 6.2.12
+      oauth4webapi: 3.8.8
 
   oxfmt@0.73.0:
     dependencies:
@@ -6952,6 +7000,18 @@ snapshots:
       fsevents: 2.3.3
       jiti: 2.7.0
 
+  vite@8.3.4(@types/node@24.19.2)(jiti@2.7.0):
+    dependencies:
+      lightningcss: 1.33.0
+      picomatch: 4.0.7
+      postcss: 8.5.30
+      rolldown: 1.2.14
+      tinyglobby: 0.2.17
+    optionalDependencies:
+      '@types/node': 24.19.2
+      fsevents: 2.3.3
+      jiti: 2.7.0
+
   vitefu@1.1.3(vite@8.3.4(@types/node@24.19.2)(esbuild@0.25.12)(jiti@2.7.0)):
     optionalDependencies:
       vite: 8.3.4(@types/node@24.19.2)(esbuild@0.25.12)(jiti@2.7.0)
@@ -6971,6 +7031,27 @@ snapshots:
       tinyexec: 1.3.1
       tinyglobby: 0.2.17
       vite: 8.3.4(@types/node@24.19.2)(esbuild@0.25.12)(jiti@2.7.0)
+      why-is-node-running: 3.2.1
+    optionalDependencies:
+      '@types/node': 24.19.2
+    transitivePeerDependencies:
+      - msw
+
+  vitest@5.0.5(@types/node@24.19.2)(vite@8.3.4(@types/node@24.19.2)(jiti@2.7.0)):
+    dependencies:
+      '@types/chai': 5.2.3
+      '@vitest/mocker': 5.0.5(vite@8.3.4(@types/node@24.19.2)(jiti@2.7.0))
+      chai: 6.3.0
+      es-module-lexer: 2.3.2
+      expect-type: 1.4.0
+      magic-string: 1.4.3
+      obug: 3.0.0
+      picomatch: 4.0.7
+      std-env: 4.3.0
+      tinybench: 6.2.2
+      tinyexec: 1.3.1
+      tinyglobby: 0.2.17
+      vite: 8.3.4(@types/node@24.19.2)(jiti@2.7.0)
       why-is-node-running: 3.2.1
     optionalDependencies:
       '@types/node': 24.19.2

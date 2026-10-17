@@ -12,8 +12,12 @@ import { RequestLimits } from "#/http/middleware/limits";
 import { makeRequestPolicy } from "#/http/middleware/request-policy";
 import { SessionAuthenticationLive } from "#/http/middleware/session-authentication";
 import { SetupProtectionLive } from "#/http/middleware/setup-protection";
+import { AccountsRoutes } from "#/http/routes/accounts";
+import { AuthenticationPolicyRoutes } from "#/http/routes/authentication-policy";
 import { EmailSignInRoutes } from "#/http/routes/email-sign-in";
+import { GoogleRoutes } from "#/http/routes/google";
 import { HealthRoutes } from "#/http/routes/health";
+import { IdentityConnectionsRoutes } from "#/http/routes/identity-connections";
 import { InstanceSetupRoutes } from "#/http/routes/instance-setup";
 import { InvitationsRoutes } from "#/http/routes/invitations";
 import { OrganizationInvitationsRoutes } from "#/http/routes/organization-invitations";
@@ -23,6 +27,7 @@ import { OrganizationRoleBindingsRoutes } from "#/http/routes/organization-role-
 import { OrganizationRolesRoutes } from "#/http/routes/organization-roles";
 import { OrganizationsRoutes, InstanceCapabilitiesRoutes } from "#/http/routes/organizations";
 import { ProfileRoutes } from "#/http/routes/profile";
+import { ReauthenticationRoutes } from "#/http/routes/reauthentication";
 import { SessionRoutes } from "#/http/routes/session";
 import { SessionsRoutes } from "#/http/routes/sessions";
 import { TeamsRoutes } from "#/http/routes/teams";
@@ -30,6 +35,11 @@ import { TeamsRoutes } from "#/http/routes/teams";
 const ProductRoutes = HttpApiBuilder.layer(PrefaceApi, { openapiPath: "/api/openapi.json" }).pipe(
   Layer.provide(
     Layer.mergeAll(
+      GoogleRoutes,
+      IdentityConnectionsRoutes,
+      AccountsRoutes,
+      ReauthenticationRoutes,
+      AuthenticationPolicyRoutes,
       TeamsRoutes,
       ProfileRoutes,
       InstanceSetupRoutes,

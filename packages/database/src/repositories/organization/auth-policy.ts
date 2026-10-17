@@ -2,7 +2,7 @@ import { Context, DateTime, Effect, Layer, Schema } from "effect";
 
 import type { OrganizationId, OrganizationMemberId } from "@usepreface/protocol";
 import { OrganizationAuthPolicy } from "@usepreface/protocol/model";
-import { eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 import { mapToDatabaseError } from "#/core/errors";
 import { Database } from "#/core/layer";
@@ -40,7 +40,32 @@ const makeOrganizationAuthPolicyRepository = Effect.gen(function* () {
     },
     mapToDatabaseError,
   );
-  return { createDefault, findByOrganizationId } as const;
+  const updateGoogle = Effect.fn("OrganizationAuthPolicyRepository.updateGoogle")(function* (
+    organizationId: OrganizationId,
+    memberId: OrganizationMemberId,
+    expectedRevision: number,
+    googleEnabled: boolean,
+  ) {
+    const [row] = yield* database
+      .update(organizationAuthPolicy)
+      .set({
+        allowedMethods: googleEnabled
+          ? ["email_code", "email_link", "google"]
+          : ["email_code", "email_link"],
+        revision: sql`${organizationAuthPolicy.revision}+1`,
+        updatedByMemberId: memberId,
+        updatedAt: DateTime.toDateUtc(yield* DateTime.now),
+      })
+      .where(
+        and(
+          eq(organizationAuthPolicy.organizationId, organizationId),
+          eq(organizationAuthPolicy.revision, expectedRevision),
+        ),
+      )
+      .returning();
+    return row === undefined ? undefined : decode(row);
+  }, mapToDatabaseError);
+  return { createDefault, findByOrganizationId, updateGoogle } as const;
 });
 export class OrganizationAuthPolicyRepository extends Context.Service<
   OrganizationAuthPolicyRepository,

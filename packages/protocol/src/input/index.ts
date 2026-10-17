@@ -29,3 +29,11 @@ export {
 } from "#/input/organization/organization";
 
 export { UpdateProfileInput } from "#/input/auth/profile";
+
+export {
+  SaveGoogleConnectionInput,
+  GoogleStartInput,
+  UpdateGooglePolicyInput,
+} from "#/input/auth/identity";
+
+export { GoogleCallbackInput } from "#/input/auth/identity";

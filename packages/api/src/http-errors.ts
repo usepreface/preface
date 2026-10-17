@@ -2,6 +2,8 @@ import { Record, Schema } from "effect";
 import { HttpApiSchema } from "effect/http-api";
 
 import {
+  IdentityError,
+  AuthenticationError,
   TeamError,
   ProfileError,
   BootstrapError,
@@ -53,3 +55,12 @@ export const profileErrors = Record.keys(ProfileError.statuses).map((code) =>
     HttpApiSchema.status(ProfileError.statuses[code]),
   ),
 );
+
+export const identityErrors = [
+  AuthenticationError.pipe(HttpApiSchema.status(401)),
+  ...Record.keys(IdentityError.statuses).map((code) =>
+    Schema.Struct({ ...IdentityError.fields, code: Schema.Literal(code) }).pipe(
+      HttpApiSchema.status(IdentityError.statuses[code]),
+    ),
+  ),
+];

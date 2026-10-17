@@ -2,6 +2,7 @@ import { defineRelationsPart } from "drizzle-orm";
 
 import { auditRelations } from "#/relations/audit";
 import { authRelations } from "#/relations/auth";
+import { identityRelations } from "#/relations/identity";
 import { instanceRelations } from "#/relations/instance";
 import { organizationRelations } from "#/relations/organization";
 import { teamRelations } from "#/relations/team";
@@ -16,4 +17,5 @@ export const relations = {
   ...organizationRelations,
   ...teamRelations,
   ...auditRelations,
+  ...identityRelations,
 };

@@ -17,6 +17,9 @@ write schemas; they do not authorize business actors or deliver HTTP responses.
 | `auth.user_email`                    | Active email ownership, primary designation, verification and login eligibility             |
 | `auth.verification`                  | Browser-bound single-use code/link proofs and durable attempt budget                        |
 | `auth.session_authentication`        | Session authentication method, email source, assurance and expiry                           |
+| `auth.identity_connection`           | Installation Google trust configuration, encrypted client secret and tested revision        |
+| `auth.account`                       | Historical explicit provider subject/user bindings and unlink state                         |
+| `auth.auth_flow`                     | Browser-bound external transactions, claim/terminal state and encrypted PKCE context        |
 | `auth.session`                       | Credential digest, activity, absolute expiry and revocation                                 |
 | `organization.organization`          | Versioned metadata, unique slug, creator attribution, archive state and lifecycle           |
 | `organization.member`                | Stable user/organization relationship, suspension and removal                               |
@@ -84,7 +87,8 @@ acquisition and listener startup. Migration files ship as runtime assets and res
 relative to the source or built module. The development history is one regenerated initial
 baseline containing metadata, teams and scoped invitation assignments. Databases using
 any deleted development history need an explicit reset; no upgrade/backfill is supplied.
-Startup never resets a database.
+Startup never resets a database. The Google migration adds external identities, source-specific
+evidence and email reauthentication to that baseline.
 
 Known SQL/Drizzle errors become `DatabaseError` with structured reasons and retryability.
 Internal causes may contain SQL or parameters; public error encoding and routine

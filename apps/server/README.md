@@ -39,7 +39,7 @@ verification with instance name, owner name and email, then submit the emailed e
 code with the returned challenge ID. Only verified completion creates the owner/session cookie.
 It creates no organization. Email code/link sign-in and session management are available
 through the API, together with organization creation and administration.
-Invitations provide verified email admission. Direct teams, scoped roles and profile editing are available. Backend-connected UI, image uploads and SSO remain pending.
+Invitations provide verified email admission. Direct teams, scoped roles and profile editing are available. Backend-connected UI, image uploads and enterprise SSO remain pending. Google identity and organization opt-in are available through the API.
 Invitation links reserve `/invitations/accept` for the future client; codes work on internal hosts.
 Magic links reserve `/auth/email/verify` for the future client. For local/internal hosts,
 enter the emailed code in the browser that requested it.
@@ -164,6 +164,38 @@ lifecycle operations and transactional audit. Instance owners create organizatio
 organization membership authorizes access. Scalar documents the complete contract.
 Parameterized request logs retain the route template rather than tenant/resource IDs.
 No additional environment variables or provider dependencies are needed.
+
+## Configure Google sign-in
+
+An instance owner configures Google through the authenticated API; no Google environment variables
+are required. Use the existing encryption key and `PUBLIC_URL`. Register exactly
+`<PUBLIC_URL>/api/v1/auth/google/callback` as the Google OAuth web client redirect URI.
+
+Save client ID/secret at `PUT /api/v1/instance/authentication/google` with `expectedRevision: 0`
+for first configuration. The API returns safe draft settings. Start a test at its `/test` action,
+open the authorization URL in that browser, then call `/activate` with the tested revision.
+Each action requires current instance ownership and recent email proof. The test never switches
+or links the operator's account. Secret updates invalidate Google evidence and require retesting.
+
+Organization owners opt in with `PATCH /api/v1/organizations/:organizationId/auth-policy` and
+`{ expectedRevision, googleEnabled: true }`. Members explicitly connect Google through
+`POST /api/v1/users/me/accounts/google/start`; ordinary Google login starts at
+`POST /api/v1/auth/google/start`. Every start returns an authorization URL and sets a separate
+HttpOnly browser-flow cookie. Follow the URL in that same browser. The callback sets any new
+session only by cookie and returns 303 to `/api/docs`, the current supported completion path.
+Google alone cannot create an account or grant organization membership.
+
+Signed-in users can request an email proof at `/api/v1/auth/reauthentication/email/request`,
+replace it at `/resend`, and verify code/link at `/verify`. The temporary cookie and current
+session are both required. Verification adds email evidence to that session. This permits
+Google-authenticated members to access an email-only organization and approve sensitive account
+changes. Ordinary signed-out email sign-in remains separate.
+
+Disabling the instance connection invalidates Google evidence everywhere; unlinking an account
+invalidates its evidence. Independent email proof remains usable. Maintenance scrubs expired
+external-flow context and removes old flows after startup, alongside existing email proofs.
+Enterprise SSO enforcement, Google Workspace domain admission and Google-side logout/deprovisioning
+notifications are not implemented. See [Google architecture](../../architecture/identity-access/google.md).
 
 ## Verification
 

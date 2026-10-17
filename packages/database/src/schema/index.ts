@@ -28,3 +28,9 @@ export {
   organizationRoleBinding,
   organizationAuthPolicy,
 } from "#/schema/organization/index";
+
+export { identityConnection } from "#/schema/auth/identity-connection";
+
+export { account } from "#/schema/auth/account";
+
+export { authFlow } from "#/schema/auth/auth-flow";

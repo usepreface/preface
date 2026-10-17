@@ -361,3 +361,16 @@ against the same database. `test:built` checks built imports and migration asset
 `Schema.TaggedErrorClass` API with `Schema.TaggedError` in Drizzle's ESM and CommonJS runtime
 error definitions. It fixes importing the Effect drivers with Effect 4.0.5. ORM and Kit
 stay on matching exact versions; review and remove the patch after an upstream fix.
+
+## External identities
+
+`auth.identityConnection`, `auth.account` and `auth.authFlow` extend the same repository aggregate.
+Connections persist versioned configuration/encrypted credentials and tested revisions. Account
+identity tuples remain unique after unlink. Flow claiming prevents duplicate external exchanges;
+consume/revoke clear temporary recoverable context. Cleanup scrubs expired context and deletes
+old flow rows in bounded batches. Connection row locks require an ambient transaction.
+
+Session evidence joins its current email source or linked account/active matching connection
+revision. Source-specific nullability and composite FKs keep Google evidence tied to its user.
+The Google migration extends the existing baseline; generation never changes a developer DB.
+Repositories provide persistence/conditional writes; application owns authority and provider calls.

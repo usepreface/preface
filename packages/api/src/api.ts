@@ -1,6 +1,10 @@
 import { HttpApi, OpenApi } from "effect/http-api";
 
+import { AccountsApi } from "#/groups/accounts";
+import { AuthenticationPolicyApi } from "#/groups/authentication-policy";
 import { EmailSignInApi } from "#/groups/email-sign-in";
+import { GoogleApi } from "#/groups/google";
+import { IdentityConnectionsApi } from "#/groups/identity-connections";
 import { InstanceCapabilitiesApi } from "#/groups/instance-capabilities";
 import { InstanceSetupApi } from "#/groups/instance-setup";
 import { InvitationsApi } from "#/groups/invitations";
@@ -11,12 +15,18 @@ import { OrganizationRoleBindingsApi } from "#/groups/organization-role-bindings
 import { OrganizationRolesApi } from "#/groups/organization-roles";
 import { OrganizationsApi } from "#/groups/organizations";
 import { ProfileApi } from "#/groups/profile";
+import { ReauthenticationApi } from "#/groups/reauthentication";
 import { SessionApi } from "#/groups/session";
 import { SessionsApi } from "#/groups/sessions";
 import { TeamsApi } from "#/groups/teams";
 
 export class PrefaceApi extends HttpApi.make("PrefaceApi")
   .add(
+    GoogleApi,
+    IdentityConnectionsApi,
+    AccountsApi,
+    ReauthenticationApi,
+    AuthenticationPolicyApi,
     TeamsApi,
     ProfileApi,
     InstanceSetupApi,

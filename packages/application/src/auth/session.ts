@@ -58,6 +58,7 @@ export const makeSessionApplication = Effect.gen(function* () {
           if (revoked === undefined) return;
 
           yield* repository.auth.sessionAuthentication.revokeBySessionId(revoked.id, actor.user.id);
+          yield* repository.auth.authFlow.revokeBySession(revoked.id);
           yield* repository.audit.event.append({
             actorKind: "user",
             actorUserId: actor.user.id,
@@ -102,6 +103,7 @@ export const makeSessionApplication = Effect.gen(function* () {
     yield* transaction.run(
       Effect.gen(function* () {
         yield* repository.auth.user.lockById(actor.user.id);
+        yield* repository.auth.authFlow.revokeByUser(actor.user.id);
         const sessions = yield* repository.auth.session.revokeAllByUserId(actor.user.id);
         for (const session of sessions) {
           yield* repository.auth.sessionAuthentication.revokeBySessionId(session.id, actor.user.id);

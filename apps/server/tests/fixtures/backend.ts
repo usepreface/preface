@@ -2,7 +2,7 @@ import { NodeServices } from "@effect/platform-node";
 import { ConfigProvider, Effect, Layer } from "effect";
 
 import { Application, AuthenticationLinks } from "@usepreface/application";
-import { NodeToken } from "@usepreface/application/node";
+import { NodeToken, NodeGoogleIdentity } from "@usepreface/application/node";
 import { NodeSecretCrypto, NodeTokenCrypto } from "@usepreface/crypto/node";
 import { DatabaseRepository } from "@usepreface/database";
 import { TestDatabase } from "@usepreface/database/testing";
@@ -25,6 +25,7 @@ export const TestConfigLayer = ServerConfig.layer.pipe(
 const persistence = DatabaseRepository.layer.pipe(Layer.provideMerge(database));
 export const BackendTestLayer = Layer.mergeAll(
   Application.layer.pipe(
+    Layer.provide(NodeGoogleIdentity.layer),
     Layer.provide(
       Layer.succeed(AuthenticationLinks, { publicOrigin: "https://preface.example.test" }),
     ),

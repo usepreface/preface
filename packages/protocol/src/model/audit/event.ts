@@ -9,6 +9,7 @@ import {
 import { AuditEventId } from "#/identifiers/audit";
 import { VerificationId, UserEmailId } from "#/identifiers/auth";
 import { BootstrapChallengeId } from "#/identifiers/bootstrap";
+import { IdentityConnectionId, AccountId, AuthFlowId } from "#/identifiers/identity";
 import { InstallationId, InstanceOwnerId } from "#/identifiers/instance";
 import {
   TeamId,
@@ -217,7 +218,73 @@ const profileFields = {
     changedFields: Schema.Array(Schema.Literals(["name", "title", "bio"])),
   }),
 };
+const connectionFields = {
+  actorKind: Schema.Literal("user"),
+  actorUserId: UserId,
+  eventType: Schema.Literals([
+    "auth.connection_configured",
+    "auth.connection_tested",
+    "auth.connection_activated",
+    "auth.connection_disabled",
+  ]),
+  targetType: Schema.Literal("identity_connection"),
+  targetId: IdentityConnectionId,
+  metadata: Schema.Struct({ revision: Schema.Int }),
+};
+const accountFields = {
+  actorKind: Schema.Literal("user"),
+  actorUserId: UserId,
+  eventType: Schema.Literals(["auth.account_linked", "auth.account_unlinked"]),
+  targetType: Schema.Literal("account"),
+  targetId: AccountId,
+  metadata: Schema.Struct({ connectionId: IdentityConnectionId }),
+};
+const flowFields = {
+  ...actorFields,
+  eventType: Schema.Literals(["auth.external_flow_started", "auth.external_flow_failed"]),
+  targetType: Schema.Literal("auth_flow"),
+  targetId: AuthFlowId,
+  metadata: Schema.Struct({
+    intent: Schema.Literals(["sign_in", "link", "reauthenticate", "test"]),
+  }),
+};
+const googleAuthenticatedFields = {
+  actorKind: Schema.Literal("user"),
+  actorUserId: UserId,
+  eventType: Schema.Literal("auth.session_authenticated"),
+  targetType: Schema.Literal("session"),
+  targetId: SessionId,
+  metadata: Schema.Struct({
+    method: Schema.Literal("google"),
+    accountId: AccountId,
+    connectionRevision: Schema.Int,
+  }),
+};
+const reauthenticationFields = {
+  actorKind: Schema.Literal("user"),
+  actorUserId: UserId,
+  eventType: Schema.Literals([
+    "auth.email_reauthentication_requested",
+    "auth.email_reauthentication_failed",
+  ]),
+  targetType: Schema.Literal("verification"),
+  targetId: VerificationId,
+  metadata: Schema.Struct({ attempts: Schema.Natural }),
+};
+const policyFields = {
+  ...organizationActor,
+  eventType: Schema.Literal("organization.auth_policy_updated"),
+  targetType: Schema.Literal("organization"),
+  targetId: OrganizationId,
+  metadata: Schema.Struct({ revision: Schema.Int, googleEnabled: Schema.Boolean }),
+};
 export const RecordAuditEvent = Schema.Union([
+  Schema.Struct(connectionFields),
+  Schema.Struct(accountFields),
+  Schema.Struct(flowFields),
+  Schema.Struct(googleAuthenticatedFields),
+  Schema.Struct(reauthenticationFields),
+  Schema.Struct(policyFields),
   Schema.Struct(profileFields),
   Schema.Struct(teamFields),
   Schema.Struct(teamMemberFields),
@@ -246,6 +313,12 @@ const storedFields = {
 };
 const organizationStoredFields = { id: AuditEventId, occurredAt: Schema.DateTimeUtcFromDate };
 export const AuditEvent = Schema.Union([
+  Schema.Struct({ ...connectionFields, ...storedFields }),
+  Schema.Struct({ ...accountFields, ...storedFields }),
+  Schema.Struct({ ...flowFields, ...storedFields }),
+  Schema.Struct({ ...googleAuthenticatedFields, ...storedFields }),
+  Schema.Struct({ ...reauthenticationFields, ...storedFields }),
+  Schema.Struct({ ...policyFields, ...organizationStoredFields }),
   Schema.Struct({ ...profileFields, ...storedFields }),
   Schema.Struct({ ...teamFields, ...organizationStoredFields }),
   Schema.Struct({ ...teamMemberFields, ...organizationStoredFields }),

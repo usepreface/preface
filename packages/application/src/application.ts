@@ -1,8 +1,15 @@
 import { Context, Effect, Layer } from "effect";
 
-import { DatabaseMigration } from "@usepreface/database";
+import { DatabaseMigration, DatabaseRepository } from "@usepreface/database";
+import type { SessionActor } from "@usepreface/protocol/dto";
+import type { GoogleStartInput } from "@usepreface/protocol/input";
 
+import { makeAccountApplication } from "#/auth/account";
+import { makeEmailReauthenticationApplication } from "#/auth/email-reauthentication";
 import { makeEmailSignInApplication } from "#/auth/email-sign-in";
+import { makeGoogleFlowCallback } from "#/auth/google/callback";
+import { makeGoogleConnectionApplication } from "#/auth/google/connection";
+import { makeGoogleFlowStart } from "#/auth/google/start";
 import { makeSessionApplication } from "#/auth/session";
 import { makeBootstrapApplication } from "#/instance/bootstrap";
 import { OrganizationAccess } from "#/organization/access";
@@ -17,9 +24,44 @@ const makeApplication = Effect.gen(function* () {
   const emailSignIn = yield* makeEmailSignInApplication;
   const session = yield* makeSessionApplication;
 
+  const start = yield* makeGoogleFlowStart;
+  const connections = yield* makeGoogleConnectionApplication;
   return {
-    instance: { bootstrap, capabilities: organizations.capabilities },
-    auth: { session, emailSignIn, profile: yield* makeProfileApplication },
+    instance: {
+      bootstrap,
+      capabilities: organizations.capabilities,
+      authentication: {
+        google: {
+          ...connections,
+          test: (actor: SessionActor, expectedRevision: number) =>
+            start("test", actor, {}, expectedRevision),
+        },
+      },
+    },
+    auth: {
+      session,
+      emailSignIn,
+      profile: yield* makeProfileApplication,
+      account: {
+        ...(yield* makeAccountApplication),
+        startGoogle: (actor: SessionActor, input: GoogleStartInput = {}) =>
+          start("link", actor, input),
+      },
+      reauthentication: {
+        email: yield* makeEmailReauthenticationApplication,
+        google: (actor: SessionActor, input: GoogleStartInput = {}) =>
+          start("reauthenticate", actor, input),
+      },
+      google: {
+        start: (input: GoogleStartInput = {}, actor?: SessionActor) =>
+          start("sign_in", actor, input),
+        callback: yield* makeGoogleFlowCallback,
+      },
+      methods: Effect.fn("Application.auth.methods")(function* () {
+        const connection = yield* (yield* DatabaseRepository).auth.identityConnection.findGoogle();
+        return { email: true as const, google: connection?.status === "active" };
+      }),
+    },
     organization: organizations.organization,
   } as const;
 });

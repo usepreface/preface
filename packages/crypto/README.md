@@ -50,3 +50,9 @@ pnpm --filter @usepreface/crypto lint
 pnpm --filter @usepreface/crypto test
 pnpm --filter @usepreface/crypto build
 ```
+
+Google flows add separate purposes for state/browser/nonce digests, encrypted connection
+credentials and temporary PKCE context. `TokenCrypto.pkceChallenge(verifier)` returns the standard
+S256 base64url challenge using platform crypto. Email reauthentication has independent browser,
+link, challenge-code and session-subject purposes. Application envelopes bind recoverable
+credentials to connection/revision or flow identity; this package does not decide account policy.

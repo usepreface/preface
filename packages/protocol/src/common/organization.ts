@@ -31,7 +31,7 @@ export const OrganizationPermissions = Schema.Array(OrganizationPermission).chec
   ),
 );
 export const OrganizationRoleKind = Schema.Literals(["builtin", "custom"]);
-export const OrganizationLoginMethod = Schema.Literals(["email_code", "email_link"]);
+export const OrganizationLoginMethod = Schema.Literals(["email_code", "email_link", "google"]);
 export type OrganizationLoginMethod = typeof OrganizationLoginMethod.Type;
 
 export const TeamPermission = Schema.Literals([

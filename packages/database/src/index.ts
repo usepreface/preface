@@ -41,3 +41,9 @@ export {
 export { InvitationRepository } from "#/repositories/organization/invitation";
 
 export { TeamRepository } from "#/repositories/organization/team";
+
+export { IdentityConnectionRepository } from "#/repositories/auth/identity-connection";
+
+export { AccountRepository } from "#/repositories/auth/account";
+
+export { AuthFlowRepository } from "#/repositories/auth/auth-flow";

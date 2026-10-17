@@ -31,7 +31,7 @@ export const organizationAuthPolicy = organizationSchema.table(
     check("auth_policy_revision_check", sql`${table.revision} > 0`),
     check(
       "auth_policy_methods_check",
-      sql`jsonb_typeof(${table.allowedMethods}) = 'array' and jsonb_array_length(${table.allowedMethods}) > 0 and ${table.allowedMethods} <@ '["email_code","email_link"]'::jsonb`,
+      sql`jsonb_typeof(${table.allowedMethods}) = 'array' and jsonb_array_length(${table.allowedMethods}) > 0 and ${table.allowedMethods} <@ '["email_code","email_link","google"]'::jsonb`,
     ),
   ],
 );

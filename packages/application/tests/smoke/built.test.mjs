@@ -12,7 +12,7 @@ import { RequestBootstrapVerificationInput, SessionActor } from "@usepreface/pro
 import { EmailPayload } from "@usepreface/protocol/model";
 
 import { Application, AuthenticationLinks } from "../../dist/index.js";
-import { NodeToken } from "../../dist/node/index.js";
+import { NodeToken, NodeGoogleIdentity } from "../../dist/node/index.js";
 
 test("built application completes and revokes setup using packaged repositories and migrations", async () => {
   const persistence = DatabaseRepository.layer.pipe(Layer.provideMerge(TestDatabase.layer));
@@ -32,6 +32,7 @@ test("built application completes and revokes setup using packaged repositories 
     ),
   );
   const application = Application.layer.pipe(
+    Layer.provide(NodeGoogleIdentity.layer),
     Layer.provide(
       Layer.succeed(AuthenticationLinks, { publicOrigin: "https://preface.example.test" }),
     ),

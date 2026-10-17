@@ -37,6 +37,11 @@ export type OrganizationInvitationEmailVariables = typeof OrganizationInvitation
 // Storage contracts only: rendering and subject selection belong to the email package.
 export const EmailPayload = Schema.Union([
   Schema.Struct({
+    type: Schema.Literal("email-reauthentication"),
+    to: UserEmail,
+    variables: SignInEmailVariables,
+  }),
+  Schema.Struct({
     type: Schema.Literal("invitation-verification"),
     to: UserEmail,
     variables: SignInEmailVariables,

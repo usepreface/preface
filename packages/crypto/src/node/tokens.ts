@@ -32,6 +32,12 @@ export const NodeTokenCrypto = {
           ).pipe(Effect.mapError(() => new CryptoError({ operation: "random" })));
           return Redacted.make(code.join(""));
         }),
+        pkceChallenge: Effect.fn("TokenCrypto.pkceChallenge")(function* (verifier) {
+          const digest = yield* crypto
+            .digest("SHA-256", new TextEncoder().encode(Redacted.value(verifier)))
+            .pipe(Effect.mapError(() => new CryptoError({ operation: "digest" })));
+          return Buffer.from(digest).toString("base64url");
+        }),
         digestToken,
         verifyToken: Effect.fn("TokenCrypto.verifyToken")(function* (input) {
           const actual = Buffer.from(yield* digestToken(input), "utf8");

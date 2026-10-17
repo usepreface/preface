@@ -12,6 +12,9 @@ export class TokenCrypto extends Context.Service<
   TokenCrypto,
   {
     readonly randomToken: () => Effect.Effect<Redacted.Redacted<string>, CryptoError>;
+    readonly pkceChallenge: (
+      verifier: Redacted.Redacted<string>,
+    ) => Effect.Effect<string, CryptoError>;
     readonly randomCode: () => Effect.Effect<Redacted.Redacted<string>, CryptoError>;
     readonly digestToken: (input: TokenDigestInput) => Effect.Effect<string, CryptoError>;
     readonly verifyToken: (

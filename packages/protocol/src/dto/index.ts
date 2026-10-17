@@ -71,3 +71,5 @@ export {
 } from "#/dto/organization/team";
 
 export { UpdateProfileRequest } from "#/dto/auth/profile";
+
+export * from "#/dto/auth/identity";

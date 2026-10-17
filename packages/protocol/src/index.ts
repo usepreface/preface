@@ -84,3 +84,14 @@ export { TeamError } from "#/errors/organization/team";
 export { ProfileError } from "#/errors/auth/profile";
 
 export { MetadataImage } from "#/common/metadata-image";
+
+export { IdentityConnectionId, AccountId, AuthFlowId } from "#/identifiers/identity";
+export { IdentityError } from "#/errors/auth/identity";
+export {
+  ConnectionStatus,
+  AuthFlowIntent,
+  GoogleConfiguration,
+  IdentityRevision,
+  AuthenticationReturnPath,
+  GoogleSubject,
+} from "#/common/identity";

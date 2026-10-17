@@ -1,6 +1,7 @@
 import { Schema } from "effect";
 
 import { SessionAuthenticationId, UserEmailId } from "#/identifiers/auth";
+import { AccountId } from "#/identifiers/identity";
 import { SessionId } from "#/identifiers/session";
 import { UserId } from "#/identifiers/user";
 
@@ -14,7 +15,7 @@ export const EmailAssurance = Schema.Struct({
   version: Schema.Literal(1),
   emailVerified: Schema.Literal(true),
 });
-export const CreateSessionAuthentication = Schema.Struct({
+const emailFields = {
   sessionId: SessionId,
   userId: UserId,
   method: EmailAuthenticationMethod,
@@ -22,11 +23,31 @@ export const CreateSessionAuthentication = Schema.Struct({
   authenticatedAt: Schema.DateTimeUtcFromDate,
   expiresAt: Schema.DateTimeUtcFromDate,
   assurance: EmailAssurance,
-});
+  accountId: Schema.optionalKey(Schema.Null),
+  connectionRevision: Schema.optionalKey(Schema.Null),
+};
+const googleFields = {
+  sessionId: SessionId,
+  userId: UserId,
+  method: Schema.Literal("google"),
+  userEmailId: Schema.Null,
+  accountId: AccountId,
+  connectionRevision: Schema.Int.check(Schema.isGreaterThan(0)),
+  authenticatedAt: Schema.DateTimeUtcFromDate,
+  expiresAt: Schema.DateTimeUtcFromDate,
+  assurance: Schema.Struct({ version: Schema.Literal(1), provider: Schema.Literal("google") }),
+};
+export const CreateSessionAuthentication = Schema.Union([
+  Schema.Struct(emailFields),
+  Schema.Struct(googleFields),
+]);
 export type CreateSessionAuthentication = typeof CreateSessionAuthentication.Type;
-export const SessionAuthentication = Schema.Struct({
+const stored = {
   id: SessionAuthenticationId,
-  ...CreateSessionAuthentication.fields,
   revokedAt: Schema.NullOr(Schema.DateTimeUtcFromDate),
-});
+};
+export const SessionAuthentication = Schema.Union([
+  Schema.Struct({ ...emailFields, ...stored }),
+  Schema.Struct({ ...googleFields, ...stored }),
+]);
 export type SessionAuthentication = typeof SessionAuthentication.Type;

@@ -8,6 +8,7 @@ import { EmailJobs, EmailPayloadCipher } from "@usepreface/emails";
 
 import { Application, AuthenticationLinks } from "../../src/index.js";
 import { NodeToken } from "../../src/node/index.js";
+import { GoogleTestProvider } from "./google-provider.js";
 
 const port = process.env.PREFACE_TEST_POSTGRES_PORT;
 export const DatabaseTestLayer: Layer.Layer<
@@ -34,6 +35,7 @@ export const SecurityTestLayer = Layer.mergeAll(
   Layer.provide(NodeCrypto.layer),
 );
 export const ApplicationTestLayer = Application.layer.pipe(
+  Layer.provideMerge(GoogleTestProvider),
   Layer.provide(
     Layer.succeed(AuthenticationLinks, { publicOrigin: "https://preface.example.test" }),
   ),

@@ -1,7 +1,7 @@
 # Sessions
 
 Setup creates the initial browser session; [email sign-in](email-sign-in.md) creates
-fresh sessions for returning users. Authentication resolves an opaque cookie
+fresh sessions for returning users. [Google sign-in](google.md) also issues sessions for explicitly linked users. Authentication resolves an opaque cookie
 credential through the application on every protected request. A successful actor
 identifies the current user/session, without asserting instance ownership or future
 organization membership. There is no sign-in or session-management UI yet.
@@ -14,9 +14,9 @@ purposes. No JWT or operator-provided session-signing secret is needed.
 
 Resolution hashes the presented redacted credential, looks up an active session and
 loads its current profile and usable authentication evidence. Evidence records
-method, source email, authentication/expiry times, assurance and revocation. Composite
+method, email or external-account source, authentication/expiry times, assurance and revocation. Composite
 foreign keys bind session and source to the same user. Missing or revoked evidence,
-removed/unverified/login-disabled source email, missing profile, revoked, absolutely
+unusable email sources or unlinked/inactive/stale-revision Google sources, missing profile, revoked, absolutely
 expired, idle-expired and disabled-user sessions all produce `AuthenticationError` with `UNAUTHENTICATED`.
 Storage/security failures remain distinct and must not be treated as invalid login.
 
@@ -83,3 +83,13 @@ rejection of the old credential after revocation.
 - [Authentication middleware](../../apps/server/src/http/middleware/session-authentication.ts)
 - [Cookie boundary](../../apps/server/src/http/cookies/session.ts)
 - [HTTP lifecycle test](../../apps/server/tests/integration/http/onboarding.test.ts)
+
+## External evidence
+
+[Google identity](google.md) adds account/connection-backed evidence alongside email proofs.
+Usable Google evidence requires an active connection at the same revision and a linked account.
+Unlink, disable and credential changes invalidate that source. Session resolution requires at
+least one usable source; losing Google does not remove independent email evidence. Google
+sign-in creates a new Preface session, while explicit linking and Google/email reauthentication
+add evidence to the current session without extending its absolute expiry. Organization policy
+checks these proofs on every access. Logout also revokes pending authenticated provider flows.

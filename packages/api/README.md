@@ -129,7 +129,7 @@ accept `includeRemoved`. Archived organization discovery is owner-only. Detail r
 
 Owner-only transitions preserve a usable owner. Custom roles/assignments are bounded
 by the actor's delegation rights. Invitations own additional admission; there is no
-direct member-creation endpoint or policy editor. SSO configuration remains pending. These endpoints are backend-only.
+direct member-creation endpoint. Owners can opt into Google with the policy editor below; enterprise SSO configuration remains pending. These endpoints are backend-only.
 
 `OrganizationError` codes map invalid input to 400, insufficient authority/evidence
 to 403, scoped missing organization/member/role/binding to 404, and lifecycle or
@@ -218,6 +218,41 @@ OpenAPI is generated from `PrefaceApi`. The server serves it at `/api/openapi.js
 Scalar at `/api/docs` always. Health routes and operator commands are server concerns and
 are absent from the product specification. Endpoint status variants have narrowed code schemas
 so documentation and generated-client decoding agree with the actual HTTP status.
+
+## Google and reauthentication
+
+All routes use `/api/v1`. `google.methods()` reads installation-wide availability;
+`google.start({ payload: {} })` begins signed-out login. The shared GET Google callback is a browser
+redirect endpoint returning 303; follow authorization URLs in the browser holding the flow cookie.
+Successful sign-in sets the existing session cookie. Never log authorization URLs or callback queries.
+
+`identityConnections.getGoogle/saveGoogle/testGoogle/activateGoogle/disableGoogle` use
+`/instance/authentication/google` and its `/test`, `/activate`, `/disable` actions. Save is PUT with
+`{ expectedRevision, clientId, clientSecret?, name? }`; first save uses revision zero and requires
+the secret. Action payloads contain `expectedRevision`. Test returns `GoogleStartResult`; other
+operations return `PublicGoogleConnection` without secrets. Instance ownership and recent email
+proof are enforced by application workflows.
+
+`accounts.list/startGoogle/unlink` map to GET `/users/me/accounts`, POST its `/google/start`, and
+DELETE `/:accountId`. `reauthentication.startGoogle` maps to POST `/auth/reauthentication/google/start`.
+All starts accept `{ returnPath?: "/api/docs" }`. Account responses include safe provider email,
+link history and connection availability; they contain neither stable provider subjects nor tokens.
+
+`reauthentication.requestEmail/resendEmail/verifyEmail` map to POST
+`/auth/reauthentication/email/request`, `/resend`, `/verify`. Request takes `{}`; resend and verify
+reuse the email sign-in wire payloads with a separate browser cookie and existing session.
+Issuance returns 202 `EmailSignInChallenge`; verification returns 204 without replacing the session.
+
+`authenticationPolicy.methods({ params })` reads GET
+`/organizations/:organizationId/authentication/methods`. Its response distinguishes Google
+preference, global availability and effective availability. `authenticationPolicy.update` PATCHes
+`/organizations/:organizationId/auth-policy` with `{ expectedRevision, googleEnabled }` and returns
+`PublicOrganizationAuthPolicy`. Organization ownership, recent email and active global configuration
+are required to enable; both email methods remain enabled.
+
+Expected failures use `IdentityError` and closed code/status mappings. Expired/replayed browser
+flows are 401, unavailable configuration and revision/account conflicts are 409, recent-proof or
+authority failures are 403, and provider unavailability is 503. Infrastructure causes remain private.
 
 ## Verification
 

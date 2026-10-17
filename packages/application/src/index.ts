@@ -3,3 +3,5 @@ export type { BootstrapPreparation, BootstrapCompletion } from "#/instance/boots
 export { TokenService, type IssuedToken } from "#/security/token";
 export { SecurityError } from "#/security/errors";
 export { AuthenticationLinks } from "#/auth/links";
+
+export { GoogleIdentity, GoogleIdentityClaims } from "#/auth/google/provider";
