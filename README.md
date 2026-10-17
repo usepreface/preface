@@ -13,6 +13,7 @@ This repository contains monorepo tooling and these workspace packages and appli
 - [template](packages/template/README.md): reusable starter for internal packages.
 - [ui](packages/ui/README.md): the design system - Base UI components in the shadcn/ui structure, Preface tokens,
   icons, company logos and brand marks.
+- [dashboard](apps/dashboard/README.md): the Preface dashboard on TanStack Router; onboarding and the empty organization home, UI only for now.
 - [landing](apps/landing/README.md): preface.run, the landing page, on TanStack Start for Vercel.
 - [uikit](apps/uikit/README.md): Preface UI Kit, the living reference for every component, icon, logo and piece of art in light and dark.
 
@@ -21,7 +22,7 @@ PGlite/PostgreSQL test layers, and instance, auth and audit tables/repositories 
 schemas. Protocol provides storage models, public bootstrap/session contracts and branded identities.
 Application implements first-owner setup and session resolution/revocation. The server wires
 startup preparation, operator links, HTTP handlers, always-available Scalar/OpenAPI and Compose
-on port 8080. The landing page defaults to port 4000. Sign-in, onboarding UI and organization
+on port 8080. The dashboard defaults to port 3000 and the landing page to port 4000. Sign-in, onboarding UI and organization
 creation remain subsequent features.
 
 Start with the [architecture index](architecture/README.md) for system boundaries, contracts,

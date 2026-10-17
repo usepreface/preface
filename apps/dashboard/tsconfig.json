@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "klarity/tsconfig/app/vite",
+  "compilerOptions": {
+    "customConditions": ["preface-source"],
+    // @usepreface/ui is compiled from source here, and its shadcn-derived code assumes this is off.
+    "exactOptionalPropertyTypes": false
+  },
+  "include": ["src", "vite.config.ts"]
+}
