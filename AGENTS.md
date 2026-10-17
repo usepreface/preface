@@ -63,9 +63,11 @@ Git history as a side effect of a refactor.
   layers. Tables are grouped into PostgreSQL schemas by domain.
 - [`packages/application`](packages/application/README.md) — instance bootstrap,
   session workflows, security capabilities and Node security adapters. HTTP
-  handling and runtime startup remain at the future server boundary.
+  handling and runtime startup belong to the server boundary.
 - [`packages/api`](packages/api/README.md) — runtime-neutral Effect HTTP contracts,
   middleware declarations and OpenAPI metadata, shared by server and clients.
+- [`apps/server`](apps/server/README.md) — Node runtime composition, HTTP handlers,
+  request policy, startup preparation, health/reference routes and operator CLI.
 - [`packages/template`](packages/template/README.md) — starter for new workspace
   packages.
 
@@ -150,6 +152,9 @@ Apply these conventions to public documentation when it is introduced.
 Package READMEs currently document implemented boundaries and remaining work.
 Keep stable cross-package architecture in `architecture/` as it is introduced;
 keep temporary investigation in gitignored `research/`.
+
+See [`architecture/backend-http.md`](architecture/backend-http.md) for startup ordering,
+dependency direction and the implemented setup/session transport boundaries.
 
 - Update the owning documentation in the same change as a contract, table,
   repository, workflow, route, authorization rule, audit event, or lifecycle change.

@@ -4,6 +4,7 @@ export { DatabaseError, mapToDatabaseError, type MapDatabaseError } from "#/core
 export { TransactionService } from "#/core/transaction";
 export { generateUuid7 } from "#/id";
 export { DatabaseMigration, runDatabaseMigrations } from "#/migrations/layer";
+export { checkDatabaseConnection } from "#/core/health";
 export { authSchema, instanceSchema, auditSchema } from "#/schema/index";
 export { timestampColumns } from "#/schema/timestamps";
 export {

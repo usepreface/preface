@@ -8,7 +8,7 @@ authorization and transport policy belong in application packages.
 The foundation, instance/auth/audit tables, and their repositories are implemented. Migrations
 create the `instance`, `auth` and `audit` PostgreSQL schemas and their tables.
 [Application](../application/README.md) implements bootstrap and session workflows on these
-repositories. Server startup and HTTP integration are not implemented.
+repositories. The [server](../../apps/server/README.md) wires migration-gated startup and HTTP.
 
 ## Repository API
 
@@ -94,9 +94,9 @@ must also check suspension and other user states. Repositories do not authorize 
 
 Application bootstrap creates the user, password credential, owner grant, session and installation
 completion in one outer transaction with required audit events. Application also generates setup
-proofs, resolves sessions and coordinates revocation. Recovery commands, startup logging and
-HTTP/UI integration remain unwired. Signup remains invitation-only, and only instance owners may
-create organizations; neither policy is a configurable settings column.
+proofs, resolves sessions and coordinates revocation. The server implements setup-proof replacement,
+startup logging and HTTP integration; account recovery and frontend integration remain pending.
+Signup remains invitation-only, and only instance owners may create organizations; neither policy is a configurable settings column.
 
 ## Auth and audit storage
 
@@ -123,10 +123,9 @@ create organizations; neither policy is a configurable settings column.
 
 All auth user foreign keys use `on delete restrict`; account disabling preserves references and
 history. There is no account-disable workflow yet. Public DTOs and application bootstrap/session
-workflows are implemented in protocol/application. HTTP authentication, sign-in, password reset
-and resource authorization are still pending. Write related lifecycle timestamps explicitly
-from the same Effect clock instant, including `createdAt` when checking
-against it; do not mix an earlier test/application time with a later database insertion default.
+workflows are implemented in protocol/application. The server implements cookie authentication;
+sign-in, password reset and resource authorization remain pending. Write related lifecycle timestamps
+explicitly from the same Effect clock instant, including `createdAt` when checking against it; do not mix an earlier test/application time with a later database insertion default.
 The auth/audit migration deliberately fails if older owner rows reference nonexistent users; it
 does not fabricate users or silently remove historical grants.
 
@@ -139,6 +138,8 @@ does not fabricate users or silently remove historical grants.
 - `TransactionService.layer` depends on `Database`. `run(effect)` uses the underlying
   Effect SQL client's transaction context, so repositories can capture `Database` once
   and query it directly. No separate transaction executor lookup is needed.
+- `checkDatabaseConnection()` probes the same pool with `select 1` and normalizes storage failures.
+  The server owns readiness deadlines and HTTP responses.
 - `DatabaseMigration.layer` depends on `Database` and completes only after successful
   migrations. `runDatabaseMigrations()` also supports an explicit release command.
 
@@ -161,8 +162,8 @@ const PersistenceLive = Layer.mergeAll(DatabaseRepository.layer, DatabaseMigrati
 ```
 
 HTTP listeners and workers must explicitly require `DatabaseMigration` before acquisition.
-Merging their Layers alongside migrations does not establish startup order. There is no
-server or worker in this repository yet; their startup gates must be wired when introduced.
+Merging their Layers alongside migrations does not establish startup order. The server requires
+completed startup preparation before binding; future workers must establish the same migration gate.
 
 Transactions commit on success and roll back on failure, defects or interruption. Nested
 `TransactionService.run` calls join the current transaction without a savepoint. Catching

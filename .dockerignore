@@ -1,0 +1,11 @@
+.git
+**/node_modules
+**/dist
+**/.turbo
+**/coverage
+**/.env
+**/.env.*
+research
+apps/*
+!apps/server
+packages/ui

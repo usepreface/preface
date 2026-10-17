@@ -1,0 +1,50 @@
+{
+  "name": "@usepreface/server",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "bin": {
+    "preface": "dist/main.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "imports": {
+    "#/*": {
+      "preface-source": "./src/*.ts",
+      "default": "./dist/*.js"
+    }
+  },
+  "scripts": {
+    "build": "tsdown --config tsdown.config.ts",
+    "dev": "node --env-file-if-exists=.env --conditions=preface-source --watch src/main.ts serve",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check .",
+    "lint": "oxlint --deny-warnings .",
+    "lint:fix": "oxlint --fix .",
+    "prepack": "pnpm run build",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.test.json",
+    "test": "NODE_OPTIONS=--conditions=preface-source vitest run",
+    "test:built": "pnpm --workspace-root exec turbo run build --filter=@usepreface/server && node --test tests/smoke/built.test.mjs",
+    "start": "node --env-file-if-exists=.env dist/main.js serve",
+    "preface": "node --env-file-if-exists=.env --conditions=preface-source src/main.ts"
+  },
+  "dependencies": {
+    "@effect/platform-node": "catalog:",
+    "@usepreface/api": "workspace:*",
+    "@usepreface/application": "workspace:*",
+    "@usepreface/database": "workspace:*",
+    "@usepreface/protocol": "workspace:*",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@effect/vitest": "catalog:",
+    "@types/node": "catalog:",
+    "klarity": "catalog:",
+    "publint": "catalog:",
+    "tsdown": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

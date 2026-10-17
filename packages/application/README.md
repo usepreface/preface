@@ -44,8 +44,8 @@ const prepareInstance = Effect.gen(function* () {
 
 Supply the database configuration documented in the database package. Application acquisition
 requires `DatabaseMigration`, so its workflows cannot be acquired before migrations finish.
-A future server must also gate HTTP listeners and workers on migrations and complete startup
-preparation before accepting requests. Reuse one composed Layer/runtime across startup and requests.
+`apps/server` gates its HTTP listener on migrations and completed startup preparation. Reuse one
+composed Layer/runtime across startup and requests; future workers must follow the same gate.
 
 ## Instance setup
 
@@ -66,7 +66,7 @@ installation row; starting another replica does not replace a valid pending proo
 issuing caller receives the credential. A lost startup output requires explicit reissue or expiry;
 the stored digest cannot reconstruct it.
 
-The future startup adapter builds the operator URL from its configured public origin and the
+The server startup adapter builds the operator URL from its configured public origin and the
 issued token after commit, then prints that supported operator output. This package neither builds
 nor logs URLs. Keep `reissueToken()` behind an operator command, never a public setup endpoint.
 Proof issuance/replacement and its typed system audit event commit together.
@@ -112,7 +112,7 @@ this actor does not imply instance ownership or organization membership.
 Invalid, disabled-user, revoked, idle-expired and absolutely expired sessions produce the same
 `AuthenticationError` with `UNAUTHENTICATED`. Operational failures remain distinct from an invalid
 credential. Cookie flags, Origin/CSRF policy, rate limiting, request size limits and HTTP status codes
-belong to the future server boundary.
+belong to the server boundary.
 
 ## Credential policy
 
@@ -155,6 +155,7 @@ sequentially. Never point it at an existing development or deployment database. 
 README for the container command. The built smoke test runs the full setup/session lifecycle against
 packaged dependencies and migrations without source conditions.
 
-Application workflows are implemented; Compose startup, operator CLI/log output, API contracts,
-HTTP handlers/cookies and onboarding UI integration remain unwired. Sign-in, invitations,
-email verification, password reset, organization creation and SSO are subsequent features.
+Application workflows, shared API contracts, HTTP handlers/cookies, startup preparation, operator
+CLI and Docker Compose are implemented. See the [server README](../../apps/server/README.md) for
+transport policy and commands. Onboarding UI, sign-in, invitations, email verification, password
+reset, organization creation and SSO are subsequent features.
