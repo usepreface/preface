@@ -18,7 +18,7 @@ Authentication, organization tables and applications have not been implemented y
 
 ## Setup
 
-Use Node.js 24 (the exact development version is in `.node-version`) and pnpm 11.28.6, pinned in
+Use Node.js 24 (the exact development version is in `.node-version`) and pnpm 12.14.0, pinned in
 `package.json`. Enable pnpm through Corepack, then install dependencies:
 
 ```sh
