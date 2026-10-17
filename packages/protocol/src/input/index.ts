@@ -1,1 +1,5 @@
-export { BootstrapPassword, CompleteBootstrapInput } from "#/input/instance/bootstrap";
+export {
+  CompleteBootstrapInput,
+  RequestBootstrapVerificationInput,
+  ResendBootstrapVerificationInput,
+} from "#/input/instance/bootstrap";

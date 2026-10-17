@@ -1,142 +1,115 @@
 # @usepreface/application
 
-Effect application workflows for Preface instance setup and authenticated sessions. Requires
-Node.js 24, Effect v4, and the persistence services from `@usepreface/database`. This private
-workspace package coordinates business policy, security capabilities, transactions and audit.
-It does not start an HTTP server or read deployment configuration on import.
+Effect workflows for Preface instance setup and sessions. Requires Node.js 24,
+Effect v4 and workspace database, crypto and email services. This private package
+coordinates business policy, transactions and audit without starting a server.
 
 ## Composition
 
-The root exports `Application`, `PasswordService`, `TokenService` and `SecurityError`.
-`@usepreface/application/node` supplies `NodePassword.layer` and `NodeToken.layer`.
-The latter uses the supplied Effect `Crypto.Crypto`; provide `NodeCrypto.layer` at the runtime edge.
+Install workspace dependencies with `pnpm install`. Supply `DatabaseRepository`,
+`TransactionService`, completed `DatabaseMigration`, `TokenService`, `TokenCrypto`,
+`SecretCrypto` and `EmailJobs` to `Application.layer`. Supply platform crypto from
+the Node runtime edge. The server's complete composition is in
+[its runtime module](../../apps/server/src/runtime.ts).
 
-```ts
-import { NodeCrypto } from "@effect/platform-node";
-import { Effect, Layer } from "effect";
-
-import { Application } from "@usepreface/application";
-import { NodePassword, NodeToken } from "@usepreface/application/node";
-import {
-  Database,
-  DatabaseMigration,
-  DatabaseRepository,
-  TransactionService,
-} from "@usepreface/database";
-
-const PersistenceLive = Layer.mergeAll(DatabaseRepository.layer, DatabaseMigration.layer).pipe(
-  Layer.provideMerge(TransactionService.layer),
-  Layer.provide(Database.layer),
-);
-const SecurityLive = Layer.mergeAll(NodePassword.layer, NodeToken.layer).pipe(
-  Layer.provide(NodeCrypto.layer),
-);
-const ApplicationLive = Application.layer.pipe(
-  Layer.provide(PersistenceLive),
-  Layer.provide(SecurityLive),
-);
-
-const prepareInstance = Effect.gen(function* () {
-  const application = yield* Application;
-  return yield* application.instance.bootstrap.prepare();
-}).pipe(Effect.provide(ApplicationLive));
-```
-
-Supply the database configuration documented in the database package. Application acquisition
-requires `DatabaseMigration`, so its workflows cannot be acquired before migrations finish.
-`apps/server` gates its HTTP listener on migrations and completed startup preparation. Reuse one
-composed Layer/runtime across startup and requests; future workers must follow the same gate.
+`@usepreface/application/node` exports `NodeToken.layer`, adapting shared token
+primitives while preserving Preface credential formats. Cryptographic operations
+belong to `@usepreface/crypto`; durable email intent belongs to `@usepreface/emails`.
+Application workflows require neither a delivery provider nor renderer. The server
+starts delivery separately, after migrations and startup preparation.
 
 ## Instance setup
 
+```ts
+import { Effect } from "effect";
+
+import { Application } from "@usepreface/application";
+
+// Run within the application's configured Effect runtime.
+export const prepareInstance = Effect.gen(function* () {
+  const application = yield* Application;
+  return yield* application.instance.bootstrap.prepare();
+});
+```
+
 `application.instance.bootstrap` exposes:
 
-| Method                | Behavior                                                                                                         |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `prepare()`           | Initialize installation/settings; issue a missing or expired proof; preserve an existing valid proof.            |
-| `getStatus()`         | Return `{ state: "setup_required" \| "ready", instanceName }`.                                                   |
-| `inspectToken(token)` | Check the current redacted proof and return `{ expiresAt }`.                                                     |
-| `complete(input)`     | Atomically create the first owner account, password credential, owner grant, session and completed installation. |
-| `reissueToken()`      | Explicit operator-only replacement; invalidates the previous proof and refuses completed setup.                  |
+| Method                       | Behavior                                                                                                   |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `prepare()`                  | Initialize installation/settings, issue a missing/expired proof, preserve a valid pending proof.           |
+| `getStatus()`                | Return `{ state: "setup_required" \| "ready", instanceName }`.                                             |
+| `inspectToken(token)`        | Check the current redacted operator proof and return its expiry.                                           |
+| `requestVerification(input)` | Store pending account details and enqueue a setup code; return challenge identity, expiry and resend time. |
+| `resendVerification(input)`  | Replace the current challenge/code after the shared cooldown.                                              |
+| `complete(input)`            | Verify code, atomically create verified owner/session and consume setup authority.                         |
+| `reissueToken()`             | Operator-only proof replacement; cancel pending challenge/email; refuse completed setup.                   |
 
-`prepare()` returns a discriminated result: `{ state: "ready" }`,
-`{ state: "pending", expiresAt }`, or `{ state: "issued", expiresAt, token }`.
-Only `issued` contains a raw credential, wrapped in `Redacted`. Replicas serialize on the
-installation row; starting another replica does not replace a valid pending proof. Only the
-issuing caller receives the credential. A lost startup output requires explicit reissue or expiry;
-the stored digest cannot reconstruct it.
+Preparation returns `{ state: "ready" }`, `{ state: "pending", expiresAt }`, or
+`{ state: "issued", expiresAt, token }`. Only issuance returns the raw redacted proof.
+Replicas serialize on installation; restart cannot reconstruct a pending credential.
+A lost startup link requires explicit reissue or expiry. The server builds/prints the
+operator URL after commit. Keep replacement behind the local CLI, not a public API.
 
-The server startup adapter builds the operator URL from its configured public origin and the
-issued token after commit, then prints that supported operator output. This package neither builds
-nor logs URLs. Keep `reissueToken()` behind an operator command, never a public setup endpoint.
-Proof issuance/replacement and its typed system audit event commit together.
+Decode wire requests through `RequestBootstrapVerificationInput`,
+`ResendBootstrapVerificationInput` and `CompleteBootstrapInput` from
+`@usepreface/protocol/input`. Names trim, email trims/lowercases, and credentials
+become non-encodable `Redacted` values. Sanitize validation failures at transport.
 
-Decode incoming completion requests with `CompleteBootstrapInput` from `@usepreface/protocol/input`.
-It trims names, trims/lowercases email without provider-specific rewriting, and wraps the setup
-token/password in `Redacted`. Passwords are preserved exactly and require 15–128 JavaScript string
-code units, with no composition rules. Encoding these secret input fields back to JSON is forbidden.
-Transport must sanitize schema errors instead of logging request bodies or validation issues with secrets.
+Request accepts `{ token, instanceName, ownerName, email }`. It creates no user/session.
+Its challenge, encrypted email job and audit event commit together. The returned
+`{ challengeId, expiresAt, resendAt }` contains no code. Verification codes have eight
+digits, ten-minute expiry bounded by the operator proof, a one-minute resend cooldown
+and five durable attempts. The code HMAC includes challenge identity and uses the
+shared independent HMAC key. Replacement invalidates prior code identity. Wrong-code
+attempts and failure audit commit before returning `INVALID_CODE`.
 
-`complete()` accepts the decoded input and returns `{ actor, sessionToken }`. `actor` contains
-only `user: { id, displayName, email, emailVerifiedAt }` and `session: { id, expiresAt }`.
-Encode it with the public `SessionActor` schema from `@usepreface/protocol/dto` for ISO timestamp strings. Unwrap `sessionToken`
-only at the server cookie boundary; do not return the entire application result as a JSON body.
-The account starts with an unverified email: possession of the setup link does not prove mailbox access.
+Completion accepts `{ token, challengeId, code }` and returns `{ actor, sessionToken }`.
+The transaction locks installation, rechecks proof and code, writes the verified user,
+owner grant, display name, session and required audit, then consumes both credentials.
+No password credential is created. Audit failure rolls back the entire operation;
+concurrent completion admits one winner. Final consumption rechecks expiry.
+Completion creates no organization or organization access.
 
-The preliminary proof check happens before password hashing. Hashing and session-secret generation
-occur outside SQL transactions. Completion then locks installation, checks the current proof and
-fresh expiry again, and writes all state plus owner/session/bootstrap audit records in one transaction.
-Failure, including audit failure, rolls everything back. Concurrent completions admit exactly one
-owner; consumed, replaced and expired proofs cannot complete setup. Completion never creates an
-organization or grants organization access.
+Encode `actor` with `SessionActor` from `@usepreface/protocol/dto` for ISO timestamps.
+It contains only safe user/profile and session identity/expiry. Unwrap `sessionToken`
+only at the server cookie boundary; never serialize the entire application result.
 
-`BootstrapError` exposes `INVALID_INPUT`, `INVALID_TOKEN`, `ALREADY_COMPLETED` and
-`EMAIL_UNAVAILABLE`. Only the known canonical-email uniqueness violation maps to the latter;
-unrelated database failures retain their internal type. HTTP mapping must not expose database causes,
-SQL parameters or infrastructure details. Failed completion leaves the proof available until expiry.
+`BootstrapError` has `INVALID_INPUT`, `INVALID_TOKEN`, `INVALID_CODE`,
+`VERIFICATION_RATE_LIMITED`, `ALREADY_COMPLETED` and `EMAIL_UNAVAILABLE`.
+Only the canonical email uniqueness violation maps to `EMAIL_UNAVAILABLE`.
+Infrastructure failures remain distinct and must not expose SQL or secret inputs.
+A lost successful completion response cannot be replayed for another session.
 
 ## Sessions
 
-`application.auth.session.resolve(token)` accepts a redacted raw session credential and returns a
-`SessionActor`. Each call looks up the digest, rejects revoked/absolutely expired sessions, checks
-that the user still exists and is enabled, and enforces idle expiry. It does not cache authority.
-Routine activity writes are throttled and cannot revive a session that becomes idle-expired between
-the initial lookup and the update. Activity never extends absolute expiry.
+`application.auth.session.resolve(token)` accepts a redacted credential and returns
+`SessionActor`. It freshly checks digest, revocation, absolute/idle expiry and user
+usability. Throttled activity writes cannot revive idle-expired sessions or extend
+absolute expiry. Invalid credentials produce `AuthenticationError/UNAUTHENTICATED`;
+operational failures retain their type.
 
-`revokeCurrent(actor)` revokes the actor's matching session and appends its required audit event
-in the same transaction. Repeated calls succeed without another audit row. Only pass actors produced
-by authentication; actor identities are not request-body fields. The server clears the cookie after
-success. Sensitive future workflows must recheck their own current grants and resource authority;
-this actor does not imply instance ownership or organization membership.
-
-Invalid, disabled-user, revoked, idle-expired and absolutely expired sessions produce the same
-`AuthenticationError` with `UNAUTHENTICATED`. Operational failures remain distinct from an invalid
-credential. Cookie flags, Origin/CSRF policy, rate limiting, request size limits and HTTP status codes
-belong to the server boundary.
+`revokeCurrent(actor)` revokes the actor's matching session and writes its audit event
+atomically. Repeated calls succeed without another event. Supply authenticated actors,
+never request-body identities. The server clears the cookie after success. Sessions
+alone imply neither instance ownership nor organization membership.
 
 ## Credential policy
 
-Stable product lifetimes are defined in application code:
+| Policy                    | Value                               |
+| ------------------------- | ----------------------------------- |
+| Operator proof            | 30 minutes                          |
+| Setup code                | 10 minutes, bounded by proof expiry |
+| Resend cooldown           | 1 minute                            |
+| Code attempt budget       | 5 per challenge                     |
+| Session absolute lifetime | 30 days                             |
+| Session idle timeout      | 7 days                              |
+| Activity write interval   | 5 minutes                           |
 
-| Policy                    | Value      |
-| ------------------------- | ---------- |
-| Setup proof lifetime      | 30 minutes |
-| Session absolute lifetime | 30 days    |
-| Session idle timeout      | 7 days     |
-| Activity write interval   | 5 minutes  |
+Opaque tokens use 32 random bytes and purpose-separated SHA-256 digests. Shared crypto
+owns secure randomness, constant-time verification, HMAC and encryption. Keep its two
+independent keys stable across replicas/restarts and back them up with the database.
 
-`NodeToken` generates 32 random bytes per credential and hashes framed, purpose/version-separated
-inputs with SHA-256. Setup verification uses Node's constant-time comparison. Only digests reach
-repositories; raw values remain redacted. No secret configuration or recoverable token storage is needed.
-
-`NodePassword` uses `@node-rs/argon2` for encoded Argon2id v1.3 hashes with random salts,
-19,456 KiB memory, two passes, one lane and 32-byte output. This focused native dependency avoids
-implementing password hashing or its encoded format ourselves. The profile meets the
-[OWASP Argon2id baseline](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html#argon2id).
-The shared adapter limits concurrent hash/verify operations to two; transport admission limits
-must bound incoming work. Security-provider errors omit secret inputs and native error details.
-
-## Verification and remaining work
+## Verification
 
 ```sh
 pnpm --filter @usepreface/application typecheck
@@ -146,16 +119,12 @@ pnpm --filter @usepreface/application test:built
 PREFACE_TEST_POSTGRES_PORT=55439 pnpm --filter @usepreface/application test
 ```
 
-PGlite tests compose migrated real repositories, real security adapters and a deterministic Effect
-clock. Focused scenarios cover restart/reissue/expiry, concurrent completion, proof changes during
-hashing, audit rollback, disabled users, session expiry/activity and audited revocation. A password
-barrier controls timing at the security boundary; a scoped database trigger simulates audit failure.
-The PostgreSQL lane uses the database package's explicit disposable-test configuration and runs files
-sequentially. Never point it at an existing development or deployment database. See the database
-README for the container command. The built smoke test runs the full setup/session lifecycle against
-packaged dependencies and migrations without source conditions.
+Tests compose real repositories, crypto, encrypted email intent and deterministic clocks.
+They cover proof/code replacement, expiry, concurrent completion/attempts, audit rollback
+and session lifecycle. The explicit PostgreSQL lane uses disposable test configuration
+and sequential files; never target a deployment database. Built tests exercise packaged
+migrations and the verification/session lifecycle.
 
-Application workflows, shared API contracts, HTTP handlers/cookies, startup preparation, operator
-CLI and Docker Compose are implemented. See the [server README](../../apps/server/README.md) for
-transport policy and commands. Onboarding UI, sign-in, invitations, email verification, password
-reset, organization creation and SSO are subsequent features.
+Onboarding UI, regular sign-in, account recovery, invitations, organization creation
+and SSO are not implemented. See the [instance setup architecture](../../architecture/identity-access/instance-setup.md)
+and [server README](../../apps/server/README.md) for current transport and deployment.

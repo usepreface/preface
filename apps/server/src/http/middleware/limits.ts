@@ -1,6 +1,6 @@
 import { Clock, Context, Effect, Layer, Semaphore } from "effect";
 
-const ratePolicies = { global: 240, inspect: 30, complete: 5 } as const;
+const ratePolicies = { global: 240, inspect: 30, complete: 10, issue: 5 } as const;
 type Bucket = keyof typeof ratePolicies;
 
 const makeRequestLimits = Effect.gen(function* () {

@@ -30,16 +30,16 @@ import { CompleteBootstrapInput } from "@usepreface/protocol/input";
 import { User, Session } from "@usepreface/protocol/model";
 ```
 
-`CompleteBootstrapInput` decodes raw strings, trims names, trims/lowercases email and wraps the
-setup token and password in `Redacted`. Passwords are preserved exactly and require 15–128
-JavaScript string code units. Secret input encoding is forbidden. `SecretTokenFromString` decodes
-other incoming token strings into redacted values; `SecretToken` validates an already-redacted token.
+`RequestBootstrapVerificationInput` trims names, trims/lowercases email and redacts
+the operator proof. `CompleteBootstrapInput` accepts proof, challenge identity and
+an eight-digit code, redacting both credentials. Secret input encoding is forbidden.
+`SecretTokenFromString` decodes incoming tokens; `SecretToken` validates redacted tokens.
 Keep validation errors containing raw input out of responses/logs. `SessionActor` is constructed
 by authentication and must not be accepted as a client-supplied identity. Its only fields are safe
 `user` identity/profile and `session` identity/expiry; it contains no credential or authority grant.
 
 `CompleteBootstrapRequest` and `InspectBootstrapRequest` are encodable HTTP wire schemas with
-string credentials. They share token/password validation with application inputs through reusable value schemas;
+string credentials. They share token validation with application inputs through reusable value schemas;
 server handlers immediately decode them into redacted inputs. This distinction lets typed HTTP
 clients transmit credentials without making internal secret-input encoding available.
 Write-only schema annotations document sensitive request fields. JSON Schema counts Unicode code
@@ -54,13 +54,14 @@ Installation, grant, credential and session codecs validate lifecycle consistenc
 must already be trimmed and lowercase; ordinary address syntax is validated without rewriting
 provider-specific dots or plus tags. Display names are trimmed and 1–120 characters. Session
 digests are 64 lowercase hexadecimal characters, representing SHA-256 of a random session secret.
-Credential hashes remain opaque nonempty encoded strings; the application credential service owns
-password hashing and algorithm validation.
+Legacy password hashes remain opaque nonempty encoded strings; passwordless setup
+does not write them.
 
 Audit contracts correlate event types with their target identities and metadata. Current events
 cover bootstrap proof issuance/replacement, bootstrap completion, owner grants and session
 creation/revocation. Proof issuance metadata records whether an existing digest was replaced,
-without retaining either credential. User actors require a user identity; system actors cannot
+without retaining either credential. Verification-request/failure events retain
+challenge identity and attempt count, never codes or email payloads. User actors require a user identity; system actors cannot
 carry one. Extend the typed union when adding new audited
 workflows. These persistence contracts do not implement authentication, hashing or HTTP APIs.
 

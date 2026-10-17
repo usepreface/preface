@@ -1,25 +1,10 @@
 import { expect, layer } from "@effect/vitest";
 import { Effect, Redacted } from "effect";
 
-import { PasswordService, TokenService } from "../../../src/index.js";
+import { TokenService } from "../../../src/index.js";
 import { SecurityTestLayer } from "../../fixtures/application.js";
 
 layer(SecurityTestLayer)("credential boundaries", (it) => {
-  it.effect("uses independently salted Argon2id hashes and preserves the exact password", () =>
-    Effect.gen(function* () {
-      const passwords = yield* PasswordService;
-      const password = Redacted.make("  a long test password  ");
-      const first = yield* passwords.hash(password);
-      const second = yield* passwords.hash(password);
-
-      expect(first).toMatch(/^\$argon2id\$v=19\$m=19456,t=2,p=1\$/);
-      expect(second).not.toBe(first);
-      expect(yield* passwords.verify(password, first)).toBe(true);
-      expect(yield* passwords.verify(Redacted.make("a long test password"), first)).toBe(false);
-      expect(yield* passwords.verify(Redacted.make("a different password"), first)).toBe(false);
-    }),
-  );
-
   it.effect("separates setup and session credentials while redacting raw secrets", () =>
     Effect.gen(function* () {
       const tokens = yield* TokenService;

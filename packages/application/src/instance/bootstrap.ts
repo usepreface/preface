@@ -1,15 +1,26 @@
-import type { Redacted } from "effect";
-import { DateTime, Effect, Predicate, Schema } from "effect";
+import { DateTime, Duration, Effect, Predicate, Redacted, Schema } from "effect";
 
-import { DatabaseRepository, TransactionService } from "@usepreface/database";
+import { cryptoPurpose, SecretCrypto, TokenCrypto } from "@usepreface/crypto";
+import type { CryptoError } from "@usepreface/crypto";
+import { DatabaseRepository, generateUuid7, TransactionService } from "@usepreface/database";
 import type { DatabaseError } from "@usepreface/database";
-import { BootstrapError, InstanceStateError } from "@usepreface/protocol";
-import type { BootstrapStatus, BootstrapTokenInfo, SessionActor } from "@usepreface/protocol/dto";
-import { CompleteBootstrapInput } from "@usepreface/protocol/input";
+import { EmailJobs } from "@usepreface/emails";
+import type { EmailError } from "@usepreface/emails";
+import { BootstrapChallengeId, BootstrapError, InstanceStateError } from "@usepreface/protocol";
+import type {
+  BootstrapStatus,
+  BootstrapTokenInfo,
+  BootstrapVerification,
+  SessionActor,
+} from "@usepreface/protocol/dto";
+import {
+  CompleteBootstrapInput,
+  RequestBootstrapVerificationInput,
+  ResendBootstrapVerificationInput,
+} from "@usepreface/protocol/input";
 import type { Installation } from "@usepreface/protocol/model";
 
 import type { SecurityError } from "#/security/errors";
-import { PasswordService } from "#/security/password";
 import { bootstrapTokenLifetime, sessionLifetime } from "#/security/policy";
 import { TokenService } from "#/security/token";
 
@@ -27,7 +38,15 @@ export interface BootstrapCompletion {
   readonly sessionToken: Redacted.Redacted<string>;
 }
 
-type BootstrapFailure = BootstrapError | InstanceStateError | DatabaseError | SecurityError;
+type BootstrapFailure =
+  | BootstrapError
+  | InstanceStateError
+  | DatabaseError
+  | SecurityError
+  | CryptoError
+  | EmailError;
+const verificationLifetime = Duration.minutes(10);
+const resendInterval = Duration.minutes(1);
 
 const hasValidTokenWindow = (installation: Installation, now: DateTime.Utc) =>
   installation.bootstrapTokenHash !== null &&
@@ -39,8 +58,10 @@ const hasValidTokenWindow = (installation: Installation, now: DateTime.Utc) =>
 export const makeBootstrapApplication = Effect.gen(function* () {
   const repository = yield* DatabaseRepository;
   const transaction = yield* TransactionService;
-  const passwords = yield* PasswordService;
   const tokens = yield* TokenService;
+  const random = yield* TokenCrypto;
+  const crypto = yield* SecretCrypto;
+  const emails = yield* EmailJobs;
 
   const validateToken = Effect.fn("Application.instance.bootstrap.validateToken")(function* (
     installation: Installation,
@@ -48,15 +69,12 @@ export const makeBootstrapApplication = Effect.gen(function* () {
   ) {
     if (installation.bootstrapCompletedAt !== null)
       return yield* new BootstrapError({ code: "ALREADY_COMPLETED" });
-    const now = yield* DateTime.now;
     if (
-      !hasValidTokenWindow(installation, now) ||
+      !hasValidTokenWindow(installation, yield* DateTime.now) ||
       installation.bootstrapTokenHash === null ||
-      installation.bootstrapTokenExpiresAt === null
+      installation.bootstrapTokenExpiresAt === null ||
+      !(yield* tokens.verifyBootstrap(token, installation.bootstrapTokenHash))
     ) {
-      return yield* new BootstrapError({ code: "INVALID_TOKEN" });
-    }
-    if (!(yield* tokens.verifyBootstrap(token, installation.bootstrapTokenHash))) {
       return yield* new BootstrapError({ code: "INVALID_TOKEN" });
     }
     return {
@@ -70,11 +88,10 @@ export const makeBootstrapApplication = Effect.gen(function* () {
     const settings = yield* repository.instance.settings.find();
     if (installation === undefined || settings === undefined)
       return yield* new InstanceStateError({ code: "NOT_INITIALIZED" });
-    const status: BootstrapStatus = {
+    return {
       state: installation.bootstrapCompletedAt === null ? "setup_required" : "ready",
       instanceName: settings.displayName,
-    };
-    return status;
+    } satisfies BootstrapStatus;
   });
 
   const inspectToken = Effect.fn("Application.instance.bootstrap.inspectToken")(function* (
@@ -82,48 +99,42 @@ export const makeBootstrapApplication = Effect.gen(function* () {
   ) {
     const installation = yield* repository.instance.installation.find();
     if (installation === undefined) return yield* new BootstrapError({ code: "INVALID_TOKEN" });
-    const validated = yield* validateToken(installation, token);
-    const info: BootstrapTokenInfo = { expiresAt: validated.expiresAt };
-    return info;
+    const proof = yield* validateToken(installation, token);
+    return { expiresAt: proof.expiresAt } satisfies BootstrapTokenInfo;
   });
 
   const prepareToken = Effect.fn("Application.instance.bootstrap.prepareToken")(function* (
     replace: boolean,
   ): Effect.fn.Return<BootstrapPreparation, BootstrapFailure> {
-    // Entropy acquisition stays outside the SQL transaction, including on restarts.
     const credential = yield* tokens.generateBootstrap();
-
     return yield* transaction.run(
       Effect.gen(function* () {
         yield* repository.instance.initialize();
         const installation = yield* repository.instance.installation.lock();
         if (installation.bootstrapCompletedAt !== null) {
           if (replace) return yield* new BootstrapError({ code: "ALREADY_COMPLETED" });
-          return { state: "ready" } as const satisfies BootstrapPreparation;
+          return { state: "ready" } as const;
         }
-
         const now = yield* DateTime.now;
         if (
           !replace &&
           hasValidTokenWindow(installation, now) &&
           installation.bootstrapTokenExpiresAt !== null
-        ) {
-          return {
-            state: "pending",
-            expiresAt: installation.bootstrapTokenExpiresAt,
-          } as const satisfies BootstrapPreparation;
-        }
+        )
+          return { state: "pending", expiresAt: installation.bootstrapTokenExpiresAt } as const;
 
+        const challenge = yield* repository.instance.challenge.find();
+        if (challenge !== undefined) {
+          yield* emails.cancel(challenge.emailJobId);
+          yield* repository.instance.challenge.clear();
+        }
         const expiresAt = DateTime.addDuration(now, bootstrapTokenLifetime);
         const issued = yield* repository.instance.installation.issueBootstrapToken({
           hash: credential.hash,
           expiresAt,
         });
         if (issued === undefined)
-          return yield* Effect.die(
-            new Error("Locked installation refused bootstrap token issuance"),
-          );
-
+          return yield* Effect.die(new Error("Locked installation refused setup token issuance"));
         yield* repository.audit.event.append({
           actorKind: "system",
           actorUserId: null,
@@ -132,35 +143,152 @@ export const makeBootstrapApplication = Effect.gen(function* () {
           targetId: installation.installationId,
           metadata: { replacesExisting: installation.bootstrapTokenHash !== null },
         });
-        return {
-          state: "issued",
-          expiresAt,
-          token: credential.token,
-        } as const satisfies BootstrapPreparation;
+        return { state: "issued", expiresAt, token: credential.token } as const;
       }),
     );
   });
 
+  const issueVerification = Effect.fn("Application.instance.bootstrap.issueVerification")(
+    function* (input: RequestBootstrapVerificationInput | ResendBootstrapVerificationInput) {
+      yield* inspectToken(input.token);
+      const id = Schema.decodeSync(BootstrapChallengeId)(generateUuid7());
+      const code = yield* random.randomCode();
+      const codeHash = yield* crypto.fingerprint({
+        purpose: cryptoPurpose.setupVerificationCode,
+        value: Redacted.make(`${id}:${Redacted.value(code)}`),
+      });
+
+      return yield* transaction.run(
+        Effect.gen(function* () {
+          const installation = yield* repository.instance.installation.lock();
+          const proof = yield* validateToken(installation, input.token);
+          const previous = yield* repository.instance.challenge.find();
+          if (
+            !("email" in input) &&
+            (previous === undefined ||
+              previous.id !== input.challengeId ||
+              previous.bootstrapTokenHash !== proof.hash)
+          )
+            return yield* new BootstrapError({ code: "INVALID_CODE" });
+          const details = "email" in input ? input : previous;
+          if (details === undefined) return yield* new BootstrapError({ code: "INVALID_CODE" });
+          const now = yield* DateTime.now;
+          if (
+            previous !== undefined &&
+            DateTime.toEpochMillis(DateTime.addDuration(previous.createdAt, resendInterval)) >
+              DateTime.toEpochMillis(now)
+          )
+            return yield* new BootstrapError({ code: "VERIFICATION_RATE_LIMITED" });
+          if (previous !== undefined) yield* emails.cancel(previous.emailJobId);
+
+          const deadline = DateTime.addDuration(now, verificationLifetime);
+          const expiresAt =
+            DateTime.toEpochMillis(deadline) < DateTime.toEpochMillis(proof.expiresAt)
+              ? deadline
+              : proof.expiresAt;
+          const emailJobId = yield* emails.enqueue({
+            type: "instance-setup",
+            to: details.email,
+            variables: {
+              instanceName: details.instanceName,
+              displayName: details.ownerName,
+              code: Redacted.value(code),
+              expiresAt,
+            },
+            idempotencyKey: `instance-setup:${id}`,
+            expiresAt,
+          });
+          const challenge = yield* repository.instance.challenge.replace({
+            id,
+            bootstrapTokenHash: proof.hash,
+            instanceName: details.instanceName,
+            ownerName: details.ownerName,
+            email: details.email,
+            codeHash,
+            emailJobId,
+            expiresAt,
+          });
+          yield* repository.audit.event.append({
+            actorKind: "system",
+            actorUserId: null,
+            eventType: "instance.bootstrap_verification_requested",
+            targetType: "installation",
+            targetId: installation.installationId,
+            metadata: { challengeId: id, attempts: 0 },
+          });
+          return {
+            challengeId: id,
+            expiresAt,
+            resendAt: DateTime.addDuration(challenge.createdAt, resendInterval),
+          } satisfies BootstrapVerification;
+        }),
+      );
+    },
+  );
+
+  const requestVerification = Effect.fn("Application.instance.bootstrap.requestVerification")(
+    function* (input: RequestBootstrapVerificationInput) {
+      const decoded = yield* Schema.decodeUnknownEffect(
+        Schema.toType(RequestBootstrapVerificationInput),
+      )(input).pipe(Effect.mapError(() => new BootstrapError({ code: "INVALID_INPUT" })));
+      return yield* issueVerification(decoded);
+    },
+  );
+
+  const resendVerification = Effect.fn("Application.instance.bootstrap.resendVerification")(
+    function* (input: ResendBootstrapVerificationInput) {
+      const decoded = yield* Schema.decodeUnknownEffect(
+        Schema.toType(ResendBootstrapVerificationInput),
+      )(input).pipe(Effect.mapError(() => new BootstrapError({ code: "INVALID_INPUT" })));
+      return yield* issueVerification(decoded);
+    },
+  );
+
   const complete = Effect.fn("Application.instance.bootstrap.complete")(function* (
     input: CompleteBootstrapInput,
   ): Effect.fn.Return<BootstrapCompletion, BootstrapFailure> {
-    // Transport decodes the wire schema; direct callers are checked against its decoded form.
-    const validated = yield* Schema.decodeUnknownEffect(Schema.toType(CompleteBootstrapInput))(
+    const decoded = yield* Schema.decodeUnknownEffect(Schema.toType(CompleteBootstrapInput))(
       input,
     ).pipe(Effect.mapError(() => new BootstrapError({ code: "INVALID_INPUT" })));
-    yield* inspectToken(validated.token);
-    const passwordHash = yield* passwords.hash(validated.password);
+    yield* inspectToken(decoded.token);
     const sessionCredential = yield* tokens.generateSession();
 
-    return yield* transaction.run(
+    const outcome = yield* transaction.run(
       Effect.gen(function* () {
         const installation = yield* repository.instance.installation.lock();
-        const proof = yield* validateToken(installation, validated.token);
-        const user = yield* repository.auth.user
-          .create({
-            displayName: validated.ownerName,
-            email: validated.email,
-          })
+        const proof = yield* validateToken(installation, decoded.token);
+        const challenge = yield* repository.instance.challenge.find();
+        if (
+          challenge === undefined ||
+          challenge.id !== decoded.challengeId ||
+          challenge.bootstrapTokenHash !== proof.hash ||
+          challenge.attempts >= 5 ||
+          DateTime.toEpochMillis(challenge.expiresAt) <= DateTime.toEpochMillis(yield* DateTime.now)
+        )
+          return yield* new BootstrapError({ code: "INVALID_CODE" });
+        const matches = yield* crypto.verifyFingerprint({
+          purpose: cryptoPurpose.setupVerificationCode,
+          value: Redacted.make(`${challenge.id}:${Redacted.value(decoded.code)}`),
+          expectedFingerprint: challenge.codeHash,
+        });
+        if (!matches) {
+          const failed = yield* repository.instance.challenge.recordFailure(challenge.id);
+          if (failed !== undefined && failed.attempts >= 5) yield* emails.cancel(failed.emailJobId);
+          if (failed !== undefined)
+            yield* repository.audit.event.append({
+              actorKind: "system",
+              actorUserId: null,
+              eventType: "instance.bootstrap_verification_failed",
+              targetType: "installation",
+              targetId: installation.installationId,
+              metadata: { challengeId: challenge.id, attempts: failed.attempts },
+            });
+          // Return a marker so the failed-attempt update commits before the public error.
+          return { state: "invalid" } as const;
+        }
+
+        const created = yield* repository.auth.user
+          .create({ displayName: challenge.ownerName, email: challenge.email })
           .pipe(
             Effect.mapError((error) =>
               Predicate.isTagged(error.reason, "UniqueViolation") &&
@@ -169,7 +297,9 @@ export const makeBootstrapApplication = Effect.gen(function* () {
                 : error,
             ),
           );
-        yield* repository.auth.passwordCredential.create({ userId: user.id, passwordHash });
+        const user = yield* repository.auth.user.markEmailVerified(created.id, challenge.email);
+        if (user === undefined)
+          return yield* Effect.die(new Error("New setup account disappeared"));
         const owner = yield* repository.instance.owner.grant({
           userId: user.id,
           grantSource: "bootstrap",
@@ -179,21 +309,23 @@ export const makeBootstrapApplication = Effect.gen(function* () {
         if (settings === undefined)
           return yield* new InstanceStateError({ code: "NOT_INITIALIZED" });
         const updated = yield* repository.instance.settings.update({
-          displayName: validated.instanceName,
+          displayName: challenge.instanceName,
           revision: settings.revision,
         });
         if (updated === undefined)
           return yield* Effect.die(
             new Error("Instance settings changed outside the installation lock"),
           );
-
         const session = yield* repository.auth.session.create({
           userId: user.id,
           tokenHash: sessionCredential.hash,
           expiresAt: DateTime.addDuration(yield* DateTime.now, sessionLifetime),
         });
-        const completed = yield* repository.instance.installation.completeBootstrap(proof.hash);
-        if (completed === undefined) return yield* new BootstrapError({ code: "INVALID_TOKEN" });
+        yield* emails.cancel(challenge.emailJobId);
+        if ((yield* repository.instance.challenge.consume(challenge.id)) === undefined)
+          return yield* new BootstrapError({ code: "INVALID_CODE" });
+        if ((yield* repository.instance.installation.completeBootstrap(proof.hash)) === undefined)
+          return yield* new BootstrapError({ code: "INVALID_TOKEN" });
 
         yield* repository.audit.event.append({
           actorKind: "system",
@@ -202,6 +334,14 @@ export const makeBootstrapApplication = Effect.gen(function* () {
           targetType: "instance_owner",
           targetId: owner.id,
           metadata: { grantSource: "bootstrap" },
+        });
+        yield* repository.audit.event.append({
+          actorKind: "user",
+          actorUserId: user.id,
+          eventType: "auth.email_verified",
+          targetType: "user",
+          targetId: user.id,
+          metadata: {},
         });
         yield* repository.audit.event.append({
           actorKind: "user",
@@ -219,7 +359,6 @@ export const makeBootstrapApplication = Effect.gen(function* () {
           targetId: installation.installationId,
           metadata: {},
         });
-
         const actor: SessionActor = {
           user: {
             id: user.id,
@@ -229,10 +368,14 @@ export const makeBootstrapApplication = Effect.gen(function* () {
           },
           session: { id: session.id, expiresAt: session.expiresAt },
         };
-        // The server unwraps only sessionToken for its cookie; actor is the safe response.
-        return { actor, sessionToken: sessionCredential.token } as const;
+        return {
+          state: "completed",
+          result: { actor, sessionToken: sessionCredential.token },
+        } as const;
       }),
     );
+    if (outcome.state === "invalid") return yield* new BootstrapError({ code: "INVALID_CODE" });
+    return outcome.result;
   });
 
   return {
@@ -240,6 +383,8 @@ export const makeBootstrapApplication = Effect.gen(function* () {
     reissueToken: () => prepareToken(true),
     getStatus,
     inspectToken,
+    requestVerification,
+    resendVerification,
     complete,
   } as const;
 });

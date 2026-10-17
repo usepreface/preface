@@ -2,9 +2,11 @@ import { NodeServices } from "@effect/platform-node";
 import { ConfigProvider, Effect, Layer } from "effect";
 
 import { Application } from "@usepreface/application";
-import { NodePassword, NodeToken } from "@usepreface/application/node";
+import { NodeToken } from "@usepreface/application/node";
+import { NodeSecretCrypto, NodeTokenCrypto } from "@usepreface/crypto/node";
 import { DatabaseRepository } from "@usepreface/database";
 import { TestDatabase } from "@usepreface/database/testing";
+import { EmailJobs, EmailPayloadCipher } from "@usepreface/emails";
 
 import { ServerConfig } from "../../src/config.js";
 
@@ -23,7 +25,19 @@ export const TestConfigLayer = ServerConfig.layer.pipe(
 const persistence = DatabaseRepository.layer.pipe(Layer.provideMerge(database));
 export const BackendTestLayer = Layer.mergeAll(
   Application.layer.pipe(
-    Layer.provide(Layer.mergeAll(NodePassword.layer, NodeToken.layer)),
+    Layer.provideMerge(EmailJobs.layer.pipe(Layer.provideMerge(EmailPayloadCipher.layer))),
+    Layer.provide(
+      Layer.mergeAll(NodeToken.layer, NodeTokenCrypto.layer, NodeSecretCrypto.layer).pipe(
+        Layer.provide(
+          ConfigProvider.layer(
+            ConfigProvider.fromUnknown({
+              CRYPTO_ENCRYPTION_KEY: Buffer.alloc(32, 7).toString("base64"),
+              CRYPTO_HMAC_KEY: Buffer.alloc(32, 8).toString("base64"),
+            }),
+          ),
+        ),
+      ),
+    ),
     Layer.provideMerge(persistence),
   ),
   TestConfigLayer,

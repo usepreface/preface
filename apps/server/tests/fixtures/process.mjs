@@ -24,6 +24,11 @@ export function testEnvironment(databasePort, serverPort) {
   return {
     PATH: process.env.PATH,
     HOME: process.env.HOME,
+    NODE_ENV: "development",
+    EMAIL_PROVIDER: "development",
+    EMAIL_FROM: "Preface <preface@example.test>",
+    CRYPTO_ENCRYPTION_KEY: Buffer.alloc(32, 7).toString("base64"),
+    CRYPTO_HMAC_KEY: Buffer.alloc(32, 8).toString("base64"),
     PUBLIC_URL: `http://localhost:${serverPort}`,
     SERVER_HOST: "127.0.0.1",
     SERVER_PORT: String(serverPort),
@@ -38,7 +43,7 @@ export function testEnvironment(databasePort, serverPort) {
 }
 
 export function spawnBackend(env) {
-  const child = spawn(process.execPath, ["dist/main.js", "serve", "--log-level", "none"], {
+  const child = spawn(process.execPath, ["dist/main.js", "serve", "--log-level", "info"], {
     cwd: serverDirectory,
     env,
     stdio: ["ignore", "pipe", "pipe"],

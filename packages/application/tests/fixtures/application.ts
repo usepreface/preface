@@ -1,11 +1,13 @@
 import { NodeCrypto } from "@effect/platform-node";
-import { Layer } from "effect";
+import { ConfigProvider, Layer } from "effect";
 
+import { NodeSecretCrypto, NodeTokenCrypto } from "@usepreface/crypto/node";
 import { DatabaseRepository } from "@usepreface/database";
 import { TestDatabase } from "@usepreface/database/testing";
+import { EmailJobs, EmailPayloadCipher } from "@usepreface/emails";
 
 import { Application } from "../../src/index.js";
-import { NodePassword, NodeToken } from "../../src/node/index.js";
+import { NodeToken } from "../../src/node/index.js";
 
 const port = process.env.PREFACE_TEST_POSTGRES_PORT;
 export const DatabaseTestLayer: Layer.Layer<
@@ -16,10 +18,23 @@ export const DatabaseTestLayer: Layer.Layer<
 export const RepositoryTestLayer = DatabaseRepository.layer.pipe(
   Layer.provideMerge(DatabaseTestLayer),
 );
-export const SecurityTestLayer = Layer.mergeAll(NodePassword.layer, NodeToken.layer).pipe(
+export const SecurityTestLayer = Layer.mergeAll(
+  NodeToken.layer,
+  NodeTokenCrypto.layer,
+  NodeSecretCrypto.layer,
+).pipe(
+  Layer.provide(
+    ConfigProvider.layer(
+      ConfigProvider.fromUnknown({
+        CRYPTO_ENCRYPTION_KEY: Buffer.alloc(32, 7).toString("base64"),
+        CRYPTO_HMAC_KEY: Buffer.alloc(32, 8).toString("base64"),
+      }),
+    ),
+  ),
   Layer.provide(NodeCrypto.layer),
 );
 export const ApplicationTestLayer = Application.layer.pipe(
+  Layer.provideMerge(EmailJobs.layer.pipe(Layer.provideMerge(EmailPayloadCipher.layer))),
   Layer.provideMerge(SecurityTestLayer),
   Layer.provideMerge(RepositoryTestLayer),
 );

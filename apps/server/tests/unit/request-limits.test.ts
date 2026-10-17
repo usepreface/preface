@@ -13,15 +13,15 @@ layer(RequestLimits.layer)("request admission", (it) => {
     () =>
       Effect.gen(function* () {
         const limits = yield* RequestLimits;
-        yield* limits.check("complete", "192.0.2.1");
-        yield* limits.check("complete", "192.0.2.1");
-        yield* limits.check("complete", "192.0.2.1");
-        yield* limits.check("complete", "192.0.2.1");
-        yield* limits.check("complete", "192.0.2.1");
-        expect(yield* limits.check("complete", "192.0.2.1")).toBe(60);
-        expect(yield* limits.check("complete", "192.0.2.2")).toBeUndefined();
+        yield* limits.check("issue", "192.0.2.1");
+        yield* limits.check("issue", "192.0.2.1");
+        yield* limits.check("issue", "192.0.2.1");
+        yield* limits.check("issue", "192.0.2.1");
+        yield* limits.check("issue", "192.0.2.1");
+        expect(yield* limits.check("issue", "192.0.2.1")).toBe(60);
+        expect(yield* limits.check("issue", "192.0.2.2")).toBeUndefined();
         yield* TestClock.adjust("1 minute");
-        expect(yield* limits.check("complete", "192.0.2.1")).toBeUndefined();
+        expect(yield* limits.check("issue", "192.0.2.1")).toBeUndefined();
 
         const firstEntered = yield* Deferred.make<void>();
         const secondEntered = yield* Deferred.make<void>();

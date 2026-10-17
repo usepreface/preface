@@ -6,4 +6,5 @@ export {
   installation,
   instanceSettings,
   instanceOwner,
+  bootstrapChallenge,
 } from "#/schema/instance/index";

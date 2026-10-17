@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { test } from "node:test";
+import { setTimeout } from "node:timers/promises";
 import { promisify } from "node:util";
 
 import { Effect } from "effect";
@@ -80,7 +81,7 @@ test(
     assert.match(restarted.stdout, /setup-link reissue/);
     assert.doesNotMatch(restarted.stdout, /\/setup#token=/);
 
-    const completed = await fetch(`${base}/api/v1/instance/setup`, {
+    const requested = await fetch(`${base}/api/v1/instance/setup`, {
       method: "POST",
       headers: { origin, "content-type": "application/json" },
       body: JSON.stringify({
@@ -88,10 +89,31 @@ test(
         instanceName: "Preface",
         ownerName: "Owner",
         email: "owner@example.test",
-        password: "a long test password",
+      }),
+    });
+    assert.equal(requested.status, 202);
+    assert.equal(requested.headers.get("set-cookie"), null);
+    const verification = await requested.json();
+    // Exercise the actual scoped worker and development renderer after a durable enqueue.
+    let code;
+    const deadline = Date.now() + 5000;
+    while (code === undefined && Date.now() < deadline) {
+      code = restarted.stdout.match(/\b(\d{8})\b/)?.[1];
+      // oxlint-disable-next-line no-await-in-loop -- Wait for the worker's explicit development output.
+      if (code === undefined) await setTimeout(25);
+    }
+    assert.ok(code, "Expected the rendered code from the development worker");
+    const completed = await fetch(`${base}/api/v1/instance/setup/verify`, {
+      method: "POST",
+      headers: { origin, "content-type": "application/json" },
+      body: JSON.stringify({
+        token: replacementToken,
+        challengeId: verification.challengeId,
+        code,
       }),
     });
     assert.equal(completed.status, 201);
+    assert.equal(typeof (await completed.json()).user.emailVerifiedAt, "string");
     assert.ok(completed.headers.get("set-cookie")?.includes("HttpOnly"));
     await assert.rejects(
       execute(process.execPath, ["dist/main.js", "instance", "setup-link", "reissue"], {

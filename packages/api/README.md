@@ -30,24 +30,27 @@ Use `preface-source` for source development or build workspace dependencies befo
 
 ## Endpoints
 
-| Client method                         | HTTP route                            | Success                                        |
-| ------------------------------------- | ------------------------------------- | ---------------------------------------------- |
-| `instanceSetup.status()`              | `GET /api/v1/instance/setup`          | `200` `BootstrapStatus`                        |
-| `instanceSetup.inspect({ payload })`  | `POST /api/v1/instance/setup/inspect` | `200` `BootstrapTokenInfo`                     |
-| `instanceSetup.complete({ payload })` | `POST /api/v1/instance/setup`         | `201` `SessionActor`, with a server-set cookie |
-| `session.current()`                   | `GET /api/v1/auth/session`            | `200` `SessionActor`                           |
-| `session.revoke()`                    | `DELETE /api/v1/auth/session`         | `204`                                          |
+| Client method                                    | HTTP route                            | Success                                        |
+| ------------------------------------------------ | ------------------------------------- | ---------------------------------------------- |
+| `instanceSetup.status()`                         | `GET /api/v1/instance/setup`          | `200` `BootstrapStatus`                        |
+| `instanceSetup.inspect({ payload })`             | `POST /api/v1/instance/setup/inspect` | `200` `BootstrapTokenInfo`                     |
+| `instanceSetup.requestVerification({ payload })` | `POST /api/v1/instance/setup`         | `202` `BootstrapVerification`                  |
+| `instanceSetup.resendVerification({ payload })`  | `POST /api/v1/instance/setup/resend`  | `202` `BootstrapVerification`                  |
+| `instanceSetup.complete({ payload })`            | `POST /api/v1/instance/setup/verify`  | `201` `SessionActor`, with a server-set cookie |
+| `session.current()`                              | `GET /api/v1/auth/session`            | `200` `SessionActor`                           |
+| `session.revoke()`                               | `DELETE /api/v1/auth/session`         | `204`                                          |
 
-Inspection accepts `{ token }`. Completion accepts `token`, `instanceName`, `ownerName`, `email`
-and `password`. These wire schemas use strings so clients can encode requests. The server decodes
-them into the existing normalized, redacted application inputs. Internal secret-input encoding
-remains forbidden. Never log request payloads or client errors that contain payloads.
+Inspection accepts `{ token }`. Request verification accepts
+`{ token, instanceName, ownerName, email }`. The 202 response contains
+`{ challengeId, expiresAt, resendAt }`, never a code or session. Resend accepts
+`{ token, challengeId }`. Completion accepts `{ token, challengeId, code }` with the
+eight-digit emailed code and requires both operator proof and mailbox access.
 
-Names trim to 1–120 UTF-16 code units; email trims/lowercases without provider-specific rewriting.
-Passwords remain unchanged and require 15–128 UTF-16 code units. JSON Schema counts Unicode code
-points, so Effect emits a conservative length bound; descriptions state the exact server policy.
-Password/proof fields are marked write-only. Responses explicitly select safe user/session fields.
-JSON timestamps use ISO strings; generated clients decode them to Effect `DateTime.Utc`.
+Names trim to 1–120 UTF-16 code units; email trims/lowercases without provider-specific
+rewriting. Wire credentials are encodable strings; server inputs redact them and
+forbid encoding. Never log payloads or validation/client errors containing them.
+Proof/code fields are write-only. Public responses select safe fields, with ISO
+timestamps decoded by generated clients into Effect `DateTime.Utc`.
 
 `SessionAuthentication` declares the `preface_session` cookie scheme and provides `CurrentActor`
 to authenticated handlers. `SetupProtection` declares setup admission middleware. Their server
@@ -63,7 +66,7 @@ There is no HTTP reissue endpoint, sign-in, organization API, bearer-token API o
 ## Errors and documentation
 
 Bootstrap errors retain `_tag: "BootstrapError"` and their domain code. Invalid input maps to `400`,
-invalid proof to `401`, and completed setup/unavailable email to `409`. Missing or invalid sessions
+invalid proof/code to `401`, cooldown to `429`, and completed setup/unavailable email to `409`. Missing or invalid sessions
 return `AuthenticationError` with `UNAUTHENTICATED` at `401`.
 
 Transport failures use `RequestError` and a closed code: `INVALID_INPUT` (`400`), `FORBIDDEN` (`403`),
@@ -76,7 +79,7 @@ There is no additional success/error envelope. Infrastructure causes and raw val
 are never public error fields.
 
 OpenAPI is generated from `PrefaceApi`. The server serves it at `/api/openapi.json` and serves
-Scalar at `/api/docs` when enabled. Health routes and operator commands are server concerns and
+Scalar at `/api/docs` always. Health routes and operator commands are server concerns and
 are absent from the product specification. Endpoint status variants have narrowed code schemas
 so documentation and generated-client decoding agree with the actual HTTP status.
 

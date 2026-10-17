@@ -17,11 +17,20 @@ export const mapInfrastructureError = <A, E, R>(effect: Effect.Effect<A, E, R>) 
         error,
       ): error is Extract<
         E,
-        { readonly _tag: "DatabaseError" | "SecurityError" | "InstanceStateError" }
+        {
+          readonly _tag:
+            | "DatabaseError"
+            | "SecurityError"
+            | "InstanceStateError"
+            | "CryptoError"
+            | "EmailError";
+        }
       > =>
         Predicate.isTagged(error, "DatabaseError") ||
         Predicate.isTagged(error, "SecurityError") ||
-        Predicate.isTagged(error, "InstanceStateError"),
+        Predicate.isTagged(error, "InstanceStateError") ||
+        Predicate.isTagged(error, "CryptoError") ||
+        Predicate.isTagged(error, "EmailError"),
       (error) =>
         Effect.gen(function* () {
           const unavailable = error instanceof DatabaseError && error.isRetryable;

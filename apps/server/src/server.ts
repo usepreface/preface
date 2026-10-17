@@ -4,6 +4,8 @@ import { NodeHttpServer } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
 import { HttpServer } from "effect/http";
 
+import { EmailWorkerLayer } from "@usepreface/emails";
+
 import { ServerConfig } from "#/config";
 import { HttpApplication } from "#/http/application";
 import { BackendLive } from "#/runtime";
@@ -33,6 +35,16 @@ export const Server = Layer.unwrap(
       ),
     );
   }),
-).pipe(Layer.provide(Layer.mergeAll(Startup.layer, HttpApplication.layer)));
+).pipe(Layer.provide(HttpApplication.layer));
 
-export const ServerLive = Server.pipe(Layer.provide(BackendLive));
+const Worker = Layer.unwrap(
+  Effect.gen(function* () {
+    yield* Startup;
+    return EmailWorkerLayer;
+  }),
+);
+
+export const ServerLive = Layer.merge(Server, Worker).pipe(
+  Layer.provide(Startup.layer),
+  Layer.provide(BackendLive),
+);

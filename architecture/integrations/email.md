@@ -6,11 +6,11 @@ links and business authority. The database package owns the `jobs.email` table,
 claims and conditional state changes. Email payload schemas are internal models
 in protocol, not public HTTP DTOs.
 
-The package is implemented independently of server acquisition. There are no
-React Email templates, renderer implementation, email-triggering application flows
-or running server worker yet. Existing bootstrap/password behavior is unchanged.
-`EmailRenderer` is an explicit required capability; absence does not render a
-placeholder email or silently mark an email sent.
+The server wires a minimal `SetupEmailRenderer` and a scoped worker for instance
+setup verification. The renderer supplies plain text and simple HTML for setup
+codes only; sign-in and invitation payloads fail rendering until their actual
+workflows/templates exist. React Email presentation can replace this capability
+without changing enqueueing, provider adapters or HTTP contracts.
 
 ## Transaction and storage boundary
 
@@ -83,9 +83,9 @@ Production uses a real provider and `NODE_ENV=production`; SDK diagnostics must 
 be treated as sanitized application logs. Capturing tests replace external delivery.
 
 `EmailWorkerLayer` scopes a sequential loop to its runtime and backs off after
-expected infrastructure failures. Unexpected defects are not swallowed. Future
-server composition must supply the actual renderer, reuse shared Layers and start
-the worker behind the migration gate. Detailed variables and commands belong in
+expected infrastructure failures. Unexpected defects are not swallowed. Server composition reuses shared Layers and starts the worker after migrations
+and committed startup preparation. The local operator CLI acquires services but
+does not start delivery. Detailed variables and commands belong in
 the [package README](../../packages/emails/README.md).
 
 ## Verification and limits
@@ -97,7 +97,8 @@ cancellation, ciphertext tampering, reclaimed/stale leases and final-attempt
 recovery. A PostgreSQL-only regression checks concurrent claim exclusion. SDK
 boundary tests intercept requests without sending email.
 
-No template preview, auth email API, resend endpoint, provider webhook,
+Setup request/resend and code verification are implemented. No template preview,
+regular sign-in API, provider webhook,
 reconciliation workflow or delivery-management UI exists yet. Payload contracts
 alone do not implement passwordless authentication or invitations.
 
@@ -110,5 +111,6 @@ alone do not implement passwordless authentication or invitations.
 - [Delivery](../../packages/emails/src/jobs/delivery.ts) and [worker](../../packages/emails/src/jobs/worker.ts)
 - [Provider selection](../../packages/emails/src/node/provider.ts)
 - [Cipher](../../packages/emails/src/node/cipher.ts)
+- [Minimal setup renderer](../../packages/emails/src/setup-renderer.ts)
 - [Renderer boundary](../../packages/emails/src/renderer.ts)
 - [Tests](../../packages/emails/tests)

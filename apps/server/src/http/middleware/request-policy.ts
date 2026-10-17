@@ -89,7 +89,11 @@ export const makeRequestPolicy = Effect.gen(function* () {
         Effect.catchCause(respondToCause),
       );
 
-      const response = yield* cors(guarded);
+      const result = yield* cors(guarded);
+      const response =
+        result.status === 429 && result.headers["retry-after"] === undefined
+          ? HttpServerResponse.setHeader(result, "retry-after", "60")
+          : result;
       const finishedAt = yield* Clock.currentTimeMillis;
       if (!path.startsWith("/health/")) {
         yield* Effect.logInfo("HTTP request", {

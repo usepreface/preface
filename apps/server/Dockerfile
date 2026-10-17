@@ -6,6 +6,8 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig.json ./
 COPY patches ./patches
 COPY packages/protocol ./packages/protocol
 COPY packages/database ./packages/database
+COPY packages/crypto ./packages/crypto
+COPY packages/emails ./packages/emails
 COPY packages/application ./packages/application
 COPY packages/api ./packages/api
 COPY apps/server ./apps/server

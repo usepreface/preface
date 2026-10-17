@@ -1,4 +1,5 @@
 export { Installation, IssueBootstrapToken } from "#/model/instance/installation";
+export { BootstrapChallenge, CreateBootstrapChallenge } from "#/model/instance/bootstrap-challenge";
 export {
   EmailPayload,
   InstanceSetupEmailVariables,

@@ -17,7 +17,13 @@ const makeAuditEventRepository = Effect.gen(function* () {
 
     const [row] = yield* database
       .insert(auditEvent)
-      .values({ ...encoded, actorUserId: input.actorUserId, targetId: input.targetId, occurredAt })
+      .values({
+        ...encoded,
+        actorUserId: input.actorUserId,
+        targetId: input.targetId,
+        metadata: input.metadata,
+        occurredAt,
+      })
       .returning();
 
     if (row === undefined)

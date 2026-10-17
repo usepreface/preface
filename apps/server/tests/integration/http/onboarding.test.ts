@@ -8,6 +8,7 @@ import { SessionActor } from "@usepreface/protocol/dto";
 
 import { prepareTestInstance } from "../../fixtures/backend.js";
 import { HttpTestLayer } from "../../fixtures/http.js";
+import { pendingSetupCode } from "../../fixtures/setup-code.js";
 
 layer(HttpTestLayer, { excludeTestServices: true })("onboarding HTTP boundary", (it) => {
   it.effect(
@@ -29,20 +30,48 @@ layer(HttpTestLayer, { excludeTestServices: true })("onboarding HTTP boundary", 
         });
         expect(inspected.expiresAt).toEqual(prepared.expiresAt);
 
-        const [actor, completedResponse] = yield* api.instanceSetup.complete({
+        const [verification, requestedResponse] = yield* api.instanceSetup.requestVerification({
           payload: {
             token: Redacted.value(prepared.token),
             instanceName: "Knowledge",
             ownerName: " Owner ",
             email: " Owner@Example.Test ",
-            password: "a long test password",
+          },
+          responseMode: "decoded-and-response",
+        });
+        expect(requestedResponse.status).toBe(202);
+        expect(requestedResponse.headers["set-cookie"]).toBeUndefined();
+        const cooldown = yield* http.execute(
+          HttpClientRequest.post("/api/v1/instance/setup/resend").pipe(
+            HttpClientRequest.setHeader("origin", "https://preface.example.test"),
+            HttpClientRequest.bodyJsonUnsafe({
+              token: Redacted.value(prepared.token),
+              challengeId: verification.challengeId,
+            }),
+          ),
+        );
+        expect(cooldown.status).toBe(429);
+        expect(cooldown.headers["retry-after"]).toBe("60");
+        expect(yield* cooldown.json).toEqual({
+          _tag: "BootstrapError",
+          code: "VERIFICATION_RATE_LIMITED",
+        });
+        const [actor, completedResponse] = yield* api.instanceSetup.complete({
+          payload: {
+            token: Redacted.value(prepared.token),
+            challengeId: verification.challengeId,
+            code: Redacted.value(yield* pendingSetupCode),
           },
           responseMode: "decoded-and-response",
         });
         expect(completedResponse.status).toBe(201);
         const completed = Schema.encodeSync(SessionActor)(actor);
         expect(completed).toMatchObject({
-          user: { email: "owner@example.test", displayName: "Owner", emailVerifiedAt: null },
+          user: {
+            email: "owner@example.test",
+            displayName: "Owner",
+            emailVerifiedAt: expect.any(String),
+          },
           session: { expiresAt: expect.any(String) },
         });
         expect(Object.keys(completed)).toEqual(["user", "session"]);

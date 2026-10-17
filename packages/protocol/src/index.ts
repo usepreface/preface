@@ -3,6 +3,7 @@ export { UserId } from "#/identifiers/user";
 export { SessionId } from "#/identifiers/session";
 export { AuditEventId } from "#/identifiers/audit";
 export { EmailJobId } from "#/identifiers/email";
+export { BootstrapChallengeId } from "#/identifiers/bootstrap";
 export { UserDisplayName, UserEmail } from "#/values/user";
 export { InstanceDisplayName } from "#/values/instance";
 export { SecretToken, SecretTokenFromString } from "#/values/secret-token";
@@ -22,6 +23,13 @@ export {
   BootstrapStatus,
   BootstrapTokenInfo,
   CompleteBootstrapRequest,
+  RequestBootstrapVerificationRequest,
+  ResendBootstrapVerificationRequest,
+  BootstrapVerification,
   InspectBootstrapRequest,
 } from "#/dto/index";
-export { BootstrapPassword, CompleteBootstrapInput } from "#/input/index";
+export {
+  CompleteBootstrapInput,
+  RequestBootstrapVerificationInput,
+  ResendBootstrapVerificationInput,
+} from "#/input/index";

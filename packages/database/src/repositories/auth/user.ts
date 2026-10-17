@@ -2,7 +2,7 @@ import { Context, DateTime, Effect, Layer, Schema } from "effect";
 
 import type { UserId } from "@usepreface/protocol";
 import { CreateUser, User } from "@usepreface/protocol/model";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 import { mapToDatabaseError } from "#/core/errors";
 import { Database } from "#/core/layer";
@@ -36,7 +36,20 @@ const makeUserRepository = Effect.gen(function* () {
     return decode(row);
   }, mapToDatabaseError);
 
-  return { findById, findByEmail, create } as const;
+  const markEmailVerified = Effect.fn("UserRepository.markEmailVerified")(function* (
+    userId: UserId,
+    expectedEmail: User["email"],
+  ) {
+    const now = DateTime.toDateUtc(yield* DateTime.now);
+    const [row] = yield* database
+      .update(user)
+      .set({ emailVerifiedAt: now, updatedAt: now })
+      .where(and(eq(user.id, userId), eq(user.email, expectedEmail)))
+      .returning();
+    return row === undefined ? undefined : decode(row);
+  }, mapToDatabaseError);
+
+  return { findById, findByEmail, create, markEmailVerified } as const;
 });
 
 export class UserRepository extends Context.Service<

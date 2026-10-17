@@ -1,8 +1,8 @@
 import { Schema } from "effect";
 import { OpenApi } from "effect/http-api";
 
-import { CompleteBootstrapRequest } from "@usepreface/protocol/dto";
-import { CompleteBootstrapInput } from "@usepreface/protocol/input";
+import { RequestBootstrapVerificationRequest } from "@usepreface/protocol/dto";
+import { RequestBootstrapVerificationInput } from "@usepreface/protocol/input";
 import { describe, expect, it } from "vitest";
 
 import { PrefaceApi } from "../../src/index.js";
@@ -14,6 +14,8 @@ describe("public HTTP contract", () => {
     expect(Object.keys(spec.paths)).toEqual([
       "/api/v1/instance/setup",
       "/api/v1/instance/setup/inspect",
+      "/api/v1/instance/setup/resend",
+      "/api/v1/instance/setup/verify",
       "/api/v1/auth/session",
     ]);
     expect(spec.paths["/api/v1/auth/session"]?.get?.security).toEqual([{ session: [] }]);
@@ -22,12 +24,10 @@ describe("public HTTP contract", () => {
       in: "cookie",
       name: "preface_session",
     });
-    expect(spec.paths["/api/v1/instance/setup"]?.post?.responses).toHaveProperty("201");
+    expect(spec.paths["/api/v1/instance/setup"]?.post?.responses).toHaveProperty("202");
     expect(spec.paths["/api/v1/instance/setup"]?.post?.responses).toHaveProperty("409");
-    // JSON Schema counts Unicode code points; the existing password policy counts UTF-16 units.
-    expect(spec.components?.schemas?.CompleteBootstrapRequest).toMatchObject({
+    expect(spec.components?.schemas?.RequestBootstrapVerificationRequest).toMatchObject({
       properties: {
-        password: { type: "string", minLength: 8, allOf: [{ writeOnly: true }] },
         token: { writeOnly: true },
       },
     });
@@ -43,10 +43,9 @@ describe("public HTTP contract", () => {
       instanceName: " Knowledge ",
       ownerName: " Owner ",
       email: " Owner@Example.Test ",
-      password: "  a long password  ",
     };
-    const encoded = Schema.encodeSync(CompleteBootstrapRequest)(request);
-    const input = Schema.decodeUnknownSync(CompleteBootstrapInput)(encoded);
+    const encoded = Schema.encodeSync(RequestBootstrapVerificationRequest)(request);
+    const input = Schema.decodeUnknownSync(RequestBootstrapVerificationInput)(encoded);
 
     expect(encoded).toEqual(request);
     expect(input).toMatchObject({
@@ -54,8 +53,7 @@ describe("public HTTP contract", () => {
       ownerName: "Owner",
       email: "owner@example.test",
     });
-    expect(() => Schema.encodeSync(CompleteBootstrapInput)(input)).toThrow();
-    expect(JSON.stringify(input)).not.toContain(request.password);
+    expect(() => Schema.encodeSync(RequestBootstrapVerificationInput)(input)).toThrow();
     expect(JSON.stringify(input)).not.toContain(request.token);
   });
 });

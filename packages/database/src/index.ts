@@ -18,4 +18,5 @@ export {
   InstallationRepository,
   InstanceSettingsRepository,
   InstanceOwnerRepository,
+  BootstrapChallengeRepository,
 } from "#/repositories/index";

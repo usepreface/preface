@@ -4,10 +4,10 @@ Typed, durable outbound email services for Preface. Requires Node.js 24, Effect 
 and the shared PostgreSQL services from `@usepreface/database`. Supports Resend,
 Inbound, Amazon SES v2 and SMTP through their respective SDKs/libraries.
 
-This package supplies delivery infrastructure only. React Email templates are not
-included. `EmailRenderer` is a required service with no default implementation;
-the current server does not acquire email services or start the email worker yet.
-The existing password-based bootstrap is unchanged.
+The server uses `SetupEmailRenderer.layer` for a minimal operational setup-code
+message and starts a scoped delivery worker. React Email presentation is not included.
+The minimal renderer accepts only `instance-setup`; sign-in and invitations require
+their own implemented workflows and templates.
 
 ## Enqueue email
 
@@ -32,7 +32,7 @@ export const enqueueEmail = Effect.fn("enqueueEmail")(function* (input: EnqueueE
 `EnqueueEmail` is a discriminated union: `type` selects the exact `variables`.
 Supported payload contracts are `instance-setup`, `sign-in` and
 `organization-invitation`, exported from `@usepreface/protocol/model`.
-They define future template inputs, not implemented authentication/invitation flows.
+Instance setup is wired; sign-in and invitation payloads define future template inputs.
 
 Each request also supplies a stable business `idempotencyKey` and `expiresAt`, with
 optional `availableAt`. Expiry cannot exceed the credential deadline in the
@@ -70,7 +70,7 @@ already in flight. The linked operation must independently enforce revocation.
 
 Compose shared Layers once. Supply the same provider to `EmailService` and
 `EmailDelivery`, and the same database composition to repositories and workflows.
-Start workers from the server composition only after templates are implemented.
+The server starts its setup worker after migrations and startup preparation.
 No new worker application or in-memory queue is required.
 
 ## Configuration
@@ -101,7 +101,7 @@ The selector refuses development logging in other environments. Directly providi
 Set `NODE_ENV=production` in production; Resend's SDK can emit its own error
 diagnostics outside production. Inbound SDK logging and automatic retries are disabled.
 
-Generate the encryption key locally, store it in deployment secrets and back it up
+Generate each crypto key independently locally, store it in deployment secrets and back it up
 with the database:
 
 ```sh

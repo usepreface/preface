@@ -3,8 +3,8 @@
 Preface is self-hosted knowledge infrastructure with installation-wide identity
 and multiple organizations as its product model. The implemented backend currently
 supports installation preparation, first-owner setup, session resolution and logout.
-Email infrastructure provides a durable outbox and provider adapters, but templates
-and server acquisition are not connected. Organization storage, invitations,
+Setup verifies mailbox ownership through an encrypted email outbox, minimal renderer
+and scoped worker. Organization storage, invitations,
 sign-in and knowledge ingestion are not implemented. The landing page illustrates the product independently of
 those backend capabilities.
 
@@ -24,7 +24,7 @@ those backend capabilities.
 | `apps/uikit`   | Interactive design-system reference                                               | Product state or backend behavior                       |
 
 The dependency direction is `api → protocol`, `database → protocol`, and
-`application → database + protocol`. The server composes these packages and Node
+`application → database + protocol + crypto + emails`. The server composes these packages and Node
 security adapters. Frontends consume presentation and public contracts; they
 never import database services. Runtime-neutral does not mean safe to expose every
 field: persistence models still contain password hashes and credential digests.
@@ -45,11 +45,11 @@ an instance-owner grant or organization permissions.
 
 One server composition shares the PostgreSQL pool, transaction service,
 repositories, migrations and application workflows. The listener opens only after
-migrations and committed instance preparation. The current Compose stack contains
-PostgreSQL and this backend; it contains no dashboard or worker service.
+migrations and committed instance preparation. The Compose stack contains PostgreSQL and this backend, with an in-process email
+worker and no dashboard.
 
-Business state and required audit rows commit in one transaction. Password hashing
-and random credential generation happen outside SQL locks. One-time proof
+Business state, durable email intent and required audit rows commit in one transaction.
+Random credential generation happens outside SQL locks; delivery happens outside business transactions. One-time proof
 consumption and owner changes use database coordination rather than process-local
 locks. Request admission limits are process-local and serve a separate purpose.
 

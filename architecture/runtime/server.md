@@ -22,7 +22,8 @@ first-owner transaction belong to [instance setup](../identity-access/instance-s
 
 Node receives SIGTERM/SIGINT through the scoped Effect runtime. Shutdown stops new
 requests, allows up to 15 seconds for active requests and releases resources. Compose
-allows 20 seconds before forcing exit. No background worker is installed.
+allows 20 seconds before forcing exit. The scoped email worker starts after startup preparation and stops with the runtime.
+The operator CLI does not start it.
 
 ## Request boundary
 
@@ -44,8 +45,9 @@ actor to protected handlers; cookie lifecycle and revocation are documented in
 [sessions](../identity-access/sessions.md).
 
 Request admission uses one-minute process-local windows: 240 general requests per
-client, 30 proof inspections and five completion attempts. Completion admits at most
-two concurrent requests before decoding or hashing. Setup limits use matched endpoint
+client, 30 proof inspections, five issuance/resend requests and ten verification
+attempts. Mutating setup endpoints admit at most two concurrent requests before decoding.
+The database separately enforces code attempts and resend cooldown across replicas. Setup limits use matched endpoint
 identifiers so alternate URL spellings cannot bypass them. Capacity is bounded to
 10,000 active buckets; replicas do not share enforcement. Rejections carry 429 and
 `Retry-After`. Health probes bypass admission limits.
@@ -80,8 +82,10 @@ plus a non-root backend image exposing container port 8080. The host publication
 defaults to loopback:8080. The image contains built workspace dependencies and
 migrations; landing and UI sources are excluded from its build context.
 
-The operator supplies the public origin and PostgreSQL credentials through deployment
-configuration. `PUBLIC_URL` is an HTTPS origin except for loopback development and
+The operator supplies the public origin, PostgreSQL credentials, two independent
+crypto keys and selected email provider configuration through deployment secrets.
+Production requires a real provider; console delivery additionally requires explicit
+`NODE_ENV=development`. Configuration is checked before binding, without a test send. `PUBLIC_URL` is an HTTPS origin except for loopback development and
 controls links/cookie security independently of internal proxy HTTP. The application
 generates setup/session credentials; no JWT signing key is required. Secret-file
 configuration and a deployment initializer are not implemented. Exact variables and

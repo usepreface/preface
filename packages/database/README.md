@@ -97,11 +97,17 @@ keys and typed relations. Storage verifies user existence, not usability.
 The last-owner safeguard protects active grants only; future authentication/lifecycle workflows
 must also check suspension and other user states. Repositories do not authorize a caller.
 
-Application bootstrap creates the user, password credential, owner grant, session and installation
+Application bootstrap creates the email-verified user, owner grant, session and installation
 completion in one outer transaction with required audit events. Application also generates setup
 proofs, resolves sessions and coordinates revocation. The server implements setup-proof replacement,
 startup logging and HTTP integration; account recovery and frontend integration remain pending.
 Signup remains invitation-only, and only instance owners may create organizations; neither policy is a configurable settings column.
+
+`instance.bootstrap_challenge` holds one pending setup verification per installation,
+including bound operator-proof digest, account details, code HMAC, attempts, expiry
+and encrypted email job identity. Repositories support replacement, conditional
+failure recording and consumption; the application coordinates them under the
+installation lock. Codes and email delivery are not repository responsibilities.
 
 ## Auth and audit storage
 
@@ -110,8 +116,8 @@ Signup remains invitation-only, and only instance owners may create organization
   characters; canonical email is nonempty, trimmed and lowercase. Address syntax is validated by
   protocol. Changing email must clear verification in the future application workflow.
 - `auth.password_credential` has one row per user, an opaque nonempty encoded password hash,
-  creation time and password-change time. Password changes cannot precede creation. The application
-  crypto service owns Argon2id hashing; persistence accepts only an already-generated hash.
+  creation time and password-change time. Password changes cannot precede creation. It remains legacy storage; passwordless setup does not create a row. Persistence
+  accepts only an already-generated hash.
 - `auth.session` stores UUIDv7 session identity, user, unique SHA-256 token digest as 64 lowercase
   hex characters, creation/activity/absolute-expiry timestamps and nullable revocation time.
   Indexes support digest lookup, user history and expiry cleanup. Expiry must follow creation;

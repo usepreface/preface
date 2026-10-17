@@ -10,7 +10,7 @@ From the repository root:
 
 ```sh
 cp .env.example .env
-# Edit .env: replace POSTGRES_PASSWORD and set PUBLIC_URL for this installation.
+# Edit .env: set database password, public origin, two crypto keys and email provider.
 docker compose up --build --detach --wait
 docker compose logs server
 ```
@@ -34,15 +34,17 @@ paths and queries. Routine logs never contain request bodies, cookies or setup c
 
 **This phase implements the backend only.** The printed `/setup#token=…` URL reserves the future
 onboarding page; this server does not render `/setup` or a dashboard. Until that UI exists, use
-the same-origin Scalar reference at `/api/docs` to inspect the proof and complete setup, sending
-the fragment's token in the JSON request body. Completion creates the first owner and sets a
-session cookie. It creates no organization. Sign-in, invitations, email verification, password
-reset and organization creation remain subsequent features.
+the same-origin Scalar reference at `/api/docs`. Inspect the fragment's proof, request
+verification with instance name, owner name and email, then submit the emailed eight-digit
+code with the returned challenge ID. Only verified completion creates the owner/session cookie.
+It creates no organization. Regular sign-in, recovery, invitations and organization creation
+remain subsequent features.
 
 ## Develop locally
 
 Copy `apps/server/.env.example` to `apps/server/.env` and configure an existing local PostgreSQL
-database. The server's commands load that package-local `.env` explicitly; imports never load it.
+database. Generate both crypto keys and select the explicit console provider for development.
+The server's commands load that package-local `.env` explicitly; imports never load it.
 
 ```sh
 pnpm --filter @usepreface/server dev
@@ -60,17 +62,19 @@ deployment configuration nor a database connection.
 
 The [API package](../../packages/api/README.md) owns the transport contract and typed client.
 
-| Method | Path                             | Behavior                                                     |
-| ------ | -------------------------------- | ------------------------------------------------------------ |
-| GET    | `/api/v1/instance/setup`         | Read safe setup status and instance name.                    |
-| POST   | `/api/v1/instance/setup/inspect` | Check a proof without consuming it.                          |
-| POST   | `/api/v1/instance/setup`         | Create the first owner and session; return 201 and a cookie. |
-| GET    | `/api/v1/auth/session`           | Resolve the current cookie into a safe actor; otherwise 401. |
-| DELETE | `/api/v1/auth/session`           | Revoke the current session and clear its cookie; return 204. |
-| GET    | `/health/live`                   | Check that the listener is running.                          |
-| GET    | `/health/ready`                  | Check PostgreSQL, with a two-second deadline.                |
-| GET    | `/api/openapi.json`              | Generated product API document.                              |
-| GET    | `/api/docs`                      | Bundled Scalar reference.                                    |
+| Method | Path                             | Behavior                                                             |
+| ------ | -------------------------------- | -------------------------------------------------------------------- |
+| GET    | `/api/v1/instance/setup`         | Read safe setup status and instance name.                            |
+| POST   | `/api/v1/instance/setup/inspect` | Check a proof without consuming it.                                  |
+| POST   | `/api/v1/instance/setup`         | Request a setup code; return 202 with challenge/expiry/resend times. |
+| POST   | `/api/v1/instance/setup/resend`  | Replace the code after cooldown; return 202.                         |
+| POST   | `/api/v1/instance/setup/verify`  | Verify code, create first owner/session; return 201 and cookie.      |
+| GET    | `/api/v1/auth/session`           | Resolve the current cookie into a safe actor; otherwise 401.         |
+| DELETE | `/api/v1/auth/session`           | Revoke the current session and clear its cookie; return 204.         |
+| GET    | `/health/live`                   | Check that the listener is running.                                  |
+| GET    | `/health/ready`                  | Check PostgreSQL, with a two-second deadline.                        |
+| GET    | `/api/openapi.json`              | Generated product API document.                                      |
+| GET    | `/api/docs`                      | Bundled Scalar reference.                                            |
 
 Pending instance setup is healthy: an operator must be able to finish onboarding. No listener
 opens if migrations or startup preparation fail. Shutdown stops admission, allows up to 15 seconds
@@ -94,6 +98,21 @@ The [database configuration](../../packages/database/README.md#configuration) is
 | `CORS_ALLOWED_ORIGINS` | Empty     | Comma-separated additional browser origins. `PUBLIC_URL` is always allowed.                                                     |
 | `TRUSTED_PROXY_CIDRS`  | Empty     | Comma-separated proxy IP networks trusted for `X-Forwarded-For`.                                                                |
 
+Setup also requires `CRYPTO_ENCRYPTION_KEY`, `CRYPTO_HMAC_KEY`, `EMAIL_PROVIDER`,
+`EMAIL_FROM` and the selected provider's credentials. Generate each 32-byte base64 key
+independently with `openssl rand -base64 32`; keep them stable across replicas/restarts
+and preserve them with backups. Legacy `EMAIL_ENCRYPTION_KEY` remains a fallback for
+the encryption key in direct server deployments. Compose uses the new explicit names.
+The [email README](../../packages/emails/README.md#configuration) documents provider variables.
+
+Production Compose defaults to `NODE_ENV=production` and requires a real provider.
+For local console delivery, explicitly set both `NODE_ENV=development` and
+`EMAIL_PROVIDER=development`; logs then include verification codes. There is no
+silent delivery fallback. Configuration errors prevent binding, while transient
+provider failures are handled asynchronously by the durable outbox. Startup sends
+no test email. The server starts one scoped worker after preparation; CLI reissue
+never starts a worker. Provider acceptance does not prove inbox delivery.
+
 By default, rate limiting uses the TCP peer address and ignores forwarded headers. Behind a proxy,
 allow only its actual CIDRs and restrict direct access to the server. Forwarded addresses are
 walked from the socket through trusted hops, stopping at the first untrusted address. Invalid
@@ -116,14 +135,15 @@ through the application policy include a generated `X-Request-Id`, `Cache-Contro
 `nosniff`, no-referrer and frame protection. Native parser failures and oversized streaming bodies
 may close the connection before an application response can be written.
 
-Rate windows last one minute: 240 general requests per client, 30 proof inspections, and five
-setup completion attempts. At most two completion requests run concurrently, admitted before
-payload decoding or password hashing. Rejection returns 429 and `Retry-After`. Health probes
+Rate windows last one minute: 240 general requests per client, 30 proof inspections, five
+issuance/resend requests and ten code-verification attempts. At most two mutating setup requests
+run concurrently before payload decoding. A shared database cooldown and five-attempt
+challenge budget independently protect verification across replicas. Rejection returns 429 and `Retry-After`. Health probes
 bypass rate limits. These limits are process-local with at most 10,000 active buckets; replicas
 need a shared admission layer when distributed enforcement becomes necessary.
 
 Expected domain errors retain their public tagged shape. Malformed input becomes a sanitized
-`RequestError`; SQL, validation issues, passwords and native causes are omitted. Retryable storage
+`RequestError`; SQL, validation issues, codes and native causes are omitted. Retryable storage
 failures return 503; unexpected failures return 500. Logs contain a request ID, known route name,
 method, status and duration, with no arbitrary paths or queries. Do not automatically retry setup
 completion: a lost response can follow a committed completion, and the proof cannot be replayed.

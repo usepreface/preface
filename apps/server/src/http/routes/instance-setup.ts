@@ -4,7 +4,11 @@ import { HttpApiBuilder } from "effect/http-api";
 import { PrefaceApi } from "@usepreface/api";
 import { Application } from "@usepreface/application";
 import { RequestError, SecretTokenFromString } from "@usepreface/protocol";
-import { CompleteBootstrapInput } from "@usepreface/protocol/input";
+import {
+  CompleteBootstrapInput,
+  RequestBootstrapVerificationInput,
+  ResendBootstrapVerificationInput,
+} from "@usepreface/protocol/input";
 
 import { setSessionCookie } from "#/http/cookies/session";
 import { mapInfrastructureError } from "#/http/errors";
@@ -12,7 +16,6 @@ import { mapInfrastructureError } from "#/http/errors";
 export const InstanceSetupRoutes = HttpApiBuilder.group(PrefaceApi, "instanceSetup", (handlers) =>
   Effect.gen(function* () {
     const bootstrap = (yield* Application).instance.bootstrap;
-
     return handlers.handleAll({
       status: () => bootstrap.getStatus().pipe(mapInfrastructureError),
       inspect: Effect.fn("http.instanceSetup.inspect")(function* ({ payload }) {
@@ -20,6 +23,22 @@ export const InstanceSetupRoutes = HttpApiBuilder.group(PrefaceApi, "instanceSet
           Effect.mapError(() => new RequestError({ code: "INVALID_INPUT" })),
         );
         return yield* bootstrap.inspectToken(token).pipe(mapInfrastructureError);
+      }),
+      requestVerification: Effect.fn("http.instanceSetup.requestVerification")(function* ({
+        payload,
+      }) {
+        const input = yield* Schema.decodeUnknownEffect(RequestBootstrapVerificationInput)(
+          payload,
+        ).pipe(Effect.mapError(() => new RequestError({ code: "INVALID_INPUT" })));
+        return yield* bootstrap.requestVerification(input).pipe(mapInfrastructureError);
+      }),
+      resendVerification: Effect.fn("http.instanceSetup.resendVerification")(function* ({
+        payload,
+      }) {
+        const input = yield* Schema.decodeUnknownEffect(ResendBootstrapVerificationInput)(
+          payload,
+        ).pipe(Effect.mapError(() => new RequestError({ code: "INVALID_INPUT" })));
+        return yield* bootstrap.resendVerification(input).pipe(mapInfrastructureError);
       }),
       complete: Effect.fn("http.instanceSetup.complete")(function* ({ payload }) {
         const input = yield* Schema.decodeUnknownEffect(CompleteBootstrapInput)(payload).pipe(

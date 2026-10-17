@@ -16,11 +16,20 @@ export const SetupProtectionLive = Layer.effect(
 
     return SetupProtection.of(
       Effect.fn("http.protectSetup")(function* (httpEffect, { endpoint }) {
-        if (endpoint.identifier !== "inspect" && endpoint.identifier !== "complete")
+        if (
+          endpoint.identifier !== "inspect" &&
+          endpoint.identifier !== "complete" &&
+          endpoint.identifier !== "requestVerification" &&
+          endpoint.identifier !== "resendVerification"
+        )
           return yield* httpEffect;
         const request = yield* HttpServerRequest.HttpServerRequest;
         const wait = yield* limits.check(
-          endpoint.identifier,
+          endpoint.identifier === "inspect"
+            ? "inspect"
+            : endpoint.identifier === "complete"
+              ? "complete"
+              : "issue",
           clientAddress(request, config.trustedProxyNetworks),
         );
         if (wait !== undefined)

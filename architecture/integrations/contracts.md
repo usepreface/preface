@@ -9,7 +9,7 @@ clients. Requests, responses and errors have one schema definition for that boun
 | Module         | Responsibility                                                               | Public entry point                        |
 | -------------- | ---------------------------------------------------------------------------- | ----------------------------------------- |
 | `identifiers/` | Branded UUIDv7 installation, user, session, owner-grant and audit identities | Protocol root                             |
-| `values/`      | Reusable field validation, credential codecs and bootstrap password policy   | Protocol root for supported shared values |
+| `values/`      | Reusable field validation, credential codecs and shared value validation     | Protocol root for supported shared values |
 | `errors/`      | Expected failures grouped by domain, with safe public fields                 | Protocol root                             |
 | `dto/`         | Public requests and explicitly selected responses                            | `@usepreface/protocol/dto`                |
 | `input/`       | Normalized application inputs with redacted credentials                      | `@usepreface/protocol/input`              |
@@ -28,14 +28,14 @@ their workflows need contracts.
 
 ## Wire, application and persistence values
 
-`CompleteBootstrapRequest` can encode plain string credentials for HTTP transmission.
-The server decodes that payload with `CompleteBootstrapInput`, which trims names,
-canonicalizes email and wraps credentials in `Redacted`. Encoding those internal
+`RequestBootstrapVerificationRequest` encodes the operator proof and account details.
+Its application input trims names, canonicalizes email and redacts the proof.
+`CompleteBootstrapRequest` carries proof, challenge ID and eight-digit code;
+`CompleteBootstrapInput` redacts both credentials. Encoding those internal
 credentials is forbidden. Public DTOs and application inputs share value validation
 without importing each other's implementation.
 
-Names require 1–120 UTF-16 code units after trimming. New bootstrap passwords retain
-their exact contents and require 15–128 UTF-16 code units. Email canonicalization
+Names require 1–120 UTF-16 code units after trimming. Email canonicalization
 trims and lowercases the whole address without provider-specific rewriting. JSON
 Schema counts Unicode code points, so its generated length bounds are conservative;
 field descriptions state the server's exact rule.
@@ -58,7 +58,7 @@ discriminate `_tag` and `code` rather than assume a client-side error class inst
 The HTTP API owns paths, methods, status-specific encoding, middleware requirements
 and OpenAPI annotations. It contains no handlers or queries. `CurrentActor` is
 provided by authentication; it is never a request-body identity. Setup protection
-is attached to matched endpoint identifiers before payload decoding and hashing.
+is attached to matched endpoint identifiers before payload decoding.
 
 `PrefaceApi` is prefixed with `/api/v1`. A typed client's base URL is the origin,
 without another API prefix. Cookie authentication is declared in the contract;

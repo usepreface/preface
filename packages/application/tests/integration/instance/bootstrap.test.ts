@@ -5,10 +5,10 @@ import { TestClock } from "effect/testing";
 import { Database, DatabaseRepository } from "@usepreface/database";
 import { TestDatabase } from "@usepreface/database/testing";
 
-import { Application, PasswordService } from "../../../src/index.js";
+import { Application } from "../../../src/index.js";
 import { ApplicationTestLayer } from "../../fixtures/application.js";
 import { rejectLifecycleAudit } from "../../fixtures/audit-failure.js";
-import { bootstrapInput } from "../../fixtures/bootstrap.js";
+import { bootstrapInput, pendingSetupCode, verificationInput } from "../../fixtures/bootstrap.js";
 
 layer(ApplicationTestLayer)("instance bootstrap", (it) => {
   it.effect("preserves a pending link on restart and invalidates replaced and expired links", () =>
@@ -39,7 +39,9 @@ layer(ApplicationTestLayer)("instance bootstrap", (it) => {
 
       yield* TestClock.setTime(DateTime.toEpochMillis(replacement.expiresAt));
       expect(
-        yield* bootstrap.complete(yield* bootstrapInput(replacement.token)).pipe(Effect.flip),
+        yield* bootstrap
+          .requestVerification(yield* bootstrapInput(replacement.token))
+          .pipe(Effect.flip),
       ).toMatchObject({ _tag: "BootstrapError", code: "INVALID_TOKEN" });
       const renewed = yield* bootstrap.prepare();
       expect(renewed.state).toBe("issued");
@@ -60,11 +62,18 @@ layer(ApplicationTestLayer)("instance bootstrap", (it) => {
         const database = yield* Database;
         const prepared = yield* application.instance.bootstrap.prepare();
         if (prepared.state !== "issued") throw new Error("Expected the setup token");
-        const input = yield* bootstrapInput(prepared.token, {
+        const details = yield* bootstrapInput(prepared.token, {
           email: " Owner@Example.Test ",
           ownerName: " First Owner ",
           instanceName: " Knowledge ",
         });
+
+        const verification = yield* application.instance.bootstrap.requestVerification(details);
+        const input = {
+          token: prepared.token,
+          challengeId: verification.challengeId,
+          code: yield* pendingSetupCode,
+        };
 
         const outcomes = yield* Effect.all(
           [
@@ -87,7 +96,7 @@ layer(ApplicationTestLayer)("instance bootstrap", (it) => {
           id: completed.actor.user.id,
           displayName: "First Owner",
           email: "owner@example.test",
-          emailVerifiedAt: null,
+          emailVerifiedAt: expect.anything(),
         });
         expect(Object.keys(completed.actor.session)).toEqual(["id", "expiresAt"]);
         expect(yield* application.auth.session.resolve(completed.sessionToken)).toEqual(
@@ -113,21 +122,41 @@ layer(ApplicationTestLayer)("instance bootstrap", (it) => {
         const credential = yield* repository.auth.passwordCredential.findByUserId(
           completed.actor.user.id,
         );
-        if (credential === undefined) throw new Error("Expected the password credential");
-        expect(
-          yield* (yield* PasswordService).verify(input.password, credential.passwordHash),
-        ).toBe(true);
+        expect(credential).toBeUndefined();
         const rows = yield* database.query.session.findMany();
         expect(rows).toHaveLength(1);
         expect(rows[0]?.tokenHash).not.toBe(Redacted.value(completed.sessionToken));
         const events = yield* database.query.auditEvent.findMany();
         expect(events.map((event) => event.eventType).toSorted()).toEqual([
+          "auth.email_verified",
           "auth.session_created",
           "instance.bootstrap_completed",
           "instance.bootstrap_token_issued",
+          "instance.bootstrap_verification_requested",
           "instance.owner_granted",
         ]);
       }),
+  );
+
+  it.effect("rolls back the challenge and email intent when required audit fails", () =>
+    Effect.gen(function* () {
+      yield* (yield* TestDatabase).reset;
+      const bootstrap = (yield* Application).instance.bootstrap;
+      const prepared = yield* bootstrap.prepare();
+      if (prepared.state !== "issued") throw new Error("Expected setup proof");
+      const input = yield* bootstrapInput(prepared.token);
+      yield* Effect.scoped(
+        Effect.gen(function* () {
+          yield* rejectLifecycleAudit;
+          expect(yield* bootstrap.requestVerification(input).pipe(Effect.flip)).toMatchObject({
+            _tag: "DatabaseError",
+          });
+        }),
+      );
+      expect(yield* (yield* DatabaseRepository).instance.challenge.find()).toBeUndefined();
+      expect(yield* (yield* Database).$client`select id from jobs.email`).toEqual([]);
+      yield* bootstrap.requestVerification(input);
+    }),
   );
 
   it.effect("rolls back the entire completion when the final required audit insert fails", () =>
@@ -138,7 +167,7 @@ layer(ApplicationTestLayer)("instance bootstrap", (it) => {
       const database = yield* Database;
       const prepared = yield* application.instance.bootstrap.prepare();
       if (prepared.state !== "issued") throw new Error("Expected the setup token");
-      const input = yield* bootstrapInput(prepared.token);
+      const input = yield* verificationInput(prepared.token);
       const before = yield* application.instance.bootstrap.getStatus();
 
       yield* Effect.scoped(
@@ -156,7 +185,7 @@ layer(ApplicationTestLayer)("instance bootstrap", (it) => {
       expect(yield* database.query.passwordCredential.findMany()).toEqual([]);
       expect(yield* database.query.session.findMany()).toEqual([]);
       expect((yield* database.query.auditEvent.findMany()).map((event) => event.eventType)).toEqual(
-        ["instance.bootstrap_token_issued"],
+        ["instance.bootstrap_token_issued", "instance.bootstrap_verification_requested"],
       );
       expect(yield* application.instance.bootstrap.inspectToken(prepared.token)).toEqual({
         expiresAt: prepared.expiresAt,

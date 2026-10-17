@@ -19,7 +19,6 @@ layer(HttpTestLayer, { excludeTestServices: true })("HTTP request policy", (it) 
           instanceName: "Preface",
           ownerName: "Owner",
           email: "owner@example.test",
-          password: "a long test password",
         };
 
         const rejected = yield* http.execute(
@@ -47,7 +46,7 @@ layer(HttpTestLayer, { excludeTestServices: true })("HTTP request policy", (it) 
             HttpClientRequest.setHeader("origin", "https://preface.example.test"),
             HttpClientRequest.bodyJsonUnsafe({
               ...payload,
-              password: "sensitive-short".slice(0, 10),
+              email: "sensitive-invalid-email",
             }),
           ),
         );

@@ -47,9 +47,9 @@
     "test:built": "pnpm --workspace-root exec turbo run build --filter=@usepreface/application && node --test tests/smoke/built.test.mjs"
   },
   "dependencies": {
-    "@node-rs/argon2": "2.2.2",
     "@usepreface/crypto": "workspace:*",
     "@usepreface/database": "workspace:*",
+    "@usepreface/emails": "workspace:*",
     "@usepreface/protocol": "workspace:*",
     "effect": "catalog:"
   },
@@ -62,5 +62,8 @@
     "tsdown": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "inlinedDependencies": {
+    "drizzle-orm": "1.0.0-rc.4"
   }
 }

@@ -4,5 +4,8 @@ export {
   BootstrapStatus,
   BootstrapTokenInfo,
   CompleteBootstrapRequest,
+  RequestBootstrapVerificationRequest,
+  ResendBootstrapVerificationRequest,
+  BootstrapVerification,
   InspectBootstrapRequest,
 } from "#/dto/instance/bootstrap";

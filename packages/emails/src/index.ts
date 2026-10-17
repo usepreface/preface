@@ -8,3 +8,4 @@ export { EmailSender } from "#/config";
 export { EmailPayloadCipher } from "#/cipher";
 export { EmailError, EmailProviderError } from "#/errors";
 export { DevelopmentEmail } from "#/providers/development";
+export { SetupEmailRenderer } from "#/setup-renderer";
