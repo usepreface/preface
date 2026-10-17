@@ -3,3 +3,18 @@ export { UserId } from "#/identifiers/user";
 export { SessionId } from "#/identifiers/session";
 export { AuditEventId } from "#/identifiers/audit";
 export { InstanceStateError } from "#/errors/instance";
+export {
+  AuthenticationError,
+  PublicUser,
+  PublicSession,
+  SessionActor,
+  SecretToken,
+  SecretTokenFromString,
+} from "#/auth/session";
+export {
+  BootstrapError,
+  BootstrapPassword,
+  BootstrapStatus,
+  BootstrapTokenInfo,
+  CompleteBootstrapInput,
+} from "#/instance/bootstrap";

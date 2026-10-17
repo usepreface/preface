@@ -10,6 +10,8 @@ allowBuilds:
   lefthook: true
 
 catalog:
+  "@effect/platform-node": 4.0.5
+  "@effect/vitest": 4.0.5
   "@types/node": 24.19.2
   "@types/react": 19.3.0
   "@types/react-dom": 19.3.0

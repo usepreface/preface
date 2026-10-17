@@ -4,23 +4,35 @@ Shared Effect schemas, domain models, identifiers and expected errors for Prefac
 package is runtime-neutral: browser and Node.js consumers use the same public contracts. Keep it free
 of Node.js built-ins, DOM-specific APIs, database code and application workflows.
 
-The root exports branded UUIDv7 identities and expected instance-state errors. The explicit
+The root exports branded UUIDv7 identities, expected instance/bootstrap/authentication errors,
+bootstrap input/status schemas and safe public user/session/actor schemas. The explicit
 `@usepreface/protocol/model` entry exports instance, user, password-credential, session and audit
 storage codecs and focused write inputs. These models contain internal fields such as password
 hashes and setup/session-token digests; they are
-not public response DTOs. Public responses must explicitly select safe fields when APIs are added.
+not public response DTOs. Application workflows explicitly select safe fields; transports encode
+the public schemas, whose timestamps use ISO strings rather than driver `Date` values.
+
+`CompleteBootstrapInput` decodes raw strings, trims names, trims/lowercases email and wraps the
+setup token and password in `Redacted`. Passwords are preserved exactly and require 15–128
+JavaScript string code units. Secret input encoding is forbidden. `SecretTokenFromString` decodes
+other incoming token strings into redacted values; `SecretToken` validates an already-redacted token.
+Keep validation errors containing raw input out of responses/logs. `SessionActor` is constructed
+by authentication and must not be accepted as a client-supplied identity. Its only fields are safe
+`user` identity/profile and `session` identity/expiry; it contains no credential or authority grant.
 
 Storage codecs decode driver `Date` values into Effect `DateTime.Utc` and encode them back for writes.
 Installation, grant, credential and session codecs validate lifecycle consistency. User emails
 must already be trimmed and lowercase; ordinary address syntax is validated without rewriting
 provider-specific dots or plus tags. Display names are trimmed and 1–120 characters. Session
 digests are 64 lowercase hexadecimal characters, representing SHA-256 of a random session secret.
-Credential hashes remain opaque nonempty encoded strings; the future credential service owns
+Credential hashes remain opaque nonempty encoded strings; the application credential service owns
 password hashing and algorithm validation.
 
 Audit contracts correlate event types with their target identities and metadata. Current events
-cover bootstrap completion, owner grants and session creation/revocation. User actors require a
-user identity; system actors cannot carry one. Extend the typed union when adding new audited
+cover bootstrap proof issuance/replacement, bootstrap completion, owner grants and session
+creation/revocation. Proof issuance metadata records whether an existing digest was replaced,
+without retaining either credential. User actors require a user identity; system actors cannot
+carry one. Extend the typed union when adding new audited
 workflows. These persistence contracts do not implement authentication, hashing or HTTP APIs.
 
 Effect is the only runtime dependency. The neutral production TypeScript preset uses `types: []`

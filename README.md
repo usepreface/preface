@@ -2,19 +2,22 @@
 
 Open-source, self-hosted knowledge infrastructure built with TypeScript and Effect.
 
-This repository contains monorepo tooling and the first internal package scaffolds:
+This repository contains monorepo tooling and these workspace packages and applications:
 
 - [protocol](packages/protocol/README.md): runtime-neutral shared Effect schemas, models and errors.
 - [database](packages/database/README.md): Node.js persistence with Effect and Drizzle ORM/Kit.
+- [application](packages/application/README.md): transactional instance setup and session workflows,
+  with password and token security capabilities.
 - [template](packages/template/README.md): reusable starter for internal packages.
 - [ui](packages/ui/README.md): the design system - Base UI components in the shadcn/ui structure, Preface tokens,
   icons, company logos and brand marks.
 - [uikit](apps/uikit/README.md): Preface UI Kit, the living reference for every component, icon, logo and piece of art in light and dark.
 
 The database package includes connection/transaction services, error mapping, migration tooling,
-PGlite/PostgreSQL test layers, and the installation, settings and owner-grant tables/repositories
-inside the `instance` schema. Protocol provides their shared schemas and branded identities.
-Authentication, organization tables and applications have not been implemented yet.
+PGlite/PostgreSQL test layers, and instance, auth and audit tables/repositories grouped in PostgreSQL
+schemas. Protocol provides storage models, public bootstrap/session contracts and branded identities.
+Application implements first-owner setup and session resolution/revocation. Server startup,
+operator-link logging, HTTP APIs, sign-in and organization creation remain unwired.
 
 ## Setup
 
@@ -48,9 +51,11 @@ source-first development with the `preface-source` condition.
 | `pnpm test`         | Run workspace tests through Turborepo                                                                      |
 | `pnpm dev`          | Run workspace development tasks through Turborepo                                                          |
 
-Workspace checks and builds run against all three packages. Database tests cover configuration,
+Workspace checks and builds run across the workspace. Database tests cover configuration,
 error mapping, transactions and migrations with PGlite; an opt-in PostgreSQL lane verifies the
-real driver and migration locking. See the [database README](packages/database/README.md).
+real driver and migration locking. Application tests exercise bootstrap concurrency and proof
+lifecycle, audit rollback, session lifecycle and security adapters. See the
+[database README](packages/database/README.md) and [application README](packages/application/README.md).
 Klarity supplies the strict TypeScript, tsdown, Oxlint, Oxfmt, Conventional Commit and Lefthook presets.
 Each package should choose its own environment-appropriate Klarity TypeScript preset; the root config
 checks root and workspace tooling files only.

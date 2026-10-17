@@ -1,4 +1,4 @@
-import { Context, DateTime, Effect, Layer, Schema } from "effect";
+import { Context, DateTime, Duration, Effect, Layer, Schema } from "effect";
 
 import type { SessionId, UserId } from "@usepreface/protocol";
 import { CreateSession, Session } from "@usepreface/protocol/model";
@@ -45,6 +45,7 @@ const makeSessionRepository = Effect.gen(function* () {
 
   const recordActivity = Effect.fn("SessionRepository.recordActivity")(function* (
     sessionId: SessionId,
+    idleTimeout?: Duration.Duration,
   ) {
     const now = DateTime.toDateUtc(yield* DateTime.now);
     const [row] = yield* database
@@ -53,7 +54,16 @@ const makeSessionRepository = Effect.gen(function* () {
         // Requests may arrive out of order; activity must never move backwards.
         lastSeenAt: sql`greatest(${session.lastSeenAt}, ${sql.param(now, session.lastSeenAt)})`,
       })
-      .where(and(eq(session.id, sessionId), isNull(session.revokedAt), gt(session.expiresAt, now)))
+      .where(
+        and(
+          eq(session.id, sessionId),
+          isNull(session.revokedAt),
+          gt(session.expiresAt, now),
+          idleTimeout === undefined
+            ? undefined
+            : gt(session.lastSeenAt, new Date(now.getTime() - Duration.toMillis(idleTimeout))),
+        ),
+      )
       .returning();
     return row === undefined ? undefined : decode(row);
   }, mapToDatabaseError);

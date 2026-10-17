@@ -52,7 +52,7 @@
     "test:watch": "NODE_OPTIONS=--conditions=preface-source vitest"
   },
   "dependencies": {
-    "@effect/platform-node": "4.0.5",
+    "@effect/platform-node": "catalog:",
     "@effect/sql-pg": "4.0.5",
     "@usepreface/protocol": "workspace:*",
     "drizzle-orm": "1.0.0-rc.4",
@@ -61,7 +61,7 @@
   },
   "devDependencies": {
     "@effect/sql-pglite": "4.0.5",
-    "@effect/vitest": "4.0.5",
+    "@effect/vitest": "catalog:",
     "@electric-sql/pglite": "0.5.10",
     "@types/node": "catalog:",
     "drizzle-kit": "1.0.0-rc.4",

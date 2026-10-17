@@ -1,5 +1,5 @@
 import { expect, layer } from "@effect/vitest";
-import { DateTime, Effect } from "effect";
+import { DateTime, Duration, Effect } from "effect";
 import { TestClock } from "effect/testing";
 
 import { Database, DatabaseRepository } from "../../../src/index.js";
@@ -32,6 +32,14 @@ layer(RepositoryTestLayer)("session lifecycle", (it) => {
       yield* TestClock.setTime(DateTime.toEpochMillis(DateTime.add(createdAt, { minutes: 1 })));
       const olderRequest = yield* repository.auth.session.recordActivity(session.id);
       expect(olderRequest?.lastSeenAt).toEqual(active?.lastSeenAt);
+      expect(yield* repository.auth.session.findActiveByTokenHash(session.tokenHash)).toEqual(
+        olderRequest,
+      );
+
+      yield* TestClock.setTime(DateTime.toEpochMillis(DateTime.add(createdAt, { minutes: 3 })));
+      expect(
+        yield* repository.auth.session.recordActivity(session.id, Duration.minutes(1)),
+      ).toBeUndefined();
       expect(yield* repository.auth.session.findActiveByTokenHash(session.tokenHash)).toEqual(
         olderRequest,
       );

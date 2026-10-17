@@ -37,6 +37,13 @@ const ownerFields = {
   targetId: InstanceOwnerId,
   metadata: Schema.Struct({ grantSource: InstanceOwnerGrantSource }),
 };
+const bootstrapTokenFields = {
+  ...actorFields,
+  eventType: Schema.Literal("instance.bootstrap_token_issued"),
+  targetType: Schema.Literal("installation"),
+  targetId: InstallationId,
+  metadata: Schema.Struct({ replacesExisting: Schema.Boolean }),
+};
 const sessionFields = {
   ...actorFields,
   eventType: Schema.Literals(["auth.session_created", "auth.session_revoked"]),
@@ -47,6 +54,7 @@ const sessionFields = {
 
 export const RecordAuditEvent = Schema.Union([
   Schema.Struct(bootstrapFields),
+  Schema.Struct(bootstrapTokenFields),
   Schema.Struct(ownerFields),
   Schema.Struct(sessionFields),
 ]).check(actorCheck);
@@ -55,6 +63,7 @@ export type RecordAuditEvent = typeof RecordAuditEvent.Type;
 const storedFields = { id: AuditEventId, occurredAt: Schema.DateTimeUtcFromDate };
 export const AuditEvent = Schema.Union([
   Schema.Struct({ ...bootstrapFields, ...storedFields }),
+  Schema.Struct({ ...bootstrapTokenFields, ...storedFields }),
   Schema.Struct({ ...ownerFields, ...storedFields }),
   Schema.Struct({ ...sessionFields, ...storedFields }),
 ]).check(actorCheck);

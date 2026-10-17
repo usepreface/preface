@@ -6,8 +6,9 @@ Shared domain contracts belong in [protocol](../protocol/README.md); business wo
 authorization and transport policy belong in application packages.
 
 The foundation, instance/auth/audit tables, and their repositories are implemented. Migrations
-create the `instance`, `auth` and `audit` PostgreSQL schemas and their tables. Application/server
-workflows are not implemented.
+create the `instance`, `auth` and `audit` PostgreSQL schemas and their tables.
+[Application](../application/README.md) implements bootstrap and session workflows on these
+repositories. Server startup and HTTP integration are not implemented.
 
 ## Repository API
 
@@ -26,13 +27,13 @@ const loadOwner = Effect.gen(function* () {
 });
 ```
 
-| Group                     | Operations                                                                                                    |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `instance`                | `initialize`, `installation`, `settings`, `owner` (documented below)                                          |
-| `auth.user`               | `findById(userId)`, `findByEmail(canonicalEmail)`, `create(input)`                                            |
-| `auth.passwordCredential` | `findByUserId(userId)`, `create(input)`                                                                       |
-| `auth.session`            | `create(input)`, `findActiveByTokenHash(tokenHash)`, `recordActivity(sessionId)`, `revoke(sessionId, userId)` |
-| `audit.event`             | `append(input)`                                                                                               |
+| Group                     | Operations                                                                                                                  |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `instance`                | `initialize`, `installation`, `settings`, `owner` (documented below)                                                        |
+| `auth.user`               | `findById(userId)`, `findByEmail(canonicalEmail)`, `create(input)`                                                          |
+| `auth.passwordCredential` | `findByUserId(userId)`, `create(input)`                                                                                     |
+| `auth.session`            | `create(input)`, `findActiveByTokenHash(tokenHash)`, `recordActivity(sessionId, idleTimeout?)`, `revoke(sessionId, userId)` |
+| `audit.event`             | `append(input)`                                                                                                             |
 
 Writes encode the focused protocol input, and every returned row decodes into its protocol model,
 including `DateTime.Utc` timestamps and branded identities. Missing lookups and conditional
@@ -46,9 +47,11 @@ Effect clock instant rather than database defaults.
 
 Active session lookup excludes revoked sessions and expiry at or before the current Effect time.
 Activity updates use a conditional write, cannot move activity backwards, and never extend expiry
-or update an expired/revoked session. Revocation requires a matching user ID and an unrevoked row;
+or update an expired/revoked session. An optional Effect `Duration` idle timeout adds a strict
+last-activity cutoff to the conditional write, preventing idle-session revival after an earlier
+application check. Revocation requires a matching user ID and an unrevoked row;
 it can revoke an expired session, and repeated revocation preserves the original timestamp.
-User enablement, idle expiry, write throttling, and caller authorization belong to the application.
+User enablement, idle policy, write throttling, and caller authorization belong to the application.
 
 Audit append validates the typed event/target/metadata relationship and records occurrence time
 from the Effect clock. It does not expose updates or deletion. Required audit writes must share
@@ -63,7 +66,7 @@ transaction without accepting raw transaction clients.
 Its `initialize()` atomically creates the singleton installation and default settings, returning
 whether the installation was newly created. Repeated or concurrent initialization preserves
 the existing installation identity, bootstrap state, and edited settings. Migration execution
-creates tables only; initialization is an explicit operation for the future startup workflow.
+creates tables only; application startup preparation explicitly initializes the installation.
 
 - `installation` stores the fixed row key `1`, UUIDv7 installation identity, creation time,
   bootstrap completion, and an optional setup-token digest/issuance/expiry tuple. Check constraints
@@ -82,18 +85,18 @@ generates or logs a raw token. Replacement invalidates the previous token. `comp
 locks the installation, checks the current digest and fresh Effect time, requires an active owner,
 and atomically clears token metadata while closing bootstrap. Invalid, expired, future-issued,
 replayed, or replaced tokens return `undefined`. `installation.lock()` requires an active
-`TransactionService.run`; use it to coordinate the future full bootstrap workflow.
+`TransactionService.run`; application bootstrap uses it to coordinate the complete workflow.
 
 Owner subjects, granting actors and revoking actors reference `auth.user` with restrictive foreign
 keys and typed relations. Storage verifies user existence, not usability.
 The last-owner safeguard protects active grants only; future authentication/lifecycle workflows
 must also check suspension and other user states. Repositories do not authorize a caller.
 
-Full bootstrap must create the user, password credential, owner grant, session and installation
-completion in one outer transaction, with its required audit event. This change does not implement
-authentication, recovery commands, authorization, startup token generation/logging,
-or HTTP/UI flows. Signup remains invitation-only, and only instance owners may create organizations;
-neither policy is a configurable settings column.
+Application bootstrap creates the user, password credential, owner grant, session and installation
+completion in one outer transaction with required audit events. Application also generates setup
+proofs, resolves sessions and coordinates revocation. Recovery commands, startup logging and
+HTTP/UI integration remain unwired. Signup remains invitation-only, and only instance owners may
+create organizations; neither policy is a configurable settings column.
 
 ## Auth and audit storage
 
@@ -102,8 +105,8 @@ neither policy is a configurable settings column.
   characters; canonical email is nonempty, trimmed and lowercase. Address syntax is validated by
   protocol. Changing email must clear verification in the future application workflow.
 - `auth.password_credential` has one row per user, an opaque nonempty encoded password hash,
-  creation time and password-change time. Password changes cannot precede creation. The future
-  crypto service owns Argon2id hashing; no hashing library or authentication behavior is added here.
+  creation time and password-change time. Password changes cannot precede creation. The application
+  crypto service owns Argon2id hashing; persistence accepts only an already-generated hash.
 - `auth.session` stores UUIDv7 session identity, user, unique SHA-256 token digest as 64 lowercase
   hex characters, creation/activity/absolute-expiry timestamps and nullable revocation time.
   Indexes support digest lookup, user history and expiry cleanup. Expiry must follow creation;
@@ -119,9 +122,10 @@ neither policy is a configurable settings column.
   organization persistence.
 
 All auth user foreign keys use `on delete restrict`; account disabling preserves references and
-history. There is no account-disable workflow yet. Public DTOs, bootstrap/login/logout, password
-reset and authorization are still pending. Write related lifecycle
-timestamps explicitly from the same Effect clock instant, including `createdAt` when checking
+history. There is no account-disable workflow yet. Public DTOs and application bootstrap/session
+workflows are implemented in protocol/application. HTTP authentication, sign-in, password reset
+and resource authorization are still pending. Write related lifecycle timestamps explicitly
+from the same Effect clock instant, including `createdAt` when checking
 against it; do not mix an earlier test/application time with a later database insertion default.
 The auth/audit migration deliberately fails if older owner rows reference nonexistent users; it
 does not fabricate users or silently remove historical grants.

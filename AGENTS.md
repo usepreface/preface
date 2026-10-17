@@ -61,6 +61,9 @@ Git history as a side effect of a refactor.
 - [`packages/database`](packages/database/README.md) — Drizzle schema,
   PostgreSQL layer, transactions, migrations, repositories, and test database
   layers. Tables are grouped into PostgreSQL schemas by domain.
+- [`packages/application`](packages/application/README.md) — instance bootstrap,
+  session workflows, security capabilities and Node security adapters. HTTP
+  handling and runtime startup remain at the future server boundary.
 - [`packages/template`](packages/template/README.md) — starter for new workspace
   packages.
 
