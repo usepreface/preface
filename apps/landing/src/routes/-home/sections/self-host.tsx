@@ -2,7 +2,8 @@ import * as React from "react";
 
 import { Glow, Grain, PerspectiveGrid, Scanlines, seeded } from "@usepreface/ui/patterns";
 
-import { useInView, useReducedMotion } from "./motion";
+import { useInView } from "../../../hooks/use-in-view";
+import { useReducedMotion } from "../../../hooks/use-reduced-motion";
 
 /*
  * Figma "Self-host": a night panel with a perspective grid, scanlines and glitch bars, and a

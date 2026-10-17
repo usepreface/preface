@@ -2,71 +2,20 @@ import * as React from "react";
 
 import { PrefaceLogo } from "@usepreface/ui/brand";
 import { Button, buttonVariants } from "@usepreface/ui/components/button";
-import { useTheme } from "@usepreface/ui/components/theme-provider";
-import { CloseIcon, MenuIcon, MoonIcon, SunIcon } from "@usepreface/ui/icons";
+import { CloseIcon, MenuIcon } from "@usepreface/ui/icons";
 import { cn } from "@usepreface/ui/lib/utils";
-import { GitHubLogo } from "@usepreface/ui/logos";
 
-import { formatStars } from "../../lib/github";
 import { site } from "../../site";
+import { GitHubButton } from "./github-button";
+import { ThemeSwitch } from "./theme-switch";
 
-export const navLinks = [
+const navLinks = [
   { label: "Product", href: "#how-it-works" },
   { label: "Integrations", href: "#integrations" },
   { label: "Docs", href: site.docs },
   { label: "Enterprise", href: "#pricing" },
   { label: "Changelog", href: `${site.github}/releases` },
 ] as const;
-
-/** Light/dark segmented switch. The active segment comes from the `.dark` class, not state,
- * so the prerendered markup matches whatever theme the boot script applied. */
-function ThemeSwitch({ className }: { className?: string }) {
-  const { setTheme } = useTheme();
-  const segment =
-    "flex size-7 items-center justify-center rounded-full text-icon-secondary outline-none transition-colors hover:text-foreground focus-visible:ring-3 focus-visible:ring-focus-ring [&_svg]:size-3.5";
-  return (
-    <div
-      role="group"
-      aria-label="Colour theme"
-      className={cn("flex items-center gap-0.5 rounded-full bg-surface-3 p-0.75", className)}
-    >
-      <button
-        type="button"
-        aria-label="Light theme"
-        onClick={() => setTheme("light")}
-        className={cn(segment, "not-dark:bg-surface-1 not-dark:text-icon not-dark:shadow-xs")}
-      >
-        <SunIcon />
-      </button>
-      <button
-        type="button"
-        aria-label="Dark theme"
-        onClick={() => setTheme("dark")}
-        className={cn(segment, "dark:bg-surface-1 dark:text-icon dark:shadow-xs")}
-      >
-        <MoonIcon />
-      </button>
-    </div>
-  );
-}
-
-function GitHubButton({ stars, className }: { stars: number | null; className?: string }) {
-  return (
-    <a
-      href={site.github}
-      className={cn(
-        "flex h-9 items-center gap-1.5 rounded-full border border-border-default px-3 text-fg-secondary outline-none transition-colors hover:border-border-strong hover:text-foreground focus-visible:ring-3 focus-visible:ring-focus-ring",
-        className,
-      )}
-    >
-      <GitHubLogo size={16} variant="auto" aria-hidden="true" />
-      <span className="font-mono text-xs">{stars === null ? "Star" : formatStars(stars)}</span>
-      <span className="sr-only">
-        {stars === null ? "Preface on GitHub" : `Preface on GitHub, ${stars} stars`}
-      </span>
-    </a>
-  );
-}
 
 export function SiteNav({ stars }: { stars: number | null }) {
   const [scrolled, setScrolled] = React.useState(false);

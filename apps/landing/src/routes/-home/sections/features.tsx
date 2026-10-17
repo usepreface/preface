@@ -21,7 +21,9 @@ import { BrandLogo, type BrandName } from "@usepreface/ui/logos/registry";
 import { MeshGradient } from "@usepreface/ui/patterns";
 import { InstallCommand } from "@usepreface/ui/preface/developer";
 
-import { GlassTile, Section, SectionHeading } from "./primitives";
+import { GlassTile } from "../components/glass-tile";
+import { Section } from "../components/section";
+import { SectionHeading } from "../components/section-heading";
 
 /* Figma "Features": a five-card bento under "Built for answers you can check." */
 

@@ -4,8 +4,8 @@ import { PrefaceLogo } from "@usepreface/ui/brand";
 import { ArrowUpIcon } from "@usepreface/ui/icons";
 import { BrandLogo, type BrandName } from "@usepreface/ui/logos/registry";
 
+import { useScrollProgress } from "../../hooks/use-scroll-progress";
 import { site } from "../../site";
-import { useScrollProgress } from "./motion";
 
 /* Figma "Footer": brand, link columns, the legal line, and the oversized wordmark. */
 

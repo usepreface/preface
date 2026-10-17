@@ -4,7 +4,7 @@ import { cn } from "@usepreface/ui/lib/utils";
 import { GitHubLogo } from "@usepreface/ui/logos";
 import { Clouds, Starfield } from "@usepreface/ui/patterns";
 
-import { site } from "../../site";
+import { site } from "../../../site";
 
 /* Figma "CTA": a framed piece of the hero sky, clouds drifting in from top and bottom. */
 

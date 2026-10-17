@@ -3,8 +3,9 @@ import type * as React from "react";
 import { BrandLogo, type BrandName } from "@usepreface/ui/logos/registry";
 import { CodeSnippet, type CodeSample } from "@usepreface/ui/preface/code-snippet";
 
-import { site } from "../../site";
-import { Section, SectionHeading } from "./primitives";
+import { site } from "../../../site";
+import { Section } from "../components/section";
+import { SectionHeading } from "../components/section-heading";
 
 /* Figma "Developers": copy and package chips on the left, a tabbed code sample on the right. */
 

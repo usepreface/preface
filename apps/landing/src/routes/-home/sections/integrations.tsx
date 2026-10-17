@@ -2,7 +2,8 @@ import type * as React from "react";
 
 import { brandLogos, BrandLogo, type BrandName } from "@usepreface/ui/logos/registry";
 
-import { Section, SectionHeading } from "./primitives";
+import { Section } from "../components/section";
+import { SectionHeading } from "../components/section-heading";
 
 /* Figma "Integrations": 40 tiles, fading toward the edges so the cloud reads as endless. */
 

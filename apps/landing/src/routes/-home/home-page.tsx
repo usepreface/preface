@@ -1,17 +1,17 @@
-import { ClosingCta } from "./closing-cta";
-import { CommandPalette } from "./command-palette";
-import { Developers } from "./developers";
-import { Features } from "./features";
-import { Hero } from "./hero";
-import { HowItWorks } from "./how-it-works";
-import { Integrations } from "./integrations";
-import { KnowledgeField } from "./knowledge-field";
-import { LogoStrip } from "./logo-strip";
-import { useScrollReveal } from "./motion";
-import { Pricing } from "./pricing";
-import { SelfHost } from "./self-host";
-import { SiteFooter } from "./site-footer";
-import { SiteNav } from "./site-nav";
+import { SiteFooter } from "../../components/layout/site-footer";
+import { SiteNav } from "../../components/layout/site-nav";
+import { useScrollReveal } from "./hooks/use-scroll-reveal";
+import { ClosingCta } from "./sections/closing-cta";
+import { CommandPalette } from "./sections/command-palette";
+import { Developers } from "./sections/developers";
+import { Features } from "./sections/features";
+import { Hero } from "./sections/hero";
+import { HowItWorks } from "./sections/how-it-works";
+import { Integrations } from "./sections/integrations";
+import { KnowledgeField } from "./sections/knowledge-field";
+import { LogoStrip } from "./sections/logo-strip";
+import { Pricing } from "./sections/pricing";
+import { SelfHost } from "./sections/self-host";
 
 /** preface.run, section for section with Figma pages 42–44 (Landing v2). */
 export function HomePage({ stars }: { stars: number | null }) {

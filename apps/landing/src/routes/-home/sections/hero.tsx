@@ -7,9 +7,9 @@ import type { BrandName } from "@usepreface/ui/logos/registry";
 import { Clouds, Glow, Starfield } from "@usepreface/ui/patterns";
 import { InstallCommand } from "@usepreface/ui/preface/developer";
 
-import { site } from "../../site";
-import { GlassTile } from "./primitives";
-import { ScaledPreview } from "./product-preview";
+import { site } from "../../../site";
+import { GlassTile } from "../components/glass-tile";
+import { ScaledPreview } from "../components/product-preview";
 
 /*
  * Figma 42/43 "Hero": sky gradient (stars at night), drifting wisps, the headline, install

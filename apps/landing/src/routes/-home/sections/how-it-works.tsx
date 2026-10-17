@@ -1,7 +1,8 @@
 import type * as React from "react";
 
-import { ExplodedStack } from "./exploded-stack";
-import { Section, SectionHeading } from "./primitives";
+import { ExplodedStack } from "../components/exploded-stack";
+import { Section } from "../components/section";
+import { SectionHeading } from "../components/section-heading";
 
 const steps = [
   ["01", "Connect", "GitHub, Slack, Discord, Telegram, Notion, Drive, websites and files."],

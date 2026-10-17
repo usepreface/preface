@@ -2,8 +2,8 @@ import * as React from "react";
 
 import type { BrandName } from "@usepreface/ui/logos/registry";
 
-import { useScrollProgress } from "./motion";
-import { GlassTile } from "./primitives";
+import { useScrollProgress } from "../../../hooks/use-scroll-progress";
+import { GlassTile } from "./glass-tile";
 
 /*
  * Figma "How it works" art: five isometric plates, one per pipeline stage, drawn with the

@@ -2,8 +2,9 @@ import * as React from "react";
 
 import { seeded } from "@usepreface/ui/patterns";
 
-import { useInView, useReducedMotion } from "./motion";
-import { Eyebrow } from "./primitives";
+import { useInView } from "../../../hooks/use-in-view";
+import { useReducedMotion } from "../../../hooks/use-reduced-motion";
+import { Eyebrow } from "../components/eyebrow";
 
 /*
  * Figma "Knowledge field": a monospace glyph field behind one sentence. Motion note from the

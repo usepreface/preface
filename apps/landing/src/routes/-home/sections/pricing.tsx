@@ -4,8 +4,9 @@ import { buttonVariants } from "@usepreface/ui/components/button";
 import { ArrowRightIcon, CheckCircleIcon } from "@usepreface/ui/icons";
 import { cn } from "@usepreface/ui/lib/utils";
 
-import { site } from "../../site";
-import { Section, SectionHeading } from "./primitives";
+import { site } from "../../../site";
+import { Section } from "../components/section";
+import { SectionHeading } from "../components/section-heading";
 
 /* Figma "Pricing": three plans, the middle one highlighted. */
 

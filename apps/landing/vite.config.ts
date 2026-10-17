@@ -9,6 +9,9 @@ import { defineConfig } from "vite";
 const indexable = (process.env.VERCEL_TARGET_ENV ?? process.env.VERCEL_ENV) === "production";
 
 export default defineConfig({
+  resolve: { dedupe: ["react", "react-dom"] },
+  server: { port: 4000 },
+  preview: { port: 4000 },
   define: {
     "import.meta.env.LANDING_SITE": JSON.stringify({
       origin: process.env.SITE_URL ?? "https://preface.run",
@@ -24,6 +27,12 @@ export default defineConfig({
       prerender: { enabled: true, crawlLinks: true, failOnError: true },
     }),
     react(),
-    nitro(),
+    // The shared highlighter uses the JavaScript regex engine; avoid Nitro's unwasm export condition.
+    nitro({
+      wasm: false,
+      // CommonJS UI dependencies must share the same React instance as the server renderer.
+      rolldownConfig: { external: [/^react(?:\/|$)/, /^react-dom(?:\/|$)/] },
+      traceDeps: ["react", "react-dom"],
+    }),
   ],
 });

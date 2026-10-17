@@ -6,15 +6,16 @@
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {
-    "dev": "vite dev --port 5175",
+    "dev": "vite dev",
     "build": "vite build",
-    "preview": "vite preview --port 5175",
-    "start": "node .output/server/index.mjs",
+    "preview": "vite preview",
+    "start": "PORT=${PORT:-4000} node .output/server/index.mjs",
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check .",
     "lint": "oxlint --deny-warnings .",
     "lint:fix": "oxlint --fix .",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test:built": "pnpm build && node --test tests/smoke/build.test.mjs"
   },
   "dependencies": {
     "@tanstack/react-router": "1.170.44",
