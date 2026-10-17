@@ -22,6 +22,8 @@ purpose as additional data. The legacy outbox fingerprint keeps its encryption-r
 derivation for compatibility. New verification fingerprints use the independent
 HMAC root and a stable purpose. Callers bind low-entropy verification codes to the
 challenge identity before fingerprinting; bare SHA-256 is for high-entropy tokens.
+Email sign-in separates link and browser token purposes, code HMACs and recipient
+HMACs. The recipient HMAC coordinates replacement without persisting unknown emails.
 
 `CRYPTO_ENCRYPTION_KEY` replaces `EMAIL_ENCRYPTION_KEY`, with the old name accepted
 only when the new one is absent. Keep the value unchanged during a rename.

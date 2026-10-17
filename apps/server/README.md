@@ -37,8 +37,10 @@ onboarding page; this server does not render `/setup` or a dashboard. Until that
 the same-origin Scalar reference at `/api/docs`. Inspect the fragment's proof, request
 verification with instance name, owner name and email, then submit the emailed eight-digit
 code with the returned challenge ID. Only verified completion creates the owner/session cookie.
-It creates no organization. Regular sign-in, recovery, invitations and organization creation
-remain subsequent features.
+It creates no organization. Email code/link sign-in and session management are available
+through the API; their UI, invitations and organization creation remain pending.
+Magic links reserve `/auth/email/verify` for the future client. For local/internal hosts,
+enter the emailed code in the browser that requested it.
 
 ## Develop locally
 
@@ -110,7 +112,7 @@ For local console delivery, explicitly set both `NODE_ENV=development` and
 `EMAIL_PROVIDER=development`; logs then include verification codes. There is no
 silent delivery fallback. Configuration errors prevent binding, while transient
 provider failures are handled asynchronously by the durable outbox. Startup sends
-no test email. The server starts one scoped worker after preparation; CLI reissue
+no test email. The server starts delivery and expired-proof cleanup after preparation; CLI reissue
 never starts a worker. Provider acceptance does not prove inbox delivery.
 
 By default, rate limiting uses the TCP peer address and ignores forwarded headers. Behind a proxy,
@@ -122,6 +124,10 @@ trusted forwarding input shares a conservative unknown-client bucket.
 connections. The host-only `preface_session` cookie has `HttpOnly`, `SameSite=Lax`, `Path=/` and
 absolute expiry. HTTPS installations also use `Secure` and HSTS. Additional CORS origins do not
 override browser SameSite rules; use a same-site frontend for cookie authentication.
+
+The schema currently ships as a fresh initial migration for local development. Reset
+an older local Preface database before using it; no migration/backfill path from the
+previous development schema is supplied. Startup does not reset existing databases.
 
 ## Request policy
 
@@ -135,8 +141,8 @@ through the application policy include a generated `X-Request-Id`, `Cache-Contro
 `nosniff`, no-referrer and frame protection. Native parser failures and oversized streaming bodies
 may close the connection before an application response can be written.
 
-Rate windows last one minute: 240 general requests per client, 30 proof inspections, five
-issuance/resend requests and ten code-verification attempts. At most two mutating setup requests
+Rate windows last one minute: 240 general requests per client, 30 setup-proof inspections, five
+setup issuance/resend requests and ten setup code-verification attempts. At most two mutating setup requests
 run concurrently before payload decoding. A shared database cooldown and five-attempt
 challenge budget independently protect verification across replicas. Rejection returns 429 and `Retry-After`. Health probes
 bypass rate limits. These limits are process-local with at most 10,000 active buckets; replicas

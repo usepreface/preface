@@ -6,11 +6,10 @@ This repository contains monorepo tooling and these workspace packages and appli
 
 - [protocol](packages/protocol/README.md): runtime-neutral shared Effect schemas, models and errors.
 - [database](packages/database/README.md): Node.js persistence with Effect and Drizzle ORM/Kit.
-- [application](packages/application/README.md): transactional instance setup and session workflows,
-  with password and token security capabilities.
+- [application](packages/application/README.md): transactional instance setup, email sign-in and session management.
 - [api](packages/api/README.md): shared Effect HTTP contract and typed client metadata.
 - [emails](packages/emails/README.md): typed durable email jobs and provider adapters;
-  templates and server acquisition are supplied separately.
+  operational setup/sign-in rendering and scoped delivery.
 - [server](apps/server/README.md): migration-gated backend, setup/session HTTP and operator CLI.
 - [template](packages/template/README.md): reusable starter for internal packages.
 - [ui](packages/ui/README.md): the design system - Base UI components in the shadcn/ui structure, Preface tokens,
@@ -22,9 +21,9 @@ This repository contains monorepo tooling and these workspace packages and appli
 The database package includes connection/transaction services, error mapping, migration tooling,
 PGlite/PostgreSQL test layers, and instance, auth and audit tables/repositories grouped in PostgreSQL
 schemas. Protocol provides storage models, public bootstrap/session contracts and branded identities.
-Application implements first-owner setup and session resolution/revocation. The server wires
+Application implements first-owner setup, browser-bound email code/link sign-in and session management. The server wires
 startup preparation, operator links, HTTP handlers, always-available Scalar/OpenAPI and Compose
-on port 8080. The dashboard defaults to port 3000 and the landing page to port 4000. Sign-in, onboarding UI and organization
+on port 8080. The dashboard defaults to port 3000 and the landing page to port 4000. Backend-connected onboarding/sign-in UI and organization
 creation remain subsequent features.
 
 Start with the [architecture index](architecture/README.md) for system boundaries, contracts,

@@ -35,7 +35,7 @@ layer(HttpTestLayer, { excludeTestServices: true })("HTTP request policy", (it) 
         expect(rejected.headers["access-control-allow-origin"]).toBeUndefined();
         expect(rejected.headers["set-cookie"]).toBeUndefined();
         expect(
-          yield* (yield* DatabaseRepository).auth.user.findByEmail(payload.email),
+          yield* (yield* DatabaseRepository).auth.userEmail.findActiveByEmail(payload.email),
         ).toBeUndefined();
 
         const missingOrigin = yield* http.del("/api/v1/auth/session");

@@ -1,57 +1,60 @@
-import { Context, DateTime, Effect, Layer, Schema } from "effect";
+import { Context, DateTime, Effect, Layer, Option, Schema } from "effect";
 
 import type { UserId } from "@usepreface/protocol";
-import { CreateUser, User } from "@usepreface/protocol/model";
-import { and, eq } from "drizzle-orm";
+import { CreateUser, User, UserProfile } from "@usepreface/protocol/model";
+import { and, eq, isNull, getTableColumns } from "drizzle-orm";
 
 import { mapToDatabaseError } from "#/core/errors";
 import { Database } from "#/core/layer";
 import { user } from "#/schema/auth/user";
+import { userEmail } from "#/schema/auth/user-email";
 
 const makeUserRepository = Effect.gen(function* () {
   const database = yield* Database;
-  const decode = Schema.decodeSync(User);
-  const encode = Schema.encodeSync(CreateUser);
+  const decode = Schema.decodeUnknownSync(User);
 
   const findById = Effect.fn("UserRepository.findById")(function* (userId: UserId) {
     const [row] = yield* database.select().from(user).where(eq(user.id, userId));
     return row === undefined ? undefined : decode(row);
   }, mapToDatabaseError);
-
-  const findByEmail = Effect.fn("UserRepository.findByEmail")(function* (email: User["email"]) {
-    const [row] = yield* database.select().from(user).where(eq(user.email, email));
-    return row === undefined ? undefined : decode(row);
+  const findProfileById = Effect.fn("UserRepository.findProfileById")(function* (userId: UserId) {
+    const [row] = yield* database
+      .select({
+        ...getTableColumns(user),
+        email: userEmail.email,
+        emailVerifiedAt: userEmail.verifiedAt,
+      })
+      .from(user)
+      .innerJoin(
+        userEmail,
+        and(
+          eq(userEmail.userId, user.id),
+          eq(userEmail.isPrimary, true),
+          isNull(userEmail.removedAt),
+        ),
+      )
+      .where(eq(user.id, userId));
+    return row === undefined ? undefined : Schema.decodeUnknownSync(UserProfile)(row);
   }, mapToDatabaseError);
-
   const create = Effect.fn("UserRepository.create")(function* (input: CreateUser) {
-    const encoded = encode(input);
     const now = DateTime.toDateUtc(yield* DateTime.now);
-
     const [row] = yield* database
       .insert(user)
-      .values({ ...encoded, createdAt: now, updatedAt: now })
+      .values({ ...Schema.encodeSync(CreateUser)(input), createdAt: now, updatedAt: now })
       .returning();
-
     if (row === undefined) return yield* Effect.die(new Error("User insert returned no row"));
     return decode(row);
   }, mapToDatabaseError);
+  const lockById = Effect.fn("UserRepository.lockById")(function* (userId: UserId) {
+    const active = yield* Effect.serviceOption(database.$client.transactionService);
+    if (Option.isNone(active))
+      return yield* Effect.die(new Error("User locking requires TransactionService.run"));
 
-  const markEmailVerified = Effect.fn("UserRepository.markEmailVerified")(function* (
-    userId: UserId,
-    expectedEmail: User["email"],
-  ) {
-    const now = DateTime.toDateUtc(yield* DateTime.now);
-    const [row] = yield* database
-      .update(user)
-      .set({ emailVerifiedAt: now, updatedAt: now })
-      .where(and(eq(user.id, userId), eq(user.email, expectedEmail)))
-      .returning();
+    const [row] = yield* database.select().from(user).where(eq(user.id, userId)).for("update");
     return row === undefined ? undefined : decode(row);
   }, mapToDatabaseError);
-
-  return { findById, findByEmail, create, markEmailVerified } as const;
+  return { findById, findProfileById, create, lockById } as const;
 });
-
 export class UserRepository extends Context.Service<
   UserRepository,
   Effect.Success<typeof makeUserRepository>

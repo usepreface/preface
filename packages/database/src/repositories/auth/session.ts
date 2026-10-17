@@ -2,11 +2,13 @@ import { Context, DateTime, Duration, Effect, Layer, Schema } from "effect";
 
 import type { SessionId, UserId } from "@usepreface/protocol";
 import { CreateSession, Session } from "@usepreface/protocol/model";
-import { and, eq, gt, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, exists, gt, isNotNull, isNull, lt, sql } from "drizzle-orm";
 
 import { mapToDatabaseError } from "#/core/errors";
 import { Database } from "#/core/layer";
 import { session } from "#/schema/auth/session";
+import { sessionAuthentication } from "#/schema/auth/session-authentication";
+import { userEmail } from "#/schema/auth/user-email";
 
 const makeSessionRepository = Effect.gen(function* () {
   const database = yield* Database;
@@ -81,7 +83,62 @@ const makeSessionRepository = Effect.gen(function* () {
     return row === undefined ? undefined : decode(row);
   }, mapToDatabaseError);
 
-  return { create, findActiveByTokenHash, recordActivity, revoke } as const;
+  const listActiveByUserId = Effect.fn("SessionRepository.listActiveByUserId")(function* (input: {
+    readonly userId: UserId;
+    readonly cursor?: SessionId;
+    readonly limit: number;
+    readonly idleTimeout: Duration.Duration;
+  }) {
+    const now = DateTime.toDateUtc(yield* DateTime.now);
+    const evidence = database
+      .select({ id: sessionAuthentication.id })
+      .from(sessionAuthentication)
+      .innerJoin(userEmail, eq(userEmail.id, sessionAuthentication.userEmailId))
+      .where(
+        and(
+          eq(sessionAuthentication.sessionId, session.id),
+          isNull(sessionAuthentication.revokedAt),
+          gt(sessionAuthentication.expiresAt, now),
+          isNull(userEmail.removedAt),
+          isNotNull(userEmail.verifiedAt),
+          eq(userEmail.loginEnabled, true),
+        ),
+      );
+    const rows = yield* database
+      .select()
+      .from(session)
+      .where(
+        and(
+          eq(session.userId, input.userId),
+          isNull(session.revokedAt),
+          gt(session.expiresAt, now),
+          gt(session.lastSeenAt, new Date(now.getTime() - Duration.toMillis(input.idleTimeout))),
+          exists(evidence),
+          input.cursor === undefined ? undefined : lt(session.id, input.cursor),
+        ),
+      )
+      .orderBy(desc(session.id))
+      .limit(input.limit);
+    return rows.map((row) => decode(row));
+  }, mapToDatabaseError);
+  const revokeAllByUserId = Effect.fn("SessionRepository.revokeAllByUserId")(function* (
+    userId: UserId,
+  ) {
+    const rows = yield* database
+      .update(session)
+      .set({ revokedAt: DateTime.toDateUtc(yield* DateTime.now) })
+      .where(and(eq(session.userId, userId), isNull(session.revokedAt)))
+      .returning();
+    return rows.map((row) => decode(row));
+  }, mapToDatabaseError);
+  return {
+    create,
+    findActiveByTokenHash,
+    recordActivity,
+    revoke,
+    listActiveByUserId,
+    revokeAllByUserId,
+  } as const;
 });
 
 export class SessionRepository extends Context.Service<

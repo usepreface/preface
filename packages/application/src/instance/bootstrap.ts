@@ -20,8 +20,9 @@ import {
 } from "@usepreface/protocol/input";
 import type { Installation } from "@usepreface/protocol/model";
 
+import { makeSessionIssuance } from "#/auth/session-issuance";
 import type { SecurityError } from "#/security/errors";
-import { bootstrapTokenLifetime, sessionLifetime } from "#/security/policy";
+import { bootstrapTokenLifetime } from "#/security/policy";
 import { TokenService } from "#/security/token";
 
 export type BootstrapPreparation =
@@ -62,6 +63,7 @@ export const makeBootstrapApplication = Effect.gen(function* () {
   const random = yield* TokenCrypto;
   const crypto = yield* SecretCrypto;
   const emails = yield* EmailJobs;
+  const issueSession = yield* makeSessionIssuance;
 
   const validateToken = Effect.fn("Application.instance.bootstrap.validateToken")(function* (
     installation: Installation,
@@ -287,19 +289,23 @@ export const makeBootstrapApplication = Effect.gen(function* () {
           return { state: "invalid" } as const;
         }
 
-        const created = yield* repository.auth.user
-          .create({ displayName: challenge.ownerName, email: challenge.email })
+        const user = yield* repository.auth.user.create({ displayName: challenge.ownerName });
+        const address = yield* repository.auth.userEmail
+          .create({
+            userId: user.id,
+            email: challenge.email,
+            isPrimary: true,
+            loginEnabled: true,
+            verifiedAt: yield* DateTime.now,
+          })
           .pipe(
             Effect.mapError((error) =>
               Predicate.isTagged(error.reason, "UniqueViolation") &&
-              error.reason.constraint === "user_email_uidx"
+              error.reason.constraint === "user_email_active_email_uidx"
                 ? new BootstrapError({ code: "EMAIL_UNAVAILABLE" })
                 : error,
             ),
           );
-        const user = yield* repository.auth.user.markEmailVerified(created.id, challenge.email);
-        if (user === undefined)
-          return yield* Effect.die(new Error("New setup account disappeared"));
         const owner = yield* repository.instance.owner.grant({
           userId: user.id,
           grantSource: "bootstrap",
@@ -316,11 +322,16 @@ export const makeBootstrapApplication = Effect.gen(function* () {
           return yield* Effect.die(
             new Error("Instance settings changed outside the installation lock"),
           );
-        const session = yield* repository.auth.session.create({
+        const session = yield* issueSession({
           userId: user.id,
-          tokenHash: sessionCredential.hash,
-          expiresAt: DateTime.addDuration(yield* DateTime.now, sessionLifetime),
-        });
+          userEmailId: address.id,
+          credential: sessionCredential,
+          method: "bootstrap_email_code",
+        }).pipe(
+          Effect.catchTag("AuthenticationError", () =>
+            Effect.fail(new BootstrapError({ code: "INVALID_CODE" })),
+          ),
+        );
         yield* emails.cancel(challenge.emailJobId);
         if ((yield* repository.instance.challenge.consume(challenge.id)) === undefined)
           return yield* new BootstrapError({ code: "INVALID_CODE" });
@@ -346,32 +357,12 @@ export const makeBootstrapApplication = Effect.gen(function* () {
         yield* repository.audit.event.append({
           actorKind: "user",
           actorUserId: user.id,
-          eventType: "auth.session_created",
-          targetType: "session",
-          targetId: session.id,
-          metadata: {},
-        });
-        yield* repository.audit.event.append({
-          actorKind: "user",
-          actorUserId: user.id,
           eventType: "instance.bootstrap_completed",
           targetType: "installation",
           targetId: installation.installationId,
           metadata: {},
         });
-        const actor: SessionActor = {
-          user: {
-            id: user.id,
-            displayName: user.displayName,
-            email: user.email,
-            emailVerifiedAt: user.emailVerifiedAt,
-          },
-          session: { id: session.id, expiresAt: session.expiresAt },
-        };
-        return {
-          state: "completed",
-          result: { actor, sessionToken: sessionCredential.token },
-        } as const;
+        return { state: "completed", result: session } as const;
       }),
     );
     if (outcome.state === "invalid") return yield* new BootstrapError({ code: "INVALID_CODE" });

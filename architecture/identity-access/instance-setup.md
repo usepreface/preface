@@ -56,11 +56,11 @@ email delivery. The correct code is also refused once this budget is exhausted;
 after cooldown the operator can request another code. Attempt enforcement is shared
 across replicas, independently of process-local HTTP admission limits.
 
-Successful verification writes the user with verified email, bootstrap owner grant,
+Successful verification writes the user, verified login-enabled primary email, bootstrap owner grant,
 instance display name and initial session. It consumes the challenge and operator
-proof, and appends owner-granted, email-verified, session-created and bootstrap-completed
-audit rows in the same transaction. No password credential is created. Existing
-password tables and historical migrations remain preserved.
+proof, and appends owner-granted, email-verified, session-created/authenticated and bootstrap-completed
+audit rows in the same transaction, including email authentication evidence. No
+password storage exists in the fresh initial schema.
 
 Final conditional consumption rechecks fresh expiry. Audit or storage failure rolls
 back all completion writes, including challenge consumption and email cancellation.
@@ -74,7 +74,8 @@ See [sessions](sessions.md) for cookie and authority boundaries.
 Email acceptance is asynchronous and does not guarantee inbox delivery. The operator
 can resend after cooldown or replace a lost setup proof locally. Restart does not
 extend proof/code expiry. A lost successful completion response cannot be replayed
-to obtain another session. Sign-in and account recovery are not implemented yet.
+to obtain another session. Use [email sign-in](email-sign-in.md) to obtain a fresh
+session for the same owner, including after a week with no organization.
 No organization, SSO or onboarding UI is implied by this flow.
 
 Application regressions cover replacement, expiry, concurrent failure/completion,

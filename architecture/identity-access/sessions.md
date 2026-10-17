@@ -1,6 +1,7 @@
 # Sessions
 
-Setup creates the initial browser session. Authentication resolves an opaque cookie
+Setup creates the initial browser session; [email sign-in](email-sign-in.md) creates
+fresh sessions for returning users. Authentication resolves an opaque cookie
 credential through the application on every protected request. A successful actor
 identifies the current user/session, without asserting instance ownership or future
 organization membership. There is no sign-in or session-management UI yet.
@@ -12,8 +13,11 @@ SHA-256 digests. Only digests persist. Setup proofs and session credentials use 
 purposes. No JWT or operator-provided session-signing secret is needed.
 
 Resolution hashes the presented redacted credential, looks up an active session and
-loads its current user. Missing, revoked, absolutely expired, idle-expired and
-disabled-user sessions all produce `AuthenticationError` with `UNAUTHENTICATED`.
+loads its current profile and usable authentication evidence. Evidence records
+method, source email, authentication/expiry times, assurance and revocation. Composite
+foreign keys bind session and source to the same user. Missing or revoked evidence,
+removed/unverified/login-disabled source email, missing profile, revoked, absolutely
+expired, idle-expired and disabled-user sessions all produce `AuthenticationError` with `UNAUTHENTICATED`.
 Storage/security failures remain distinct and must not be treated as invalid login.
 
 | Policy                  | Implemented value |
@@ -41,12 +45,25 @@ returns only `PublicUser` and `PublicSession`. Mutations require the server's ex
 trusted Origin, including requests from non-browser clients. Additional CORS origins
 do not change browser SameSite rules.
 
-## Revocation and failure
+## Session management and failure
 
 Logout optionally resolves the cookie, revokes a valid matching user/session and
 appends `auth.session_revoked` in one transaction. Only after success does the server
 expire the cookie. Missing, malformed or already-invalid credentials return 204 and
 clear it. Repeated revocation does not append another audit event.
+
+`GET /api/v1/auth/sessions` lists only the actor's unrevoked, unexpired, non-idle
+sessions with usable evidence. Pages default to 25 and cap at 100, ordered by UUIDv7
+identity descending with an exclusive cursor. Responses expose creation, activity,
+expiry and `isCurrent`, never token digests or authentication storage.
+
+`DELETE /api/v1/auth/sessions/:sessionId` revokes only a session belonging to the
+actor and clears the cookie when it is current. A missing or other-user ID is a
+204 no-op. `DELETE /api/v1/auth/sessions` revokes all the actor's unrevoked sessions,
+including the current one. Session issuance and revoke-all serialize on the user
+row: issuance committed before revocation is included; a later sign-in can create a
+new session. Both operations revoke associated evidence and append per-session
+audit in their transaction. Failed audit rolls back all revocations.
 
 An operational failure still fails logout; it must not report successful revocation.
 The application accepts actors from authentication, never caller-controlled user or

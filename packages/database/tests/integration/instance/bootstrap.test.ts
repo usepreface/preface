@@ -11,7 +11,7 @@ import {
   TransactionService,
 } from "../../../src/index.js";
 import { auditEvent } from "../../../src/schema/audit/index.js";
-import { passwordCredential, session, user } from "../../../src/schema/auth/index.js";
+import { userEmail, session, user } from "../../../src/schema/auth/index.js";
 import { TestDatabase } from "../../../src/testing/index.js";
 import { RepositoryTestLayer } from "../../fixtures/database.js";
 import { createTestUser } from "../../fixtures/user.js";
@@ -99,11 +99,13 @@ layer(RepositoryTestLayer)("bootstrap persistence", (it) => {
             const now = yield* DateTime.now;
             const account = yield* repository.auth.user.create({
               displayName: "First Owner",
-              email: "bootstrap@example.test",
             });
-            yield* repository.auth.passwordCredential.create({
+            yield* repository.auth.userEmail.create({
               userId: account.id,
-              passwordHash: "encoded-test-hash",
+              email: "bootstrap@example.test",
+              isPrimary: true,
+              loginEnabled: true,
+              verifiedAt: now,
             });
             yield* repository.auth.session.create({
               userId: account.id,
@@ -154,7 +156,7 @@ layer(RepositoryTestLayer)("bootstrap persistence", (it) => {
       expect(yield* repository.instance.settings.find()).toBeUndefined();
       expect(yield* repository.instance.owner.listActive()).toEqual([]);
       expect(yield* database.select().from(user)).toEqual([]);
-      expect(yield* database.select().from(passwordCredential)).toEqual([]);
+      expect(yield* database.select().from(userEmail)).toEqual([]);
       expect(yield* database.select().from(session)).toEqual([]);
       expect(yield* database.select().from(auditEvent)).toEqual([]);
     }),

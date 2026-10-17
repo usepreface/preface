@@ -14,6 +14,8 @@ Executable schemas, migrations, source and tests settle disagreements with prose
   adapters, retries and the renderer/server integration boundary.
 - [Instance setup](identity-access/instance-setup.md): installation preparation,
   operator proofs, first-owner creation and recovery from lost setup output.
+- [Email sign-in](identity-access/email-sign-in.md): browser-bound codes and links,
+  proof replacement, durable attempts, returning operators and proof cleanup.
 - [Sessions](identity-access/sessions.md): credential resolution, expiry, activity,
   cookie delivery and audited revocation.
 

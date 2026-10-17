@@ -14,12 +14,15 @@ test("built exports apply packaged migrations without deployment configuration",
       const database = yield* Database;
       const repository = yield* DatabaseRepository;
       const account = yield* database.query.user.findFirst({
-        with: { passwordCredential: true, sessions: true, ownerGrants: true, auditEvents: true },
+        with: { emails: true, sessions: true, ownerGrants: true, auditEvents: true },
       });
 
       assert.equal(account, undefined);
       assert.equal(yield* repository.instance.installation.find(), undefined);
-      assert.equal(yield* repository.auth.user.findByEmail("missing@example.test"), undefined);
+      assert.equal(
+        yield* repository.auth.userEmail.findActiveByEmail("missing@example.test"),
+        undefined,
+      );
     }).pipe(Effect.provide(DatabaseRepository.layer.pipe(Layer.provideMerge(TestDatabase.layer)))),
   );
 });

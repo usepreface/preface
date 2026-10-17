@@ -27,7 +27,9 @@ Keep the encryption key unchanged when renaming its variable. Bootstrap/session
 prefixes and SHA-256 digest framing remain compatible. The existing outbox's
 versioned AES-256-GCM ciphertext and keyed fingerprint remain compatible; that
 legacy fingerprint purpose still derives its key from the encryption root. New
-verification-code fingerprints derive from `CRYPTO_HMAC_KEY`.
+verification-code fingerprints derive from `CRYPTO_HMAC_KEY`. Email sign-in adds
+separate purposes for link and browser token digests, challenge-bound code HMACs,
+and recipient HMACs used to coordinate pending proofs without storing unknown emails.
 
 Generate each key separately and store it in deployment secrets:
 

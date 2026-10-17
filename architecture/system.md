@@ -2,10 +2,11 @@
 
 Preface is self-hosted knowledge infrastructure with installation-wide identity
 and multiple organizations as its product model. The implemented backend currently
-supports installation preparation, first-owner setup, session resolution and logout.
+supports installation preparation, first-owner setup, email code/link sign-in,
+session resolution and session management.
 Setup verifies mailbox ownership through an encrypted email outbox, minimal renderer
-and scoped worker. Organization storage, invitations,
-sign-in and knowledge ingestion are not implemented. The landing page illustrates the product independently of
+and scoped worker. Organization storage, invitations, Google/SSO
+and knowledge ingestion are not implemented. The landing page illustrates the product independently of
 those backend capabilities.
 
 ## Ownership
@@ -27,7 +28,7 @@ The dependency direction is `api → protocol`, `database → protocol`, and
 `application → database + protocol + crypto + emails`. The server composes these packages and Node
 security adapters. Frontends consume presentation and public contracts; they
 never import database services. Runtime-neutral does not mean safe to expose every
-field: persistence models still contain password hashes and credential digests.
+field: persistence models still contain verification HMACs and credential digests.
 
 ## Identity and authority
 
@@ -54,7 +55,7 @@ consumption and owner changes use database coordination rather than process-loca
 locks. Request admission limits are process-local and serve a separate purpose.
 
 Detailed workflows belong to [instance setup](identity-access/instance-setup.md)
-and [sessions](identity-access/sessions.md); [email](integrations/email.md) owns
+[email sign-in](identity-access/email-sign-in.md) and [sessions](identity-access/sessions.md); [email](integrations/email.md) owns
 durable external delivery infrastructure. Persistence consistency belongs to
 [storage](data/storage.md). Logs summarize safe operational decisions. Audit rows
 record durable product events. Metrics and remote telemetry exporters are not

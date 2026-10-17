@@ -15,7 +15,7 @@ Choose the entry point for the boundary you are working on:
 
 Existing root DTO/input exports remain available for compatibility. New callers should use the
 explicit entry points. Public DTOs reuse identifiers and value schemas without importing storage
-models. Storage models contain internal fields such as password hashes and token digests and must
+models. Storage models contain internal fields such as credential HMACs and token digests and must
 never be returned directly from an HTTP handler. Public timestamps encode as ISO strings.
 
 Internal email models define typed `instance-setup`, `sign-in` and
@@ -54,12 +54,14 @@ Installation, grant, credential and session codecs validate lifecycle consistenc
 must already be trimmed and lowercase; ordinary address syntax is validated without rewriting
 provider-specific dots or plus tags. Display names are trimmed and 1–120 characters. Session
 digests are 64 lowercase hexadecimal characters, representing SHA-256 of a random session secret.
-Legacy password hashes remain opaque nonempty encoded strings; passwordless setup
-does not write them.
+Normalized `User` owns identity, while `UserEmailAddress` owns email verification
+and login eligibility. `UserProfile` is a joined repository projection. `Verification`
+and `SessionAuthentication` represent single-use proofs and session evidence.
+Password storage is absent.
 
 Audit contracts correlate event types with their target identities and metadata. Current events
 cover bootstrap proof issuance/replacement, bootstrap completion, owner grants and session
-creation/revocation. Proof issuance metadata records whether an existing digest was replaced,
+creation/authentication/revocation and email sign-in proof requests/failures. Proof issuance metadata records whether an existing digest was replaced,
 without retaining either credential. Verification-request/failure events retain
 challenge identity and attempt count, never codes or email payloads. User actors require a user identity; system actors cannot
 carry one. Extend the typed union when adding new audited

@@ -1,3 +1,5 @@
 export { UserRepository } from "#/repositories/auth/user";
-export { PasswordCredentialRepository } from "#/repositories/auth/password-credential";
 export { SessionRepository } from "#/repositories/auth/session";
+export { UserEmailRepository } from "#/repositories/auth/user-email";
+export { VerificationRepository } from "#/repositories/auth/verification";
+export { SessionAuthenticationRepository } from "#/repositories/auth/session-authentication";

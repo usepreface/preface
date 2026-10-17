@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { test } from "node:test";
-import { setTimeout } from "node:timers/promises";
 import { promisify } from "node:util";
 
 import { Effect } from "effect";
@@ -16,6 +15,7 @@ import {
   spawnBackend,
   testEnvironment,
   waitForReadiness,
+  waitForDevelopmentCode,
 } from "../fixtures/process.mjs";
 
 const execute = promisify(execFile);
@@ -95,14 +95,7 @@ test(
     assert.equal(requested.headers.get("set-cookie"), null);
     const verification = await requested.json();
     // Exercise the actual scoped worker and development renderer after a durable enqueue.
-    let code;
-    const deadline = Date.now() + 5000;
-    while (code === undefined && Date.now() < deadline) {
-      code = restarted.stdout.match(/\b(\d{8})\b/)?.[1];
-      // oxlint-disable-next-line no-await-in-loop -- Wait for the worker's explicit development output.
-      if (code === undefined) await setTimeout(25);
-    }
-    assert.ok(code, "Expected the rendered code from the development worker");
+    const code = await waitForDevelopmentCode(restarted);
     const completed = await fetch(`${base}/api/v1/instance/setup/verify`, {
       method: "POST",
       headers: { origin, "content-type": "application/json" },
@@ -113,8 +106,66 @@ test(
       }),
     });
     assert.equal(completed.status, 201);
-    assert.equal(typeof (await completed.json()).user.emailVerifiedAt, "string");
+    const firstActor = await completed.json();
+    assert.equal(typeof firstActor.user.emailVerifiedAt, "string");
     assert.ok(completed.headers.get("set-cookie")?.includes("HttpOnly"));
+    const firstCookie = completed.headers.get("set-cookie").split(";", 1)[0];
+    assert.equal(
+      (
+        await fetch(`${base}/api/v1/auth/session`, {
+          method: "DELETE",
+          headers: { origin, cookie: firstCookie },
+        })
+      ).status,
+      204,
+    );
+    const outputOffset = restarted.stdout.length;
+    const signIn = await fetch(`${base}/api/v1/auth/email/request`, {
+      method: "POST",
+      headers: { origin, "content-type": "application/json" },
+      body: JSON.stringify({ email: "owner@example.test" }),
+    });
+    assert.equal(signIn.status, 202);
+    const signInChallenge = await signIn.json();
+    const browserCookie = signIn.headers.get("set-cookie").split(";", 1)[0];
+    const signInCode = await waitForDevelopmentCode(restarted, outputOffset);
+    const signedIn = await fetch(`${base}/api/v1/auth/email/verify`, {
+      method: "POST",
+      headers: { origin, "content-type": "application/json", cookie: browserCookie },
+      body: JSON.stringify({
+        challengeId: signInChallenge.challengeId,
+        method: "code",
+        code: signInCode,
+      }),
+    });
+    assert.equal(signedIn.status, 201);
+    const returningActor = await signedIn.json();
+    assert.deepEqual(returningActor.user, firstActor.user);
+    assert.notEqual(returningActor.session.id, firstActor.session.id);
+    const sessionCookie = signedIn.headers
+      .getSetCookie()
+      .find((cookie) => cookie.startsWith("preface_session="))
+      ?.split(";", 1)[0];
+    assert.ok(sessionCookie);
+    const listed = await fetch(`${base}/api/v1/auth/sessions`, {
+      headers: { cookie: sessionCookie },
+    });
+    assert.equal(listed.status, 200);
+    assert.equal((await listed.json()).sessions.length, 1);
+    assert.equal(
+      (
+        await fetch(`${base}/api/v1/auth/sessions`, {
+          method: "DELETE",
+          headers: { origin, cookie: sessionCookie },
+        })
+      ).status,
+      204,
+    );
+    assert.equal(
+      (await fetch(`${base}/api/v1/auth/session`, { headers: { cookie: sessionCookie } })).status,
+      401,
+    );
+
     await assert.rejects(
       execute(process.execPath, ["dist/main.js", "instance", "setup-link", "reissue"], {
         cwd: serverDirectory,

@@ -119,16 +119,13 @@ layer(ApplicationTestLayer)("instance bootstrap", (it) => {
         const owner = yield* repository.instance.owner.listActive();
         expect(owner).toHaveLength(1);
         expect(owner[0]?.userId).toBe(completed.actor.user.id);
-        const credential = yield* repository.auth.passwordCredential.findByUserId(
-          completed.actor.user.id,
-        );
-        expect(credential).toBeUndefined();
         const rows = yield* database.query.session.findMany();
         expect(rows).toHaveLength(1);
         expect(rows[0]?.tokenHash).not.toBe(Redacted.value(completed.sessionToken));
         const events = yield* database.query.auditEvent.findMany();
         expect(events.map((event) => event.eventType).toSorted()).toEqual([
           "auth.email_verified",
+          "auth.session_authenticated",
           "auth.session_created",
           "instance.bootstrap_completed",
           "instance.bootstrap_token_issued",
@@ -182,7 +179,7 @@ layer(ApplicationTestLayer)("instance bootstrap", (it) => {
       expect(yield* application.instance.bootstrap.getStatus()).toEqual(before);
       expect(yield* repository.instance.owner.listActive()).toEqual([]);
       expect(yield* database.query.user.findMany()).toEqual([]);
-      expect(yield* database.query.passwordCredential.findMany()).toEqual([]);
+      expect(yield* database.query.userEmail.findMany()).toEqual([]);
       expect(yield* database.query.session.findMany()).toEqual([]);
       expect((yield* database.query.auditEvent.findMany()).map((event) => event.eventType)).toEqual(
         ["instance.bootstrap_token_issued", "instance.bootstrap_verification_requested"],

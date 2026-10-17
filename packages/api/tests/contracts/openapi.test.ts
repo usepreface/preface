@@ -17,6 +17,11 @@ describe("public HTTP contract", () => {
       "/api/v1/instance/setup/resend",
       "/api/v1/instance/setup/verify",
       "/api/v1/auth/session",
+      "/api/v1/auth/email/request",
+      "/api/v1/auth/email/resend",
+      "/api/v1/auth/email/verify",
+      "/api/v1/auth/sessions",
+      "/api/v1/auth/sessions/{sessionId}",
     ]);
     expect(spec.paths["/api/v1/auth/session"]?.get?.security).toEqual([{ session: [] }]);
     expect(spec.components?.securitySchemes?.session).toEqual({

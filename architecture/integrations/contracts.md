@@ -44,11 +44,17 @@ Storage codecs translate driver `Date` values to Effect `DateTime.Utc` and back.
 Public DTOs translate timestamps to ISO strings. Use the owning schema to encode
 values; serializing arbitrary decoded objects does not establish the wire contract.
 `SessionActor` includes only safe user/profile and session identity/expiry fields.
-Password hashes, token digests and instance-owner storage fields are absent.
+Verification HMACs, token digests and instance-owner storage fields are absent.
 
 ## Errors and HTTP declarations
 
-Expected failures use `Schema.TaggedError`. Bootstrap and request errors define
+Email sign-in DTOs carry email, challenge identity and a code/link discriminated
+payload. Browser binding is supplied by the server cookie, not the public JSON
+body. Internal inputs redact credentials and forbid their encoding. Storage separates
+`User`, `UserEmailAddress`, `Verification` and `SessionAuthentication`; `UserProfile`
+is a joined repository projection rather than another email authority.
+
+Expected failures use `Schema.TaggedError`. Bootstrap, email sign-in and request errors define
 their code/status mapping once alongside the protocol error. Allowed codes are
 derived from that mapping; the API creates narrowed schema variants with the
 corresponding static HTTP status. Protocol stores plain metadata and imports no

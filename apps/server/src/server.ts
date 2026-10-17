@@ -6,6 +6,7 @@ import { HttpServer } from "effect/http";
 
 import { EmailWorkerLayer } from "@usepreface/emails";
 
+import { AuthenticationMaintenanceLayer } from "#/authentication-maintenance";
 import { ServerConfig } from "#/config";
 import { HttpApplication } from "#/http/application";
 import { BackendLive } from "#/runtime";
@@ -40,7 +41,7 @@ export const Server = Layer.unwrap(
 const Worker = Layer.unwrap(
   Effect.gen(function* () {
     yield* Startup;
-    return EmailWorkerLayer;
+    return Layer.merge(EmailWorkerLayer, AuthenticationMaintenanceLayer);
   }),
 );
 

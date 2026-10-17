@@ -14,9 +14,16 @@ export {
   EmailJobErrorCode,
   EmailProviderName,
 } from "#/model/email/job";
-export { User, UserDisplayName, UserEmail, CreateUser } from "#/model/auth/user";
-export { PasswordCredential, SetPasswordCredential } from "#/model/auth/password-credential";
+export { User, UserProfile, UserDisplayName, UserEmail, CreateUser } from "#/model/auth/user";
 export { Session, SessionTokenHash, CreateSession } from "#/model/auth/session";
+export { UserEmailAddress, CreateUserEmail } from "#/model/auth/user-email";
+export { Verification, CreateVerification, CredentialDigest } from "#/model/auth/verification";
+export {
+  SessionAuthentication,
+  CreateSessionAuthentication,
+  EmailAuthenticationMethod,
+  EmailAssurance,
+} from "#/model/auth/session-authentication";
 export { AuditActorKind, AuditEvent, RecordAuditEvent } from "#/model/audit/event";
 export {
   InstanceDisplayName,

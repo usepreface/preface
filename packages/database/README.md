@@ -28,27 +28,31 @@ import { DatabaseRepository } from "@usepreface/database";
 
 const loadOwner = Effect.gen(function* () {
   const repository = yield* DatabaseRepository;
-  return yield* repository.auth.user.findByEmail("owner@example.com");
+  return yield* repository.auth.userEmail.findActiveByEmail("owner@example.com");
 });
 ```
 
-| Group                     | Operations                                                                                                                  |
-| ------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `instance`                | `initialize`, `installation`, `settings`, `owner` (documented below)                                                        |
-| `auth.user`               | `findById(userId)`, `findByEmail(canonicalEmail)`, `create(input)`                                                          |
-| `auth.passwordCredential` | `findByUserId(userId)`, `create(input)`                                                                                     |
-| `auth.session`            | `create(input)`, `findActiveByTokenHash(tokenHash)`, `recordActivity(sessionId, idleTimeout?)`, `revoke(sessionId, userId)` |
-| `audit.event`             | `append(input)`                                                                                                             |
+| Group                        | Operations                                                                                                   |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `instance`                   | `initialize`, `installation`, `settings`, `owner`, `challenge`                                               |
+| `auth.user`                  | `findById`, `findProfileById`, `lockById`, `create`                                                          |
+| `auth.userEmail`             | `create`, `findById`, `findActiveByEmail`, `findPrimaryByUserId`                                             |
+| `auth.verification`          | `create`, `findById`, `lockById`, `retirePendingBySubject`, `recordFailure`, `consume`, `deleteExpiredBatch` |
+| `auth.sessionAuthentication` | `create`, `listUsableBySessionId`, `revokeBySessionId`                                                       |
+| `auth.session`               | `create`, `findActiveByTokenHash`, `recordActivity`, `listActiveByUserId`, `revoke`, `revokeAllByUserId`     |
+| `audit.event`                | `append`                                                                                                     |
+| `jobs.email`                 | Durable outbox repository used by the emails package                                                         |
 
 Writes encode the focused protocol input, and every returned row decodes into its protocol model,
 including `DateTime.Utc` timestamps and branded identities. Missing lookups and conditional
 mutations return `undefined`. Unexpected missing insert results and codec mismatches are defects;
 known SQL/Drizzle failures become `DatabaseError`. Individual repository services remain exported.
 
-User creation stores the supplied canonical email without provider-specific rewriting. Credential
-creation stores an already-generated hash and never replaces an existing credential. Session
-creation stores a digest and an absolute expiry. Related creation timestamps come from the same
-Effect clock instant rather than database defaults.
+User creation stores identity/profile independently of email. Create its address explicitly
+inside the same transaction when the workflow requires both. `findById` returns the normalized
+`User`; both `lockById` methods require an active `TransactionService.run`.
+`findProfileById` joins the active primary email into `UserProfile`. Session creation
+stores a digest and absolute expiry. Lifecycle timestamps use the same Effect clock.
 
 Active session lookup excludes revoked sessions and expiry at or before the current Effect time.
 Activity updates use a conditional write, cannot move activity backwards, and never extend expiry
@@ -100,7 +104,7 @@ must also check suspension and other user states. Repositories do not authorize 
 Application bootstrap creates the email-verified user, owner grant, session and installation
 completion in one outer transaction with required audit events. Application also generates setup
 proofs, resolves sessions and coordinates revocation. The server implements setup-proof replacement,
-startup logging and HTTP integration; account recovery and frontend integration remain pending.
+startup logging and HTTP integration; frontend integration remains pending.
 Signup remains invitation-only, and only instance owners may create organizations; neither policy is a configurable settings column.
 
 `instance.bootstrap_challenge` holds one pending setup verification per installation,
@@ -111,13 +115,18 @@ installation lock. Codes and email delivery are not repository responsibilities.
 
 ## Auth and audit storage
 
-- `auth.user` stores UUIDv7 identity, display name, unique canonical email, nullable email
-  verification/disable timestamps and creation/update timestamps. Names are trimmed and 1–120
-  characters; canonical email is nonempty, trimmed and lowercase. Address syntax is validated by
-  protocol. Changing email must clear verification in the future application workflow.
-- `auth.password_credential` has one row per user, an opaque nonempty encoded password hash,
-  creation time and password-change time. Password changes cannot precede creation. It remains legacy storage; passwordless setup does not create a row. Persistence
-  accepts only an already-generated hash.
+- `auth.user` stores UUIDv7 identity, display name, disable state and lifecycle timestamps.
+- `auth.user_email` owns canonical email, primary designation, verification, login enablement,
+  removal history and timestamps. Partial unique indexes protect active email ownership and one
+  active primary address per user. Removed addresses cannot remain primary/login-enabled;
+  login-enabled addresses must be verified.
+- `auth.verification` holds email-sign-in code/link digests, recipient HMAC, browser binding,
+  optional eligible user/email/job source, five-attempt budget, context and expiry/terminal state.
+  A partial unique index allows one pending purpose/recipient proof. Consumption rechecks expiry;
+  cleanup removes at most 500 proofs at least one day past expiry with `SKIP LOCKED`.
+- `auth.session_authentication` records method, authentication time, email source, assurance,
+  expiry and revocation. Composite foreign keys keep its session and email on the same user.
+  Usable-evidence lookup rechecks active verified login-enabled email and evidence expiry.
 - `auth.session` stores UUIDv7 session identity, user, unique SHA-256 token digest as 64 lowercase
   hex characters, creation/activity/absolute-expiry timestamps and nullable revocation time.
   Indexes support digest lookup, user history and expiry cleanup. Expiry must follow creation;
@@ -135,10 +144,12 @@ installation lock. Codes and email delivery are not repository responsibilities.
 All auth user foreign keys use `on delete restrict`; account disabling preserves references and
 history. There is no account-disable workflow yet. Public DTOs and application bootstrap/session
 workflows are implemented in protocol/application. The server implements cookie authentication;
-sign-in, password reset and resource authorization remain pending. Write related lifecycle timestamps
-explicitly from the same Effect clock instant, including `createdAt` when checking against it; do not mix an earlier test/application time with a later database insertion default.
-The auth/audit migration deliberately fails if older owner rows reference nonexistent users; it
-does not fabricate users or silently remove historical grants.
+email sign-in and session management are implemented; invitations and resource authorization remain
+pending. Write related lifecycle timestamps from the same Effect clock instant.
+
+The prelaunch migration history is one freshly generated initial migration, with no password
+table or upgrade/backfill path. Reset an older local database before using this schema. Generation
+and tests do not reset a developer database automatically.
 
 ## Services and composition
 

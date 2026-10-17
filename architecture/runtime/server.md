@@ -23,7 +23,8 @@ first-owner transaction belong to [instance setup](../identity-access/instance-s
 Node receives SIGTERM/SIGINT through the scoped Effect runtime. Shutdown stops new
 requests, allows up to 15 seconds for active requests and releases resources. Compose
 allows 20 seconds before forcing exit. The scoped email worker starts after startup preparation and stops with the runtime.
-The operator CLI does not start it.
+A second scoped task removes expired sign-in proofs in bounded batches.
+The operator CLI starts neither worker.
 
 ## Request boundary
 
@@ -45,7 +46,7 @@ actor to protected handlers; cookie lifecycle and revocation are documented in
 [sessions](../identity-access/sessions.md).
 
 Request admission uses one-minute process-local windows: 240 general requests per
-client, 30 proof inspections, five issuance/resend requests and ten verification
+client, 30 setup-proof inspections, five setup issuance/resend requests and ten setup verification
 attempts. Mutating setup endpoints admit at most two concurrent requests before decoding.
 The database separately enforces code attempts and resend cooldown across replicas. Setup limits use matched endpoint
 identifiers so alternate URL spellings cannot bypass them. Capacity is bounded to

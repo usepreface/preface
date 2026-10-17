@@ -12,13 +12,15 @@ import { RequestLimits } from "#/http/middleware/limits";
 import { makeRequestPolicy } from "#/http/middleware/request-policy";
 import { SessionAuthenticationLive } from "#/http/middleware/session-authentication";
 import { SetupProtectionLive } from "#/http/middleware/setup-protection";
+import { EmailSignInRoutes } from "#/http/routes/email-sign-in";
 import { HealthRoutes } from "#/http/routes/health";
 import { InstanceSetupRoutes } from "#/http/routes/instance-setup";
 import { SessionRoutes } from "#/http/routes/session";
+import { SessionsRoutes } from "#/http/routes/sessions";
 
 const ProductRoutes = HttpApiBuilder.layer(PrefaceApi, { openapiPath: "/api/openapi.json" }).pipe(
   Layer.provide(
-    Layer.mergeAll(InstanceSetupRoutes, SessionRoutes).pipe(
+    Layer.mergeAll(InstanceSetupRoutes, SessionRoutes, EmailSignInRoutes, SessionsRoutes).pipe(
       Layer.provideMerge(Layer.mergeAll(SessionAuthenticationLive, SetupProtectionLive)),
     ),
   ),

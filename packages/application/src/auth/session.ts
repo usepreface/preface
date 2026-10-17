@@ -2,8 +2,8 @@ import type { Redacted } from "effect";
 import { DateTime, Duration, Effect } from "effect";
 
 import { DatabaseRepository, TransactionService } from "@usepreface/database";
-import { AuthenticationError } from "@usepreface/protocol";
-import type { SessionActor } from "@usepreface/protocol/dto";
+import { AuthenticationError, type SessionId } from "@usepreface/protocol";
+import type { ListSessionsQuery, SessionList, SessionActor } from "@usepreface/protocol/dto";
 
 import { sessionActivityInterval, sessionIdleTimeout } from "#/security/policy";
 import { TokenService } from "#/security/token";
@@ -20,13 +20,14 @@ export const makeSessionApplication = Effect.gen(function* () {
     const session = yield* repository.auth.session.findActiveByTokenHash(hash);
     if (session === undefined) return yield* new AuthenticationError({ code: "UNAUTHENTICATED" });
 
-    const user = yield* repository.auth.user.findById(session.userId);
+    const user = yield* repository.auth.user.findProfileById(session.userId);
     const now = DateTime.toEpochMillis(yield* DateTime.now);
     const inactiveFor = now - DateTime.toEpochMillis(session.lastSeenAt);
     if (
       user === undefined ||
       user.disabledAt !== null ||
-      inactiveFor >= Duration.toMillis(sessionIdleTimeout)
+      inactiveFor >= Duration.toMillis(sessionIdleTimeout) ||
+      (yield* repository.auth.sessionAuthentication.listUsableBySessionId(session.id)).length === 0
     ) {
       return yield* new AuthenticationError({ code: "UNAUTHENTICATED" });
     }
@@ -49,23 +50,72 @@ export const makeSessionApplication = Effect.gen(function* () {
   });
 
   // actor comes from resolve(), never from caller-controlled body identities.
-  const revokeCurrent = Effect.fn("Application.auth.session.revokeCurrent")((actor: SessionActor) =>
-    transaction.run(
-      Effect.gen(function* () {
-        const revoked = yield* repository.auth.session.revoke(actor.session.id, actor.user.id);
-        if (revoked === undefined) return;
+  const revoke = Effect.fn("Application.auth.session.revoke")(
+    (actor: SessionActor, sessionId: SessionId) =>
+      transaction.run(
+        Effect.gen(function* () {
+          const revoked = yield* repository.auth.session.revoke(sessionId, actor.user.id);
+          if (revoked === undefined) return;
 
-        yield* repository.audit.event.append({
-          actorKind: "user",
-          actorUserId: actor.user.id,
-          eventType: "auth.session_revoked",
-          targetType: "session",
-          targetId: revoked.id,
-          metadata: {},
-        });
-      }),
-    ),
+          yield* repository.auth.sessionAuthentication.revokeBySessionId(revoked.id, actor.user.id);
+          yield* repository.audit.event.append({
+            actorKind: "user",
+            actorUserId: actor.user.id,
+            eventType: "auth.session_revoked",
+            targetType: "session",
+            targetId: revoked.id,
+            metadata: {},
+          });
+        }),
+      ),
   );
 
-  return { resolve, revokeCurrent } as const;
+  const list = Effect.fn("Application.auth.session.list")(function* (
+    actor: SessionActor,
+    input: ListSessionsQuery,
+  ) {
+    const limit = input.limit ?? 25;
+    const rows = yield* repository.auth.session.listActiveByUserId({
+      userId: actor.user.id,
+      ...(input.cursor === undefined ? {} : { cursor: input.cursor }),
+      limit: limit + 1,
+      idleTimeout: sessionIdleTimeout,
+    });
+    const visible = rows.slice(0, limit);
+    return {
+      sessions: visible.map((session) => ({
+        id: session.id,
+        createdAt: session.createdAt,
+        lastSeenAt: session.lastSeenAt,
+        expiresAt: session.expiresAt,
+        isCurrent: session.id === actor.session.id,
+      })),
+      nextCursor: rows.length > limit ? (visible.at(-1)?.id ?? null) : null,
+    } satisfies SessionList;
+  });
+  const revokeCurrent = Effect.fn("Application.auth.session.revokeCurrent")((actor: SessionActor) =>
+    revoke(actor, actor.session.id),
+  );
+  const revokeAll = Effect.fn("Application.auth.session.revokeAll")(function* (
+    actor: SessionActor,
+  ) {
+    yield* transaction.run(
+      Effect.gen(function* () {
+        yield* repository.auth.user.lockById(actor.user.id);
+        const sessions = yield* repository.auth.session.revokeAllByUserId(actor.user.id);
+        for (const session of sessions) {
+          yield* repository.auth.sessionAuthentication.revokeBySessionId(session.id, actor.user.id);
+          yield* repository.audit.event.append({
+            actorKind: "user",
+            actorUserId: actor.user.id,
+            eventType: "auth.session_revoked",
+            targetType: "session",
+            targetId: session.id,
+            metadata: {},
+          });
+        }
+      }),
+    );
+  });
+  return { resolve, revokeCurrent, list, revoke, revokeAll } as const;
 });

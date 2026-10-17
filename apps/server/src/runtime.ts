@@ -1,7 +1,7 @@
 import { NodeServices } from "@effect/platform-node";
-import { Layer } from "effect";
+import { Effect, Layer } from "effect";
 
-import { Application } from "@usepreface/application";
+import { Application, AuthenticationLinks } from "@usepreface/application";
 import { NodeToken } from "@usepreface/application/node";
 import { NodeSecretCrypto, NodeTokenCrypto } from "@usepreface/crypto/node";
 import {
@@ -16,11 +16,19 @@ import {
   EmailPayloadCipher,
   EmailSender,
   EmailService,
-  SetupEmailRenderer,
+  AuthenticationEmailRenderer,
 } from "@usepreface/emails";
 import { ConfiguredEmailProvider } from "@usepreface/emails/node";
 
 import { ServerConfig } from "#/config";
+
+const LinksLive = Layer.effect(
+  AuthenticationLinks,
+  Effect.gen(function* () {
+    const config = yield* ServerConfig;
+    return { publicOrigin: config.publicUrl.origin };
+  }),
+).pipe(Layer.provide(ServerConfig.layer));
 
 const PersistenceLive = Layer.mergeAll(DatabaseRepository.layer, DatabaseMigration.layer).pipe(
   Layer.provideMerge(TransactionService.layer.pipe(Layer.provideMerge(Database.layer))),
@@ -28,7 +36,7 @@ const PersistenceLive = Layer.mergeAll(DatabaseRepository.layer, DatabaseMigrati
 const CryptoLive = Layer.mergeAll(NodeToken.layer, NodeTokenCrypto.layer, NodeSecretCrypto.layer);
 const CipherLive = EmailPayloadCipher.layer.pipe(Layer.provide(CryptoLive));
 const EmailLive = EmailService.layer.pipe(
-  Layer.provide(Layer.mergeAll(SetupEmailRenderer.layer, EmailSender.layer)),
+  Layer.provide(Layer.mergeAll(AuthenticationEmailRenderer.layer, EmailSender.layer)),
   Layer.provideMerge(ConfiguredEmailProvider),
 );
 const JobsLive = EmailJobs.layer.pipe(Layer.provideMerge(CipherLive));
@@ -36,6 +44,7 @@ const JobsLive = EmailJobs.layer.pipe(Layer.provideMerge(CipherLive));
 export const BackendLive = Layer.mergeAll(Application.layer, EmailDelivery.layer).pipe(
   Layer.provideMerge(JobsLive),
   Layer.provide(EmailLive),
+  Layer.provide(LinksLive),
   Layer.provide(CryptoLive),
   Layer.provideMerge(PersistenceLive),
   Layer.merge(ServerConfig.layer),

@@ -1,3 +1,4 @@
+export { UserEmailId, VerificationId, SessionAuthenticationId } from "#/identifiers/auth";
 export { InstallationId, InstanceOwnerId } from "#/identifiers/instance";
 export { UserId } from "#/identifiers/user";
 export { SessionId } from "#/identifiers/session";
@@ -33,3 +34,5 @@ export {
   RequestBootstrapVerificationInput,
   ResendBootstrapVerificationInput,
 } from "#/input/index";
+
+export { EmailSignInError } from "#/errors/auth/email-sign-in";

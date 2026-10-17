@@ -2,7 +2,9 @@ export { DatabaseRepository } from "#/repositories/layer";
 export { EmailJobRepository } from "#/repositories/jobs/email";
 export {
   UserRepository,
-  PasswordCredentialRepository,
+  UserEmailRepository,
+  VerificationRepository,
+  SessionAuthenticationRepository,
   SessionRepository,
 } from "#/repositories/auth/index";
 export { AuditEventRepository } from "#/repositories/audit/index";

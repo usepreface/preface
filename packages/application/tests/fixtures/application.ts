@@ -6,7 +6,7 @@ import { DatabaseRepository } from "@usepreface/database";
 import { TestDatabase } from "@usepreface/database/testing";
 import { EmailJobs, EmailPayloadCipher } from "@usepreface/emails";
 
-import { Application } from "../../src/index.js";
+import { Application, AuthenticationLinks } from "../../src/index.js";
 import { NodeToken } from "../../src/node/index.js";
 
 const port = process.env.PREFACE_TEST_POSTGRES_PORT;
@@ -34,6 +34,9 @@ export const SecurityTestLayer = Layer.mergeAll(
   Layer.provide(NodeCrypto.layer),
 );
 export const ApplicationTestLayer = Application.layer.pipe(
+  Layer.provide(
+    Layer.succeed(AuthenticationLinks, { publicOrigin: "https://preface.example.test" }),
+  ),
   Layer.provideMerge(EmailJobs.layer.pipe(Layer.provideMerge(EmailPayloadCipher.layer))),
   Layer.provideMerge(SecurityTestLayer),
   Layer.provideMerge(RepositoryTestLayer),

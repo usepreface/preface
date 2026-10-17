@@ -78,7 +78,9 @@ layer(ApplicationTestLayer)("setup verification", (it) => {
         (event) => event.eventType === "instance.bootstrap_verification_failed",
       );
       expect(failuresRecorded).toHaveLength(5);
-      expect(yield* repository.auth.user.findByEmail("owner@example.test")).toBeUndefined();
+      expect(
+        yield* repository.auth.userEmail.findActiveByEmail("owner@example.test"),
+      ).toBeUndefined();
     }),
   );
 

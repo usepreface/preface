@@ -30,15 +30,21 @@ Use `preface-source` for source development or build workspace dependencies befo
 
 ## Endpoints
 
-| Client method                                    | HTTP route                            | Success                                        |
-| ------------------------------------------------ | ------------------------------------- | ---------------------------------------------- |
-| `instanceSetup.status()`                         | `GET /api/v1/instance/setup`          | `200` `BootstrapStatus`                        |
-| `instanceSetup.inspect({ payload })`             | `POST /api/v1/instance/setup/inspect` | `200` `BootstrapTokenInfo`                     |
-| `instanceSetup.requestVerification({ payload })` | `POST /api/v1/instance/setup`         | `202` `BootstrapVerification`                  |
-| `instanceSetup.resendVerification({ payload })`  | `POST /api/v1/instance/setup/resend`  | `202` `BootstrapVerification`                  |
-| `instanceSetup.complete({ payload })`            | `POST /api/v1/instance/setup/verify`  | `201` `SessionActor`, with a server-set cookie |
-| `session.current()`                              | `GET /api/v1/auth/session`            | `200` `SessionActor`                           |
-| `session.revoke()`                               | `DELETE /api/v1/auth/session`         | `204`                                          |
+| Client method                                    | HTTP route                                | Success                                                |
+| ------------------------------------------------ | ----------------------------------------- | ------------------------------------------------------ |
+| `instanceSetup.status()`                         | `GET /api/v1/instance/setup`              | `200` `BootstrapStatus`                                |
+| `instanceSetup.inspect({ payload })`             | `POST /api/v1/instance/setup/inspect`     | `200` `BootstrapTokenInfo`                             |
+| `instanceSetup.requestVerification({ payload })` | `POST /api/v1/instance/setup`             | `202` `BootstrapVerification`                          |
+| `instanceSetup.resendVerification({ payload })`  | `POST /api/v1/instance/setup/resend`      | `202` `BootstrapVerification`                          |
+| `instanceSetup.complete({ payload })`            | `POST /api/v1/instance/setup/verify`      | `201` `SessionActor`, with a server-set cookie         |
+| `session.current()`                              | `GET /api/v1/auth/session`                | `200` `SessionActor`                                   |
+| `emailSignIn.request({ payload })`               | `POST /api/v1/auth/email/request`         | `202` `EmailSignInChallenge`, temporary cookie         |
+| `emailSignIn.resend({ payload })`                | `POST /api/v1/auth/email/resend`          | `202` `EmailSignInChallenge`, rotated temporary cookie |
+| `emailSignIn.verify({ payload })`                | `POST /api/v1/auth/email/verify`          | `201` `SessionActor`, session cookie                   |
+| `sessions.list({ query })`                       | `GET /api/v1/auth/sessions`               | `200` `SessionList`                                    |
+| `sessions.revoke({ params })`                    | `DELETE /api/v1/auth/sessions/:sessionId` | `204`                                                  |
+| `sessions.revokeAll()`                           | `DELETE /api/v1/auth/sessions`            | `204`                                                  |
+| `session.revoke()`                               | `DELETE /api/v1/auth/session`             | `204`                                                  |
 
 Inspection accepts `{ token }`. Request verification accepts
 `{ token, instanceName, ownerName, email }`. The 202 response contains
@@ -61,13 +67,28 @@ bodies where applicable. Node clients must supply the Origin header explicitly.
 
 Logout resolves a cookie if present and succeeds for absent/invalid sessions. It does not promise
 successful revocation after a storage failure. Bootstrap proofs and sessions are separate authorities.
-There is no HTTP reissue endpoint, sign-in, organization API, bearer-token API or dashboard in this slice.
+There is no HTTP reissue endpoint, organization API, bearer-token API or dashboard in this slice.
+
+Email request accepts `{ email }`; resend accepts `{ challengeId }` with the temporary
+`preface_sign_in` cookie. Verification accepts `{ challengeId, method: "code", code }`
+or `{ challengeId, method: "magic_link", token }` with that same cookie. The response
+contains only challenge identity/expiry. Unknown or unavailable recipients receive the
+same public shape and no email; this is not signup. Existing authenticated browsers
+cannot start or complete ordinary sign-in. The link fragment belongs to the future UI.
+
+Session listing accepts optional `cursor` and `limit` (1–100, default 25) and returns
+`{ sessions, nextCursor }`. Each session exposes `id`, `createdAt`, `lastSeenAt`,
+`expiresAt` and `isCurrent`. Revocation is user-scoped; a missing/other-user session is
+an idempotent no-op. Revoke-all includes the current session and clears its cookie.
 
 ## Errors and documentation
 
 Bootstrap errors retain `_tag: "BootstrapError"` and their domain code. Invalid input maps to `400`,
 invalid proof/code to `401`, cooldown to `429`, and completed setup/unavailable email to `409`. Missing or invalid sessions
 return `AuthenticationError` with `UNAUTHENTICATED` at `401`.
+
+Email sign-in errors use `_tag: "EmailSignInError"`: `INVALID_INPUT` (400),
+`INVALID_PROOF` (401), `INSTANCE_NOT_READY` and `ALREADY_AUTHENTICATED` (409).
 
 Transport failures use `RequestError` and a closed code: `INVALID_INPUT` (`400`), `FORBIDDEN` (`403`),
 `NOT_FOUND` (`404`), `REQUEST_TIMEOUT` (`408`), `PAYLOAD_TOO_LARGE` (`413`), `UNSUPPORTED_MEDIA_TYPE`

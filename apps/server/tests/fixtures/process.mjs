@@ -106,3 +106,16 @@ export function setupLink(output) {
   if (line === undefined) throw new Error("Expected the one-time operator setup URL");
   return new URL(line.trim());
 }
+
+export async function waitForDevelopmentCode(running, outputOffset = 0) {
+  const deadline = Date.now() + 5000;
+  while (Date.now() < deadline) {
+    const code = running.stdout
+      .slice(outputOffset)
+      .match(/email\.development[\s\S]*?\b(\d{8})\b/)?.[1];
+    if (code !== undefined) return code;
+    // oxlint-disable-next-line no-await-in-loop -- Wait for the worker's explicit development output.
+    await setTimeout(25);
+  }
+  throw new Error("Expected a rendered code from the development worker");
+}

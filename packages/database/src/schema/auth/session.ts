@@ -26,6 +26,7 @@ export const session = authSchema.table(
     revokedAt: timestamp("revoked_at", { mode: "date", withTimezone: true }),
   },
   (table) => [
+    uniqueIndex("session_id_user_unique").on(table.id, table.userId),
     uniqueIndex("session_token_hash_uidx").on(table.tokenHash),
     index("session_user_created_idx").on(table.userId, table.createdAt),
     index("session_expiry_idx").on(table.expiresAt),

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 
 import { DateTime, Effect } from "effect";
 
-import { Database, generateUuid7 } from "../../src/index.js";
+import { Database } from "../../src/index.js";
 import { user } from "../../src/schema/auth/user.js";
 
 export const createTestUser = Effect.fnUntraced(function* () {
@@ -12,7 +12,6 @@ export const createTestUser = Effect.fnUntraced(function* () {
     .insert(user)
     .values({
       displayName: "Test Owner",
-      email: `${generateUuid7()}@example.test`,
       createdAt,
       updatedAt: createdAt,
     })

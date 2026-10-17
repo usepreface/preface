@@ -1,10 +1,12 @@
 import { Schema } from "effect";
 
 import { AuditEventId } from "#/identifiers/audit";
+import { VerificationId, UserEmailId } from "#/identifiers/auth";
 import { BootstrapChallengeId } from "#/identifiers/bootstrap";
 import { InstallationId, InstanceOwnerId } from "#/identifiers/instance";
 import { SessionId } from "#/identifiers/session";
 import { UserId } from "#/identifiers/user";
+import { EmailAuthenticationMethod } from "#/model/auth/session-authentication";
 import { InstanceOwnerGrantSource } from "#/model/instance/owner";
 
 export const AuditActorKind = Schema.Literals(["user", "system"]);
@@ -71,7 +73,24 @@ const emailVerifiedFields = {
   metadata: emptyMetadata,
 };
 
+const signInFields = {
+  ...actorFields,
+  eventType: Schema.Literals(["auth.email_sign_in_requested", "auth.email_sign_in_failed"]),
+  targetType: Schema.Literal("verification"),
+  targetId: VerificationId,
+  metadata: Schema.Struct({ attempts: Schema.Natural }),
+};
+const authenticatedFields = {
+  ...actorFields,
+  eventType: Schema.Literal("auth.session_authenticated"),
+  targetType: Schema.Literal("session"),
+  targetId: SessionId,
+  metadata: Schema.Struct({ method: EmailAuthenticationMethod, userEmailId: UserEmailId }),
+};
+
 export const RecordAuditEvent = Schema.Union([
+  Schema.Struct(signInFields),
+  Schema.Struct(authenticatedFields),
   Schema.Struct(bootstrapFields),
   Schema.Struct(bootstrapVerificationFields),
   Schema.Struct(emailVerifiedFields),
@@ -83,6 +102,8 @@ export type RecordAuditEvent = typeof RecordAuditEvent.Type;
 
 const storedFields = { id: AuditEventId, occurredAt: Schema.DateTimeUtcFromDate };
 export const AuditEvent = Schema.Union([
+  Schema.Struct({ ...signInFields, ...storedFields }),
+  Schema.Struct({ ...authenticatedFields, ...storedFields }),
   Schema.Struct({ ...bootstrapFields, ...storedFields }),
   Schema.Struct({ ...bootstrapVerificationFields, ...storedFields }),
   Schema.Struct({ ...emailVerifiedFields, ...storedFields }),

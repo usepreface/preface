@@ -1,7 +1,10 @@
 import { defineRelations } from "drizzle-orm";
 
 import { auditEvent } from "#/schema/audit/index";
-import { passwordCredential, session, user } from "#/schema/auth/index";
+import { session, user } from "#/schema/auth/index";
+import { sessionAuthentication } from "#/schema/auth/session-authentication";
+import { userEmail } from "#/schema/auth/user-email";
+import { verification } from "#/schema/auth/verification";
 import {
   installation,
   instanceOwner,
@@ -16,11 +19,13 @@ export const relations = defineRelations(
     instanceSettings,
     instanceOwner,
     user,
-    passwordCredential,
     session,
     auditEvent,
     emailJob,
     bootstrapChallenge,
+    userEmail,
+    verification,
+    sessionAuthentication,
   },
   (r) => ({
     installation: {
@@ -63,17 +68,22 @@ export const relations = defineRelations(
         optional: false,
       }),
     },
-    user: {
-      passwordCredential: r.one.passwordCredential({
-        from: r.user.id,
-        to: r.passwordCredential.userId,
+    userEmail: { user: r.one.user({ from: r.userEmail.userId, to: r.user.id, optional: false }) },
+    verification: {
+      emailJob: r.one.emailJob({ from: r.verification.emailJobId, to: r.emailJob.id }),
+    },
+    sessionAuthentication: {
+      session: r.one.session({
+        from: r.sessionAuthentication.sessionId,
+        to: r.session.id,
+        optional: false,
       }),
+    },
+    user: {
+      emails: r.many.userEmail({ from: r.user.id, to: r.userEmail.userId }),
       sessions: r.many.session({ from: r.user.id, to: r.session.userId }),
       ownerGrants: r.many.instanceOwner({ from: r.user.id, to: r.instanceOwner.userId }),
       auditEvents: r.many.auditEvent({ from: r.user.id, to: r.auditEvent.actorUserId }),
-    },
-    passwordCredential: {
-      user: r.one.user({ from: r.passwordCredential.userId, to: r.user.id, optional: false }),
     },
     session: {
       user: r.one.user({ from: r.session.userId, to: r.user.id, optional: false }),

@@ -6,9 +6,9 @@ links and business authority. The database package owns the `jobs.email` table,
 claims and conditional state changes. Email payload schemas are internal models
 in protocol, not public HTTP DTOs.
 
-The server wires a minimal `SetupEmailRenderer` and a scoped worker for instance
-setup verification. The renderer supplies plain text and simple HTML for setup
-codes only; sign-in and invitation payloads fail rendering until their actual
+The server wires a minimal `AuthenticationEmailRenderer` and a scoped worker for
+instance setup and ordinary email sign-in. The renderer supplies plain text and simple HTML for setup
+codes and sign-in code/link messages; invitation payloads fail rendering until their actual
 workflows/templates exist. React Email presentation can replace this capability
 without changing enqueueing, provider adapters or HTTP contracts.
 
@@ -97,9 +97,9 @@ cancellation, ciphertext tampering, reclaimed/stale leases and final-attempt
 recovery. A PostgreSQL-only regression checks concurrent claim exclusion. SDK
 boundary tests intercept requests without sending email.
 
-Setup request/resend and code verification are implemented. No template preview,
-regular sign-in API, provider webhook,
-reconciliation workflow or delivery-management UI exists yet. Payload contracts
+Setup and sign-in request/resend and code/link verification are implemented. No
+template preview, provider webhook, reconciliation workflow or delivery-management
+UI exists yet. Payload contracts
 alone do not implement passwordless authentication or invitations.
 
 ## Source
@@ -111,6 +111,6 @@ alone do not implement passwordless authentication or invitations.
 - [Delivery](../../packages/emails/src/jobs/delivery.ts) and [worker](../../packages/emails/src/jobs/worker.ts)
 - [Provider selection](../../packages/emails/src/node/provider.ts)
 - [Cipher](../../packages/emails/src/node/cipher.ts)
-- [Minimal setup renderer](../../packages/emails/src/setup-renderer.ts)
+- [Operational authentication renderer](../../packages/emails/src/authentication-renderer.ts)
 - [Renderer boundary](../../packages/emails/src/renderer.ts)
 - [Tests](../../packages/emails/tests)

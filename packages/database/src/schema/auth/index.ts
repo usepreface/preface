@@ -1,4 +1,6 @@
 export { authSchema } from "#/schema/auth/schema";
 export { user } from "#/schema/auth/user";
-export { passwordCredential } from "#/schema/auth/password-credential";
 export { session } from "#/schema/auth/session";
+export { userEmail } from "#/schema/auth/user-email";
+export { verification } from "#/schema/auth/verification";
+export { sessionAuthentication } from "#/schema/auth/session-authentication";
