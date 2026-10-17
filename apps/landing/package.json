@@ -1,0 +1,38 @@
+{
+  "name": "@usepreface/landing",
+  "version": "0.0.0",
+  "private": true,
+  "description": "preface.run: the Preface landing page, built with TanStack Start and deployed to Vercel.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev --port 5175",
+    "build": "vite build",
+    "preview": "vite preview --port 5175",
+    "start": "node .output/server/index.mjs",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check .",
+    "lint": "oxlint --deny-warnings .",
+    "lint:fix": "oxlint --fix .",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@tanstack/react-router": "1.170.44",
+    "@tanstack/react-start": "1.169.2",
+    "@usepreface/ui": "workspace:*",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "4.3.3",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "6.1.2",
+    "klarity": "catalog:",
+    "nitro": "3.0.260903-beta",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:",
+    "vite": "8.3.4"
+  }
+}

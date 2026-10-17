@@ -3,5 +3,5 @@ import { defineConfig } from "oxlint";
 
 export default defineConfig({
   extends: [config],
-  ignorePatterns: [...config.ignorePatterns, "research/**"],
+  ignorePatterns: [...config.ignorePatterns, "research/**", "**/routeTree.gen.ts"],
 });

@@ -1,0 +1,9 @@
+{
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "env": ["VERCEL", "VERCEL_ENV", "VERCEL_TARGET_ENV", "SITE_URL"],
+      "outputs": [".output/**", ".vercel/output/**"]
+    }
+  }
+}

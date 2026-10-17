@@ -1,0 +1,223 @@
+@import "@usepreface/ui/globals.css";
+
+/*
+ * Landing-only surfaces from Figma pages 42–44 (Landing v2). The sky, glass and glow colours
+ * are brand art, so they live here as variables beside the semantic tokens they extend.
+ */
+:root {
+  --landing-canvas: var(--slate-25);
+  --landing-card: var(--slate-0);
+  --landing-card-border: #e5eaf2;
+  --landing-grid-line: color-mix(in srgb, #1747c9 12%, transparent);
+  --landing-accent-text: linear-gradient(90deg, #1747c9, #4d96ff);
+  --landing-sky: linear-gradient(
+    180deg,
+    #6faef7 0%,
+    #b9daff 42%,
+    #eaf4ff 75%,
+    var(--slate-25) 100%
+  );
+  --landing-glass: rgb(255 255 255 / 0.45);
+  --landing-glass-edge: rgb(255 255 255 / 0.9);
+  --landing-glass-tile: linear-gradient(140deg, rgb(255 255 255 / 0.75), rgb(255 255 255 / 0.4));
+  --landing-glass-shadow: 0 18px 40px rgb(23 71 201 / 0.14);
+  --landing-window-shadow: 0 40px 80px rgb(23 71 201 / 0.2);
+  --landing-nav: rgb(255 255 255 / 0.65);
+  --landing-nav-scrolled: rgb(255 255 255 / 0.85);
+  --landing-nav-edge: rgb(255 255 255 / 0.8);
+  --landing-nav-shadow: 0 10px 30px rgb(23 71 201 / 0.1);
+  --landing-circuit: rgb(23 71 201 / 0.25);
+  --landing-field: #1747c9;
+  --landing-tile: var(--slate-0);
+  --landing-tile-border: #e5eaf2;
+  --landing-cta-sky: linear-gradient(180deg, #8ec7ff, #dceeff);
+  --landing-cta-ink: #0f1a33;
+  --landing-cta-sub: #2b3a5c;
+  --landing-wordmark: linear-gradient(180deg, rgb(23 71 201 / 0.16), rgb(23 71 201 / 0));
+  --landing-highlight: #eaf2ff;
+  --landing-highlight-border: rgb(47 107 255 / 0.7);
+}
+
+.dark {
+  --landing-canvas: #0a0b0d;
+  --landing-card: #11141b;
+  --landing-card-border: #1f2430;
+  --landing-grid-line: color-mix(in srgb, #8ec0ff 18%, transparent);
+  --landing-accent-text: linear-gradient(90deg, #eaf2ff, #8ec0ff 55%, #4d96ff);
+  --landing-sky: linear-gradient(180deg, #050a1f 0%, #0e1b4d 55%, #1d3477 100%);
+  --landing-glass: rgb(255 255 255 / 0.06);
+  --landing-glass-edge: rgb(255 255 255 / 0.14);
+  --landing-glass-tile: linear-gradient(140deg, rgb(255 255 255 / 0.14), rgb(255 255 255 / 0.04));
+  --landing-glass-shadow: 0 18px 40px rgb(0 0 0 / 0.45);
+  --landing-window-shadow: 0 40px 80px rgb(0 0 0 / 0.6);
+  --landing-nav: rgb(17 20 27 / 0.6);
+  --landing-nav-scrolled: rgb(17 20 27 / 0.82);
+  --landing-nav-edge: rgb(255 255 255 / 0.1);
+  --landing-nav-shadow: 0 10px 30px rgb(23 71 201 / 0.3);
+  --landing-circuit: rgb(142 192 255 / 0.35);
+  --landing-field: #8ec0ff;
+  --landing-tile: #151922;
+  --landing-tile-border: #232937;
+  --landing-cta-sky: linear-gradient(180deg, #050a1f 0%, #0e1b4d 55%, #1d3477 100%);
+  --landing-cta-ink: #f5f8ff;
+  --landing-cta-sub: #c9d4ea;
+  --landing-wordmark: linear-gradient(180deg, rgb(142 192 255 / 0.3), rgb(142 192 255 / 0));
+  --landing-highlight: #0e1d4a;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 6rem;
+  background: var(--landing-canvas);
+}
+
+body {
+  background: var(--landing-canvas);
+}
+
+/* ---------- motion ---------- */
+
+@keyframes landing-rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--rise, 18px));
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+@keyframes landing-drift {
+  from {
+    transform: translate3d(calc(var(--drift, 60px) * -1), 0, 0);
+  }
+  to {
+    transform: translate3d(var(--drift, 60px), 0, 0);
+  }
+}
+
+@keyframes landing-float {
+  from {
+    translate: 0 -6px;
+  }
+  to {
+    translate: 0 6px;
+  }
+}
+
+@keyframes landing-dash {
+  to {
+    stroke-dashoffset: -32;
+  }
+}
+
+@keyframes landing-caret {
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes landing-sweep {
+  from {
+    transform: translateY(-30%);
+  }
+  to {
+    transform: translateY(130%);
+  }
+}
+
+@keyframes landing-glitch {
+  0%,
+  88%,
+  100% {
+    opacity: 0;
+    transform: none;
+  }
+  90% {
+    opacity: 1;
+    transform: translateX(-6px);
+  }
+  93% {
+    opacity: 0.4;
+    transform: translateX(10px);
+  }
+  96% {
+    opacity: 0.9;
+    transform: translateX(-2px);
+  }
+}
+
+@keyframes landing-twinkle {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes landing-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* Entrance on load, for the hero. */
+.landing-enter {
+  animation: landing-rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--delay, 0ms);
+}
+
+/* Scroll reveals. Hidden only when JavaScript runs, so the prerendered page is always readable. */
+html.js [data-reveal] {
+  opacity: 0;
+  transform: translateY(var(--rise, 24px));
+  transition:
+    opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--delay, 0ms);
+}
+
+html.js [data-reveal][data-shown] {
+  opacity: 1;
+  transform: none;
+}
+
+.landing-drift {
+  animation: landing-drift var(--duration, 60s) ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+.landing-float {
+  animation: landing-float 6s ease-in-out infinite alternate;
+  animation-delay: var(--delay, 0ms);
+}
+
+.landing-accent-text {
+  background-image: var(--landing-accent-text);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .landing-enter,
+  .landing-drift,
+  .landing-float,
+  [data-motion] {
+    animation: none !important;
+  }
+
+  html.js [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

@@ -1,0 +1,5 @@
+# TanStack Start and Nitro build output
+.output/
+.nitro/
+.tanstack/
+.vercel/

@@ -1,0 +1,22 @@
+{
+  "id": "/",
+  "name": "Preface",
+  "short_name": "Preface",
+  "description": "The open-source knowledge platform you host yourself. Cited answers from GitHub, Slack, Notion and your docs.",
+  "lang": "en-US",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#fbfcfd",
+  "theme_color": "#16191f",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

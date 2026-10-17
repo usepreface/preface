@@ -18,7 +18,13 @@ import {
  * visible. Dark is the default in both themes - it reads as code everywhere.
  */
 
-export type CodeSample = { label: string; language: string; code: string };
+export type CodeSample = {
+  label: string;
+  language: string;
+  code: string;
+  /** Shown on the right of the tabs while this sample is active, e.g. "route.ts". */
+  filename?: string;
+};
 
 function HighlightedLines({ code, language }: { code: string; language: string }) {
   const lines = useHighlightedCode(code, language);
@@ -36,6 +42,7 @@ function CodeSnippet({
   title,
   theme = "dark",
   lineNumbers = false,
+  defaultIndex = 0,
   className,
   ...props
 }: Omit<React.ComponentProps<"div">, "title"> & {
@@ -45,12 +52,15 @@ function CodeSnippet({
   /** dark: always dark (default). auto: follows the page theme. */
   theme?: "dark" | "auto";
   lineNumbers?: boolean;
+  /** The tab that is open first. */
+  defaultIndex?: number;
 }) {
-  const [active, setActive] = React.useState(0);
+  const [active, setActive] = React.useState(defaultIndex);
   const sample = samples[active] ?? samples[0];
   if (!sample) {
     return null;
   }
+  const heading = title ?? sample.filename;
   return (
     <div
       data-slot="code-snippet"
@@ -76,12 +86,12 @@ function CodeSnippet({
               </button>
             ))}
           </div>
-          {title ? (
+          {heading ? (
             <span className="ml-auto truncate pr-1 font-mono text-xs text-fg-tertiary">
-              {title}
+              {heading}
             </span>
           ) : null}
-          <CodeBlockActions className={title ? "ms-1" : undefined}>
+          <CodeBlockActions className={heading ? "ms-1" : undefined}>
             <CodeBlockCopyButton value={sample.code} />
           </CodeBlockActions>
         </CodeBlockHeader>

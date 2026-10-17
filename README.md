@@ -11,6 +11,7 @@ This repository contains monorepo tooling and these workspace packages and appli
 - [template](packages/template/README.md): reusable starter for internal packages.
 - [ui](packages/ui/README.md): the design system - Base UI components in the shadcn/ui structure, Preface tokens,
   icons, company logos and brand marks.
+- [landing](apps/landing/README.md): preface.run, the landing page, on TanStack Start for Vercel.
 - [uikit](apps/uikit/README.md): Preface UI Kit, the living reference for every component, icon, logo and piece of art in light and dark.
 
 The database package includes connection/transaction services, error mapping, migration tooling,
