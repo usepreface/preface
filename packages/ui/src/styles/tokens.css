@@ -263,11 +263,12 @@
   --input: var(--border-default);
   --ring: var(--border-focus);
 
+  /* Data colours, in order: Signal, Ice, Teal, Violet, Amber (Figma page 55). */
   --chart-1: var(--blue-500);
-  --chart-2: var(--teal-500);
-  --chart-3: var(--violet-500);
-  --chart-4: var(--amber-500);
-  --chart-5: var(--green-500);
+  --chart-2: var(--ice-300);
+  --chart-3: var(--teal-500);
+  --chart-4: var(--violet-500);
+  --chart-5: var(--amber-500);
 
   --sidebar: var(--bg-surface-1);
   --sidebar-foreground: var(--text-secondary);

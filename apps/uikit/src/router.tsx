@@ -9,12 +9,18 @@ import { labPages } from "./lab";
 import { AiPage } from "./pages/ai";
 import { BackgroundsPage } from "./pages/backgrounds";
 import { BrandMarksPage } from "./pages/brand-marks";
+import { ChartsPage } from "./pages/charts";
 import { ColorsPage } from "./pages/colors";
 import { DashboardPage } from "./pages/dashboard";
+import { DateCalendarPage } from "./pages/date-calendar";
+import { DisclosurePage } from "./pages/disclosure";
 import { IconsPage } from "./pages/icons";
 import { IllustrationsPage } from "./pages/illustrations";
+import { InputsPage } from "./pages/inputs";
 import { LogosPage } from "./pages/logos";
+import { MenusPage } from "./pages/menus";
 import { ObjectsPage } from "./pages/objects";
+import { OnboardingPage } from "./pages/onboarding";
 import { OverviewPage } from "./pages/overview";
 import { ProductPage } from "./pages/product";
 import { SurfacePage } from "./pages/surface";
@@ -75,10 +81,16 @@ const routeTree = rootRoute.addChildren([
   createRoute({ ...parent, path: "/art/illustrations", component: themed(IllustrationsPage) }),
   createRoute({ ...parent, path: "/art/objects", component: themed(ObjectsPage) }),
   createRoute({ ...parent, path: "/art/backgrounds", component: BackgroundsPage }),
+  createRoute({ ...parent, path: "/components/date", component: themed(DateCalendarPage) }),
+  createRoute({ ...parent, path: "/components/menus", component: themed(MenusPage) }),
+  createRoute({ ...parent, path: "/components/disclosure", component: themed(DisclosurePage) }),
+  createRoute({ ...parent, path: "/components/inputs", component: themed(InputsPage) }),
+  createRoute({ ...parent, path: "/components/charts", component: themed(ChartsPage) }),
   createRoute({ ...parent, path: "/preface/components", component: themed(ProductPage) }),
   createRoute({ ...parent, path: "/preface/ai", component: themed(AiPage) }),
   createRoute({ ...parent, path: "/preface/toasts", component: themed(ToastsPage) }),
   createRoute({ ...parent, path: "/preface/dashboard", component: DashboardPage }),
+  createRoute({ ...parent, path: "/preface/onboarding", component: OnboardingPage }),
   labRoute,
 ]);
 

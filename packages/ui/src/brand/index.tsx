@@ -174,11 +174,9 @@ function PrefaceAppIcon({
   const small = size <= 20;
   const rich = size >= 56;
   const background: Record<AppIconSkin, string> = {
-    glacier: rich
-      ? "radial-gradient(circle at 50% 50%, rgb(77 150 255 / 0.3), transparent 60%), #16191F"
-      : "#16191F",
+    glacier: "#16191F",
     dither: "linear-gradient(140deg, #2F6BFF 0%, #5C97FF 55%, #8EC0FF 100%)",
-    hybrid: "radial-gradient(circle at 50% 50%, rgb(77 150 255 / 0.24), transparent 60%), #16191F",
+    hybrid: "#16191F",
     frost: "#F5F9FF",
   };
   const tone: MarkTone =

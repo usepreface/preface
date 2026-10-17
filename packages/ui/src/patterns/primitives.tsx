@@ -380,6 +380,31 @@ export function Halftone({
   );
 }
 
+/** Isometric lattice: two 30° families and verticals, hairlines at any scale. */
+export function IsoLattice({
+  color = "#8EC0FF",
+  opacity = 0.26,
+  step = 64,
+  ...props
+}: PatternProps & { step?: number }) {
+  const { w, h } = ARTBOARD;
+  const d = React.useMemo(() => {
+    const t = Math.tan(Math.PI / 6);
+    let s = "";
+    for (let c = -h / t; c < w + h / t; c += step / t) {
+      s += `M${c.toFixed(1)} 0L${(c + h / t).toFixed(1)} ${h}`;
+      s += `M${(c + h / t).toFixed(1)} 0L${c.toFixed(1)} ${h}`;
+    }
+    for (let x = 0; x <= w; x += step / t) s += `M${x.toFixed(1)} 0V${h}`;
+    return s;
+  }, [step, w, h]);
+  return (
+    <Layer fit="none" {...props}>
+      <path d={d} stroke={color} strokeOpacity={opacity} vectorEffect="non-scaling-stroke" />
+    </Layer>
+  );
+}
+
 /** Monospace glyph field, the "knowledge field" texture behind marketing headlines. */
 export function CharacterField({
   color = "#8EC0FF",

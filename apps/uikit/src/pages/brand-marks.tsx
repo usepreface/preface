@@ -47,10 +47,6 @@ function AppIconSvg({ skin, size = 96 }: { skin: AppIconSkin; size?: number }) {
           <stop offset="0.55" stopColor="#5C97FF" />
           <stop offset="1" stopColor="#8EC0FF" />
         </linearGradient>
-        <radialGradient id={`${id}-glow`} cx="0.5" cy="0.5" r="0.6">
-          <stop stopColor="#4D96FF" stopOpacity={skin === "hybrid" ? 0.24 : 0.3} />
-          <stop offset="1" stopColor="#4D96FF" stopOpacity={0} />
-        </radialGradient>
         <pattern id={`${id}-dots`} width={step} height={step} patternUnits="userSpaceOnUse">
           <circle
             cx={step / 2}
@@ -80,9 +76,6 @@ function AppIconSvg({ skin, size = 96 }: { skin: AppIconSkin; size?: number }) {
           height={size}
           fill={skin === "dither" ? `url(#${id}-dither)` : skin === "frost" ? "#F5F9FF" : "#16191F"}
         />
-        {skin === "glacier" || skin === "hybrid" ? (
-          <rect width={size} height={size} fill={`url(#${id}-glow)`} />
-        ) : null}
         {dots ? (
           <rect width={size} height={size} fill={`url(#${id}-dots)`} mask={`url(#${id}-mask)`} />
         ) : null}

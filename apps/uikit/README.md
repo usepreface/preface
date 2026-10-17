@@ -15,10 +15,16 @@ Press <kbd>⌘K</kbd> to search pages, lab components and themes.
   type scale, radius, elevation and nested surfaces.
 - **Brand**: Facet mark, lockups and app icons; the icon set with search, size and stroke; company
   logos in auto, colour and mono. Art tiles download as SVG or PNG and copy their JSX.
-- **Art**: empty-state illustrations, isometric objects in four palettes, and the 35 backgrounds
-  with their pattern primitives.
+- **Art**: empty-state illustrations, isometric objects in four palettes, and the 43 backgrounds
+  with their pattern primitives (Studio backgrounds for templates; clouds for the landing page).
+- **Components**: date and calendar, menus and overlays (context menu, menubar, navigation menu,
+  option menus, hover cards, drawer), disclosure and layout (accordion, collapsible, carousel,
+  resizable, scroll area), more inputs (OTP, slider, toggles, button group, native select,
+  dropzone) and charts. Figma pages 51–55.
 - **Product**: Preface components, AI and chat (a scripted streaming thread, citations, sources,
-  agent steps, composer), toasts on sonner, and the Ask dashboard screen from Figma page 31.
+  agent steps, composer), toasts on sonner, the Ask dashboard screen from Figma page 31, and the
+  onboarding flow from pages 56–57 (set up instance, create organization with an editable slug,
+  empty organization). The onboarding screens are live: submitting one moves to the next.
 - **Component lab**: shadcn/ui's Base UI example pages, re-pointed at the Preface components, for
   every variant, size and state.
 

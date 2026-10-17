@@ -34,23 +34,23 @@ the fonts and an `@source` for this package, so its classes are generated.
 
 ## What is inside
 
-| Import path                        | Contents                                                                                        |
-| ---------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `@usepreface/ui/globals.css`       | Tailwind setup, Preface tokens, fonts, shadcn variants and utilities                            |
-| `@usepreface/ui/tokens.css`        | Tokens only: primitives, `Theme · Light` under `:root`, `Theme · Dark` under `.dark`            |
-| `@usepreface/ui/components/*`      | Base UI components (button, select, dialog, sidebar, trace, message, code-block …)              |
-| `@usepreface/ui/ai/*`              | Chat and agent patterns: `citation`, `sources`, `chat`, `composer`, `agent-steps`               |
-| `@usepreface/ui/preface/*`         | Product pieces: `cards`, `data-display`, `developer`, `code-snippet`, `layout`                  |
-| `@usepreface/ui/icons`             | 115 Hugeicons as React components with Preface names (`SearchIcon`, `McpIcon` …)                |
-| `@usepreface/ui/logos`             | 65 company logos from [thesvg.org](https://thesvg.org) (`GitHubLogo`, `SlackLogo` …)            |
-| `@usepreface/ui/logos/registry`    | `BrandLogo` by slug, `brandLogos`, `brandGroups`                                                |
-| `@usepreface/ui/brand`             | `PrefaceMark`, `PrefaceLogo`, `PrefaceWordmark`, `PrefaceAppIcon`                               |
-| `@usepreface/ui/components/sonner` | `Toaster` and `toast()`: sonner styled with Preface tokens and Hugeicons                        |
-| `@usepreface/ui/illustrations`     | 38 empty-state illustrations (`NoSourcesIllustration` …), light and dark, with suggested copy   |
-| `@usepreface/ui/objects`           | 29 isometric objects (`KnowledgeStackObject` …) in glacier, deep, line and line-dark palettes   |
-| `@usepreface/ui/patterns`          | `<Background preset>` (35 presets) and primitives: `DotGrid`, `Clouds`, `MeshGradient`, `Grain` |
-| `@usepreface/ui/lib/utils`         | `cn()`, aware of the Preface text-style utilities                                               |
-| `@usepreface/ui/hooks/*`           | `use-mobile`, `use-copy-to-clipboard`, `use-highlighted-code`                                   |
+| Import path                        | Contents                                                                                       |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `@usepreface/ui/globals.css`       | Tailwind setup, Preface tokens, fonts, shadcn variants and utilities                           |
+| `@usepreface/ui/tokens.css`        | Tokens only: primitives, `Theme · Light` under `:root`, `Theme · Dark` under `.dark`           |
+| `@usepreface/ui/components/*`      | Base UI components (button, select, dialog, menubar, date-picker, carousel, resizable …)       |
+| `@usepreface/ui/ai/*`              | Chat and agent patterns: `citation`, `sources`, `chat`, `composer`, `agent-steps`              |
+| `@usepreface/ui/preface/*`         | Product pieces: `cards`, `data-display`, `developer`, `charts`, `account-fields`, `dropzone` … |
+| `@usepreface/ui/icons`             | 115 Hugeicons as React components with Preface names (`SearchIcon`, `McpIcon` …)               |
+| `@usepreface/ui/logos`             | 65 company logos from [thesvg.org](https://thesvg.org) (`GitHubLogo`, `SlackLogo` …)           |
+| `@usepreface/ui/logos/registry`    | `BrandLogo` by slug, `brandLogos`, `brandGroups`                                               |
+| `@usepreface/ui/brand`             | `PrefaceMark`, `PrefaceLogo`, `PrefaceWordmark`, `PrefaceAppIcon`                              |
+| `@usepreface/ui/components/sonner` | `Toaster` and `toast()`: sonner styled with Preface tokens and Hugeicons                       |
+| `@usepreface/ui/illustrations`     | 59 empty-state illustrations (`NoSourcesIllustration` …), light and dark, with suggested copy  |
+| `@usepreface/ui/objects`           | 49 isometric objects (`KnowledgeStackObject` …) in glacier, deep, line and line-dark palettes  |
+| `@usepreface/ui/patterns`          | `<Background preset>` (43 presets) and primitives: `DotGrid`, `IsoLattice`, `MeshGradient` …   |
+| `@usepreface/ui/lib/utils`         | `cn()`, aware of the Preface text-style utilities                                              |
+| `@usepreface/ui/hooks/*`           | `use-mobile`, `use-copy-to-clipboard`, `use-highlighted-code`                                  |
 
 ## Tokens
 
@@ -78,6 +78,21 @@ Tailwind's default palette is removed: every colour comes from the tokens.
 
 Dark mode is the `.dark` class on any ancestor. `ThemeProvider` sets it on `<html>` and remembers
 the choice; `useTheme()` reads and changes it.
+
+### New in this release
+
+- `components/menubar`, `date-picker` (`DatePicker`, `DateRangePicker` with presets, `TimeField`),
+  `carousel` (scroll-snap, no animation library) and `resizable` (pointer and keyboard).
+- `preface/account-fields` (`PasswordInput`, `PasswordStrength`, `UrlSlugInput`, `slugify`,
+  `SetupSteps`, `FieldHint`) for the onboarding flow; `preface/dropzone` (`Dropzone`,
+  `UploadItem`); `preface/charts` (`ChartCard`, `ChartLegendRow`, `ChartTooltipCard`, `KpiStrip`,
+  `RadialMeter`); `preface/previews` (`PersonPreview`, `SourcePreview`, `CitationPreview`) for
+  hover cards.
+- Calendar, OTP, slider, toggle and hover card restyled to Figma pages 51–54; chart tokens are the
+  five data colours (Signal, Ice, Teal, Violet, Amber).
+- Backgrounds: a **Studio** group (Mist, Horizon, Frame, Daybreak, Midnight, Blueprint, Iso lattice)
+  for templates, OG images, emails and posts. Sky presets with clouds are for the landing page only.
+- App icons and the assistant avatar have no radial glow on dark backgrounds.
 
 ## Adding components
 

@@ -169,11 +169,22 @@ function NavItem({
   );
 }
 
-function AppSidebar() {
+/** The floating app sidebar. Shared with the onboarding page's empty organization screen. */
+export function AppSidebar({
+  active = "Ask",
+  title = "Knowledge",
+  counts = true,
+  status = "eu-west-1 · 3 workers · all healthy",
+}: {
+  active?: string;
+  title?: string;
+  counts?: boolean;
+  status?: string;
+}) {
   return (
     <aside className="flex w-62 shrink-0 flex-col gap-0.5 overflow-y-auto rounded-xl border bg-background px-2 py-3">
       <div className="flex items-center gap-1.5 px-2 pt-0.5 pb-2">
-        <span className="flex-1 text-heading-3">Knowledge</span>
+        <span className="flex-1 text-heading-3">{title}</span>
         <Button variant="ghost" size="icon-sm" aria-label="View options">
           <SlidersIcon />
         </Button>
@@ -194,7 +205,13 @@ function AppSidebar() {
             </div>
           ) : null}
           {group.items.map(([label, icon, count]) => (
-            <NavItem key={label} label={label} icon={icon} count={count} active={label === "Ask"} />
+            <NavItem
+              key={label}
+              label={label}
+              icon={icon}
+              count={counts ? count : undefined}
+              active={label === active}
+            />
           ))}
         </div>
       ))}
@@ -203,7 +220,7 @@ function AppSidebar() {
           <span className="size-2 rounded-full bg-success" />
           <span className="text-xs font-medium">Self-hosted · v1.4.0</span>
         </div>
-        <span className="text-xs text-fg-tertiary">eu-west-1 · 3 workers · all healthy</span>
+        <span className="text-xs text-fg-tertiary">{status}</span>
       </div>
     </aside>
   );

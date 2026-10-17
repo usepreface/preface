@@ -54,7 +54,7 @@ function InputOTPSlot({
       data-slot="input-otp-slot"
       data-active={isActive}
       className={cn(
-        "border-input data-[active=true]:border-ring data-[active=true]:ring-focus-ring data-[active=true]:aria-invalid:ring-danger/25 dark:data-[active=true]:aria-invalid:ring-danger/25 aria-invalid:border-destructive data-[active=true]:aria-invalid:border-destructive size-8 border-y border-r text-sm transition-all outline-none first:rounded-l-lg first:border-l last:rounded-r-lg data-[active=true]:ring-3 relative flex items-center justify-center data-[active=true]:z-10",
+        "border-border-default bg-surface-1 data-[active=true]:border-border-focus data-[active=true]:ring-focus-ring data-[active=true]:aria-invalid:ring-danger/25 dark:data-[active=true]:aria-invalid:ring-danger/25 aria-invalid:border-danger data-[active=true]:aria-invalid:border-danger h-12 w-11 border-y border-r font-heading text-lg font-semibold text-fg transition-all outline-none first:rounded-l-lg first:border-l last:rounded-r-lg data-[active=true]:ring-3 relative flex items-center justify-center data-[active=true]:z-10",
         className,
       )}
       {...props}
@@ -62,7 +62,7 @@ function InputOTPSlot({
       {char}
       {hasFakeCaret && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="animate-caret-blink bg-foreground h-4 w-px duration-1000" />
+          <div className="animate-caret-blink bg-primary h-5 w-0.5 duration-1000" />
         </div>
       )}
     </div>
@@ -73,7 +73,7 @@ function InputOTPSeparator({ ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="input-otp-separator"
-      className="[&_svg:not([class*='size-'])]:size-4 flex items-center"
+      className="[&_svg:not([class*='size-'])]:size-4 flex items-center text-fg-tertiary"
       role="separator"
       {...props}
     >

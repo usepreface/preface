@@ -24,7 +24,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "../tooltip";
  * Messages: the user speaks in a right-aligned bubble; Preface answers without one.
  */
 
-/** Preface's avatar in chat: slate tile with a signal glow and the ice mark. */
+/** Preface's avatar in chat: flat slate tile with the ice mark. */
 function AssistantAvatar({
   size = 24,
   className,
@@ -40,8 +40,7 @@ function AssistantAvatar({
         width: size,
         height: size,
         borderRadius: Math.round(size * 0.28),
-        background:
-          "radial-gradient(80% 80% at 50% 20%, rgb(47 107 255 / 0.35), transparent), #16191F",
+        background: "#16191F",
         ...style,
       }}
       {...props}

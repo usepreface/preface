@@ -14,6 +14,7 @@ import {
   Glow,
   Grain,
   Halftone,
+  IsoLattice,
   Layer,
   LineGrid,
   MeshGradient,
@@ -28,7 +29,9 @@ import {
 } from "./primitives";
 
 /*
- * The 35 backgrounds from Figma page 45, as one component:
+ * The 43 backgrounds from Figma page 45, as one component. Sky presets are for the landing page;
+ * templates, headers, OG images and email use the cloud-free Studio presets.
+ *
  *
  *   <Background preset="gradient-glacier" className="h-80 rounded-2xl">
  *     <h1 className="relative">…</h1>
@@ -303,7 +306,7 @@ const PILL_BRANDS: BrandName[] = [
 /* ---------- presets ---------- */
 
 type Preset = {
-  group: "Sky" | "Gradient blur" | "Grain" | "Glass" | "Glitch" | "Pattern";
+  group: "Sky" | "Gradient blur" | "Grain" | "Glass" | "Glitch" | "Pattern" | "Studio";
   name: string;
   /** True when the background is dark, so content on it should use light text. */
   dark: boolean;
@@ -584,8 +587,8 @@ const PRESETS = {
     base: "#0A0D14",
     render: () => (
       <>
-        <Glow x={500} y={150} w={600} h={600} color="#2F6BFF" opacity={1} blur={120} />
-        <Glow x={800} y={300} w={380} h={380} color="#8EC0FF" opacity={0.9} blur={90} />
+        <Glow x={-260} y={-300} w={600} h={600} color="#2F6BFF" opacity={1} blur={120} />
+        <Glow x={1240} y={560} w={380} h={380} color="#8EC0FF" opacity={0.9} blur={90} />
         <Glass x={400} y={160} w={800} h={580} dark radius={40} />
         <Mark x={670} y={320} size={260} />
         <Grain opacity={0.08} />
@@ -642,7 +645,6 @@ const PRESETS = {
     base: "#070A12",
     render: () => (
       <>
-        <Glow x={500} y={150} w={600} h={600} color="#1F55E6" opacity={0.8} blur={160} />
         <Mark x={540} y={190} size={520} />
         <GlitchBars />
         <Scanlines gap={3} color="#8EC0FF" opacity={0.08} />
@@ -858,7 +860,6 @@ const PRESETS = {
     render: () => (
       <>
         <Rings fit="none" />
-        <Glow x={650} y={300} w={300} h={300} color="#2F6BFF" opacity={0.8} blur={90} />
         <Mark x={730} y={380} size={140} />
       </>
     ),
@@ -869,6 +870,219 @@ const PRESETS = {
     dark: true,
     base: "conic-gradient(from 0deg at 50% 30%, #0A0F1F 0%, #1747C9 25%, #8EC0FF 50%, #1747C9 75%, #0A0F1F 100%)",
     render: () => <Grain opacity={0.12} />,
+  },
+  "studio-mist": {
+    group: "Studio",
+    name: "Mist",
+    dark: false,
+    base: lin(
+      [
+        [0, "#E6F0FF"],
+        [0.6, "#F5F9FF"],
+        [1, "#FFFFFF"],
+      ],
+      90,
+    ),
+    render: () => (
+      <>
+        <MeshGradient colors={["#BFD5FF", "#DDE8FF", "#C9DBFF", "#EAF2FF"]} seed={71} blur={260} />
+        <DotGrid gap={26} radius={1.4} color="#1747C9" opacity={0.14} />
+        <Wash
+          background={lin(
+            [
+              [0, "#F5F9FF", 1],
+              [1, "#F5F9FF", 0.1],
+            ],
+            90,
+          )}
+        />
+        <Grain opacity={0.04} />
+      </>
+    ),
+  },
+  "studio-horizon": {
+    group: "Studio",
+    name: "Horizon",
+    dark: false,
+    base: lin(
+      [
+        [0, "#8EC0FF"],
+        [0.5, "#D6E7FF"],
+        [1, "#F7FAFF"],
+      ],
+      90,
+    ),
+    render: () => (
+      <>
+        <Glow x={-200} y={470} w={2000} h={120} color="#FFFFFF" opacity={0.95} blur={70} />
+        <Glow x={300} y={500} w={1000} h={40} color="#FFFFFF" opacity={1} blur={24} />
+        <PerspectiveGrid horizon={540} color="#1747C9" opacity={0.14} fit="none" />
+        <div
+          aria-hidden
+          style={{
+            ...at(0, 540, ARTBOARD.w, ARTBOARD.h - 540),
+            background: lin(
+              [
+                [0, "#F7FAFF", 0.9],
+                [1, "#F7FAFF", 0],
+              ],
+              90,
+            ),
+          }}
+        />
+        <Grain opacity={0.04} />
+      </>
+    ),
+  },
+  "studio-frame": {
+    group: "Studio",
+    name: "Frame",
+    dark: false,
+    base: "#F5F9FF",
+    render: () => (
+      <>
+        <FacetTessellation
+          colors={["#BFD5FF", "#8EC0FF", "#DDE8FF", "#4D96FF"]}
+          size={72}
+          seed={73}
+        />
+        <Wash
+          background={rad(
+            [
+              [0, "#F5F9FF", 1],
+              [0.55, "#F5F9FF", 0.96],
+              [1, "#F5F9FF", 0],
+            ],
+            0.5,
+            0.5,
+            0.62,
+            0.78,
+          )}
+        />
+        <Grain opacity={0.04} />
+      </>
+    ),
+  },
+  "studio-daybreak": {
+    group: "Studio",
+    name: "Daybreak",
+    dark: false,
+    base: lin(
+      [
+        [0, "#DCE6FF"],
+        [0.55, "#F3EEF8"],
+        [1, "#FFF6F0"],
+      ],
+      90,
+    ),
+    render: () => (
+      <>
+        <MeshGradient colors={["#FFD6C2", "#BFD5FF", "#E7DAFF", "#8EC0FF"]} seed={74} blur={240} />
+        <Waves lines={22} color="#1747C9" opacity={0.16} amplitude={46} fit="none" />
+        <Grain opacity={0.05} />
+      </>
+    ),
+  },
+  "studio-midnight": {
+    group: "Studio",
+    name: "Midnight",
+    dark: true,
+    base: lin(
+      [
+        [0, "#040817"],
+        [0.6, "#0A1640"],
+        [1, "#132A6B"],
+      ],
+      90,
+    ),
+    render: () => (
+      <>
+        <Starfield count={260} height={560} seed={75} />
+        <Glow x={-200} y={700} w={2000} h={160} color="#2F6BFF" opacity={0.55} blur={90} />
+        <div
+          aria-hidden
+          style={{
+            ...at(0, 760, ARTBOARD.w),
+            height: u(1.5),
+            background: lin(
+              [
+                [0, "#EAF2FF", 0],
+                [0.5, "#EAF2FF", 0.7],
+                [1, "#EAF2FF", 0],
+              ],
+              0,
+            ),
+          }}
+        />
+        <Grain opacity={0.06} />
+      </>
+    ),
+  },
+  "studio-blueprint": {
+    group: "Studio",
+    name: "Blueprint",
+    dark: true,
+    base: "#0A1430",
+    render: () => (
+      <>
+        <LineGrid gap={32} color="#8EC0FF" opacity={0.07} />
+        <LineGrid gap={160} color="#8EC0FF" opacity={0.18} />
+        <Wash
+          background={rad(
+            [
+              [0, "#0A1430", 0],
+              [1, "#0A1430", 0.92],
+            ],
+            0.5,
+            0.5,
+            0.75,
+            0.85,
+          )}
+        />
+        <Grain opacity={0.06} />
+      </>
+    ),
+  },
+  "studio-iso-lattice-dark": {
+    group: "Studio",
+    name: "Iso lattice · Dark",
+    dark: true,
+    base: "#0B0E14",
+    render: () => (
+      <>
+        <IsoLattice color="#8EC0FF" opacity={0.26} />
+        <Wash
+          background={lin(
+            [
+              [0, "#0B0E14", 0.9],
+              [1, "#0B0E14", 0],
+            ],
+            0,
+          )}
+        />
+        <Grain opacity={0.06} />
+      </>
+    ),
+  },
+  "studio-iso-lattice-light": {
+    group: "Studio",
+    name: "Iso lattice · Light",
+    dark: false,
+    base: "#F7FAFF",
+    render: () => (
+      <>
+        <IsoLattice color="#1747C9" opacity={0.2} />
+        <Wash
+          background={lin(
+            [
+              [0, "#F7FAFF", 0.9],
+              [1, "#F7FAFF", 0],
+            ],
+            0,
+          )}
+        />
+      </>
+    ),
   },
 } satisfies Record<string, Preset>;
 
@@ -883,13 +1097,17 @@ export const backgrounds = (Object.keys(PRESETS) as BackgroundPreset[]).map((id)
 export const backgroundGroups = [
   [
     "Sky",
-    "Billow-style volumetric clouds from stacked blurred ellipses. Day for light surfaces, Night for dark. Cloud frame leaves the centre clear for a CTA.",
+    "Billow-style volumetric clouds from stacked blurred ellipses. For the landing page only - templates, headers, OG images and email use Studio.",
   ],
   ["Gradient blur", "Soft colour fields from the brand palettes, blurred and finished with grain."],
   ["Grain", "Single light sources with heavy film grain, for covers and quotes."],
   ["Glass", "Frosted panels over colour, for product shots and integration grids."],
   ["Glitch", "Signal-error textures for launches and changelogs. Use sparingly."],
   ["Pattern", "Quiet geometric textures for sections, slides and OG images."],
+  [
+    "Studio",
+    "Calm, cloud-free grounds for templates, headers, OG images and email. Mist, Horizon, Frame and Daybreak replace the skies outside the landing page.",
+  ],
 ] as const;
 
 export type BackgroundProps = React.ComponentProps<"div"> & {

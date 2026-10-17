@@ -9,6 +9,7 @@ export {
   Glow,
   Grain,
   Halftone,
+  IsoLattice,
   Layer,
   LineGrid,
   MeshGradient,

@@ -6,12 +6,12 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../lib/utils";
 
 const toggleVariants = cva(
-  "hover:text-foreground aria-pressed:bg-muted focus-visible:border-ring focus-visible:ring-focus-ring aria-invalid:ring-danger/25 aria-invalid:border-destructive data-[state=on]:bg-muted gap-1 rounded-md text-sm font-medium transition-all [&_svg:not([class*='size-'])]:size-4 group/toggle inline-flex items-center justify-center whitespace-nowrap outline-none hover:bg-muted focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+  "text-fg-secondary hover:bg-hover hover:text-foreground aria-pressed:border-border-default aria-pressed:bg-selected aria-pressed:text-foreground aria-pressed:[&_svg]:text-icon-accent focus-visible:border-ring focus-visible:ring-focus-ring aria-invalid:ring-danger/25 aria-invalid:border-destructive gap-1.5 rounded-lg border border-transparent text-sm font-medium transition-all [&_svg:not([class*='size-'])]:size-4 group/toggle inline-flex items-center justify-center whitespace-nowrap outline-none focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
       variant: {
         default: "bg-transparent",
-        outline: "border-input hover:bg-muted border bg-transparent",
+        outline: "border-border-default bg-surface-1",
       },
       size: {
         default:

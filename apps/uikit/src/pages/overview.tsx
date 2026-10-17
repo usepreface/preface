@@ -92,7 +92,7 @@ export function OverviewPage() {
           key={section.label}
           title={section.label}
           className={
-            section.items.length === 4
+            (section.items.length as number) === 4
               ? "grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
               : "grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
           }

@@ -2,14 +2,19 @@ import {
   AiChatIcon,
   BellIcon,
   BookIcon,
+  CalendarIcon,
+  ChartIcon,
   CubeIcon,
   DashboardIcon,
   GridIcon,
   HomeIcon,
   ImageIcon,
   LayersIcon,
+  MenuIcon,
   PackageIcon,
+  SlidersIcon,
   SparklesIcon,
+  UserCircleIcon,
   type IconComponent,
 } from "@usepreface/ui/icons";
 
@@ -97,6 +102,41 @@ export const nav = [
     ],
   },
   {
+    label: "Components",
+    items: [
+      {
+        to: "/components/date",
+        title: "Date & calendar",
+        description: "Calendar, date and range pickers, time",
+        icon: CalendarIcon,
+      },
+      {
+        to: "/components/menus",
+        title: "Menus & overlays",
+        description: "Context menu, menubar, hover cards, drawer",
+        icon: MenuIcon,
+      },
+      {
+        to: "/components/disclosure",
+        title: "Disclosure & layout",
+        description: "Accordion, carousel, resizable, scroll area",
+        icon: LayersIcon,
+      },
+      {
+        to: "/components/inputs",
+        title: "More inputs",
+        description: "OTP, slider, toggles, button group, dropzone",
+        icon: SlidersIcon,
+      },
+      {
+        to: "/components/charts",
+        title: "Charts",
+        description: "Chart cards, KPI strip, legend, tooltip",
+        icon: ChartIcon,
+      },
+    ],
+  },
+  {
     label: "Product",
     items: [
       {
@@ -122,6 +162,12 @@ export const nav = [
         title: "Dashboard",
         description: "The Ask screen, built from the kit",
         icon: DashboardIcon,
+      },
+      {
+        to: "/preface/onboarding",
+        title: "Onboarding",
+        description: "Set up instance, first organization, empty org",
+        icon: UserCircleIcon,
       },
     ],
   },
