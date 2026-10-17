@@ -4,7 +4,7 @@ import { HttpClient, HttpClientRequest } from "effect/http";
 import { HttpApiClient } from "effect/http-api";
 
 import { PrefaceApi } from "@usepreface/api";
-import { SessionActor } from "@usepreface/protocol";
+import { SessionActor } from "@usepreface/protocol/dto";
 
 import { prepareTestInstance } from "../../fixtures/backend.js";
 import { HttpTestLayer } from "../../fixtures/http.js";

@@ -1,6 +1,6 @@
 import { Effect, Redacted, Schema } from "effect";
 
-import { CompleteBootstrapInput } from "@usepreface/protocol";
+import { CompleteBootstrapInput } from "@usepreface/protocol/input";
 
 import { Application } from "../../src/index.js";
 

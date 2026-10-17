@@ -3,7 +3,8 @@ import { HttpApiBuilder } from "effect/http-api";
 
 import { PrefaceApi } from "@usepreface/api";
 import { Application } from "@usepreface/application";
-import { CompleteBootstrapInput, RequestError, SecretTokenFromString } from "@usepreface/protocol";
+import { RequestError, SecretTokenFromString } from "@usepreface/protocol";
+import { CompleteBootstrapInput } from "@usepreface/protocol/input";
 
 import { setSessionCookie } from "#/http/cookies/session";
 import { mapInfrastructureError } from "#/http/errors";

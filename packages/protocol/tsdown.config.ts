@@ -10,6 +10,8 @@ export default defineConfig({
   entry: {
     index: "src/index.ts",
     "model/index": "src/model/index.ts",
+    "dto/index": "src/dto/index.ts",
+    "input/index": "src/input/index.ts",
   },
   exports: {
     devExports: "preface-source",

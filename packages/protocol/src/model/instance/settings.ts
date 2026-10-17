@@ -1,10 +1,8 @@
 import { Schema } from "effect";
 
-export const InstanceDisplayName = Schema.String.check(
-  Schema.isTrimmed(),
-  Schema.isMinLength(1),
-  Schema.isMaxLength(120),
-);
+import { InstanceDisplayName } from "#/values/instance";
+
+export { InstanceDisplayName } from "#/values/instance";
 
 export const InstanceSettings = Schema.Struct({
   installationId: Schema.Literal(1),

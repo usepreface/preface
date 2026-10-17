@@ -69,7 +69,8 @@ return `AuthenticationError` with `UNAUTHENTICATED` at `401`.
 Transport failures use `RequestError` and a closed code: `INVALID_INPUT` (`400`), `FORBIDDEN` (`403`),
 `NOT_FOUND` (`404`), `REQUEST_TIMEOUT` (`408`), `PAYLOAD_TOO_LARGE` (`413`), `UNSUPPORTED_MEDIA_TYPE`
 (`415`), `RATE_LIMITED` (`429`), `INTERNAL_ERROR` (`500`), or `SERVICE_UNAVAILABLE` (`503`).
-The exported `requestErrorStatuses` is shared with the server. Rate-limit responses include
+Error code/status definitions live alongside protocol errors. The API derives status-specific schemas
+and exports `requestErrorStatuses` for the server. Rate-limit responses include
 `Retry-After`; all handled server responses include `X-Request-Id` and `Cache-Control: no-store`.
 There is no additional success/error envelope. Infrastructure causes and raw validation issues
 are never public error fields.

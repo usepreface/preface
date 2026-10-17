@@ -1,6 +1,6 @@
 import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema, OpenApi } from "effect/http-api";
 
-import { SessionActor } from "@usepreface/protocol";
+import { SessionActor } from "@usepreface/protocol/dto";
 
 import { requestErrors } from "#/http-errors";
 import { SessionAuthentication } from "#/middleware/session-authentication";

@@ -6,7 +6,7 @@ import {
   CompleteBootstrapRequest,
   InspectBootstrapRequest,
   SessionActor,
-} from "@usepreface/protocol";
+} from "@usepreface/protocol/dto";
 
 import { bootstrapErrors, requestErrors } from "#/http-errors";
 import { SetupProtection } from "#/middleware/setup-protection";

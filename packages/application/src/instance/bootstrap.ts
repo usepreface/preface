@@ -3,8 +3,9 @@ import { DateTime, Effect, Predicate, Schema } from "effect";
 
 import { DatabaseRepository, TransactionService } from "@usepreface/database";
 import type { DatabaseError } from "@usepreface/database";
-import { BootstrapError, CompleteBootstrapInput, InstanceStateError } from "@usepreface/protocol";
-import type { BootstrapStatus, BootstrapTokenInfo, SessionActor } from "@usepreface/protocol";
+import { BootstrapError, InstanceStateError } from "@usepreface/protocol";
+import type { BootstrapStatus, BootstrapTokenInfo, SessionActor } from "@usepreface/protocol/dto";
+import { CompleteBootstrapInput } from "@usepreface/protocol/input";
 import type { Installation } from "@usepreface/protocol/model";
 
 import type { SecurityError } from "#/security/errors";

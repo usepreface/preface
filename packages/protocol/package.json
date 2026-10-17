@@ -18,6 +18,14 @@
       "preface-source": "./src/index.ts",
       "default": "./dist/index.js"
     },
+    "./dto": {
+      "preface-source": "./src/dto/index.ts",
+      "default": "./dist/dto/index.js"
+    },
+    "./input": {
+      "preface-source": "./src/input/index.ts",
+      "default": "./dist/input/index.js"
+    },
     "./model": {
       "preface-source": "./src/model/index.ts",
       "default": "./dist/model/index.js"
@@ -30,6 +38,8 @@
     },
     "exports": {
       ".": "./dist/index.js",
+      "./dto": "./dist/dto/index.js",
+      "./input": "./dist/input/index.js",
       "./model": "./dist/model/index.js",
       "./package.json": "./package.json"
     }

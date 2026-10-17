@@ -3,7 +3,7 @@ import { DateTime, Duration, Effect } from "effect";
 
 import { DatabaseRepository, TransactionService } from "@usepreface/database";
 import { AuthenticationError } from "@usepreface/protocol";
-import type { SessionActor } from "@usepreface/protocol";
+import type { SessionActor } from "@usepreface/protocol/dto";
 
 import { sessionActivityInterval, sessionIdleTimeout } from "#/security/policy";
 import { TokenService } from "#/security/token";

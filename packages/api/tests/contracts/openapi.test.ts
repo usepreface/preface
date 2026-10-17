@@ -1,7 +1,8 @@
 import { Schema } from "effect";
 import { OpenApi } from "effect/http-api";
 
-import { CompleteBootstrapInput, CompleteBootstrapRequest } from "@usepreface/protocol";
+import { CompleteBootstrapRequest } from "@usepreface/protocol/dto";
+import { CompleteBootstrapInput } from "@usepreface/protocol/input";
 import { describe, expect, it } from "vitest";
 
 import { PrefaceApi } from "../../src/index.js";

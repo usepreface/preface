@@ -4,13 +4,26 @@ Shared Effect schemas, domain models, identifiers and expected errors for Prefac
 package is runtime-neutral: browser and Node.js consumers use the same public contracts. Keep it free
 of Node.js built-ins, DOM-specific APIs, database code and application workflows.
 
-The root exports branded UUIDv7 identities, expected instance/bootstrap/authentication errors,
-bootstrap input/status schemas and safe public user/session/actor schemas. The explicit
-`@usepreface/protocol/model` entry exports instance, user, password-credential, session and audit
-storage codecs and focused write inputs. These models contain internal fields such as password
-hashes and setup/session-token digests; they are
-not public response DTOs. Application workflows explicitly select safe fields; transports encode
-the public schemas, whose timestamps use ISO strings rather than driver `Date` values.
+Choose the entry point for the boundary you are working on:
+
+| Import                       | Contents                                                               |
+| ---------------------------- | ---------------------------------------------------------------------- |
+| `@usepreface/protocol`       | Branded identities, reusable values and expected errors.               |
+| `@usepreface/protocol/dto`   | Public request/response schemas, including safe users and sessions.    |
+| `@usepreface/protocol/input` | Normalized application inputs with non-encodable redacted credentials. |
+| `@usepreface/protocol/model` | Persistence codecs and focused repository write inputs.                |
+
+Existing root DTO/input exports remain available for compatibility. New callers should use the
+explicit entry points. Public DTOs reuse identifiers and value schemas without importing storage
+models. Storage models contain internal fields such as password hashes and token digests and must
+never be returned directly from an HTTP handler. Public timestamps encode as ISO strings.
+
+```ts
+import { UserId, BootstrapError } from "@usepreface/protocol";
+import { CompleteBootstrapRequest, SessionActor } from "@usepreface/protocol/dto";
+import { CompleteBootstrapInput } from "@usepreface/protocol/input";
+import { User, Session } from "@usepreface/protocol/model";
+```
 
 `CompleteBootstrapInput` decodes raw strings, trims names, trims/lowercases email and wraps the
 setup token and password in `Redacted`. Passwords are preserved exactly and require 15–128
@@ -21,13 +34,15 @@ by authentication and must not be accepted as a client-supplied identity. Its on
 `user` identity/profile and `session` identity/expiry; it contains no credential or authority grant.
 
 `CompleteBootstrapRequest` and `InspectBootstrapRequest` are encodable HTTP wire schemas with
-string credentials. They derive their token/password validation from the existing input schemas;
+string credentials. They share token/password validation with application inputs through reusable value schemas;
 server handlers immediately decode them into redacted inputs. This distinction lets typed HTTP
 clients transmit credentials without making internal secret-input encoding available.
 Write-only schema annotations document sensitive request fields. JSON Schema counts Unicode code
 points while the existing length policy counts UTF-16 code units; generated bounds are conservative
 and descriptions state the exact policy. `RequestError` contains only a closed transport error code.
-HTTP paths, statuses and middleware contracts belong to `@usepreface/api`.
+Bootstrap and request errors define code/status metadata once alongside their schemas. The API
+package derives status-specific HTTP schemas from that metadata. Protocol imports no HTTP
+implementation. HTTP paths, middleware declarations and error encoding belong to `@usepreface/api`.
 
 Storage codecs decode driver `Date` values into Effect `DateTime.Utc` and encode them back for writes.
 Installation, grant, credential and session codecs validate lifecycle consistency. User emails

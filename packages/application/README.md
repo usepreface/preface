@@ -71,7 +71,7 @@ issued token after commit, then prints that supported operator output. This pack
 nor logs URLs. Keep `reissueToken()` behind an operator command, never a public setup endpoint.
 Proof issuance/replacement and its typed system audit event commit together.
 
-Decode incoming completion requests with `CompleteBootstrapInput` from `@usepreface/protocol`.
+Decode incoming completion requests with `CompleteBootstrapInput` from `@usepreface/protocol/input`.
 It trims names, trims/lowercases email without provider-specific rewriting, and wraps the setup
 token/password in `Redacted`. Passwords are preserved exactly and require 15–128 JavaScript string
 code units, with no composition rules. Encoding these secret input fields back to JSON is forbidden.
@@ -79,7 +79,7 @@ Transport must sanitize schema errors instead of logging request bodies or valid
 
 `complete()` accepts the decoded input and returns `{ actor, sessionToken }`. `actor` contains
 only `user: { id, displayName, email, emailVerifiedAt }` and `session: { id, expiresAt }`.
-Encode it with the public `SessionActor` schema for ISO timestamp strings. Unwrap `sessionToken`
+Encode it with the public `SessionActor` schema from `@usepreface/protocol/dto` for ISO timestamp strings. Unwrap `sessionToken`
 only at the server cookie boundary; do not return the entire application result as a JSON body.
 The account starts with an unverified email: possession of the setup link does not prove mailbox access.
 
