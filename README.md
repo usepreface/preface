@@ -7,6 +7,9 @@ This repository contains monorepo tooling and the first internal package scaffol
 - [protocol](packages/protocol/README.md): runtime-neutral shared Effect schemas, models and errors.
 - [database](packages/database/README.md): Node.js persistence with Effect and Drizzle ORM/Kit.
 - [template](packages/template/README.md): reusable starter for internal packages.
+- [ui](packages/ui/README.md): the design system - Base UI components in the shadcn/ui structure, Preface tokens,
+  icons, company logos and brand marks.
+- [uikit](apps/uikit/README.md): Preface UI Kit, the living reference for every component, icon, logo and piece of art in light and dark.
 
 The database package includes connection/transaction services, error mapping, migration tooling,
 PGlite/PostgreSQL test layers, and the installation, settings and owner-grant tables/repositories
@@ -23,8 +26,10 @@ corepack enable pnpm
 pnpm install
 ```
 
-Installation enables Lefthook's Git hooks. Dependency versions live in the default catalog in
-`pnpm-workspace.yaml`; package manifests reference them with `catalog:`. Workspace packages live under
+Installation enables Lefthook's Git hooks. Dependencies shared by multiple workspace packages use
+the default catalog in `pnpm-workspace.yaml` through `catalog:`. Dependencies used by only one
+package keep their versions in that package's manifest. Catalog mode is `manual` so new package-local
+dependencies are not automatically added to the catalog. Workspace packages live under
 `apps/*` and `packages/*`. Copy `packages/template` to start an internal package; its README covers setup and
 source-first development with the `preface-source` condition.
 

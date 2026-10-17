@@ -1,0 +1,357 @@
+/*
+ * @usepreface/ui global stylesheet.
+ *
+ * Import once at the root of an app:
+ *   @import "@usepreface/ui/globals.css";
+ *
+ * Tailwind scans the importing app on its own. The @source below adds the UI package,
+ * which lives in node_modules from the app's point of view and is otherwise skipped.
+ */
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "./shadcn.css";
+@import "./tokens.css";
+@import "./fonts.css";
+
+@source "../";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  /* Drop Tailwind's default palette: every colour in Preface comes from the tokens. */
+  --color-*: initial;
+
+  --font-sans:
+    "Geist Variable", "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-heading: "Space Grotesk Variable", "Space Grotesk", var(--font-sans);
+  --font-display: "Space Grotesk Variable", "Space Grotesk", var(--font-sans);
+  --font-mono:
+    "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+  --radius-2xl: 20px;
+  --radius-3xl: 28px;
+  --radius-4xl: 999px;
+
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 0.875rem;
+  --text-13: 0.8125rem;
+  --text-13--line-height: 1.125rem;
+
+  --animate-caret: caret 1s steps(2, start) infinite;
+
+  @keyframes caret {
+    to {
+      visibility: hidden;
+    }
+  }
+}
+
+@theme inline {
+  --color-white: #ffffff;
+  --color-black: #000000;
+
+  /* Primitive ramps */
+  --color-slate-0: var(--slate-0);
+  --color-slate-25: var(--slate-25);
+  --color-slate-50: var(--slate-50);
+  --color-slate-100: var(--slate-100);
+  --color-slate-150: var(--slate-150);
+  --color-slate-200: var(--slate-200);
+  --color-slate-300: var(--slate-300);
+  --color-slate-400: var(--slate-400);
+  --color-slate-500: var(--slate-500);
+  --color-slate-600: var(--slate-600);
+  --color-slate-700: var(--slate-700);
+  --color-slate-800: var(--slate-800);
+  --color-slate-850: var(--slate-850);
+  --color-slate-900: var(--slate-900);
+  --color-slate-925: var(--slate-925);
+  --color-slate-950: var(--slate-950);
+  --color-slate-1000: var(--slate-1000);
+  --color-blue-50: var(--blue-50);
+  --color-blue-100: var(--blue-100);
+  --color-blue-200: var(--blue-200);
+  --color-blue-300: var(--blue-300);
+  --color-blue-400: var(--blue-400);
+  --color-blue-500: var(--blue-500);
+  --color-blue-600: var(--blue-600);
+  --color-blue-700: var(--blue-700);
+  --color-blue-800: var(--blue-800);
+  --color-blue-900: var(--blue-900);
+  --color-blue-950: var(--blue-950);
+  --color-ice-50: var(--ice-50);
+  --color-ice-100: var(--ice-100);
+  --color-ice-300: var(--ice-300);
+  --color-ice-500: var(--ice-500);
+  --color-green-50: var(--green-50);
+  --color-green-100: var(--green-100);
+  --color-green-400: var(--green-400);
+  --color-green-500: var(--green-500);
+  --color-green-600: var(--green-600);
+  --color-green-700: var(--green-700);
+  --color-green-900: var(--green-900);
+  --color-green-950: var(--green-950);
+  --color-amber-50: var(--amber-50);
+  --color-amber-100: var(--amber-100);
+  --color-amber-400: var(--amber-400);
+  --color-amber-500: var(--amber-500);
+  --color-amber-600: var(--amber-600);
+  --color-amber-700: var(--amber-700);
+  --color-amber-900: var(--amber-900);
+  --color-amber-950: var(--amber-950);
+  --color-red-50: var(--red-50);
+  --color-red-100: var(--red-100);
+  --color-red-400: var(--red-400);
+  --color-red-500: var(--red-500);
+  --color-red-600: var(--red-600);
+  --color-red-700: var(--red-700);
+  --color-red-900: var(--red-900);
+  --color-red-950: var(--red-950);
+  --color-violet-50: var(--violet-50);
+  --color-violet-100: var(--violet-100);
+  --color-violet-400: var(--violet-400);
+  --color-violet-500: var(--violet-500);
+  --color-violet-600: var(--violet-600);
+  --color-violet-700: var(--violet-700);
+  --color-violet-900: var(--violet-900);
+  --color-teal-50: var(--teal-50);
+  --color-teal-100: var(--teal-100);
+  --color-teal-400: var(--teal-400);
+  --color-teal-500: var(--teal-500);
+  --color-teal-600: var(--teal-600);
+  --color-teal-900: var(--teal-900);
+
+  /* shadcn/ui contract */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Preface semantic tokens: surfaces */
+  --color-canvas: var(--bg-canvas);
+  --color-surface-1: var(--bg-surface-1);
+  --color-surface-2: var(--bg-surface-2);
+  --color-surface-3: var(--bg-surface-3);
+  --color-surface-4: var(--bg-surface-4);
+  --color-overlay: var(--bg-overlay);
+  --color-inverse: var(--bg-inverse);
+  --color-backdrop: var(--bg-backdrop);
+
+  /* States */
+  --color-hover: var(--state-hover);
+  --color-pressed: var(--state-pressed);
+  --color-selected: var(--state-selected);
+  --color-focus-ring: var(--state-focus-ring);
+
+  /* Accent (primary is the shadcn name for accent/primary) */
+  --color-primary-hover: var(--accent-primary-hover);
+  --color-primary-pressed: var(--accent-primary-pressed);
+  --color-primary-subtle: var(--accent-subtle);
+  --color-primary-subtle-hover: var(--accent-subtle-hover);
+
+  /* Text: text-fg, text-fg-secondary … */
+  --color-fg: var(--text-primary);
+  --color-fg-secondary: var(--text-secondary);
+  --color-fg-tertiary: var(--text-tertiary);
+  --color-fg-disabled: var(--text-disabled);
+  --color-fg-accent: var(--text-accent);
+  --color-fg-link: var(--text-link);
+  --color-fg-inverse: var(--text-inverse);
+
+  /* Borders: border-border-default … (border-border is subtle) */
+  --color-border-subtle: var(--border-subtle);
+  --color-border-default: var(--border-default);
+  --color-border-strong: var(--border-strong);
+  --color-border-focus: var(--border-focus);
+
+  /* Icons */
+  --color-icon: var(--icon-primary);
+  --color-icon-secondary: var(--icon-secondary);
+  --color-icon-accent: var(--icon-accent);
+
+  /* Status */
+  --color-success: var(--status-success-solid);
+  --color-success-bg: var(--status-success-bg);
+  --color-success-fg: var(--status-success-fg);
+  --color-warning: var(--status-warning-solid);
+  --color-warning-bg: var(--status-warning-bg);
+  --color-warning-fg: var(--status-warning-fg);
+  --color-danger: var(--status-danger-solid);
+  --color-danger-hover: var(--status-danger-hover);
+  --color-danger-bg: var(--status-danger-bg);
+  --color-danger-fg: var(--status-danger-fg);
+  --color-info: var(--status-info-solid);
+  --color-info-bg: var(--status-info-bg);
+  --color-info-fg: var(--status-info-fg);
+  --color-neutral-bg: var(--status-neutral-bg);
+  --color-neutral-fg: var(--status-neutral-fg);
+  --color-violet-bg: var(--label-violet-bg);
+  --color-violet-fg: var(--label-violet-fg);
+  --color-teal-bg: var(--label-teal-bg);
+  --color-teal-fg: var(--label-teal-fg);
+
+  /* Brand */
+  --color-brand-slate: var(--brand-slate);
+  --color-brand-deep: var(--brand-deep);
+  --color-brand-signal: var(--brand-signal);
+  --color-brand-ice: var(--brand-ice);
+  --color-brand-sky: var(--brand-sky);
+  --color-brand-frost: var(--brand-frost);
+
+  /* Elevation */
+  --shadow-xs: var(--elevation-1);
+  --shadow-sm: var(--elevation-2);
+  --shadow-md: var(--elevation-3);
+  --shadow-lg: var(--elevation-3);
+  --shadow-xl: var(--elevation-4);
+  --shadow-2xl: var(--elevation-4);
+  --shadow-glow: var(--glow-signal);
+}
+
+/* Figma text styles as utilities: text-display-2xl, text-heading-1, text-body-md … */
+@utility text-display-2xl {
+  font-family: var(--font-display);
+  font-size: 5rem;
+  line-height: 5.25rem;
+  letter-spacing: -0.035em;
+  font-weight: 500;
+}
+@utility text-display-xl {
+  font-family: var(--font-display);
+  font-size: 4rem;
+  line-height: 4.25rem;
+  letter-spacing: -0.03em;
+  font-weight: 500;
+}
+@utility text-display-lg {
+  font-family: var(--font-display);
+  font-size: 3rem;
+  line-height: 3.25rem;
+  letter-spacing: -0.025em;
+  font-weight: 500;
+}
+@utility text-display-md {
+  font-family: var(--font-display);
+  font-size: 2.25rem;
+  line-height: 2.5rem;
+  letter-spacing: -0.02em;
+  font-weight: 500;
+}
+@utility text-heading-1 {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  line-height: 2.125rem;
+  letter-spacing: -0.015em;
+  font-weight: 500;
+}
+@utility text-heading-2 {
+  font-size: 1.375rem;
+  line-height: 1.75rem;
+  letter-spacing: -0.012em;
+  font-weight: 600;
+}
+@utility text-heading-3 {
+  font-size: 1.125rem;
+  line-height: 1.5rem;
+  letter-spacing: -0.008em;
+  font-weight: 600;
+}
+@utility text-heading-4 {
+  font-size: 0.9375rem;
+  line-height: 1.25rem;
+  letter-spacing: -0.004em;
+  font-weight: 600;
+}
+@utility text-body-lg {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  letter-spacing: -0.002em;
+}
+@utility text-body-md {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  letter-spacing: -0.001em;
+}
+@utility text-body-sm {
+  font-size: 0.8125rem;
+  line-height: 1.125rem;
+}
+@utility text-caption {
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+@utility text-overline {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  line-height: 0.875rem;
+  letter-spacing: 0.06em;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+@utility text-mono-md {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+}
+@utility text-mono-sm {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+@utility text-mono-xs {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  line-height: 0.875rem;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply bg-background font-sans antialiased;
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-background text-foreground text-body-md;
+  }
+  ::selection {
+    @apply bg-primary-subtle-hover text-fg;
+  }
+}

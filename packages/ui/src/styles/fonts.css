@@ -1,0 +1,9 @@
+/*
+ * Preface type families, self-hosted through Fontsource (SIL Open Font License).
+ *   Geist          - interface text
+ *   Space Grotesk  - display and headings
+ *   JetBrains Mono - code, IDs, keys and overlines
+ */
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/space-grotesk";
+@import "@fontsource-variable/jetbrains-mono";

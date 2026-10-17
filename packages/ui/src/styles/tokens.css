@@ -1,0 +1,280 @@
+/*
+ * Preface design tokens.
+ *
+ * Mirrors the Figma variables in "Preface Brand Kit" (pages 05 Color and 13 Tokens):
+ *   Primitives      -> --slate-*, --blue-*, --ice-*, --green-*, --amber-*, --red-*, --violet-*, --teal-*
+ *   Theme · Light   -> semantic variables under :root
+ *   Theme · Dark    -> the same names under .dark
+ *
+ * The semantic names match the Figma code syntax exactly, so a value read in Dev Mode
+ * (for example var(--bg-surface-2)) can be pasted straight into CSS.
+ */
+
+:root {
+  /* Primitives: slate */
+  --slate-0: #ffffff;
+  --slate-25: #fbfcfd;
+  --slate-50: #f6f7f9;
+  --slate-100: #eef0f3;
+  --slate-150: #e5e8ed;
+  --slate-200: #d9dde4;
+  --slate-300: #c2c8d2;
+  --slate-400: #98a1b0;
+  --slate-500: #6e7787;
+  --slate-600: #525b6a;
+  --slate-700: #3a414d;
+  --slate-800: #262b33;
+  --slate-850: #1f232b;
+  --slate-900: #16191f;
+  --slate-925: #121418;
+  --slate-950: #0d0f12;
+  --slate-1000: #08090b;
+
+  /* Primitives: blue (signal) */
+  --blue-50: #eef4ff;
+  --blue-100: #dde8ff;
+  --blue-200: #bfd5ff;
+  --blue-300: #8eb8ff;
+  --blue-400: #5c97ff;
+  --blue-500: #2f6bff;
+  --blue-600: #1f55e6;
+  --blue-700: #1747c9;
+  --blue-800: #153a9e;
+  --blue-900: #142f78;
+  --blue-950: #0e1d4a;
+
+  /* Primitives: ice (Glacier) */
+  --ice-50: #f5f9ff;
+  --ice-100: #eaf2ff;
+  --ice-300: #8ec0ff;
+  --ice-500: #4d96ff;
+
+  /* Primitives: status and label ramps */
+  --green-50: #ecfbf3;
+  --green-100: #d2f5e2;
+  --green-400: #3ccb87;
+  --green-500: #17a865;
+  --green-600: #0e8a51;
+  --green-700: #0b6e41;
+  --green-900: #0a3a25;
+  --green-950: #06231a;
+
+  --amber-50: #fff8eb;
+  --amber-100: #feedc8;
+  --amber-400: #f8b23a;
+  --amber-500: #e8940c;
+  --amber-600: #c27407;
+  --amber-700: #9a5a09;
+  --amber-900: #4a2d07;
+  --amber-950: #2a1a05;
+
+  --red-50: #fef1f1;
+  --red-100: #fddcdc;
+  --red-400: #f26b6b;
+  --red-500: #e5484d;
+  --red-600: #cc2f35;
+  --red-700: #a6242a;
+  --red-900: #4c1316;
+  --red-950: #2b0b0d;
+
+  --violet-50: #f4f1ff;
+  --violet-100: #e6e0ff;
+  --violet-400: #9b87ff;
+  --violet-500: #7c5cff;
+  --violet-600: #6844f0;
+  --violet-700: #5532cc;
+  --violet-900: #2a1a66;
+
+  --teal-50: #edfbf9;
+  --teal-100: #d5f6f2;
+  --teal-400: #3fd0c1;
+  --teal-500: #12b5a6;
+  --teal-600: #0c9488;
+  --teal-900: #063d38;
+
+  /* Theme · Light */
+  --bg-canvas: var(--slate-100);
+  --bg-surface-1: var(--slate-0);
+  --bg-surface-2: var(--slate-50);
+  --bg-surface-3: var(--slate-100);
+  --bg-surface-4: var(--slate-150);
+  --bg-overlay: var(--slate-0);
+  --bg-inverse: var(--slate-900);
+  --bg-backdrop: rgb(8 9 11 / 0.4);
+
+  --state-hover: rgb(22 25 31 / 0.05);
+  --state-pressed: rgb(22 25 31 / 0.09);
+  --state-selected: var(--slate-150);
+  --state-focus-ring: rgb(47 107 255 / 0.28);
+
+  --accent-primary: var(--blue-600);
+  --accent-primary-hover: var(--blue-700);
+  --accent-primary-pressed: var(--blue-800);
+  --accent-subtle: var(--blue-50);
+  --accent-subtle-hover: var(--blue-100);
+  --accent-on-primary: var(--slate-0);
+
+  --text-primary: var(--slate-900);
+  --text-secondary: var(--slate-600);
+  --text-tertiary: var(--slate-500);
+  --text-disabled: var(--slate-400);
+  --text-accent: var(--blue-600);
+  --text-link: var(--blue-600);
+  --text-inverse: var(--slate-0);
+
+  --border-subtle: var(--slate-150);
+  --border-default: var(--slate-200);
+  --border-strong: var(--slate-300);
+  --border-focus: var(--blue-500);
+
+  --icon-primary: var(--slate-700);
+  --icon-secondary: var(--slate-500);
+  --icon-accent: var(--blue-500);
+
+  --status-success-bg: var(--green-50);
+  --status-success-fg: var(--green-700);
+  --status-success-solid: var(--green-500);
+  --status-warning-bg: var(--amber-50);
+  --status-warning-fg: var(--amber-700);
+  --status-warning-solid: var(--amber-500);
+  --status-danger-bg: var(--red-50);
+  --status-danger-fg: var(--red-700);
+  --status-danger-solid: var(--red-500);
+  --status-danger-hover: var(--red-600);
+  --status-info-bg: var(--blue-50);
+  --status-info-fg: var(--blue-700);
+  --status-info-solid: var(--blue-500);
+  --status-neutral-bg: var(--slate-100);
+  --status-neutral-fg: var(--slate-600);
+
+  --label-violet-bg: var(--violet-50);
+  --label-violet-fg: var(--violet-700);
+  --label-teal-bg: var(--teal-50);
+  --label-teal-fg: var(--teal-600);
+
+  --brand-slate: var(--slate-900);
+  --brand-deep: var(--blue-700);
+  --brand-signal: var(--blue-500);
+  --brand-ice: var(--ice-500);
+  --brand-sky: var(--ice-300);
+  --brand-frost: var(--ice-100);
+
+  /* Elevation (Figma effect styles) */
+  --elevation-1: 0 1px 2px 0 rgb(13 15 18 / 0.05);
+  --elevation-2: 0 1px 2px 0 rgb(13 15 18 / 0.04), 0 4px 12px -2px rgb(13 15 18 / 0.06);
+  --elevation-3: 0 2px 4px -2px rgb(13 15 18 / 0.05), 0 12px 28px -6px rgb(13 15 18 / 0.12);
+  --elevation-4: 0 4px 8px -4px rgb(13 15 18 / 0.06), 0 24px 56px -12px rgb(13 15 18 / 0.2);
+  --glow-signal: 0 8px 32px -4px rgb(47 107 255 / 0.45);
+
+  /* Radius (Figma Dimensions/radius) */
+  --radius: 8px;
+}
+
+.dark {
+  /* Theme · Dark */
+  --bg-canvas: var(--slate-1000);
+  --bg-surface-1: var(--slate-950);
+  --bg-surface-2: var(--slate-925);
+  --bg-surface-3: var(--slate-900);
+  --bg-surface-4: var(--slate-850);
+  --bg-overlay: var(--slate-900);
+  --bg-inverse: var(--slate-50);
+  --bg-backdrop: rgb(8 9 11 / 0.64);
+
+  --state-hover: rgb(255 255 255 / 0.06);
+  --state-pressed: rgb(255 255 255 / 0.1);
+  --state-selected: var(--slate-850);
+  --state-focus-ring: rgb(92 151 255 / 0.36);
+
+  --accent-primary: var(--blue-600);
+  --accent-primary-hover: var(--blue-500);
+  --accent-primary-pressed: var(--blue-700);
+  --accent-subtle: var(--blue-950);
+  --accent-subtle-hover: var(--blue-900);
+  --accent-on-primary: var(--slate-0);
+
+  --text-primary: var(--slate-50);
+  --text-secondary: var(--slate-400);
+  --text-tertiary: var(--slate-500);
+  --text-disabled: var(--slate-700);
+  --text-accent: var(--blue-400);
+  --text-link: var(--blue-300);
+  --text-inverse: var(--slate-900);
+
+  --border-subtle: var(--slate-850);
+  --border-default: var(--slate-800);
+  --border-strong: var(--slate-700);
+  --border-focus: var(--blue-400);
+
+  --icon-primary: var(--slate-200);
+  --icon-secondary: var(--slate-500);
+  --icon-accent: var(--blue-400);
+
+  --status-success-bg: var(--green-950);
+  --status-success-fg: var(--green-400);
+  --status-success-solid: var(--green-500);
+  --status-warning-bg: var(--amber-950);
+  --status-warning-fg: var(--amber-400);
+  --status-warning-solid: var(--amber-500);
+  --status-danger-bg: var(--red-950);
+  --status-danger-fg: var(--red-400);
+  --status-danger-solid: var(--red-500);
+  --status-danger-hover: var(--red-400);
+  --status-info-bg: var(--blue-950);
+  --status-info-fg: var(--blue-300);
+  --status-info-solid: var(--blue-500);
+  --status-neutral-bg: var(--slate-850);
+  --status-neutral-fg: var(--slate-400);
+
+  --label-violet-bg: var(--violet-900);
+  --label-violet-fg: var(--violet-400);
+  --label-teal-bg: var(--teal-900);
+  --label-teal-fg: var(--teal-400);
+
+  --elevation-1: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --elevation-2: 0 1px 2px 0 rgb(0 0 0 / 0.3), 0 4px 12px -2px rgb(0 0 0 / 0.35);
+  --elevation-3: 0 2px 4px -2px rgb(0 0 0 / 0.35), 0 12px 28px -6px rgb(0 0 0 / 0.5);
+  --elevation-4: 0 4px 8px -4px rgb(0 0 0 / 0.4), 0 24px 56px -12px rgb(0 0 0 / 0.6);
+}
+
+/*
+ * shadcn/ui contract. Components ported from shadcn read these names; each one points at a
+ * Preface token so both vocabularies stay in sync.
+ */
+:root,
+.dark {
+  --background: var(--bg-surface-1);
+  --foreground: var(--text-primary);
+  --card: var(--bg-surface-1);
+  --card-foreground: var(--text-primary);
+  --popover: var(--bg-overlay);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--accent-primary);
+  --primary-foreground: var(--accent-on-primary);
+  --secondary: var(--bg-surface-3);
+  --secondary-foreground: var(--text-primary);
+  --muted: var(--bg-surface-2);
+  --muted-foreground: var(--text-secondary);
+  --accent: var(--state-selected);
+  --accent-foreground: var(--text-primary);
+  --destructive: var(--status-danger-solid);
+  --destructive-foreground: var(--accent-on-primary);
+  --border: var(--border-subtle);
+  --input: var(--border-default);
+  --ring: var(--border-focus);
+
+  --chart-1: var(--blue-500);
+  --chart-2: var(--teal-500);
+  --chart-3: var(--violet-500);
+  --chart-4: var(--amber-500);
+  --chart-5: var(--green-500);
+
+  --sidebar: var(--bg-surface-1);
+  --sidebar-foreground: var(--text-secondary);
+  --sidebar-primary: var(--accent-primary);
+  --sidebar-primary-foreground: var(--accent-on-primary);
+  --sidebar-accent: var(--state-selected);
+  --sidebar-accent-foreground: var(--text-primary);
+  --sidebar-border: var(--border-subtle);
+  --sidebar-ring: var(--border-focus);
+}

@@ -1,0 +1,38 @@
+{
+  "name": "@usepreface/uikit",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Preface UI Kit: the living reference for @usepreface/ui, page for page with the Figma brand kit.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 5174",
+    "build": "vite build",
+    "preview": "vite preview --port 5174",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check .",
+    "lint": "oxlint --deny-warnings .",
+    "lint:fix": "oxlint --fix .",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@hugeicons/core-free-icons": "4.3.5",
+    "@hugeicons/react": "1.1.10",
+    "@tanstack/react-router": "1.170.42",
+    "@usepreface/ui": "workspace:*",
+    "input-otp": "1.5.0",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "recharts": "3.10.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "4.3.3",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "6.1.2",
+    "klarity": "catalog:",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:",
+    "vite": "8.3.4"
+  }
+}

@@ -16,15 +16,15 @@
     "typecheck": "tsc --noEmit -p tsconfig.json && turbo run typecheck"
   },
   "devDependencies": {
-    "@commitlint/cli": "catalog:",
-    "@commitlint/config-conventional": "catalog:",
+    "@commitlint/cli": "21.2.3",
+    "@commitlint/config-conventional": "21.2.3",
     "@types/node": "catalog:",
     "effect": "catalog:",
     "klarity": "catalog:",
-    "lefthook": "catalog:",
-    "oxfmt": "catalog:",
-    "oxlint": "catalog:",
-    "turbo": "catalog:",
+    "lefthook": "2.2.2",
+    "oxfmt": "0.73.0",
+    "oxlint": "1.88.0",
+    "turbo": "2.11.8",
     "typescript": "catalog:"
   },
   "engines": {

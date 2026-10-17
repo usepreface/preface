@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "klarity/tsconfig/app/vite",
+  "compilerOptions": {
+    "customConditions": ["preface-source"],
+    // The component lab is ported from shadcn/ui examples, which assume these checks are off.
+    "exactOptionalPropertyTypes": false,
+    "noUncheckedIndexedAccess": false
+  },
+  "include": ["src", "vite.config.ts"]
+}
