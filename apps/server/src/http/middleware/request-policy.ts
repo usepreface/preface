@@ -21,7 +21,7 @@ export const maximumBodyBytes = 32 * 1024;
 export const makeRequestPolicy = Effect.gen(function* () {
   const config = yield* ServerConfig;
   const limits = yield* RequestLimits;
-  const routePaths = new Set([
+  const routePaths = new Set<string>([
     ...Object.values(PrefaceApi.groups).flatMap((group) =>
       Object.values(group.endpoints).map((endpoint) => endpoint.path),
     ),
@@ -30,9 +30,10 @@ export const makeRequestPolicy = Effect.gen(function* () {
     "/health/live",
     "/health/ready",
   ]);
+  const routeTemplates = [...routePaths].map((path) => ({ path, segments: path.split("/") }));
   const cors = HttpMiddleware.cors({
     allowedOrigins: (origin) => config.allowedOrigins.has(origin),
-    allowedMethods: ["GET", "HEAD", "POST", "DELETE", "OPTIONS"],
+    allowedMethods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type"],
     exposedHeaders: ["X-Request-Id", "Retry-After"],
     credentials: true,
@@ -45,6 +46,15 @@ export const makeRequestPolicy = Effect.gen(function* () {
       const requestId = randomUUID();
       const startedAt = yield* Clock.currentTimeMillis;
       const path = request.url.split(/[?#]/, 1)[0] ?? "/";
+      const segments = path.split("/");
+      const routeName =
+        routeTemplates.find(
+          (template) =>
+            template.segments.length === segments.length &&
+            template.segments.every((segment, index) =>
+              segment.startsWith(":") ? segments[index] !== "" : segment === segments[index],
+            ),
+        )?.path ?? "unmatched";
 
       const guarded = Effect.gen(function* () {
         const health = path === "/health/live" || path === "/health/ready";
@@ -65,7 +75,7 @@ export const makeRequestPolicy = Effect.gen(function* () {
         const contentLength = request.headers["content-length"];
         if (contentLength !== undefined && Number(contentLength) > maximumBodyBytes)
           return requestErrorResponse("PAYLOAD_TOO_LARGE");
-        if (request.method === "POST") {
+        if (request.method === "POST" || request.method === "PUT" || request.method === "PATCH") {
           const contentType = request.headers["content-type"]
             ?.split(";", 1)[0]
             ?.trim()
@@ -99,7 +109,7 @@ export const makeRequestPolicy = Effect.gen(function* () {
         yield* Effect.logInfo("HTTP request", {
           requestId,
           method: request.method,
-          route: routePaths.has(path) ? path : "unmatched",
+          route: routeName,
           status: response.status,
           durationMs: finishedAt - startedAt,
         });

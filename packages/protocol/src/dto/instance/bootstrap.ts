@@ -1,8 +1,9 @@
 import { Schema } from "effect";
 
+import { DisplayName as InstanceDisplayName } from "#/common/display-name";
+import { SecretTokenFromString } from "#/common/secret-token";
+import { VerificationCode } from "#/common/verification-code";
 import { BootstrapChallengeId } from "#/identifiers/bootstrap";
-import { InstanceDisplayName } from "#/values/instance";
-import { SecretTokenFromString } from "#/values/secret-token";
 
 const token = Schema.toEncoded(SecretTokenFromString).annotate({
   writeOnly: true,
@@ -26,7 +27,7 @@ export type RequestBootstrapVerificationRequest = typeof RequestBootstrapVerific
 export const CompleteBootstrapRequest = Schema.Struct({
   token,
   challengeId: BootstrapChallengeId,
-  code: Schema.String.check(Schema.isPattern(/^\d{8}$/)).annotate({
+  code: VerificationCode.annotate({
     writeOnly: true,
     description: "Eight-digit verification code from the setup email.",
   }),

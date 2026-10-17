@@ -62,7 +62,7 @@ Git history as a side effect of a refactor.
   PostgreSQL layer, transactions, migrations, repositories, and test database
   layers. Tables are grouped into PostgreSQL schemas by domain.
 - [`packages/application`](packages/application/README.md) — instance bootstrap,
-  session workflows, security capabilities and Node security adapters. HTTP
+  session and organization workflows, security capabilities and Node security adapters. HTTP
   handling and runtime startup belong to the server boundary.
 - [`packages/api`](packages/api/README.md) — runtime-neutral Effect HTTP contracts,
   middleware declarations and OpenAPI metadata, shared by server and clients.
@@ -250,12 +250,17 @@ follow its linked local documentation when relevant. Search
   trusted configuration.
 - Brand values only when identity or confusion between values would cause a real
   defect. Do not brand every string.
-- Organize protocol by purpose, then domain: `identifiers/`, `values/`, `model/`,
-  `dto/`, `input/` and `errors/`. Public DTOs import shared values/identities,
+- Organize protocol by purpose, then domain: `identifiers/`, `common/`, `model/`,
+  `dto/`, `input/` and `errors/`. Public DTOs import shared schemas/identities,
   never storage models. Use `/dto`, `/input` and `/model` package exports for new
   consumers; root DTO/input exports remain compatible. Keep sensitive persistence
   fields out of public DTOs. Error/status metadata belongs beside the protocol
   error; API owns status-specific HTTP encoding and middleware declarations.
+- Put reusable field schemas and input normalization in focused `common/` modules.
+  Define UUIDv7 identities through `createBrandedId`; keep identity declarations grouped
+  by domain. Reuse common schemas across models, DTOs and inputs instead of repeating checks.
+- Define Drizzle relations in domain modules using `defineRelationsPart`. Compose them
+  in `relations/index.ts` after the schema-wide empty part so unrelated tables retain inference.
 - Put business workflows in `application`, transport definitions in `api`, HTTP
   handlers and authorization in `apps/server`, and queries in `database`.
 - Repository methods must work with both the normal database and

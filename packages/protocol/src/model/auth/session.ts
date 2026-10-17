@@ -1,9 +1,10 @@
 import { DateTime, Schema } from "effect";
 
+import { CredentialDigest } from "#/common/credential-digest";
 import { SessionId } from "#/identifiers/session";
 import { UserId } from "#/identifiers/user";
 
-export const SessionTokenHash = Schema.String.check(Schema.isPattern(/^[0-9a-f]{64}$/));
+export const SessionTokenHash = CredentialDigest;
 
 export const CreateSession = Schema.Struct({
   userId: UserId,

@@ -1,6 +1,4 @@
-import { Schema } from "effect";
+import { createBrandedId } from "#/common/branded-id";
 
-export const AuditEventId = Schema.String.check(Schema.isUUID(7)).pipe(
-  Schema.brand("AuditEventId"),
-);
+export const AuditEventId = createBrandedId("AuditEventId");
 export type AuditEventId = typeof AuditEventId.Type;

@@ -14,9 +14,26 @@ Choose the entry point for the boundary you are working on:
 | `@usepreface/protocol/model` | Persistence codecs and focused repository write inputs.                |
 
 Existing root DTO/input exports remain available for compatibility. New callers should use the
-explicit entry points. Public DTOs reuse identifiers and value schemas without importing storage
+explicit entry points. Public DTOs reuse identifiers and common schemas without importing storage
 models. Storage models contain internal fields such as credential HMACs and token digests and must
 never be returned directly from an HTTP handler. Public timestamps encode as ISO strings.
+
+Shared field schemas live in focused `src/common/` modules: display names, canonical
+email/input normalization, verification codes, credential digests, secret tokens and
+organization permissions/values. Domain identifiers use the shared factory:
+
+```ts
+import { createBrandedId } from "@usepreface/protocol";
+
+export const OrganizationDocumentId = createBrandedId("OrganizationDocumentId");
+export type OrganizationDocumentId = typeof OrganizationDocumentId.Type;
+```
+
+The factory preserves UUIDv7 validation and the distinct literal brand. Existing
+`UserEmail`, `UserDisplayName` and `InstanceDisplayName` exports reuse the common
+schemas. Organization models and public DTOs cover organization, membership, roles,
+grants, access, pagination and the default local-email authentication policy.
+`OrganizationError` owns its code/status mapping alongside other protocol errors.
 
 Internal email models define typed `instance-setup`, `sign-in` and
 `organization-invitation` payloads plus encrypted outbox lifecycle records. Their
@@ -39,7 +56,7 @@ by authentication and must not be accepted as a client-supplied identity. Its on
 `user` identity/profile and `session` identity/expiry; it contains no credential or authority grant.
 
 `CompleteBootstrapRequest` and `InspectBootstrapRequest` are encodable HTTP wire schemas with
-string credentials. They share token validation with application inputs through reusable value schemas;
+string credentials. They share token validation with application inputs through reusable common schemas;
 server handlers immediately decode them into redacted inputs. This distinction lets typed HTTP
 clients transmit credentials without making internal secret-input encoding available.
 Write-only schema annotations document sensitive request fields. JSON Schema counts Unicode code

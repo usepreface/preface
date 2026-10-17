@@ -36,3 +36,21 @@ export {
   GrantInstanceOwner,
   RevokeInstanceOwner,
 } from "#/model/instance/owner";
+
+export { OrganizationAuthPolicy } from "#/model/organization/auth-policy";
+
+export { CreateOrganizationMember, OrganizationMember } from "#/model/organization/member";
+
+export {
+  CreateOrganization,
+  Organization,
+  UpdateOrganization,
+} from "#/model/organization/organization";
+
+export { GrantOrganizationRole, OrganizationRoleBinding } from "#/model/organization/role-binding";
+
+export {
+  CreateOrganizationRole,
+  OrganizationRole,
+  UpdateOrganizationRole,
+} from "#/model/organization/role";

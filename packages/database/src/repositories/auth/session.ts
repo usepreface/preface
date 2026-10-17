@@ -45,6 +45,27 @@ const makeSessionRepository = Effect.gen(function* () {
     return row === undefined ? undefined : decode(row);
   }, mapToDatabaseError);
 
+  const findActiveById = Effect.fn("SessionRepository.findActiveById")(function* (
+    id: SessionId,
+    userId: UserId,
+    idleTimeout: Duration.Duration,
+  ) {
+    const now = DateTime.toDateUtc(yield* DateTime.now);
+    const [row] = yield* database
+      .select()
+      .from(session)
+      .where(
+        and(
+          eq(session.id, id),
+          eq(session.userId, userId),
+          isNull(session.revokedAt),
+          gt(session.expiresAt, now),
+          gt(session.lastSeenAt, new Date(now.getTime() - Duration.toMillis(idleTimeout))),
+        ),
+      );
+    return row === undefined ? undefined : decode(row);
+  }, mapToDatabaseError);
+
   const recordActivity = Effect.fn("SessionRepository.recordActivity")(function* (
     sessionId: SessionId,
     idleTimeout?: Duration.Duration,
@@ -134,6 +155,7 @@ const makeSessionRepository = Effect.gen(function* () {
   return {
     create,
     findActiveByTokenHash,
+    findActiveById,
     recordActivity,
     revoke,
     listActiveByUserId,

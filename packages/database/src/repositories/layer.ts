@@ -10,8 +10,10 @@ import {
 } from "#/repositories/auth/index";
 import { InstanceRepository } from "#/repositories/instance/index";
 import { EmailJobRepository } from "#/repositories/jobs/email";
+import { OrganizationRepositories } from "#/repositories/organization/index";
 
 const makeDatabaseRepository = Effect.gen(function* () {
+  const organization = yield* OrganizationRepositories;
   const instance = yield* InstanceRepository;
   const user = yield* UserRepository;
   const session = yield* SessionRepository;
@@ -23,6 +25,7 @@ const makeDatabaseRepository = Effect.gen(function* () {
 
   return {
     instance,
+    organization,
     auth: { user, userEmail, session, verification, sessionAuthentication },
     audit: { event },
     jobs: { email },
@@ -37,6 +40,7 @@ export class DatabaseRepository extends Context.Service<
     Layer.provide(
       Layer.mergeAll(
         InstanceRepository.layer,
+        OrganizationRepositories.layer,
         UserRepository.layer,
         UserEmailRepository.layer,
         VerificationRepository.layer,

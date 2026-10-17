@@ -20,6 +20,7 @@ const makeAuditEventRepository = Effect.gen(function* () {
       .values({
         ...encoded,
         actorUserId: input.actorUserId,
+        organizationId: "organizationId" in input ? input.organizationId : null,
         targetId: input.targetId,
         metadata: input.metadata,
         occurredAt,

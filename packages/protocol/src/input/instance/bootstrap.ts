@@ -1,39 +1,23 @@
-import { Schema, SchemaGetter } from "effect";
+import { Schema } from "effect";
 
+import { DisplayNameInput } from "#/common/display-name";
+import { EmailAddressInput } from "#/common/email";
+import { SecretTokenFromString } from "#/common/secret-token";
+import { VerificationCodeFromString } from "#/common/verification-code";
 import { BootstrapChallengeId } from "#/identifiers/bootstrap";
-import { InstanceDisplayName } from "#/values/instance";
-import { SecretTokenFromString } from "#/values/secret-token";
-import { UserDisplayName, UserEmail } from "#/values/user";
 
 export const RequestBootstrapVerificationInput = Schema.Struct({
   token: SecretTokenFromString,
-  instanceName: Schema.String.pipe(
-    Schema.decodeTo(InstanceDisplayName, {
-      decode: SchemaGetter.transform((name) => name.trim()),
-      encode: SchemaGetter.passthrough(),
-    }),
-  ),
-  ownerName: Schema.String.pipe(
-    Schema.decodeTo(UserDisplayName, {
-      decode: SchemaGetter.transform((name) => name.trim()),
-      encode: SchemaGetter.passthrough(),
-    }),
-  ),
-  email: Schema.String.pipe(
-    Schema.decodeTo(UserEmail, {
-      decode: SchemaGetter.transform((email) => email.trim().toLowerCase()),
-      encode: SchemaGetter.passthrough(),
-    }),
-  ),
+  instanceName: DisplayNameInput,
+  ownerName: DisplayNameInput,
+  email: EmailAddressInput,
 });
 export type RequestBootstrapVerificationInput = typeof RequestBootstrapVerificationInput.Type;
 
 export const CompleteBootstrapInput = Schema.Struct({
   token: SecretTokenFromString,
   challengeId: BootstrapChallengeId,
-  code: Schema.RedactedFromValue(Schema.String.check(Schema.isPattern(/^\d{8}$/)), {
-    disallowEncode: true,
-  }),
+  code: VerificationCodeFromString,
 });
 export type CompleteBootstrapInput = typeof CompleteBootstrapInput.Type;
 

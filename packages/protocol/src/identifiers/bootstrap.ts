@@ -1,6 +1,4 @@
-import { Schema } from "effect";
+import { createBrandedId } from "#/common/branded-id";
 
-export const BootstrapChallengeId = Schema.String.check(Schema.isUUID(7)).pipe(
-  Schema.brand("BootstrapChallengeId"),
-);
+export const BootstrapChallengeId = createBrandedId("BootstrapChallengeId");
 export type BootstrapChallengeId = typeof BootstrapChallengeId.Type;

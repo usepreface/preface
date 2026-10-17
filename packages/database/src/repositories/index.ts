@@ -15,3 +15,12 @@ export {
   InstanceOwnerRepository,
   BootstrapChallengeRepository,
 } from "#/repositories/instance/index";
+
+export {
+  OrganizationRepositories,
+  OrganizationRepository,
+  OrganizationMemberRepository,
+  OrganizationRoleRepository,
+  OrganizationRoleBindingRepository,
+  OrganizationAuthPolicyRepository,
+} from "#/repositories/organization/index";

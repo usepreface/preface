@@ -7,29 +7,17 @@ import { PrefaceApi } from "@usepreface/api";
 import { Application } from "@usepreface/application";
 import { DatabaseRepository } from "@usepreface/database";
 
-import { prepareTestInstance } from "../../fixtures/backend.js";
+import { completeTestSetup } from "../../fixtures/authenticated-user.js";
 import { readEmailJob } from "../../fixtures/email-job.js";
 import { HttpTestLayer } from "../../fixtures/http.js";
-import { pendingSetupCode } from "../../fixtures/setup-code.js";
 
 layer(HttpTestLayer, { excludeTestServices: true })("email sign-in HTTP boundary", (it) => {
   it.effect(
     "uses browser-bound proofs and cookie-only session delivery, then lists and revokes sessions",
     () =>
       Effect.gen(function* () {
-        const prepared = yield* prepareTestInstance;
+        const first = yield* completeTestSetup;
         const application = yield* Application;
-        const verification = yield* application.instance.bootstrap.requestVerification({
-          token: prepared.token,
-          instanceName: "Knowledge",
-          ownerName: "Owner",
-          email: "owner@example.test",
-        });
-        const first = yield* application.instance.bootstrap.complete({
-          token: prepared.token,
-          challengeId: verification.challengeId,
-          code: yield* pendingSetupCode,
-        });
         const http = yield* HttpClient.HttpClient;
         const api = yield* HttpApiClient.make(PrefaceApi, {
           transformClient: (client) =>

@@ -1,8 +1,8 @@
 import { Schema } from "effect";
 
+import { EmailAddress as UserEmail } from "#/common/email";
 import { UserEmailId } from "#/identifiers/auth";
 import { UserId } from "#/identifiers/user";
-import { UserEmail } from "#/values/user";
 
 export const CreateUserEmail = Schema.Struct({
   userId: UserId,

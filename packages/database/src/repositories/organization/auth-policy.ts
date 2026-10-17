@@ -1,0 +1,53 @@
+import { Context, DateTime, Effect, Layer, Schema } from "effect";
+
+import type { OrganizationId, OrganizationMemberId } from "@usepreface/protocol";
+import { OrganizationAuthPolicy } from "@usepreface/protocol/model";
+import { eq } from "drizzle-orm";
+
+import { mapToDatabaseError } from "#/core/errors";
+import { Database } from "#/core/layer";
+import { organizationAuthPolicy } from "#/schema/organization/auth-policy";
+
+const makeOrganizationAuthPolicyRepository = Effect.gen(function* () {
+  const database = yield* Database;
+  const decode = Schema.decodeUnknownSync(OrganizationAuthPolicy);
+  const createDefault = Effect.fn("OrganizationAuthPolicyRepository.createDefault")(function* (
+    organizationId: OrganizationId,
+    memberId: OrganizationMemberId,
+  ) {
+    const now = DateTime.toDateUtc(yield* DateTime.now);
+    const [row] = yield* database
+      .insert(organizationAuthPolicy)
+      .values({
+        organizationId,
+        updatedByMemberId: memberId,
+        allowedMethods: ["email_code", "email_link"],
+        createdAt: now,
+        updatedAt: now,
+      })
+      .returning();
+    if (row === undefined)
+      return yield* Effect.die(new Error("Authentication policy insert returned no row"));
+    return decode(row);
+  }, mapToDatabaseError);
+  const findByOrganizationId = Effect.fn("OrganizationAuthPolicyRepository.findByOrganizationId")(
+    function* (organizationId: OrganizationId) {
+      const [row] = yield* database
+        .select()
+        .from(organizationAuthPolicy)
+        .where(eq(organizationAuthPolicy.organizationId, organizationId));
+      return row === undefined ? undefined : decode(row);
+    },
+    mapToDatabaseError,
+  );
+  return { createDefault, findByOrganizationId } as const;
+});
+export class OrganizationAuthPolicyRepository extends Context.Service<
+  OrganizationAuthPolicyRepository,
+  Effect.Success<typeof makeOrganizationAuthPolicyRepository>
+>()("@usepreface/database/repositories/organization/OrganizationAuthPolicyRepository") {
+  static readonly layer = Layer.effect(
+    OrganizationAuthPolicyRepository,
+    makeOrganizationAuthPolicyRepository,
+  );
+}

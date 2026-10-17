@@ -6,14 +6,14 @@ clients. Requests, responses and errors have one schema definition for that boun
 
 ## Protocol modules
 
-| Module         | Responsibility                                                               | Public entry point                        |
-| -------------- | ---------------------------------------------------------------------------- | ----------------------------------------- |
-| `identifiers/` | Branded UUIDv7 installation, user, session, owner-grant and audit identities | Protocol root                             |
-| `values/`      | Reusable field validation, credential codecs and shared value validation     | Protocol root for supported shared values |
-| `errors/`      | Expected failures grouped by domain, with safe public fields                 | Protocol root                             |
-| `dto/`         | Public requests and explicitly selected responses                            | `@usepreface/protocol/dto`                |
-| `input/`       | Normalized application inputs with redacted credentials                      | `@usepreface/protocol/input`              |
-| `model/`       | Persistence codecs and repository write inputs                               | `@usepreface/protocol/model`              |
+| Module         | Responsibility                                                                             | Public entry point                        |
+| -------------- | ------------------------------------------------------------------------------------------ | ----------------------------------------- |
+| `identifiers/` | Branded UUIDv7 installation, user, session, owner-grant and audit identities               | Protocol root                             |
+| `common/`      | Reusable field schemas, input normalization, credential codecs and branded-ID construction | Protocol root for supported shared values |
+| `errors/`      | Expected failures grouped by domain, with safe public fields                               | Protocol root                             |
+| `dto/`         | Public requests and explicitly selected responses                                          | `@usepreface/protocol/dto`                |
+| `input/`       | Normalized application inputs with redacted credentials                                    | `@usepreface/protocol/input`              |
+| `model/`       | Persistence codecs and repository write inputs                                             | `@usepreface/protocol/model`              |
 
 Purpose is the first folder boundary; domains and workflows sit inside it. An
 operation's request and response stay together when that is readable. Subdivide
@@ -22,7 +22,9 @@ Barrels expose supported boundaries, not every implementation file.
 
 Existing root DTO/input exports remain compatible, but current consumers use the
 explicit subpaths. Shared field schemas retained by the model export also remain
-available for compatibility. DTOs import identifiers and reusable values, never
+available for compatibility. UUIDv7 identifiers use the shared `createBrandedId` factory. Common display-name,
+email, verification-code, digest and credential schemas live in focused `common/`
+modules; input normalization reuses them. DTOs import identifiers and common schemas, never
 persistence models. Do not add speculative organization or provider modules before
 their workflows need contracts.
 

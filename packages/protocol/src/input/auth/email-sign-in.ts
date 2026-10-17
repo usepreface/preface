@@ -1,16 +1,12 @@
-import { Schema, SchemaGetter } from "effect";
+import { Schema } from "effect";
 
+import { EmailAddressInput } from "#/common/email";
+import { SecretTokenFromString } from "#/common/secret-token";
+import { VerificationCodeFromString } from "#/common/verification-code";
 import { VerificationId } from "#/identifiers/auth";
-import { SecretTokenFromString } from "#/values/secret-token";
-import { UserEmail } from "#/values/user";
 
 export const RequestEmailSignInInput = Schema.Struct({
-  email: Schema.String.pipe(
-    Schema.decodeTo(UserEmail, {
-      decode: SchemaGetter.transform((email) => email.trim().toLowerCase()),
-      encode: SchemaGetter.passthrough(),
-    }),
-  ),
+  email: EmailAddressInput,
 });
 export type RequestEmailSignInInput = typeof RequestEmailSignInInput.Type;
 export const ResendEmailSignInInput = Schema.Struct({
@@ -23,9 +19,7 @@ export const VerifyEmailSignInInput = Schema.Union([
     challengeId: VerificationId,
     browserToken: SecretTokenFromString,
     method: Schema.Literal("code"),
-    code: Schema.RedactedFromValue(Schema.String.check(Schema.isPattern(/^\d{8}$/)), {
-      disallowEncode: true,
-    }),
+    code: VerificationCodeFromString,
   }),
   Schema.Struct({
     challengeId: VerificationId,

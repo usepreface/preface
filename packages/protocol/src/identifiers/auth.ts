@@ -1,12 +1,8 @@
-import { Schema } from "effect";
+import { createBrandedId } from "#/common/branded-id";
 
-export const UserEmailId = Schema.String.check(Schema.isUUID(7)).pipe(Schema.brand("UserEmailId"));
+export const UserEmailId = createBrandedId("UserEmailId");
 export type UserEmailId = typeof UserEmailId.Type;
-export const VerificationId = Schema.String.check(Schema.isUUID(7)).pipe(
-  Schema.brand("VerificationId"),
-);
+export const VerificationId = createBrandedId("VerificationId");
 export type VerificationId = typeof VerificationId.Type;
-export const SessionAuthenticationId = Schema.String.check(Schema.isUUID(7)).pipe(
-  Schema.brand("SessionAuthenticationId"),
-);
+export const SessionAuthenticationId = createBrandedId("SessionAuthenticationId");
 export type SessionAuthenticationId = typeof SessionAuthenticationId.Type;

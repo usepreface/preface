@@ -15,14 +15,28 @@ import { SetupProtectionLive } from "#/http/middleware/setup-protection";
 import { EmailSignInRoutes } from "#/http/routes/email-sign-in";
 import { HealthRoutes } from "#/http/routes/health";
 import { InstanceSetupRoutes } from "#/http/routes/instance-setup";
+import { OrganizationMembersRoutes } from "#/http/routes/organization-members";
+import { OrganizationOwnershipRoutes } from "#/http/routes/organization-ownership";
+import { OrganizationRoleBindingsRoutes } from "#/http/routes/organization-role-bindings";
+import { OrganizationRolesRoutes } from "#/http/routes/organization-roles";
+import { OrganizationsRoutes, InstanceCapabilitiesRoutes } from "#/http/routes/organizations";
 import { SessionRoutes } from "#/http/routes/session";
 import { SessionsRoutes } from "#/http/routes/sessions";
 
 const ProductRoutes = HttpApiBuilder.layer(PrefaceApi, { openapiPath: "/api/openapi.json" }).pipe(
   Layer.provide(
-    Layer.mergeAll(InstanceSetupRoutes, SessionRoutes, EmailSignInRoutes, SessionsRoutes).pipe(
-      Layer.provideMerge(Layer.mergeAll(SessionAuthenticationLive, SetupProtectionLive)),
-    ),
+    Layer.mergeAll(
+      InstanceSetupRoutes,
+      SessionRoutes,
+      EmailSignInRoutes,
+      SessionsRoutes,
+      OrganizationsRoutes,
+      InstanceCapabilitiesRoutes,
+      OrganizationMembersRoutes,
+      OrganizationRolesRoutes,
+      OrganizationRoleBindingsRoutes,
+      OrganizationOwnershipRoutes,
+    ).pipe(Layer.provideMerge(Layer.mergeAll(SessionAuthenticationLive, SetupProtectionLive))),
   ),
 );
 

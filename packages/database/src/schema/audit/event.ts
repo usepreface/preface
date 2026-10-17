@@ -1,6 +1,6 @@
 import { Schema } from "effect";
 
-import { AuditEventId, type UserId } from "@usepreface/protocol";
+import { AuditEventId, type OrganizationId, type UserId } from "@usepreface/protocol";
 import type { AuditActorKind, AuditEvent } from "@usepreface/protocol/model";
 import { sql } from "drizzle-orm";
 import { check, index, jsonb, text, timestamp, uuid } from "drizzle-orm/pg-core";
@@ -8,6 +8,7 @@ import { check, index, jsonb, text, timestamp, uuid } from "drizzle-orm/pg-core"
 import { generateUuid7 } from "#/id";
 import { auditSchema } from "#/schema/audit/schema";
 import { user } from "#/schema/auth/user";
+import { organization } from "#/schema/organization/organization";
 
 export const auditEvent = auditSchema.table(
   "event",
@@ -16,6 +17,9 @@ export const auditEvent = auditSchema.table(
       .$type<AuditEventId>()
       .primaryKey()
       .$defaultFn(() => Schema.decodeSync(AuditEventId)(generateUuid7())),
+    organizationId: uuid("organization_id")
+      .$type<OrganizationId>()
+      .references(() => organization.id, { onDelete: "restrict" }),
     eventType: text("event_type").$type<AuditEvent["eventType"]>().notNull(),
     actorKind: text("actor_kind").$type<AuditActorKind>().notNull(),
     actorUserId: uuid("actor_user_id")
@@ -28,6 +32,7 @@ export const auditEvent = auditSchema.table(
     occurredAt: timestamp("occurred_at", { mode: "date", withTimezone: true }).notNull(),
   },
   (table) => [
+    index("event_organization_chronology_idx").on(table.organizationId, table.occurredAt, table.id),
     index("event_chronology_idx").on(table.occurredAt, table.id),
     index("event_actor_chronology_idx").on(table.actorUserId, table.occurredAt),
     index("event_target_chronology_idx").on(table.targetType, table.targetId, table.occurredAt),

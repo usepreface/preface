@@ -1,6 +1,6 @@
 # @usepreface/application
 
-Effect workflows for Preface instance setup, email sign-in and sessions. Requires Node.js 24,
+Effect workflows for Preface instance setup, email sign-in, sessions and organizations. Requires Node.js 24,
 Effect v4 and workspace database, crypto and email services. This private package
 coordinates business policy, transactions and audit without starting a server.
 
@@ -124,6 +124,59 @@ never request-body identities. The server clears the cookie after success.
 their evidence with required per-session audit. Issuance and revoke-all share a user-row lock.
 Sessions alone imply neither instance ownership nor organization membership.
 
+## Organizations
+
+Only instance owners may create organizations. Supply a cookie-authenticated actor;
+workflows recheck current session/user, membership, evidence and role bindings.
+Instance ownership does not grant access to another organization's content or administration.
+
+```ts
+import { Effect, Schema } from "effect";
+
+import { Application } from "@usepreface/application";
+import type { SessionActor } from "@usepreface/protocol/dto";
+import { CreateOrganizationInput } from "@usepreface/protocol/input";
+
+export const createOrganizationForOwner = Effect.fn("createOrganizationForOwner")(function* (
+  actor: SessionActor,
+) {
+  const input = yield* Schema.decodeUnknownEffect(CreateOrganizationInput)({
+    name: "Knowledge",
+    slug: "knowledge",
+  });
+  return yield* (yield* Application).organization.organization.create(actor, input);
+});
+```
+
+Creation returns `{ organization, membership, access }` with Effect timestamps. The
+transaction creates the creator membership, built-in owner/admin/member roles,
+explicit owner grant and default local-email auth policy with required audit.
+`instance.capabilities.get(actor)` returns `{ canCreateOrganization }`.
+
+`application.organization` exposes:
+
+- `organization`: `create`, `listMine`, `get`, `getAccess`, `update`, `archive`, `restore`.
+- `member`: `list`, `suspend`, `reinstate`, `remove`, `leave`.
+- `role`: `list`, `create`, `update`, `archive` for custom definitions.
+- `roleBinding`: `grant`, `revoke` for direct member assignments.
+- `ownership`: protected `grant`, `revoke`, `transfer` workflows.
+- `authPolicy.get`: read the currently enforced policy.
+
+List inputs use an exclusive ID `cursor` and `limit` (default 25, maximum 100).
+Organization/role lists accept `includeArchived`; member lists accept `includeRemoved`.
+Only owners can discover archived organizations. Normal access remains blocked until restore.
+
+Mutations serialize on organization identity and recheck authority after locking.
+Owner removal/suspension/departure/revocation preserves another usable owner.
+Transfer grants the target owner, demotes the source to administrator and audits
+atomically. Custom roles cannot manufacture ownership or delegate permissions the
+actor lacks. Role retirement and member removal revoke assignments transactionally;
+suspension preserves them for explicit reinstatement.
+
+Additional member admission, invitations, groups/teams, SSO, policy editing and
+content permissions are not supplied by these workflows. See the
+[organization architecture](../../architecture/identity-access/organizations.md) for boundaries.
+
 ## Credential policy
 
 | Policy                    | Value                                       |
@@ -157,6 +210,6 @@ and session lifecycle. The explicit PostgreSQL lane uses disposable test configu
 and sequential files; never target a deployment database. Built tests exercise packaged
 migrations and the verification/session lifecycle.
 
-Onboarding/sign-in UI, account recovery, invitations, organization creation
+Backend-connected onboarding/sign-in UI, account recovery, invitations, teams
 and SSO are not implemented. See the [instance setup architecture](../../architecture/identity-access/instance-setup.md)
 and [server README](../../apps/server/README.md) for current transport and deployment.

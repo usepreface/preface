@@ -6,13 +6,13 @@ Shared domain contracts belong in [protocol](../protocol/README.md); business wo
 authorization and transport policy belong in application packages.
 
 The foundation, instance/auth/audit tables, and their repositories are implemented. Migrations
-create the `instance`, `auth` and `audit` PostgreSQL schemas and their tables.
+create the `instance`, `auth`, `organization` and `audit` PostgreSQL schemas and their tables.
 The `jobs` schema contains the encrypted email outbox, exposed through
 `DatabaseRepository.jobs.email`. Claims use token-owned leases and PostgreSQL
 `SKIP LOCKED`; completion/rescheduling reject stale or expired leases. The
 [emails package](../emails/README.md) owns payload encryption, conflict detection,
 delivery policy and provider calls. Enqueueing joins the caller's transaction.
-[Application](../application/README.md) implements bootstrap and session workflows on these
+[Application](../application/README.md) implements bootstrap, session and organization workflows on these
 repositories. The [server](../../apps/server/README.md) wires migration-gated startup and HTTP.
 
 ## Repository API
@@ -144,12 +144,40 @@ installation lock. Codes and email delivery are not repository responsibilities.
 All auth user foreign keys use `on delete restrict`; account disabling preserves references and
 history. There is no account-disable workflow yet. Public DTOs and application bootstrap/session
 workflows are implemented in protocol/application. The server implements cookie authentication;
-email sign-in and session management are implemented; invitations and resource authorization remain
+email sign-in, session and organization administration are implemented; invitations and content authorization remain
 pending. Write related lifecycle timestamps from the same Effect clock instant.
 
-The prelaunch migration history is one freshly generated initial migration, with no password
-table or upgrade/backfill path. Reset an older local database before using this schema. Generation
-and tests do not reset a developer database automatically.
+The development history starts with the regenerated initial migration, followed by
+organization authority. Databases using the deleted older development history need
+a reset; databases on the current initial baseline apply subsequent migrations normally.
+Generation and tests do not reset a developer database automatically.
+
+## Organization persistence
+
+`DatabaseRepository.organization` groups `organization`, `member`, `role`,
+`roleBinding` and `authPolicy`. These are storage APIs; application owns authorization,
+last-owner checks, admission, permission delegation and required audit.
+
+- `organization` supports creation, ID/slug lookup, transaction-only locking,
+  membership-based pagination, updates, archive and restore.
+- `member` supports stable membership creation/lookups, paginated profile projections,
+  suspension, reinstatement and removal. There is no public direct-admission API.
+- `role` supports built-in/custom storage, lookup, pagination, custom updates and
+  retirement. Retired keys remain reserved.
+- `roleBinding` supports attributed idempotent grants, active member/bulk-member
+  lookup, scoped revocation, role/member grant retirement and usable-owner lookup.
+- `authPolicy` creates the default email-code/link policy and reads it by organization.
+
+Composite foreign keys bind roles, members, granting members and policy updaters to
+the same organization. Role/member lists default to active records unless history
+is requested. Organization discovery can include archived records only for their
+owners. Audit adds organization identity without changing global events' null scope.
+All write results decode through protocol storage models. Locking and application
+mutations use the same ambient transaction.
+
+Relations live in `relations/auth.ts`, `instance.ts`, `organization.ts` and `audit.ts`.
+Each uses `defineRelationsPart` against the schema barrel. The aggregate composes
+those parts after the schema-wide empty part, retaining unrelated table inference.
 
 ## Services and composition
 
@@ -276,7 +304,7 @@ Build workspace dependencies through root `pnpm build` or Turbo when consuming b
 `@usepreface/database/testing` exports `TestDatabase`. Its PGlite Layer creates a fresh
 in-memory database, applies the real migrations, and provides `Database`, `TransactionService`,
 `DatabaseMigration` and `TestDatabase`. The test migration path deliberately omits the
-PostgreSQL advisory lock. `reset` truncates tables in `auth`, `instance`, `audit` and `jobs` and preserves
+PostgreSQL advisory lock. `reset` truncates tables in `auth`, `instance`, `organization`, `audit` and `jobs` and preserves
 migration history. Tests use real tables and repositories, with shared database Layers and user
 fixtures under `tests/fixtures/`. Unit tests cover configuration/error boundaries;
 `tests/integration/` groups transaction, migration, auth persistence/session lifecycle and instance

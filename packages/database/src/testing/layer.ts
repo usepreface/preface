@@ -35,7 +35,7 @@ export class TestDatabase extends Context.Service<
           readonly schemaname: string;
           readonly tablename: string;
         }>`select schemaname, tablename from pg_tables
-          where schemaname in ('auth', 'instance', 'audit', 'jobs')`;
+          where schemaname in ('auth', 'instance', 'organization', 'audit', 'jobs')`;
 
         if (tables.length === 0) return;
         const names = tables.map(

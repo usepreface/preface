@@ -1,9 +1,21 @@
 import { Schema } from "effect";
 
+import {
+  OrganizationName,
+  OrganizationSlug,
+  OrganizationRoleKey,
+  OrganizationPermissions,
+} from "#/common/organization";
 import { AuditEventId } from "#/identifiers/audit";
 import { VerificationId, UserEmailId } from "#/identifiers/auth";
 import { BootstrapChallengeId } from "#/identifiers/bootstrap";
 import { InstallationId, InstanceOwnerId } from "#/identifiers/instance";
+import {
+  OrganizationId,
+  OrganizationMemberId,
+  OrganizationRoleId,
+  OrganizationRoleBindingId,
+} from "#/identifiers/organization";
 import { SessionId } from "#/identifiers/session";
 import { UserId } from "#/identifiers/user";
 import { EmailAuthenticationMethod } from "#/model/auth/session-authentication";
@@ -88,7 +100,69 @@ const authenticatedFields = {
   metadata: Schema.Struct({ method: EmailAuthenticationMethod, userEmailId: UserEmailId }),
 };
 
+const organizationActor = {
+  actorKind: Schema.Literal("user"),
+  actorUserId: UserId,
+  organizationId: OrganizationId,
+};
+const organizationFields = {
+  ...organizationActor,
+  eventType: Schema.Literals([
+    "organization.created",
+    "organization.updated",
+    "organization.archived",
+    "organization.restored",
+  ]),
+  targetType: Schema.Literal("organization"),
+  targetId: OrganizationId,
+  metadata: Schema.Struct({ name: OrganizationName, slug: OrganizationSlug }),
+};
+const organizationMemberFields = {
+  ...organizationActor,
+  eventType: Schema.Literals([
+    "organization.member_suspended",
+    "organization.member_reinstated",
+    "organization.member_removed",
+    "organization.member_left",
+    "organization.owner_granted",
+    "organization.owner_revoked",
+  ]),
+  targetType: Schema.Literal("organization_member"),
+  targetId: OrganizationMemberId,
+  metadata: emptyMetadata,
+};
+const organizationRoleFields = {
+  ...organizationActor,
+  eventType: Schema.Literals([
+    "organization.role_created",
+    "organization.role_updated",
+    "organization.role_archived",
+  ]),
+  targetType: Schema.Literal("organization_role"),
+  targetId: OrganizationRoleId,
+  metadata: Schema.Struct({ key: OrganizationRoleKey, permissions: OrganizationPermissions }),
+};
+const organizationBindingFields = {
+  ...organizationActor,
+  eventType: Schema.Literals(["organization.role_granted", "organization.role_revoked"]),
+  targetType: Schema.Literal("organization_role_binding"),
+  targetId: OrganizationRoleBindingId,
+  metadata: Schema.Struct({ roleId: OrganizationRoleId, memberId: OrganizationMemberId }),
+};
+const ownershipTransferFields = {
+  ...organizationActor,
+  eventType: Schema.Literal("organization.ownership_transferred"),
+  targetType: Schema.Literal("organization"),
+  targetId: OrganizationId,
+  metadata: Schema.Struct({ fromMemberId: OrganizationMemberId, toMemberId: OrganizationMemberId }),
+};
+
 export const RecordAuditEvent = Schema.Union([
+  Schema.Struct(organizationFields),
+  Schema.Struct(organizationMemberFields),
+  Schema.Struct(organizationRoleFields),
+  Schema.Struct(organizationBindingFields),
+  Schema.Struct(ownershipTransferFields),
   Schema.Struct(signInFields),
   Schema.Struct(authenticatedFields),
   Schema.Struct(bootstrapFields),
@@ -100,8 +174,18 @@ export const RecordAuditEvent = Schema.Union([
 ]).check(actorCheck);
 export type RecordAuditEvent = typeof RecordAuditEvent.Type;
 
-const storedFields = { id: AuditEventId, occurredAt: Schema.DateTimeUtcFromDate };
+const storedFields = {
+  id: AuditEventId,
+  occurredAt: Schema.DateTimeUtcFromDate,
+  organizationId: Schema.Null,
+};
+const organizationStoredFields = { id: AuditEventId, occurredAt: Schema.DateTimeUtcFromDate };
 export const AuditEvent = Schema.Union([
+  Schema.Struct({ ...organizationFields, ...organizationStoredFields }),
+  Schema.Struct({ ...organizationMemberFields, ...organizationStoredFields }),
+  Schema.Struct({ ...organizationRoleFields, ...organizationStoredFields }),
+  Schema.Struct({ ...organizationBindingFields, ...organizationStoredFields }),
+  Schema.Struct({ ...ownershipTransferFields, ...organizationStoredFields }),
   Schema.Struct({ ...signInFields, ...storedFields }),
   Schema.Struct({ ...authenticatedFields, ...storedFields }),
   Schema.Struct({ ...bootstrapFields, ...storedFields }),

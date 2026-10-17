@@ -1,11 +1,7 @@
-import { Schema } from "effect";
+import { createBrandedId } from "#/common/branded-id";
 
-export const InstallationId = Schema.String.check(Schema.isUUID(7)).pipe(
-  Schema.brand("InstallationId"),
-);
+export const InstallationId = createBrandedId("InstallationId");
 export type InstallationId = typeof InstallationId.Type;
 
-export const InstanceOwnerId = Schema.String.check(Schema.isUUID(7)).pipe(
-  Schema.brand("InstanceOwnerId"),
-);
+export const InstanceOwnerId = createBrandedId("InstanceOwnerId");
 export type InstanceOwnerId = typeof InstanceOwnerId.Type;

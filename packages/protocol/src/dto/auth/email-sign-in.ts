@@ -1,7 +1,8 @@
 import { Schema } from "effect";
 
+import { SecretTokenFromString } from "#/common/secret-token";
+import { VerificationCode } from "#/common/verification-code";
 import { VerificationId } from "#/identifiers/auth";
-import { SecretTokenFromString } from "#/values/secret-token";
 
 const token = Schema.toEncoded(SecretTokenFromString).annotate({ writeOnly: true });
 export const RequestEmailSignInRequest = Schema.Struct({ email: Schema.String }).annotate({
@@ -12,7 +13,7 @@ export const VerifyEmailSignInRequest = Schema.Union([
   Schema.Struct({
     challengeId: VerificationId,
     method: Schema.Literal("code"),
-    code: Schema.String.check(Schema.isPattern(/^\d{8}$/)).annotate({ writeOnly: true }),
+    code: VerificationCode.annotate({ writeOnly: true }),
   }),
   Schema.Struct({ challengeId: VerificationId, method: Schema.Literal("magic_link"), token }),
 ]).annotate({ identifier: "VerifyEmailSignInRequest" });

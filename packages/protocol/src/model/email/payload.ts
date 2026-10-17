@@ -1,10 +1,11 @@
 import { Schema } from "effect";
 
-import { InstanceDisplayName } from "#/values/instance";
-import { UserDisplayName, UserEmail } from "#/values/user";
+import { DisplayName as InstanceDisplayName } from "#/common/display-name";
+import { DisplayName as UserDisplayName } from "#/common/display-name";
+import { EmailAddress as UserEmail } from "#/common/email";
+import { VerificationCode } from "#/common/verification-code";
 
 const EmailLink = Schema.String.check(Schema.isPattern(/^https?:\/\/[^\s]+$/));
-const VerificationCode = Schema.String.check(Schema.isPattern(/^\d{8}$/));
 
 export const InstanceSetupEmailVariables = Schema.Struct({
   instanceName: InstanceDisplayName,

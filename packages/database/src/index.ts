@@ -5,7 +5,13 @@ export { TransactionService } from "#/core/transaction";
 export { generateUuid7 } from "#/id";
 export { DatabaseMigration, runDatabaseMigrations } from "#/migrations/layer";
 export { checkDatabaseConnection } from "#/core/health";
-export { authSchema, instanceSchema, auditSchema, jobsSchema } from "#/schema/index";
+export {
+  authSchema,
+  instanceSchema,
+  auditSchema,
+  jobsSchema,
+  organizationSchema,
+} from "#/schema/index";
 export { timestampColumns } from "#/schema/timestamps";
 export {
   DatabaseRepository,
@@ -22,3 +28,12 @@ export {
   InstanceOwnerRepository,
   BootstrapChallengeRepository,
 } from "#/repositories/index";
+
+export {
+  OrganizationRepositories,
+  OrganizationRepository,
+  OrganizationMemberRepository,
+  OrganizationRoleRepository,
+  OrganizationRoleBindingRepository,
+  OrganizationAuthPolicyRepository,
+} from "#/repositories/organization/index";

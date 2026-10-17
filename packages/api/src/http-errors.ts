@@ -1,7 +1,12 @@
 import { Record, Schema } from "effect";
 import { HttpApiSchema } from "effect/http-api";
 
-import { BootstrapError, EmailSignInError, RequestError } from "@usepreface/protocol";
+import {
+  BootstrapError,
+  EmailSignInError,
+  OrganizationError,
+  RequestError,
+} from "@usepreface/protocol";
 
 export const requestErrorStatuses = RequestError.statuses;
 
@@ -20,5 +25,11 @@ export const bootstrapErrors = Record.keys(BootstrapError.statuses).map((code) =
 export const emailSignInErrors = Record.keys(EmailSignInError.statuses).map((code) =>
   Schema.Struct({ ...EmailSignInError.fields, code: Schema.Literal(code) }).pipe(
     HttpApiSchema.status(EmailSignInError.statuses[code]),
+  ),
+);
+
+export const organizationErrors = Record.keys(OrganizationError.statuses).map((code) =>
+  Schema.Struct({ ...OrganizationError.fields, code: Schema.Literal(code) }).pipe(
+    HttpApiSchema.status(OrganizationError.statuses[code]),
   ),
 );

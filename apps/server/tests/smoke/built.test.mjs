@@ -152,6 +152,40 @@ test(
     });
     assert.equal(listed.status, 200);
     assert.equal((await listed.json()).sessions.length, 1);
+    const organizationResponse = await fetch(`${base}/api/v1/organizations`, {
+      method: "POST",
+      headers: { origin, "content-type": "application/json", cookie: sessionCookie },
+      body: JSON.stringify({ name: "Knowledge", slug: "knowledge" }),
+    });
+    assert.equal(organizationResponse.status, 201);
+    const organization = await organizationResponse.json();
+    assert.equal(organization.access.isOwner, true);
+    assert.equal(organization.membership.userId, firstActor.user.id);
+    const organizationPath = `${base}/api/v1/organizations/${organization.organization.id}`;
+    const updatedOrganization = await fetch(organizationPath, {
+      method: "PATCH",
+      headers: { origin, "content-type": "application/json", cookie: sessionCookie },
+      body: JSON.stringify({ name: "Knowledge Updated" }),
+    });
+    assert.equal(updatedOrganization.status, 200);
+    assert.equal((await updatedOrganization.json()).name, "Knowledge Updated");
+    const archived = await fetch(`${organizationPath}/archive`, {
+      method: "POST",
+      headers: { origin, "content-type": "application/json", cookie: sessionCookie },
+      body: "{}",
+    });
+    assert.equal(archived.status, 200);
+    assert.equal(
+      (await fetch(organizationPath, { headers: { cookie: sessionCookie } })).status,
+      409,
+    );
+    const restored = await fetch(`${organizationPath}/restore`, {
+      method: "POST",
+      headers: { origin, "content-type": "application/json", cookie: sessionCookie },
+      body: "{}",
+    });
+    assert.equal(restored.status, 200);
+
     assert.equal(
       (
         await fetch(`${base}/api/v1/auth/sessions`, {

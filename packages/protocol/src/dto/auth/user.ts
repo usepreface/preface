@@ -1,7 +1,8 @@
 import { Schema } from "effect";
 
+import { DisplayName as UserDisplayName } from "#/common/display-name";
+import { EmailAddress as UserEmail } from "#/common/email";
 import { UserId } from "#/identifiers/user";
-import { UserDisplayName, UserEmail } from "#/values/user";
 
 export const PublicUser = Schema.Struct({
   id: UserId,

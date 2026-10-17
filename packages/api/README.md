@@ -1,6 +1,6 @@
 # @usepreface/api
 
-Runtime-neutral Effect v4 HTTP contracts for Preface instance setup and sessions. This private
+Runtime-neutral Effect v4 HTTP contracts for Preface instance setup, sessions and organizations. This private
 workspace package supplies `PrefaceApi` to server handlers, generated clients and OpenAPI generation.
 It depends only on Effect and `@usepreface/protocol`; importing it does not read configuration,
 start a server or acquire persistence.
@@ -67,7 +67,7 @@ bodies where applicable. Node clients must supply the Origin header explicitly.
 
 Logout resolves a cookie if present and succeeds for absent/invalid sessions. It does not promise
 successful revocation after a storage failure. Bootstrap proofs and sessions are separate authorities.
-There is no HTTP reissue endpoint, organization API, bearer-token API or dashboard in this slice.
+There is no HTTP reissue endpoint, bearer-token API or dashboard in this slice.
 
 Email request accepts `{ email }`; resend accepts `{ challengeId }` with the temporary
 `preface_sign_in` cookie. Verification accepts `{ challengeId, method: "code", code }`
@@ -80,6 +80,58 @@ Session listing accepts optional `cursor` and `limit` (1–100, default 25) and 
 `{ sessions, nextCursor }`. Each session exposes `id`, `createdAt`, `lastSeenAt`,
 `expiresAt` and `isCurrent`. Revocation is user-scoped; a missing/other-user session is
 an idempotent no-op. Revoke-all includes the current session and clears its cookie.
+
+## Organization endpoints
+
+All paths below are relative to `/api/v1` and require the session cookie.
+`organizationId`, `memberId`, `roleId` and `bindingId` are UUIDv7 identities. Creation
+requires instance ownership; organization operations use current membership,
+authentication policy and permissions. Instance ownership alone grants no tenant access.
+
+| Client method                                            | Method and route                                                  | Result                                |
+| -------------------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------- |
+| `instanceCapabilities.get()`                             | `GET /instance/capabilities`                                      | `{ canCreateOrganization }`           |
+| `organizations.create({ payload })`                      | `POST /organizations`                                             | `201` `OrganizationDetail`            |
+| `organizations.list({ query })`                          | `GET /organizations`                                              | `OrganizationList`                    |
+| `organizations.get({ params })`                          | `GET /organizations/:organizationId`                              | `OrganizationDetail`                  |
+| `organizations.access({ params })`                       | `GET /organizations/:organizationId/access`                       | `OrganizationAccessInfo`              |
+| `organizations.update({ params, payload })`              | `PATCH /organizations/:organizationId`                            | `PublicOrganization`                  |
+| `organizations.archive({ params, payload: {} })`         | `POST /organizations/:organizationId/archive`                     | `PublicOrganization`                  |
+| `organizations.restore({ params, payload: {} })`         | `POST /organizations/:organizationId/restore`                     | `PublicOrganization`                  |
+| `organizations.authPolicy({ params })`                   | `GET /organizations/:organizationId/auth-policy`                  | `PublicOrganizationAuthPolicy`        |
+| `organizationMembers.list({ params, query })`            | `GET /organizations/:organizationId/members`                      | `OrganizationMemberList`              |
+| `organizationMembers.suspend({ params, payload: {} })`   | `POST /organizations/:organizationId/members/:memberId/suspend`   | `204`                                 |
+| `organizationMembers.reinstate({ params, payload: {} })` | `POST /organizations/:organizationId/members/:memberId/reinstate` | `204`                                 |
+| `organizationMembers.remove({ params })`                 | `DELETE /organizations/:organizationId/members/:memberId`         | `204`                                 |
+| `organizationMembers.leave({ params, payload: {} })`     | `POST /organizations/:organizationId/leave`                       | `204`                                 |
+| `organizationRoles.list({ params, query })`              | `GET /organizations/:organizationId/roles`                        | `OrganizationRoleList`                |
+| `organizationRoles.create({ params, payload })`          | `POST /organizations/:organizationId/roles`                       | `201` `PublicOrganizationRole`        |
+| `organizationRoles.update({ params, payload })`          | `PATCH /organizations/:organizationId/roles/:roleId`              | `PublicOrganizationRole`              |
+| `organizationRoles.archive({ params })`                  | `DELETE /organizations/:organizationId/roles/:roleId`             | `204`                                 |
+| `organizationRoleBindings.grant({ params, payload })`    | `POST /organizations/:organizationId/role-bindings`               | `201` `PublicOrganizationRoleBinding` |
+| `organizationRoleBindings.revoke({ params })`            | `DELETE /organizations/:organizationId/role-bindings/:bindingId`  | `204`                                 |
+| `organizationOwnership.grant({ params, payload: {} })`   | `PUT /organizations/:organizationId/owners/:memberId`             | `204`                                 |
+| `organizationOwnership.revoke({ params })`               | `DELETE /organizations/:organizationId/owners/:memberId`          | `204`                                 |
+| `organizationOwnership.transfer({ params, payload })`    | `POST /organizations/:organizationId/ownership/transfer`          | `204`                                 |
+
+Creation accepts `{ name, slug }`; organization update accepts one or both fields.
+Custom-role creation accepts `{ key, name, permissions }`; update accepts name and/or
+permissions. Names trim; slugs/keys trim and lowercase. Direct grants accept
+`{ memberId, roleId }`; transfer accepts `{ targetMemberId }`. Built-ins are protected.
+
+Lists use `cursor` and `limit` (1–100, default 25) and return their named array plus
+`nextCursor`. Organization and role lists accept `includeArchived`; member lists
+accept `includeRemoved`. Archived organization discovery is owner-only. Detail returns
+`{ organization, membership, access }`; access is `{ memberId, isOwner, permissions }`.
+
+Owner-only transitions preserve a usable owner. Custom roles/assignments are bounded
+by the actor's delegation rights. There is no direct admission endpoint or policy editor;
+invitations and SSO configuration are subsequent features. These endpoints are backend-only.
+
+`OrganizationError` codes map invalid input to 400, insufficient authority/evidence
+to 403, scoped missing organization/member/role/binding to 404, and lifecycle or
+uniqueness conflicts to 409. Outsiders and removed/suspended memberships receive
+`ORGANIZATION_NOT_FOUND`; completed instance ownership is not membership.
 
 ## Errors and documentation
 

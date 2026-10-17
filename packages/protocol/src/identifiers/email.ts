@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { createBrandedId } from "#/common/branded-id";
 
-export const EmailJobId = Schema.String.check(Schema.isUUID(7)).pipe(Schema.brand("EmailJobId"));
+export const EmailJobId = createBrandedId("EmailJobId");
 export type EmailJobId = typeof EmailJobId.Type;

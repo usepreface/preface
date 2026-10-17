@@ -1,17 +1,19 @@
 import { Schema } from "effect";
 
+import { CredentialDigest } from "#/common/credential-digest";
+import { DisplayName as InstanceDisplayName } from "#/common/display-name";
+import { DisplayName as UserDisplayName } from "#/common/display-name";
+import { EmailAddress as UserEmail } from "#/common/email";
 import { BootstrapChallengeId } from "#/identifiers/bootstrap";
 import { EmailJobId } from "#/identifiers/email";
-import { InstanceDisplayName } from "#/values/instance";
-import { UserDisplayName, UserEmail } from "#/values/user";
 
 export const CreateBootstrapChallenge = Schema.Struct({
   id: BootstrapChallengeId,
-  bootstrapTokenHash: Schema.String.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+  bootstrapTokenHash: CredentialDigest,
   instanceName: InstanceDisplayName,
   ownerName: UserDisplayName,
   email: UserEmail,
-  codeHash: Schema.String.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+  codeHash: CredentialDigest,
   emailJobId: EmailJobId,
   expiresAt: Schema.DateTimeUtcFromDate,
 });

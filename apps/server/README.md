@@ -38,7 +38,8 @@ the same-origin Scalar reference at `/api/docs`. Inspect the fragment's proof, r
 verification with instance name, owner name and email, then submit the emailed eight-digit
 code with the returned challenge ID. Only verified completion creates the owner/session cookie.
 It creates no organization. Email code/link sign-in and session management are available
-through the API; their UI, invitations and organization creation remain pending.
+through the API, together with organization creation and administration.
+Backend-connected UI, invitations, teams and SSO remain pending.
 Magic links reserve `/auth/email/verify` for the future client. For local/internal hosts,
 enter the emailed code in the browser that requested it.
 
@@ -125,14 +126,14 @@ connections. The host-only `preface_session` cookie has `HttpOnly`, `SameSite=La
 absolute expiry. HTTPS installations also use `Secure` and HSTS. Additional CORS origins do not
 override browser SameSite rules; use a same-site frontend for cookie authentication.
 
-The schema currently ships as a fresh initial migration for local development. Reset
-an older local Preface database before using it; no migration/backfill path from the
-previous development schema is supplied. Startup does not reset existing databases.
+Migration history begins with the regenerated initial baseline and includes organization
+authority. Databases using deleted earlier development history need a reset; databases
+on the current baseline apply new migrations normally. Startup never resets a database.
 
 ## Request policy
 
-Every mutation requires an exact allowed `Origin`, including non-browser clients. POST bodies
-must be uncompressed JSON. Use `credentials: "include"` for a browser client on another allowed
+Every mutation requires an exact allowed `Origin`, including non-browser clients. POST, PUT and PATCH bodies
+must be uncompressed JSON. Action endpoints accept `{}` where no other input is needed. Use `credentials: "include"` for a browser client on another allowed
 origin. Session credentials are accepted only through the cookie, never a JSON field or URL.
 
 Requests have a 32 KiB streaming body cap, a 16 KiB native header cap, ten seconds for headers,
@@ -156,6 +157,12 @@ completion: a lost response can follow a committed completion, and the proof can
 
 Logout is idempotent for an absent, malformed or invalid cookie. Operational failures still fail
 the request; a failed revocation is not reported as successful logout.
+
+Organization handlers provide current membership/permission checks, owner-protected
+lifecycle operations and transactional audit. Instance owners create organizations;
+organization membership authorizes access. Scalar documents the complete contract.
+Parameterized request logs retain the route template rather than tenant/resource IDs.
+No additional environment variables or provider dependencies are needed.
 
 ## Verification
 

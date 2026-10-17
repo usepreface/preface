@@ -1,8 +1,8 @@
 import { Schema } from "effect";
 
-import { InstanceDisplayName } from "#/values/instance";
+import { DisplayName as InstanceDisplayName } from "#/common/display-name";
 
-export { InstanceDisplayName } from "#/values/instance";
+export { DisplayName as InstanceDisplayName } from "#/common/display-name";
 
 export const InstanceSettings = Schema.Struct({
   installationId: Schema.Literal(1),

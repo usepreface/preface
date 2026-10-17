@@ -3,9 +3,10 @@
 Preface is self-hosted knowledge infrastructure with installation-wide identity
 and multiple organizations as its product model. The implemented backend currently
 supports installation preparation, first-owner setup, email code/link sign-in,
-session resolution and session management.
+session resolution, session management, organization creation, membership lifecycle,
+roles and ownership management.
 Setup verifies mailbox ownership through an encrypted email outbox, minimal renderer
-and scoped worker. Organization storage, invitations, Google/SSO
+and scoped worker. Invitations, teams, Google/SSO
 and knowledge ingestion are not implemented. The landing page illustrates the product independently of
 those backend capabilities.
 
@@ -40,7 +41,8 @@ Signup is invitation-only and only instance owners may create organizations. The
 are fixed product rules, not configurable settings. The current setup proof is a
 special authority to create the first owner, not a general signup invitation.
 A resolved session identifies a usable user and session; it is not evidence of
-an instance-owner grant or organization permissions.
+an instance-owner grant or organization permissions. Organization workflows freshly
+check membership, role bindings and acceptable evidence under the organization policy.
 
 ## Runtime and durable state
 

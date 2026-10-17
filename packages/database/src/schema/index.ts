@@ -15,3 +15,12 @@ export {
   instanceOwner,
   bootstrapChallenge,
 } from "#/schema/instance/index";
+
+export {
+  organizationSchema,
+  organization,
+  organizationMember,
+  organizationRole,
+  organizationRoleBinding,
+  organizationAuthPolicy,
+} from "#/schema/organization/index";
