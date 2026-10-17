@@ -44,7 +44,7 @@ layer(ApplicationTestLayer)("organization roles and delegation", (it) => {
         )).id,
       ).toBe(binding.id);
       yield* application.organization.organization.update(editor.actor, fixture.organization.id, {
-        name: "Edited",
+        metadata: { name: "Edited" },
       });
       yield* application.organization.role.update(
         fixture.owner.actor,
@@ -54,7 +54,7 @@ layer(ApplicationTestLayer)("organization roles and delegation", (it) => {
       );
       expect(
         yield* application.organization.organization
-          .update(editor.actor, fixture.organization.id, { name: "Forbidden" })
+          .update(editor.actor, fixture.organization.id, { metadata: { name: "Forbidden" } })
           .pipe(Effect.flip),
       ).toMatchObject({ _tag: "OrganizationError", code: "FORBIDDEN" });
       yield* Effect.scoped(
@@ -177,7 +177,7 @@ layer(ApplicationTestLayer)("organization roles and delegation", (it) => {
         const repository = yield* DatabaseRepository;
         const fixture = yield* createTestOrganization;
         const other = yield* application.organization.organization.create(fixture.owner.actor, {
-          name: "Other",
+          metadata: { name: "Other" },
           slug: "other",
         });
         const foreignRole = yield* repository.organization.role.findByKey(

@@ -67,3 +67,20 @@ export {
 
 export { OrganizationInvitationId, InvitationAssignmentId } from "#/identifiers/organization";
 export { InvitationError } from "#/errors/organization/invitation";
+
+export {
+  UserMetadataV1,
+  UserMetadata,
+  OrganizationMetadataV1,
+  OrganizationMetadata,
+  TeamMetadataV1,
+  TeamMetadata,
+} from "#/metadata/index";
+
+export { TeamId, TeamMemberId } from "#/identifiers/organization";
+export { TeamPermission, RolePermission, RolePermissions, RoleScope } from "#/common/organization";
+export { TeamError } from "#/errors/organization/team";
+
+export { ProfileError } from "#/errors/auth/profile";
+
+export { MetadataImage } from "#/common/metadata-image";

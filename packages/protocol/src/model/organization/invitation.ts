@@ -4,6 +4,7 @@ import { CredentialDigest } from "#/common/credential-digest";
 import { EmailAddress } from "#/common/email";
 import { EmailJobId } from "#/identifiers/email";
 import {
+  TeamId,
   OrganizationId,
   OrganizationInvitationId,
   OrganizationMemberId,
@@ -36,6 +37,8 @@ export const InvitationAssignment = Schema.Struct({
   organizationId: OrganizationId,
   invitationId: OrganizationInvitationId,
   roleId: OrganizationRoleId,
+  scopeKind: Schema.Literals(["organization", "team"]),
+  teamId: Schema.NullOr(TeamId),
   createdAt: Schema.DateTimeUtcFromDate,
 });
 export type InvitationAssignment = typeof InvitationAssignment.Type;

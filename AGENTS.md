@@ -251,7 +251,8 @@ follow its linked local documentation when relevant. Search
 - Brand values only when identity or confusion between values would cause a real
   defect. Do not brand every string.
 - Organize protocol by purpose, then domain: `identifiers/`, `common/`, `model/`,
-  `dto/`, `input/` and `errors/`. Public DTOs import shared schemas/identities,
+  `dto/`, `input/`, `metadata/` and `errors/`. Versioned user/organization/team presentation
+  schemas belong in `metadata/`; authority and lifecycle remain relational. Public DTOs import shared schemas/identities,
   never storage models. Use `/dto`, `/input` and `/model` package exports for new
   consumers; root DTO/input exports remain compatible. Keep sensitive persistence
   fields out of public DTOs. Error/status metadata belongs beside the protocol

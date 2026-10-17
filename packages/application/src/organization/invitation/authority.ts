@@ -11,9 +11,14 @@ import type { InvitationTokenInput } from "@usepreface/protocol/input";
 import type { OrganizationInvitation, OrganizationRole } from "@usepreface/protocol/model";
 
 import { requireDelegablePermissions } from "#/organization/delegation";
+import {
+  invitationTeams,
+  makeInvitationTeamAssignments,
+} from "#/organization/invitation/assignments";
 
 export const makeInvitationAuthority = Effect.gen(function* () {
   const repository = yield* DatabaseRepository;
+  const requireTeams = yield* makeInvitationTeamAssignments;
   const tokens = yield* TokenCrypto;
   const crypto = yield* SecretCrypto;
   const requireToken = Effect.fn("InvitationAuthority.requireToken")(function* (
@@ -64,6 +69,7 @@ export const makeInvitationAuthority = Effect.gen(function* () {
       if (
         role === undefined ||
         role.archivedAt !== null ||
+        role.scopeKind !== "organization" ||
         (role.kind === "builtin" && role.key === "owner")
       )
         return yield* new InvitationError({ code: "ASSIGNMENT_UNAVAILABLE" });
@@ -113,10 +119,19 @@ export const makeInvitationAuthority = Effect.gen(function* () {
     );
     const roles = yield* requireRoles(
       invitation.organizationId,
-      assignments.map((assignment) => assignment.roleId),
+      assignments
+        .filter((assignment) => assignment.teamId === null)
+        .map((assignment) => assignment.roleId),
       permissions,
     );
+    const teams = yield* requireTeams(
+      invitation.organizationId,
+      member.id,
+      permissions,
+      invitationTeams(assignments),
+    );
     return {
+      teams,
       member,
       user,
       roles,
@@ -129,5 +144,5 @@ export const makeInvitationAuthority = Effect.gen(function* () {
       // Rotation invalidates browser proofs even when the invitation identity stays the same.
       value: Redacted.make(`${invitation.id}:${invitation.tokenHash}`),
     });
-  return { requireToken, requireRoles, requireInviter, subjectKey };
+  return { requireToken, requireRoles, requireInviter, requireTeams, subjectKey };
 });

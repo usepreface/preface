@@ -2,6 +2,8 @@ import { Record, Schema } from "effect";
 import { HttpApiSchema } from "effect/http-api";
 
 import {
+  TeamError,
+  ProfileError,
   BootstrapError,
   EmailSignInError,
   OrganizationError,
@@ -38,5 +40,16 @@ export const organizationErrors = Record.keys(OrganizationError.statuses).map((c
 export const invitationErrors = Record.keys(InvitationError.statuses).map((code) =>
   Schema.Struct({ ...InvitationError.fields, code: Schema.Literal(code) }).pipe(
     HttpApiSchema.status(InvitationError.statuses[code]),
+  ),
+);
+
+export const teamErrors = Record.keys(TeamError.statuses).map((code) =>
+  Schema.Struct({ ...TeamError.fields, code: Schema.Literal(code) }).pipe(
+    HttpApiSchema.status(TeamError.statuses[code]),
+  ),
+);
+export const profileErrors = Record.keys(ProfileError.statuses).map((code) =>
+  Schema.Struct({ ...ProfileError.fields, code: Schema.Literal(code) }).pipe(
+    HttpApiSchema.status(ProfileError.statuses[code]),
   ),
 );

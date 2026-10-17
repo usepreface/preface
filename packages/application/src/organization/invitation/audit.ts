@@ -27,7 +27,18 @@ export const makeInvitationAudit = Effect.gen(function* () {
       eventType,
       targetType: "organization_invitation",
       targetId: invitation.id,
-      metadata: { roleIds: assignments.map((assignment) => assignment.roleId) },
+      metadata: {
+        roleIds: assignments
+          .filter((assignment) => assignment.teamId === null)
+          .map((assignment) => assignment.roleId),
+        teamIds: [
+          ...new Set(
+            assignments.flatMap((assignment) =>
+              assignment.teamId === null ? [] : [assignment.teamId],
+            ),
+          ),
+        ],
+      },
     });
   });
   const verification = Effect.fn("InvitationAudit.verification")(function* (

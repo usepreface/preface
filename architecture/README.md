@@ -20,6 +20,8 @@ Executable schemas, migrations, source and tests settle disagreements with prose
   membership lifecycle, delegation, ownership, policy and tenant-safe storage.
 - [Invitations](identity-access/invitations.md): verified mailbox admission, current delegation,
   readmission, credential replacement and one-use acceptance.
+- [Teams and profiles](identity-access/teams-profiles.md): versioned metadata, direct team membership,
+  scoped delegation and invitation assignments.
 - [Sessions](identity-access/sessions.md): credential resolution, expiry, activity,
   cookie delivery and audited revocation.
 

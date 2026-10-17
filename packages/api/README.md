@@ -114,10 +114,13 @@ authentication policy and permissions. Instance ownership alone grants no tenant
 | `organizationOwnership.revoke({ params })`               | `DELETE /organizations/:organizationId/owners/:memberId`          | `204`                                 |
 | `organizationOwnership.transfer({ params, payload })`    | `POST /organizations/:organizationId/ownership/transfer`          | `204`                                 |
 
-Creation accepts `{ name, slug }`; organization update accepts one or both fields.
-Custom-role creation accepts `{ key, name, permissions }`; update accepts name and/or
+Creation accepts `{ metadata: { name, description? }, slug }`; organization update accepts
+`metadata` and/or `slug`. Metadata patches preserve omitted fields; `description: null` clears it.
+Public organization, user and team responses include metadata with `version: 1`.
+Custom-role creation accepts `{ key, name, permissions, scopeKind? }` (default organization); update accepts name and/or
 permissions. Names trim; slugs/keys trim and lowercase. Direct grants accept
-`{ memberId, roleId }`; transfer accepts `{ targetMemberId }`. Built-ins are protected.
+`{ memberId, roleId, teamId? }`; supplying `teamId` requires a team-scoped role and active
+team membership. Role listing accepts `scopeKind` (default organization). Transfer accepts `{ targetMemberId }`. Built-ins are protected.
 
 Lists use `cursor` and `limit` (1–100, default 25) and return their named array plus
 `nextCursor`. Organization and role lists accept `includeArchived`; member lists
@@ -148,7 +151,9 @@ uniqueness conflicts to 409. Outsiders and removed/suspended memberships receive
 Paths use the same `/api/v1` prefix. Typed-client groups are `organizationInvitations`
 and `invitations`. Management requires cookie authentication; listing/revocation need
 `members.manage`, creation/resend also need `roles.assign`. Creation takes
-`{ email, roleIds }` (1–20 unique role IDs); resend takes `{}`. Lists use `cursor` and
+`{ email, roleIds, teams? }` (1–20 unique organization role IDs); optional team entries are
+`{ teamId, roleIds? }`, with built-in team member as the default. Up to 20 unique teams
+are allowed. All assignments are revalidated at acceptance. Resend takes `{}`. Lists use `cursor` and
 `limit` and return `{ invitations, nextCursor }`, including lifecycle history.
 
 Inspect and verification request take `{ invitationId, token }`. Acceptance adds
@@ -162,6 +167,34 @@ All POST routes require the exact trusted Origin and JSON.
 (401), `INVITATION_NOT_FOUND` (404), and `ACCOUNT_MISMATCH`, `RECIPIENT_UNAVAILABLE`,
 `INVITER_NOT_AUTHORIZED`, `ASSIGNMENT_UNAVAILABLE` (409). Management also returns
 normal organization/authentication errors. Operational failures remain private.
+
+## Teams and profiles
+
+All paths use `/api/v1` and cookie authentication. Team directory listing requires
+`teams.read`; creation requires `teams.manage`. Team detail, editing, archival, member
+and role operations use current team permissions. Organization `teams.manage` explicitly
+supplies team administration without requiring team membership.
+
+| Client method                                                         | Method and path                                            |
+| --------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `profile.get()` / `profile.update({ payload })`                       | GET / PATCH `/users/me`                                    |
+| `teams.create({ params, payload })` / `teams.list({ params, query })` | POST / GET `/organizations/:organizationId/teams`          |
+| `teams.get({ params })` / `teams.update({ params, payload })`         | GET / PATCH `/organizations/:organizationId/teams/:teamId` |
+| `teams.archive({ params, payload: {} })`                              | POST `…/:teamId/archive`                                   |
+| `teams.access({ params })`                                            | GET `…/:teamId/access`                                     |
+| `teams.roles({ params, query })`                                      | GET `…/:teamId/roles`                                      |
+| `teams.members({ params, query })`                                    | GET `…/:teamId/members`                                    |
+| `teams.addMember({ params, payload: {} })`                            | PUT `…/:teamId/members/:memberId`                          |
+| `teams.removeMember({ params })`                                      | DELETE `…/:teamId/members/:memberId`                       |
+
+Team create/update payloads follow the organization metadata/slug shape. Profiles accept
+`{ metadata: { name?, title?, bio? } }`; `null` clears title/bio. Image/logo metadata is
+optional presentation data; upload and image editing routes are not available. Team member
+responses include safe user metadata and current scoped roles. Lists use the existing cursor
+contract; role lists use organization role IDs and include only team definitions.
+
+`TeamError` maps invalid input to 400, insufficient authority to 403, missing team to 404,
+and archive/slug/member conflicts to 409. `ProfileError/INVALID_INPUT` maps to 400.
 
 ## Errors and documentation
 

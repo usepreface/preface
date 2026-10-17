@@ -13,17 +13,19 @@ write schemas; they do not authorize business actors or deliver HTTP responses.
 | `instance.settings`                  | Instance display name, optimistic revision and lifecycle timestamps                         |
 | `instance.bootstrap_challenge`       | One pending setup challenge, code HMAC, proof binding, expiry, attempt budget and email job |
 | `instance.owner`                     | Owner grants, attribution and revocation history                                            |
-| `auth.user`                          | Installation-wide identity, display name, disabled state and lifecycle                      |
+| `auth.user`                          | Installation-wide identity, versioned metadata, disabled state and lifecycle                |
 | `auth.user_email`                    | Active email ownership, primary designation, verification and login eligibility             |
 | `auth.verification`                  | Browser-bound single-use code/link proofs and durable attempt budget                        |
 | `auth.session_authentication`        | Session authentication method, email source, assurance and expiry                           |
 | `auth.session`                       | Credential digest, activity, absolute expiry and revocation                                 |
-| `organization.organization`          | Name, unique slug, creator attribution, archive state and lifecycle                         |
+| `organization.organization`          | Versioned metadata, unique slug, creator attribution, archive state and lifecycle           |
 | `organization.member`                | Stable user/organization relationship, suspension and removal                               |
 | `organization.role`                  | Protected built-ins and custom code-owned permission sets                                   |
 | `organization.role_binding`          | Attributed member grants and revocation history                                             |
 | `organization.invitation`            | Intended email, inviter, token digest, email job, deadline and acceptance/revocation        |
-| `organization.invitation_assignment` | Tenant-scoped proposed role assignments                                                     |
+| `organization.invitation_assignment` | Tenant- and scope-bound organization/team role assignments                                  |
+| `organization.team`                  | Organization-scoped slug, versioned metadata, creator and archive state                     |
+| `organization.team_member`           | Direct team membership of an organization member with removal history                       |
 | `organization.auth_policy`           | Current allowed local email methods and policy revision                                     |
 | `audit.event`                        | Typed actor/event/target metadata and occurrence time                                       |
 | `jobs.email`                         | Encrypted email intent, deduplication, attempt state and token-owned delivery lease         |
@@ -79,10 +81,10 @@ Production migrations use a transaction advisory lock on the reserved migration
 connection, with automatic release on completion/failure. They reject execution
 inside an existing transaction. The migration Layer completes before application
 acquisition and listener startup. Migration files ship as runtime assets and resolve
-relative to the source or built module. The development history starts with the regenerated initial baseline, followed by
-organization authority and invitation migrations. Databases using the deleted earlier history
-need a reset; no upgrade/backfill from that history is supplied. Databases on the
-current baseline apply subsequent migrations normally.
+relative to the source or built module. The development history is one regenerated initial
+baseline containing metadata, teams and scoped invitation assignments. Databases using
+any deleted development history need an explicit reset; no upgrade/backfill is supplied.
+Startup never resets a database.
 
 Known SQL/Drizzle errors become `DatabaseError` with structured reasons and retryability.
 Internal causes may contain SQL or parameters; public error encoding and routine

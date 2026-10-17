@@ -4,9 +4,11 @@ import {
   OrganizationName,
   OrganizationRoleKey,
   OrganizationRoleKind,
-  OrganizationPermissions,
+  RolePermissions,
+  RoleScope,
 } from "#/common/organization";
 import {
+  TeamId,
   OrganizationMemberId,
   OrganizationRoleId,
   OrganizationRoleBindingId,
@@ -17,22 +19,25 @@ export const PublicOrganizationRole = Schema.Struct({
   key: OrganizationRoleKey,
   name: OrganizationName,
   kind: OrganizationRoleKind,
-  permissions: OrganizationPermissions,
+  scopeKind: RoleScope,
+  permissions: RolePermissions,
   archivedAt: Schema.NullOr(Schema.DateTimeUtcFromString),
   createdAt: Schema.DateTimeUtcFromString,
   updatedAt: Schema.DateTimeUtcFromString,
 });
 export type PublicOrganizationRole = typeof PublicOrganizationRole.Type;
 export const CreateOrganizationRoleRequest = Schema.Struct({
+  scopeKind: Schema.optionalKey(RoleScope),
   key: Schema.String,
   name: Schema.String,
-  permissions: OrganizationPermissions,
+  permissions: RolePermissions,
 });
 export const UpdateOrganizationRoleRequest = Schema.Struct({
   name: Schema.optionalKey(Schema.String),
-  permissions: Schema.optionalKey(OrganizationPermissions),
+  permissions: Schema.optionalKey(RolePermissions),
 });
 export const ListOrganizationRolesQuery = Schema.Struct({
+  scopeKind: Schema.optionalKey(RoleScope),
   cursor: Schema.optionalKey(OrganizationRoleId),
   limit: Schema.optionalKey(Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 100 }))),
   includeArchived: Schema.optionalKey(Schema.Boolean),
@@ -43,10 +48,13 @@ export const OrganizationRoleList = Schema.Struct({
   nextCursor: Schema.NullOr(OrganizationRoleId),
 });
 export const GrantOrganizationRoleRequest = Schema.Struct({
+  teamId: Schema.optionalKey(TeamId),
   memberId: OrganizationMemberId,
   roleId: OrganizationRoleId,
 });
 export const PublicOrganizationRoleBinding = Schema.Struct({
+  scopeKind: RoleScope,
+  teamId: Schema.NullOr(TeamId),
   id: OrganizationRoleBindingId,
   roleId: OrganizationRoleId,
   memberId: OrganizationMemberId,

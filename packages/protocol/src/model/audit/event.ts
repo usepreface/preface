@@ -4,13 +4,15 @@ import {
   OrganizationName,
   OrganizationSlug,
   OrganizationRoleKey,
-  OrganizationPermissions,
+  RolePermissions,
 } from "#/common/organization";
 import { AuditEventId } from "#/identifiers/audit";
 import { VerificationId, UserEmailId } from "#/identifiers/auth";
 import { BootstrapChallengeId } from "#/identifiers/bootstrap";
 import { InstallationId, InstanceOwnerId } from "#/identifiers/instance";
 import {
+  TeamId,
+  TeamMemberId,
   OrganizationInvitationId,
   OrganizationId,
   OrganizationMemberId,
@@ -141,14 +143,18 @@ const organizationRoleFields = {
   ]),
   targetType: Schema.Literal("organization_role"),
   targetId: OrganizationRoleId,
-  metadata: Schema.Struct({ key: OrganizationRoleKey, permissions: OrganizationPermissions }),
+  metadata: Schema.Struct({ key: OrganizationRoleKey, permissions: RolePermissions }),
 };
 const organizationBindingFields = {
   ...organizationActor,
   eventType: Schema.Literals(["organization.role_granted", "organization.role_revoked"]),
   targetType: Schema.Literal("organization_role_binding"),
   targetId: OrganizationRoleBindingId,
-  metadata: Schema.Struct({ roleId: OrganizationRoleId, memberId: OrganizationMemberId }),
+  metadata: Schema.Struct({
+    roleId: OrganizationRoleId,
+    memberId: OrganizationMemberId,
+    teamId: Schema.optionalKey(Schema.NullOr(TeamId)),
+  }),
 };
 const ownershipTransferFields = {
   ...organizationActor,
@@ -168,7 +174,10 @@ const invitationFields = {
   ]),
   targetType: Schema.Literal("organization_invitation"),
   targetId: OrganizationInvitationId,
-  metadata: Schema.Struct({ roleIds: Schema.Array(OrganizationRoleId) }),
+  metadata: Schema.Struct({
+    roleIds: Schema.Array(OrganizationRoleId),
+    teamIds: Schema.optionalKey(Schema.Array(TeamId)),
+  }),
 };
 
 const invitationVerificationFields = {
@@ -184,7 +193,34 @@ const invitationVerificationFields = {
   metadata: Schema.Struct({ challengeId: VerificationId, attempts: Schema.Natural }),
 };
 
+const teamFields = {
+  ...organizationActor,
+  eventType: Schema.Literals(["team.created", "team.updated", "team.archived"]),
+  targetType: Schema.Literal("team"),
+  targetId: TeamId,
+  metadata: Schema.Struct({ name: OrganizationName, slug: OrganizationSlug }),
+};
+const teamMemberFields = {
+  ...organizationActor,
+  eventType: Schema.Literals(["team.member_added", "team.member_removed"]),
+  targetType: Schema.Literal("team_member"),
+  targetId: TeamMemberId,
+  metadata: Schema.Struct({ teamId: TeamId, memberId: OrganizationMemberId }),
+};
+const profileFields = {
+  actorKind: Schema.Literal("user"),
+  actorUserId: UserId,
+  eventType: Schema.Literal("auth.profile_updated"),
+  targetType: Schema.Literal("user"),
+  targetId: UserId,
+  metadata: Schema.Struct({
+    changedFields: Schema.Array(Schema.Literals(["name", "title", "bio"])),
+  }),
+};
 export const RecordAuditEvent = Schema.Union([
+  Schema.Struct(profileFields),
+  Schema.Struct(teamFields),
+  Schema.Struct(teamMemberFields),
   Schema.Struct(invitationFields),
   Schema.Struct(invitationVerificationFields),
   Schema.Struct(organizationFields),
@@ -210,6 +246,9 @@ const storedFields = {
 };
 const organizationStoredFields = { id: AuditEventId, occurredAt: Schema.DateTimeUtcFromDate };
 export const AuditEvent = Schema.Union([
+  Schema.Struct({ ...profileFields, ...storedFields }),
+  Schema.Struct({ ...teamFields, ...organizationStoredFields }),
+  Schema.Struct({ ...teamMemberFields, ...organizationStoredFields }),
   Schema.Struct({ ...invitationFields, ...organizationStoredFields }),
   Schema.Struct({ ...invitationVerificationFields, ...organizationStoredFields }),
   Schema.Struct({ ...organizationFields, ...organizationStoredFields }),

@@ -1,3 +1,4 @@
+import type { UserMetadata } from "@usepreface/protocol";
 import type {
   PublicOrganization,
   PublicOrganizationMember,
@@ -16,7 +17,7 @@ import type { ResolvedOrganizationAccess } from "#/organization/access";
 
 export const publicOrganization = (organization: Organization): PublicOrganization => ({
   id: organization.id,
-  name: organization.name,
+  metadata: organization.metadata,
   slug: organization.slug,
   archivedAt: organization.archivedAt,
   createdAt: organization.createdAt,
@@ -25,6 +26,7 @@ export const publicOrganization = (organization: Organization): PublicOrganizati
 export const publicRole = (role: OrganizationRole): PublicOrganizationRole => ({
   id: role.id,
   key: role.key,
+  scopeKind: role.scopeKind,
   name: role.name,
   kind: role.kind,
   permissions: role.permissions,
@@ -34,12 +36,12 @@ export const publicRole = (role: OrganizationRole): PublicOrganizationRole => ({
 });
 export const publicMember = (
   member: OrganizationMember,
-  displayName: string,
+  metadata: UserMetadata,
   roles: readonly OrganizationRole[],
 ): PublicOrganizationMember => ({
   id: member.id,
   userId: member.userId,
-  displayName,
+  metadata,
   joinedAt: member.joinedAt,
   suspendedAt: member.suspendedAt,
   removedAt: member.removedAt,
@@ -48,6 +50,8 @@ export const publicMember = (
 export const publicBinding = (binding: OrganizationRoleBinding): PublicOrganizationRoleBinding => ({
   id: binding.id,
   roleId: binding.roleId,
+  scopeKind: binding.scopeKind,
+  teamId: binding.teamId,
   memberId: binding.memberId,
   grantedByMemberId: binding.grantedByMemberId,
   createdAt: binding.createdAt,

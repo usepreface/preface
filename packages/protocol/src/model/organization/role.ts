@@ -4,7 +4,10 @@ import {
   OrganizationName,
   OrganizationRoleKey,
   OrganizationRoleKind,
-  OrganizationPermissions,
+  RolePermissions,
+  RoleScope,
+  OrganizationPermission,
+  TeamPermission,
 } from "#/common/organization";
 import { OrganizationId, OrganizationRoleId } from "#/identifiers/organization";
 
@@ -13,20 +16,29 @@ export const CreateOrganizationRole = Schema.Struct({
   key: OrganizationRoleKey,
   name: OrganizationName,
   kind: OrganizationRoleKind,
-  permissions: OrganizationPermissions,
+  scopeKind: Schema.optionalKey(RoleScope),
+  permissions: RolePermissions,
 });
 export type CreateOrganizationRole = typeof CreateOrganizationRole.Type;
 export const OrganizationRole = Schema.Struct({
   id: OrganizationRoleId,
   ...CreateOrganizationRole.fields,
+  scopeKind: RoleScope,
   archivedAt: Schema.NullOr(Schema.DateTimeUtcFromDate),
   createdAt: Schema.DateTimeUtcFromDate,
   updatedAt: Schema.DateTimeUtcFromDate,
-});
+}).check(
+  Schema.makeFilter(
+    (role) =>
+      role.permissions.every(
+        Schema.is(role.scopeKind === "organization" ? OrganizationPermission : TeamPermission),
+      ) || "Wrong-scope permission",
+  ),
+);
 export type OrganizationRole = typeof OrganizationRole.Type;
 
 export const UpdateOrganizationRole = Schema.Struct({
   name: OrganizationName,
-  permissions: OrganizationPermissions,
+  permissions: RolePermissions,
 });
 export type UpdateOrganizationRole = typeof UpdateOrganizationRole.Type;

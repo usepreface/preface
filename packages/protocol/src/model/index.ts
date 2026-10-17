@@ -60,3 +60,5 @@ export {
   OrganizationInvitation,
   InvitationAssignment,
 } from "#/model/organization/invitation";
+
+export { CreateTeam, Team, TeamMember } from "#/model/organization/team";

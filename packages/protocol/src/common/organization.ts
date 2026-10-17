@@ -12,6 +12,8 @@ export const OrganizationRoleKey = Schema.String.check(
   Schema.isPattern(/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/),
 );
 export const OrganizationPermission = Schema.Literals([
+  "teams.read",
+  "teams.manage",
   "organization.read",
   "organization.update",
   "organization.archive",
@@ -31,3 +33,19 @@ export const OrganizationPermissions = Schema.Array(OrganizationPermission).chec
 export const OrganizationRoleKind = Schema.Literals(["builtin", "custom"]);
 export const OrganizationLoginMethod = Schema.Literals(["email_code", "email_link"]);
 export type OrganizationLoginMethod = typeof OrganizationLoginMethod.Type;
+
+export const TeamPermission = Schema.Literals([
+  "team.read",
+  "team.update",
+  "team.archive",
+  "team.members.read",
+  "team.members.manage",
+  "team.roles.read",
+  "team.roles.assign",
+]);
+export type TeamPermission = typeof TeamPermission.Type;
+export const RoleScope = Schema.Literals(["organization", "team"]);
+export type RoleScope = typeof RoleScope.Type;
+export const RolePermission = Schema.Union([OrganizationPermission, TeamPermission]);
+export type RolePermission = typeof RolePermission.Type;
+export const RolePermissions = Schema.Array(RolePermission).check(Schema.isUnique());

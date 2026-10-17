@@ -3,6 +3,8 @@ import { Effect, Predicate, Schema } from "effect";
 import { DatabaseRepository, TransactionService } from "@usepreface/database";
 import {
   OrganizationError,
+  TeamPermission,
+  OrganizationPermission,
   type OrganizationId,
   type OrganizationRoleId,
 } from "@usepreface/protocol";
@@ -55,7 +57,17 @@ export const makeOrganizationRoleApplication = Effect.gen(function* () {
         });
         if (builtinOrganizationRoles.some((role) => role.key === decoded.key))
           return yield* new OrganizationError({ code: "BUILTIN_ROLE_PROTECTED" });
-        yield* requireDelegablePermissions(resolved.permissions, decoded.permissions);
+        if (decoded.scopeKind === "team") {
+          if (
+            !resolved.permissions.includes("teams.manage") ||
+            !decoded.permissions.every(Schema.is(TeamPermission))
+          )
+            return yield* new OrganizationError({ code: "ROLE_NOT_ASSIGNABLE" });
+        } else {
+          if (!decoded.permissions.every(Schema.is(OrganizationPermission)))
+            return yield* new OrganizationError({ code: "INVALID_INPUT" });
+          yield* requireDelegablePermissions(resolved.permissions, decoded.permissions);
+        }
         const role = yield* repository.organization.role
           .create({ ...decoded, organizationId, kind: "custom" })
           .pipe(
@@ -98,9 +110,19 @@ export const makeOrganizationRoleApplication = Effect.gen(function* () {
           return yield* new OrganizationError({ code: "ROLE_NOT_FOUND" });
         if (current.kind === "builtin")
           return yield* new OrganizationError({ code: "BUILTIN_ROLE_PROTECTED" });
-        yield* requireDelegablePermissions(resolved.permissions, current.permissions);
+        if (current.scopeKind === "team" && !resolved.permissions.includes("teams.manage"))
+          return yield* new OrganizationError({ code: "FORBIDDEN" });
+        if (current.scopeKind === "organization")
+          yield* requireDelegablePermissions(resolved.permissions, current.permissions);
         const permissions = decoded.permissions ?? current.permissions;
-        yield* requireDelegablePermissions(resolved.permissions, permissions);
+        if (
+          !permissions.every(
+            Schema.is(current.scopeKind === "team" ? TeamPermission : OrganizationPermission),
+          )
+        )
+          return yield* new OrganizationError({ code: "INVALID_INPUT" });
+        if (current.scopeKind === "organization")
+          yield* requireDelegablePermissions(resolved.permissions, permissions);
         const role = yield* repository.organization.role.update(organizationId, roleId, {
           name: decoded.name ?? current.name,
           permissions,
@@ -134,7 +156,10 @@ export const makeOrganizationRoleApplication = Effect.gen(function* () {
         if (role === undefined) return yield* new OrganizationError({ code: "ROLE_NOT_FOUND" });
         if (role.kind === "builtin")
           return yield* new OrganizationError({ code: "BUILTIN_ROLE_PROTECTED" });
-        yield* requireDelegablePermissions(resolved.permissions, role.permissions);
+        if (role.scopeKind === "team" && !resolved.permissions.includes("teams.manage"))
+          return yield* new OrganizationError({ code: "FORBIDDEN" });
+        if (role.scopeKind === "organization")
+          yield* requireDelegablePermissions(resolved.permissions, role.permissions);
         if (role.archivedAt !== null) return;
         yield* repository.organization.role.archive(organizationId, roleId);
         const revoked = yield* repository.organization.roleBinding.revokeAllByRoleId(

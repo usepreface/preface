@@ -17,6 +17,7 @@ import { CreateInvitationInput, InvitationTokenInput } from "@usepreface/protoco
 import type { OrganizationInvitation } from "@usepreface/protocol/model";
 
 import { OrganizationAccess } from "#/organization/access";
+import { invitationTeams } from "#/organization/invitation/assignments";
 import { makeInvitationAudit } from "#/organization/invitation/audit";
 import { makeInvitationAuthority } from "#/organization/invitation/authority";
 import { makeInvitationDelivery } from "#/organization/invitation/delivery";
@@ -52,7 +53,10 @@ export const makeInvitationManagement = Effect.gen(function* () {
       id,
       email,
       invitedByMemberId,
-      roleIds: assignments.map((assignment) => assignment.roleId),
+      roleIds: assignments
+        .filter((assignment) => assignment.teamId === null)
+        .map((assignment) => assignment.roleId),
+      teams: invitationTeams(assignments),
       expiresAt,
       acceptedAt,
       acceptedByUserId,
@@ -108,6 +112,12 @@ export const makeInvitationManagement = Effect.gen(function* () {
           decoded.roleIds,
           resolved.permissions,
         );
+        const teams = yield* authority.requireTeams(
+          organizationId,
+          resolved.member.id,
+          resolved.permissions,
+          decoded.teams ?? [],
+        );
         const previous = yield* repository.organization.invitation.findPendingByEmail(
           organizationId,
           decoded.email,
@@ -118,7 +128,7 @@ export const makeInvitationManagement = Effect.gen(function* () {
           id,
           organization: resolved.organization,
           email: decoded.email,
-          inviterName: resolved.user.displayName,
+          inviterName: resolved.user.metadata.name,
           roles,
           token,
           tokenHash,
@@ -135,6 +145,10 @@ export const makeInvitationManagement = Effect.gen(function* () {
             expiresAt,
           },
           decoded.roleIds,
+          teams.map((assignment) => ({
+            teamId: assignment.team.id,
+            roleIds: assignment.roles.map((role) => role.id),
+          })),
         );
         yield* audit.record(invitation, "organization.invitation_created", actor);
         return yield* view(invitation);
@@ -186,6 +200,15 @@ export const makeInvitationManagement = Effect.gen(function* () {
           inviter.roles.map((role) => role.id),
           resolved.permissions,
         );
+        yield* authority.requireTeams(
+          organizationId,
+          resolved.member.id,
+          resolved.permissions,
+          inviter.teams.map((assignment) => ({
+            teamId: assignment.team.id,
+            roleIds: assignment.roles.map((role) => role.id),
+          })),
+        );
         yield* emails.cancel(invitation.emailJobId);
         yield* retireProofs(invitation);
         const expiresAt = DateTime.addDuration(yield* DateTime.now, "7 days");
@@ -193,7 +216,7 @@ export const makeInvitationManagement = Effect.gen(function* () {
           id,
           organization: resolved.organization,
           email: invitation.email,
-          inviterName: inviter.user.displayName,
+          inviterName: inviter.user.metadata.name,
           roles: inviter.roles,
           token,
           tokenHash,
@@ -235,7 +258,7 @@ export const makeInvitationManagement = Effect.gen(function* () {
     const { invitation, organization } = yield* authority.requireToken(decoded);
     yield* authority.requireInviter(invitation);
     return {
-      organization: { id: organization.id, name: organization.name },
+      organization: { id: organization.id, name: organization.metadata.name },
       expiresAt: invitation.expiresAt,
     };
   });

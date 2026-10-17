@@ -8,7 +8,7 @@ export const rejectLifecycleAudit = Effect.gen(function* () {
   yield* Effect.acquireRelease(
     sql`create function audit.reject_test_lifecycle() returns trigger language plpgsql as $$
       begin
-        if new.event_type in ('instance.bootstrap_completed', 'instance.bootstrap_verification_requested', 'auth.session_revoked', 'auth.session_authenticated', 'auth.email_sign_in_requested', 'organization.created', 'organization.updated', 'organization.role_archived', 'organization.member_removed', 'organization.ownership_transferred', 'organization.invitation_created', 'organization.invitation_accepted') then
+        if new.event_type in ('instance.bootstrap_completed', 'instance.bootstrap_verification_requested', 'auth.session_revoked', 'auth.session_authenticated', 'auth.email_sign_in_requested', 'organization.created', 'organization.updated', 'organization.role_archived', 'organization.member_removed', 'organization.ownership_transferred', 'organization.invitation_created', 'organization.invitation_accepted', 'team.created', 'team.member_removed', 'auth.profile_updated') then
           raise exception 'Lifecycle audit unavailable';
         end if;
         return new;

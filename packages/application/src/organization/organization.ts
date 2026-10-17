@@ -10,8 +10,9 @@ import type {
 import { CreateOrganizationInput, UpdateOrganizationInput } from "@usepreface/protocol/input";
 
 import { OrganizationAccess } from "#/organization/access";
-import { builtinOrganizationRoles } from "#/organization/builtin-roles";
+import { builtinOrganizationRoles, builtinTeamRoles } from "#/organization/builtin-roles";
 import { publicAccess, publicMember, publicOrganization } from "#/organization/views";
+import { mergeOrganizationMetadata } from "#/profile/metadata";
 
 export const makeOrganizationApplication = Effect.gen(function* () {
   const repository = yield* DatabaseRepository;
@@ -31,7 +32,7 @@ export const makeOrganizationApplication = Effect.gen(function* () {
     const resolved = yield* access.requirePermissions(actor, organizationId, ["organization.read"]);
     return {
       organization: publicOrganization(resolved.organization),
-      membership: publicMember(resolved.member, resolved.user.displayName, resolved.roles),
+      membership: publicMember(resolved.member, resolved.user.metadata, resolved.roles),
       access: publicAccess(resolved),
     } satisfies OrganizationDetail;
   });
@@ -49,7 +50,11 @@ export const makeOrganizationApplication = Effect.gen(function* () {
         if ((yield* repository.instance.owner.findActiveByUserId(actor.user.id)) === undefined)
           return yield* new OrganizationError({ code: "FORBIDDEN" });
         const organization = yield* repository.organization.organization
-          .create({ ...decoded, createdByUserId: actor.user.id })
+          .create({
+            ...decoded,
+            metadata: { version: 1, ...decoded.metadata },
+            createdByUserId: actor.user.id,
+          })
           .pipe(
             Effect.mapError((error) =>
               Predicate.isTagged(error.reason, "UniqueViolation") &&
@@ -86,6 +91,13 @@ export const makeOrganizationApplication = Effect.gen(function* () {
             });
           }
         }
+        for (const definition of builtinTeamRoles)
+          yield* repository.organization.role.create({
+            organizationId: organization.id,
+            scopeKind: "team",
+            kind: "builtin",
+            ...definition,
+          });
         yield* repository.organization.authPolicy.createDefault(organization.id, member.id);
         yield* repository.audit.event.append({
           organizationId: organization.id,
@@ -94,7 +106,7 @@ export const makeOrganizationApplication = Effect.gen(function* () {
           eventType: "organization.created",
           targetType: "organization",
           targetId: organization.id,
-          metadata: { name: organization.name, slug: organization.slug },
+          metadata: { name: organization.metadata.name, slug: organization.slug },
         });
         return yield* get(actor, organization.id);
       }),
@@ -134,7 +146,7 @@ export const makeOrganizationApplication = Effect.gen(function* () {
         );
         const organization = yield* repository.organization.organization
           .update(organizationId, {
-            name: decoded.name ?? resolved.organization.name,
+            metadata: mergeOrganizationMetadata(resolved.organization.metadata, decoded.metadata),
             slug: decoded.slug ?? resolved.organization.slug,
           })
           .pipe(
@@ -154,7 +166,7 @@ export const makeOrganizationApplication = Effect.gen(function* () {
           eventType: "organization.updated",
           targetType: "organization",
           targetId: organizationId,
-          metadata: { name: organization.name, slug: organization.slug },
+          metadata: { name: organization.metadata.name, slug: organization.slug },
         });
         return publicOrganization(organization);
       }),
@@ -182,7 +194,7 @@ export const makeOrganizationApplication = Effect.gen(function* () {
           eventType: "organization.archived",
           targetType: "organization",
           targetId: organizationId,
-          metadata: { name: organization.name, slug: organization.slug },
+          metadata: { name: organization.metadata.name, slug: organization.slug },
         });
         return publicOrganization(organization);
       }),
@@ -210,7 +222,7 @@ export const makeOrganizationApplication = Effect.gen(function* () {
           eventType: "organization.restored",
           targetType: "organization",
           targetId: organizationId,
-          metadata: { name: organization.name, slug: organization.slug },
+          metadata: { name: organization.metadata.name, slug: organization.slug },
         });
         return publicOrganization(organization);
       }),

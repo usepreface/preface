@@ -10,11 +10,15 @@ import { OrganizationOwnershipApi } from "#/groups/organization-ownership";
 import { OrganizationRoleBindingsApi } from "#/groups/organization-role-bindings";
 import { OrganizationRolesApi } from "#/groups/organization-roles";
 import { OrganizationsApi } from "#/groups/organizations";
+import { ProfileApi } from "#/groups/profile";
 import { SessionApi } from "#/groups/session";
 import { SessionsApi } from "#/groups/sessions";
+import { TeamsApi } from "#/groups/teams";
 
 export class PrefaceApi extends HttpApi.make("PrefaceApi")
   .add(
+    TeamsApi,
+    ProfileApi,
     InstanceSetupApi,
     SessionApi,
     EmailSignInApi,

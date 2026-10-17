@@ -79,7 +79,7 @@ layer(ApplicationTestLayer)("authenticated sessions", (it) => {
       const database = yield* Database;
       const completed = yield* completeTestBootstrap;
       const otherUser = yield* repository.auth.user.create({
-        displayName: "Other User",
+        metadata: { version: 1, name: "Other User" },
       });
 
       yield* application.auth.session.revokeCurrent({
@@ -125,7 +125,9 @@ layer(ApplicationTestLayer)("authenticated sessions", (it) => {
         const first = yield* completeTestBootstrap;
         const second = yield* signInTestUser();
         const third = yield* signInTestUser();
-        const other = yield* repository.auth.user.create({ displayName: "Other" });
+        const other = yield* repository.auth.user.create({
+          metadata: { version: 1, name: "Other" },
+        });
         yield* repository.auth.userEmail.create({
           userId: other.id,
           email: "other@example.test",

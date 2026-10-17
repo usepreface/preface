@@ -40,7 +40,7 @@ export const makeSessionApplication = Effect.gen(function* () {
     const actor: SessionActor = {
       user: {
         id: user.id,
-        displayName: user.displayName,
+        metadata: user.metadata,
         email: user.email,
         emailVerifiedAt: user.emailVerifiedAt,
       },

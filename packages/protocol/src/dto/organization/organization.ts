@@ -1,12 +1,13 @@
 import { Schema } from "effect";
 
-import { OrganizationName, OrganizationSlug, OrganizationPermissions } from "#/common/organization";
+import { OrganizationSlug, OrganizationPermissions } from "#/common/organization";
 import { PublicOrganizationMember } from "#/dto/organization/member";
 import { OrganizationId, OrganizationMemberId } from "#/identifiers/organization";
+import { OrganizationMetadata } from "#/metadata/organization";
 
 export const PublicOrganization = Schema.Struct({
   id: OrganizationId,
-  name: OrganizationName,
+  metadata: OrganizationMetadata,
   slug: OrganizationSlug,
   archivedAt: Schema.NullOr(Schema.DateTimeUtcFromString),
   createdAt: Schema.DateTimeUtcFromString,
@@ -26,11 +27,16 @@ export const OrganizationDetail = Schema.Struct({
 });
 export type OrganizationDetail = typeof OrganizationDetail.Type;
 export const CreateOrganizationRequest = Schema.Struct({
-  name: Schema.String,
+  metadata: Schema.Struct({ name: Schema.String, description: Schema.optionalKey(Schema.String) }),
   slug: Schema.String,
 });
 export const UpdateOrganizationRequest = Schema.Struct({
-  name: Schema.optionalKey(Schema.String),
+  metadata: Schema.optionalKey(
+    Schema.Struct({
+      name: Schema.optionalKey(Schema.String),
+      description: Schema.optionalKey(Schema.NullOr(Schema.String)),
+    }),
+  ),
   slug: Schema.optionalKey(Schema.String),
 });
 export const ListOrganizationsQuery = Schema.Struct({

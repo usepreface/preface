@@ -1,11 +1,12 @@
 import { Schema } from "effect";
 
-import { OrganizationName, OrganizationSlug } from "#/common/organization";
+import { OrganizationSlug } from "#/common/organization";
 import { OrganizationId } from "#/identifiers/organization";
 import { UserId } from "#/identifiers/user";
+import { OrganizationMetadata } from "#/metadata/organization";
 
 export const CreateOrganization = Schema.Struct({
-  name: OrganizationName,
+  metadata: OrganizationMetadata,
   slug: OrganizationSlug,
   createdByUserId: UserId,
 });
@@ -19,5 +20,8 @@ export const Organization = Schema.Struct({
 });
 export type Organization = typeof Organization.Type;
 
-export const UpdateOrganization = Schema.Struct({ name: OrganizationName, slug: OrganizationSlug });
+export const UpdateOrganization = Schema.Struct({
+  metadata: OrganizationMetadata,
+  slug: OrganizationSlug,
+});
 export type UpdateOrganization = typeof UpdateOrganization.Type;

@@ -10,14 +10,15 @@ keep their installation-wide identity and session across organizations.
 The `organization` PostgreSQL schema contains its authority tables, plus invitation tables documented in
 [invitation admission](invitations.md):
 
-- `organization`: UUIDv7 identity, name, unique normalized slug, creating user,
+- `organization`: UUIDv7 identity, versioned metadata, unique normalized slug, creating user,
   archive state and timestamps.
 - `member`: stable organization/user relationship, original join time, suspension,
   removal and timestamps. The organization/user pair is unique.
-- `role`: organization-local key, name, builtin/custom kind, code-owned permission
+- `role`: organization-local scope/key, name, builtin/custom kind, code-owned permission
   keys, archive state and timestamps. Keys remain reserved after retirement.
 - `role_binding`: direct member grant, role, granting member, time and revocation.
-  A partial unique index admits one active grant per member/role pair.
+  Separate partial indexes admit one active grant per member/role at each organization or team scope.
+  Team grants additionally reference a same-organization direct team membership.
 - `auth_policy`: one policy per organization, positive revision, allowed local email
   methods, updating member and timestamps.
 
@@ -64,7 +65,7 @@ explicit owner binding, default auth policy and required audit in one transactio
 Only the named slug uniqueness conflict becomes `SLUG_UNAVAILABLE`. Failed audit
 rolls back all creation rows. Concurrent attempts for the same slug admit one winner.
 
-Name and slug updates require `organization.update`. Archive and restore require
+Metadata and slug updates require `organization.update`. Archive and restore require
 explicit organization ownership. Archive blocks ordinary access without removing
 members or grants. Restore has an explicit archived-owner authorization path;
 ordinary operations cannot opt out of archive checks. Repeated archive/restore
@@ -73,14 +74,15 @@ calls retain state without appending another transition event.
 ## Roles and delegation
 
 Built-ins are owner, administrator and member. Their definitions are code-owned
-and seeded per organization. Owner has all current permissions; administrator has
-all except `organization.archive`; member has organization/member/role read access.
+and seeded per organization, together with team administrator/member definitions. Owner has all organization permissions; administrator has
+all except `organization.archive`; member has organization/member/role/team-directory read access. Team grants never contribute
+to organization permissions; see [teams and profiles](teams-profiles.md).
 The owner role is additionally recognized as a protected authority, not something
 custom permission strings can manufacture.
 
 The current vocabulary is `organization.read`, `organization.update`,
 `organization.archive`, `members.read`, `members.manage`, `roles.read`,
-`roles.manage` and `roles.assign`. Custom-role permissions must fit the actor's
+`roles.manage`, `roles.assign`, `teams.read` and `teams.manage`. Custom-role permissions must fit the actor's
 current delegation envelope and cannot include archiving. Editing/retiring a role
 also requires authority over its existing permissions, preventing takeover of a
 more powerful custom role. Built-ins cannot be edited or retired.
@@ -95,7 +97,7 @@ changes affect subsequent requests immediately through current-state checks.
 ## Membership and ownership lifecycle
 
 Suspension blocks organization access while retaining assignments for authorized
-reinstatement. Removal and leaving revoke active role bindings transactionally;
+reinstatement. Removal and leaving remove direct team memberships and revoke all organization/team role bindings transactionally;
 clearing lifecycle state alone cannot resurrect those grants. Removed memberships
 cannot be reinstated through the suspension endpoint. Organization removal does
 not revoke installation-wide sessions or authority in other organizations.
@@ -132,7 +134,7 @@ strings. Logs normalize parameterized routes rather than retaining tenant IDs.
 There is no public direct-member-creation endpoint. Organization creation admits
 its first member; [invitations](invitations.md) own additional admission and readmission.
 Authority tests can seed members through persistence fixtures; invitation tests
-exercise the actual admission workflow. Teams/groups, SSO, custom
+exercise the actual admission workflow. [Teams](teams-profiles.md) use direct memberships without groups. SSO, custom
 policy editing, permanent deletion, organization content and dashboard integration
 are outside this implemented phase.
 

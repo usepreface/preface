@@ -1,15 +1,15 @@
 import { Schema } from "effect";
 
-import { DisplayName as UserDisplayName } from "#/common/display-name";
 import { EmailAddress as UserEmail } from "#/common/email";
 import { UserId } from "#/identifiers/user";
+import { UserMetadata } from "#/metadata/user";
 
 export { DisplayName as UserDisplayName } from "#/common/display-name";
 export { EmailAddress as UserEmail } from "#/common/email";
 
 export const User = Schema.Struct({
   id: UserId,
-  displayName: UserDisplayName,
+  metadata: UserMetadata,
   disabledAt: Schema.NullOr(Schema.DateTimeUtcFromDate),
   createdAt: Schema.DateTimeUtcFromDate,
   updatedAt: Schema.DateTimeUtcFromDate,
@@ -23,5 +23,5 @@ export const UserProfile = Schema.Struct({
   emailVerifiedAt: Schema.NullOr(Schema.DateTimeUtcFromDate),
 });
 export type UserProfile = typeof UserProfile.Type;
-export const CreateUser = Schema.Struct({ displayName: UserDisplayName });
+export const CreateUser = Schema.Struct({ metadata: UserMetadata });
 export type CreateUser = typeof CreateUser.Type;

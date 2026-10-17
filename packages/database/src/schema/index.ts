@@ -19,6 +19,8 @@ export {
 export {
   organizationInvitation,
   invitationAssignment,
+  team,
+  teamMember,
   organizationSchema,
   organization,
   organizationMember,

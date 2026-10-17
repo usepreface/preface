@@ -1,6 +1,6 @@
 import { Context, DateTime, Effect, Layer, Schema } from "effect";
 
-import type { OrganizationId, OrganizationRoleId } from "@usepreface/protocol";
+import type { OrganizationId, OrganizationRoleId, RoleScope } from "@usepreface/protocol";
 import {
   CreateOrganizationRole,
   OrganizationRole,
@@ -28,12 +28,17 @@ const makeOrganizationRoleRepository = Effect.gen(function* () {
   const findByKey = Effect.fn("OrganizationRoleRepository.findByKey")(function* (
     organizationId: OrganizationId,
     key: string,
+    scopeKind: RoleScope = "organization",
   ) {
     const [row] = yield* database
       .select()
       .from(organizationRole)
       .where(
-        and(eq(organizationRole.organizationId, organizationId), eq(organizationRole.key, key)),
+        and(
+          eq(organizationRole.organizationId, organizationId),
+          eq(organizationRole.key, key),
+          eq(organizationRole.scopeKind, scopeKind),
+        ),
       );
     return row === undefined ? undefined : decode(row);
   }, mapToDatabaseError);
@@ -47,6 +52,7 @@ const makeOrganizationRoleRepository = Effect.gen(function* () {
         ...Schema.encodeSync(CreateOrganizationRole)(input),
         organizationId: input.organizationId,
         permissions: input.permissions,
+        scopeKind: input.scopeKind ?? "organization",
         createdAt: now,
         updatedAt: now,
       })
@@ -58,6 +64,7 @@ const makeOrganizationRoleRepository = Effect.gen(function* () {
     function* (
       organizationId: OrganizationId,
       input: {
+        readonly scopeKind?: RoleScope;
         readonly cursor?: OrganizationRoleId;
         readonly limit: number;
         readonly includeArchived?: boolean;
@@ -69,6 +76,7 @@ const makeOrganizationRoleRepository = Effect.gen(function* () {
         .where(
           and(
             eq(organizationRole.organizationId, organizationId),
+            eq(organizationRole.scopeKind, input.scopeKind ?? "organization"),
             input.includeArchived === true ? undefined : isNull(organizationRole.archivedAt),
             input.cursor === undefined ? undefined : lt(organizationRole.id, input.cursor),
           ),

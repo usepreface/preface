@@ -1,4 +1,4 @@
-import { Context, Effect, Layer } from "effect";
+import { Context, Effect, Layer, Schema } from "effect";
 
 import { DatabaseRepository } from "@usepreface/database";
 import {
@@ -6,7 +6,7 @@ import {
   OrganizationError,
   type OrganizationId,
   type OrganizationMemberId,
-  type OrganizationPermission,
+  OrganizationPermission,
 } from "@usepreface/protocol";
 import type { SessionActor } from "@usepreface/protocol/dto";
 
@@ -77,7 +77,11 @@ const makeOrganizationAccess = Effect.gen(function* () {
       member.id,
     );
     const roles = grants.map((grant) => grant.role);
-    const permissions = [...new Set(roles.flatMap((role) => role.permissions))].toSorted();
+    const permissions = [
+      ...new Set(
+        roles.flatMap((role) => role.permissions).filter(Schema.is(OrganizationPermission)),
+      ),
+    ].toSorted();
     const isOwner = roles.some((role) => role.kind === "builtin" && role.key === "owner");
     return {
       organization,

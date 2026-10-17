@@ -3,11 +3,12 @@ import { Schema } from "effect";
 import { OrganizationName, OrganizationRoleKey, OrganizationRoleKind } from "#/common/organization";
 import { OrganizationMemberId, OrganizationRoleId } from "#/identifiers/organization";
 import { UserId } from "#/identifiers/user";
+import { UserMetadata } from "#/metadata/user";
 
 export const PublicOrganizationMember = Schema.Struct({
   id: OrganizationMemberId,
   userId: UserId,
-  displayName: OrganizationName,
+  metadata: UserMetadata,
   joinedAt: Schema.DateTimeUtcFromString,
   suspendedAt: Schema.NullOr(Schema.DateTimeUtcFromString),
   removedAt: Schema.NullOr(Schema.DateTimeUtcFromString),

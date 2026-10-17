@@ -6,9 +6,11 @@ import { OrganizationMemberRepository } from "#/repositories/organization/member
 import { OrganizationRepository } from "#/repositories/organization/organization";
 import { OrganizationRoleRepository } from "#/repositories/organization/role";
 import { OrganizationRoleBindingRepository } from "#/repositories/organization/role-binding";
+import { TeamRepository } from "#/repositories/organization/team";
 
 const makeOrganizationRepositories = Effect.gen(function* () {
   return {
+    team: yield* TeamRepository,
     invitation: yield* InvitationRepository,
     organization: yield* OrganizationRepository,
     member: yield* OrganizationMemberRepository,
@@ -24,6 +26,7 @@ export class OrganizationRepositories extends Context.Service<
   static readonly layer = Layer.effect(OrganizationRepositories, makeOrganizationRepositories).pipe(
     Layer.provide(
       Layer.mergeAll(
+        TeamRepository.layer,
         InvitationRepository.layer,
         OrganizationRepository.layer,
         OrganizationMemberRepository.layer,
@@ -42,3 +45,5 @@ export {
   OrganizationRoleBindingRepository,
   OrganizationAuthPolicyRepository,
 };
+
+export { TeamRepository };

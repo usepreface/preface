@@ -12,6 +12,14 @@ describe("public HTTP contract", () => {
     const spec = OpenApi.fromApi(PrefaceApi);
 
     expect(Object.keys(spec.paths)).toEqual([
+      "/api/v1/organizations/{organizationId}/teams",
+      "/api/v1/organizations/{organizationId}/teams/{teamId}",
+      "/api/v1/organizations/{organizationId}/teams/{teamId}/archive",
+      "/api/v1/organizations/{organizationId}/teams/{teamId}/access",
+      "/api/v1/organizations/{organizationId}/teams/{teamId}/roles",
+      "/api/v1/organizations/{organizationId}/teams/{teamId}/members",
+      "/api/v1/organizations/{organizationId}/teams/{teamId}/members/{memberId}",
+      "/api/v1/users/me",
       "/api/v1/instance/setup",
       "/api/v1/instance/setup/inspect",
       "/api/v1/instance/setup/resend",

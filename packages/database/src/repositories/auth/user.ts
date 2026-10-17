@@ -1,6 +1,6 @@
 import { Context, DateTime, Effect, Layer, Option, Schema } from "effect";
 
-import type { UserId } from "@usepreface/protocol";
+import { UserMetadata, type UserId } from "@usepreface/protocol";
 import { CreateUser, User, UserProfile } from "@usepreface/protocol/model";
 import { and, eq, isNull, getTableColumns } from "drizzle-orm";
 
@@ -40,7 +40,11 @@ const makeUserRepository = Effect.gen(function* () {
     const now = DateTime.toDateUtc(yield* DateTime.now);
     const [row] = yield* database
       .insert(user)
-      .values({ ...Schema.encodeSync(CreateUser)(input), createdAt: now, updatedAt: now })
+      .values({
+        ...Schema.encodeSync(CreateUser)(input),
+        createdAt: now,
+        updatedAt: now,
+      })
       .returning();
     if (row === undefined) return yield* Effect.die(new Error("User insert returned no row"));
     return decode(row);
@@ -53,7 +57,27 @@ const makeUserRepository = Effect.gen(function* () {
     const [row] = yield* database.select().from(user).where(eq(user.id, userId)).for("update");
     return row === undefined ? undefined : decode(row);
   }, mapToDatabaseError);
-  return { findById, findProfileById, create, lockById } as const;
+  const updateMetadata = Effect.fn("UserRepository.updateMetadata")(function* (
+    userId: UserId,
+    metadata: UserMetadata,
+  ) {
+    const [row] = yield* database
+      .update(user)
+      .set({
+        metadata: Schema.encodeSync(UserMetadata)(metadata),
+        updatedAt: DateTime.toDateUtc(yield* DateTime.now),
+      })
+      .where(eq(user.id, userId))
+      .returning();
+    return row === undefined ? undefined : decode(row);
+  }, mapToDatabaseError);
+  return {
+    findById,
+    findProfileById,
+    create,
+    lockById,
+    updateMetadata,
+  } as const;
 });
 export class UserRepository extends Context.Service<
   UserRepository,

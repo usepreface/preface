@@ -98,7 +98,7 @@ layer(RepositoryTestLayer)("bootstrap persistence", (it) => {
             const initialized = yield* repository.instance.initialize();
             const now = yield* DateTime.now;
             const account = yield* repository.auth.user.create({
-              displayName: "First Owner",
+              metadata: { version: 1, name: "First Owner" },
             });
             yield* repository.auth.userEmail.create({
               userId: account.id,

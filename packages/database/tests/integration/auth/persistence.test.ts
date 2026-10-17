@@ -18,7 +18,7 @@ layer(RepositoryTestLayer)("auth persistence boundary", (it) => {
         yield* repository.instance.initialize();
         const now = yield* DateTime.now;
         const account = yield* repository.auth.user.create({
-          displayName: "Preface Owner",
+          metadata: { version: 1, name: "Preface Owner" },
         });
         const address = yield* repository.auth.userEmail.create({
           userId: account.id,

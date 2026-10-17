@@ -1,6 +1,7 @@
 import { Context, DateTime, Effect, Layer, Schema } from "effect";
 
 import type {
+  TeamId,
   OrganizationId,
   OrganizationInvitationId,
   OrganizationRoleId,
@@ -58,7 +59,14 @@ const makeInvitationRepository = Effect.gen(function* () {
     return rows.map((row) => decode(row));
   }, mapToDatabaseError);
   const create = Effect.fn("InvitationRepository.create")(
-    function* (input: CreateOrganizationInvitation, roleIds: readonly OrganizationRoleId[]) {
+    function* (
+      input: CreateOrganizationInvitation,
+      roleIds: readonly OrganizationRoleId[],
+      teams: readonly {
+        readonly teamId: TeamId;
+        readonly roleIds: readonly OrganizationRoleId[];
+      }[] = [],
+    ) {
       const now = DateTime.toDateUtc(yield* DateTime.now);
       const [row] = yield* database
         .insert(invitation)
@@ -74,14 +82,26 @@ const makeInvitationRepository = Effect.gen(function* () {
         .returning();
       if (row === undefined)
         return yield* Effect.die(new Error("Invitation insert returned no row"));
-      yield* database.insert(invitationAssignment).values(
-        roleIds.map((roleId) => ({
+      yield* database.insert(invitationAssignment).values([
+        ...roleIds.map((roleId) => ({
+          scopeKind: "organization" as const,
+          teamId: null,
           organizationId: input.organizationId,
           invitationId: input.id,
           roleId,
           createdAt: now,
         })),
-      );
+        ...teams.flatMap((team) =>
+          team.roleIds.map((roleId) => ({
+            scopeKind: "team" as const,
+            teamId: team.teamId,
+            roleId,
+            organizationId: input.organizationId,
+            invitationId: input.id,
+            createdAt: now,
+          })),
+        ),
+      ]);
       return decode(row);
     },
     transaction.run,

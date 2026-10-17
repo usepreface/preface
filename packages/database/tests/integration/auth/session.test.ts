@@ -13,7 +13,7 @@ layer(RepositoryTestLayer)("session lifecycle", (it) => {
       const repository = yield* DatabaseRepository;
       const database = yield* Database;
       const account = yield* repository.auth.user.create({
-        displayName: "Session Owner",
+        metadata: { version: 1, name: "Session Owner" },
       });
       const createdAt = yield* DateTime.now;
       const expiresAt = DateTime.add(createdAt, { minutes: 10 });
@@ -64,11 +64,9 @@ layer(RepositoryTestLayer)("session lifecycle", (it) => {
       yield* (yield* TestDatabase).reset;
       const repository = yield* DatabaseRepository;
       const database = yield* Database;
-      const owner = yield* repository.auth.user.create({
-        displayName: "Owner",
-      });
+      const owner = yield* repository.auth.user.create({ metadata: { version: 1, name: "Owner" } });
       const otherUser = yield* repository.auth.user.create({
-        displayName: "Other",
+        metadata: { version: 1, name: "Other" },
       });
       const session = yield* repository.auth.session.create({
         userId: owner.id,

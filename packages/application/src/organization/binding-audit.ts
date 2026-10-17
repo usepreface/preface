@@ -18,7 +18,7 @@ export const makeBindingAudit = Effect.gen(function* () {
       eventType,
       targetType: "organization_role_binding",
       targetId: binding.id,
-      metadata: { memberId: binding.memberId, roleId: binding.roleId },
+      metadata: { memberId: binding.memberId, roleId: binding.roleId, teamId: binding.teamId },
     });
   });
 });

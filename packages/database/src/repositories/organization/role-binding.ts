@@ -1,6 +1,7 @@
 import { Context, DateTime, Effect, Layer, Schema } from "effect";
 
 import type {
+  TeamId,
   OrganizationId,
   OrganizationMemberId,
   OrganizationRoleId,
@@ -47,20 +48,15 @@ const makeOrganizationRoleBindingRepository = Effect.gen(function* () {
       .insert(organizationRoleBinding)
       .values({
         ...Schema.encodeSync(GrantOrganizationRole)(input),
+        teamId: input.teamId ?? null,
+        scopeKind: input.teamId === null || input.teamId === undefined ? "organization" : "team",
         organizationId: input.organizationId,
         roleId: input.roleId,
         memberId: input.memberId,
         grantedByMemberId: input.grantedByMemberId,
         createdAt: DateTime.toDateUtc(yield* DateTime.now),
       })
-      .onConflictDoNothing({
-        target: [
-          organizationRoleBinding.organizationId,
-          organizationRoleBinding.roleId,
-          organizationRoleBinding.memberId,
-        ],
-        where: isNull(organizationRoleBinding.revokedAt),
-      })
+      .onConflictDoNothing()
       .returning();
     if (inserted !== undefined) return { binding: decode(inserted), created: true } as const;
     const [existing] = yield* database
@@ -71,6 +67,9 @@ const makeOrganizationRoleBindingRepository = Effect.gen(function* () {
           eq(organizationRoleBinding.organizationId, input.organizationId),
           eq(organizationRoleBinding.roleId, input.roleId),
           eq(organizationRoleBinding.memberId, input.memberId),
+          input.teamId === null || input.teamId === undefined
+            ? isNull(organizationRoleBinding.teamId)
+            : eq(organizationRoleBinding.teamId, input.teamId),
           isNull(organizationRoleBinding.revokedAt),
         ),
       );
@@ -80,7 +79,11 @@ const makeOrganizationRoleBindingRepository = Effect.gen(function* () {
   }, mapToDatabaseError);
   const listActiveByMemberIds = Effect.fn(
     "OrganizationRoleBindingRepository.listActiveByMemberIds",
-  )(function* (organizationId: OrganizationId, memberIds: readonly OrganizationMemberId[]) {
+  )(function* (
+    organizationId: OrganizationId,
+    memberIds: readonly OrganizationMemberId[],
+    teamId: TeamId | null = null,
+  ) {
     if (memberIds.length === 0) return [];
     const rows = yield* database
       .select({ binding: organizationRoleBinding, role: organizationRole })
@@ -90,6 +93,9 @@ const makeOrganizationRoleBindingRepository = Effect.gen(function* () {
         and(
           eq(organizationRoleBinding.organizationId, organizationId),
           inArray(organizationRoleBinding.memberId, memberIds),
+          teamId === null
+            ? isNull(organizationRoleBinding.teamId)
+            : eq(organizationRoleBinding.teamId, teamId),
           isNull(organizationRoleBinding.revokedAt),
           isNull(organizationRole.archivedAt),
         ),
@@ -100,8 +106,11 @@ const makeOrganizationRoleBindingRepository = Effect.gen(function* () {
     }));
   }, mapToDatabaseError);
   const listActiveByMemberId = Effect.fn("OrganizationRoleBindingRepository.listActiveByMemberId")(
-    (organizationId: OrganizationId, memberId: OrganizationMemberId) =>
-      listActiveByMemberIds(organizationId, [memberId]),
+    (
+      organizationId: OrganizationId,
+      memberId: OrganizationMemberId,
+      teamId: TeamId | null = null,
+    ) => listActiveByMemberIds(organizationId, [memberId], teamId),
   );
   const revoke = Effect.fn("OrganizationRoleBindingRepository.revoke")(function* (
     organizationId: OrganizationId,
@@ -185,6 +194,7 @@ const makeOrganizationRoleBindingRepository = Effect.gen(function* () {
             isNull(organizationRoleBinding.revokedAt),
             eq(organizationRole.kind, "builtin"),
             eq(organizationRole.key, "owner"),
+            isNull(organizationRoleBinding.teamId),
             exists(usableEmail),
           ),
         );
@@ -192,7 +202,26 @@ const makeOrganizationRoleBindingRepository = Effect.gen(function* () {
     },
     mapToDatabaseError,
   );
+  const revokeTeamMember = Effect.fn("OrganizationRoleBindingRepository.revokeTeamMember")(
+    function* (organizationId: OrganizationId, teamId: TeamId, memberId: OrganizationMemberId) {
+      const rows = yield* database
+        .update(organizationRoleBinding)
+        .set({ revokedAt: DateTime.toDateUtc(yield* DateTime.now) })
+        .where(
+          and(
+            eq(organizationRoleBinding.organizationId, organizationId),
+            eq(organizationRoleBinding.teamId, teamId),
+            eq(organizationRoleBinding.memberId, memberId),
+            isNull(organizationRoleBinding.revokedAt),
+          ),
+        )
+        .returning();
+      return rows.map((row) => decode(row));
+    },
+    mapToDatabaseError,
+  );
   return {
+    revokeTeamMember,
     grant,
     findById,
     listActiveByMemberId,

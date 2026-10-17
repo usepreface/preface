@@ -34,7 +34,7 @@ export const makeInvitationDelivery = Effect.gen(function* () {
       to: input.email,
       variables: {
         instanceName: settings.displayName,
-        organizationName: input.organization.name,
+        organizationName: input.organization.metadata.name,
         inviterName: input.inviterName,
         roleName: input.roles.map((role) => role.name).join(", "),
         invitationUrl: url.href,

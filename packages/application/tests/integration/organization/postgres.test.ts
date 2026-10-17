@@ -59,7 +59,9 @@ it.live.skipIf(port === undefined)(
         .pipe(Effect.forkChild);
       yield* Deferred.await(locked);
       const waitingUpdate = yield* application.organization.organization
-        .update(editor.actor, fixture.organization.id, { name: "Unauthorized update" })
+        .update(editor.actor, fixture.organization.id, {
+          metadata: { name: "Unauthorized update" },
+        })
         .pipe(Effect.result, Effect.forkChild);
       yield* sql<{
         readonly count: number;
@@ -76,7 +78,8 @@ it.live.skipIf(port === undefined)(
         failure: { _tag: "OrganizationError", code: "FORBIDDEN" },
       });
       expect(
-        (yield* repository.organization.organization.findById(fixture.organization.id))?.name,
+        (yield* repository.organization.organization.findById(fixture.organization.id))?.metadata
+          .name,
       ).toBe("Knowledge");
     }).pipe(Effect.provide(ApplicationTestLayer)),
 );

@@ -6,7 +6,7 @@ import {
   PublicOrganizationRoleBinding,
 } from "@usepreface/protocol/dto";
 
-import { organizationErrors, requestErrors } from "#/http-errors";
+import { teamErrors, organizationErrors, requestErrors } from "#/http-errors";
 import { SessionAuthentication } from "#/middleware/session-authentication";
 
 export class OrganizationRoleBindingsApi extends HttpApiGroup.make("organizationRoleBindings")
@@ -15,12 +15,12 @@ export class OrganizationRoleBindingsApi extends HttpApiGroup.make("organization
       params: { organizationId: OrganizationId },
       payload: GrantOrganizationRoleRequest,
       success: PublicOrganizationRoleBinding.pipe(HttpApiSchema.status(201)),
-      error: [...organizationErrors, ...requestErrors],
+      error: [...teamErrors, ...organizationErrors, ...requestErrors],
     }),
     HttpApiEndpoint.delete("revoke", "/:organizationId/role-bindings/:bindingId", {
       params: { organizationId: OrganizationId, bindingId: OrganizationRoleBindingId },
       success: HttpApiSchema.NoContent,
-      error: [...organizationErrors, ...requestErrors],
+      error: [...teamErrors, ...organizationErrors, ...requestErrors],
     }),
   )
   .middleware(SessionAuthentication)

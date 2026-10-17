@@ -94,7 +94,7 @@ layer(ApplicationTestLayer)("instance bootstrap", (it) => {
         const completed = success.success;
         expect(completed.actor.user).toEqual({
           id: completed.actor.user.id,
-          displayName: "First Owner",
+          metadata: { version: 1, name: "First Owner" },
           email: "owner@example.test",
           emailVerifiedAt: expect.anything(),
         });

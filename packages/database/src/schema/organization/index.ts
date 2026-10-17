@@ -7,3 +7,6 @@ export { organizationAuthPolicy } from "#/schema/organization/auth-policy";
 
 export { organizationInvitation } from "#/schema/organization/invitation";
 export { invitationAssignment } from "#/schema/organization/invitation-assignment";
+
+export { team } from "#/schema/organization/team";
+export { teamMember } from "#/schema/organization/team-member";

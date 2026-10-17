@@ -39,3 +39,5 @@ export {
 } from "#/repositories/organization/index";
 
 export { InvitationRepository } from "#/repositories/organization/invitation";
+
+export { TeamRepository } from "#/repositories/organization/team";

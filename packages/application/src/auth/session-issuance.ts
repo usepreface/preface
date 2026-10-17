@@ -68,7 +68,7 @@ export const makeSessionIssuance = Effect.gen(function* () {
     const actor: SessionActor = {
       user: {
         id: user.id,
-        displayName: user.displayName,
+        metadata: user.metadata,
         email: profile.email,
         emailVerifiedAt: profile.emailVerifiedAt,
       },

@@ -27,12 +27,12 @@ layer(ApplicationTestLayer)("organization creation and access", (it) => {
         const database = yield* Database;
         const owner = yield* completeTestBootstrap;
         const input = yield* Schema.decodeUnknownEffect(CreateOrganizationInput)({
-          name: " Knowledge ",
+          metadata: { name: " Knowledge " },
           slug: " KNOWLEDGE ",
         });
         const created = yield* application.organization.organization.create(owner.actor, input);
         expect(created.organization).toMatchObject({
-          name: "Knowledge",
+          metadata: { name: "Knowledge" },
           slug: "knowledge",
           archivedAt: null,
         });
@@ -48,14 +48,14 @@ layer(ApplicationTestLayer)("organization creation and access", (it) => {
             authPolicy: true,
           },
         });
-        expect(persisted?.roles).toHaveLength(3);
+        expect(persisted?.roles).toHaveLength(5);
         expect(persisted?.members[0]?.bindings[0]?.role.key).toBe("owner");
         expect(persisted?.members[0]?.bindings[0]?.grantedBy.id).toBe(created.membership.id);
 
         const outsider = yield* createTestIdentity("outsider@example.test", "Other Owner");
         expect(
           yield* application.organization.organization
-            .create(outsider.actor, { name: "Other", slug: "other" })
+            .create(outsider.actor, { metadata: { name: "Other" }, slug: "other" })
             .pipe(Effect.flip),
         ).toMatchObject({ _tag: "OrganizationError", code: "FORBIDDEN" });
         yield* repository.instance.owner.grant({
@@ -92,7 +92,7 @@ layer(ApplicationTestLayer)("organization creation and access", (it) => {
         const application = yield* Application;
         const database = yield* Database;
         const owner = yield* completeTestBootstrap;
-        const input = { name: "Knowledge", slug: "knowledge" };
+        const input = { metadata: { name: "Knowledge" }, slug: "knowledge" };
         yield* Effect.scoped(
           Effect.gen(function* () {
             yield* rejectLifecycleAudit;
@@ -122,7 +122,7 @@ layer(ApplicationTestLayer)("organization creation and access", (it) => {
           code: "SLUG_UNAVAILABLE",
         });
         expect(yield* database.query.organizationMember.findMany()).toHaveLength(1);
-        expect(yield* database.query.organizationRole.findMany()).toHaveLength(3);
+        expect(yield* database.query.organizationRole.findMany()).toHaveLength(5);
         expect(yield* database.query.organizationAuthPolicy.findMany()).toHaveLength(1);
       }),
   );
@@ -136,7 +136,7 @@ layer(ApplicationTestLayer)("organization creation and access", (it) => {
         const repository = yield* DatabaseRepository;
         const first = yield* createTestOrganization;
         const second = yield* application.organization.organization.create(first.owner.actor, {
-          name: "Second",
+          metadata: { name: "Second" },
           slug: "second",
         });
         const page = yield* application.organization.organization.listMine(first.owner.actor, {
@@ -212,7 +212,7 @@ layer(ApplicationTestLayer)("organization creation and access", (it) => {
       yield* application.auth.session.revokeCurrent(linked.actor);
       expect(
         yield* application.organization.organization
-          .update(linked.actor, fixture.organization.id, { name: "Stale Actor" })
+          .update(linked.actor, fixture.organization.id, { metadata: { name: "Stale Actor" } })
           .pipe(Effect.flip),
       ).toMatchObject({ _tag: "AuthenticationError", code: "UNAUTHENTICATED" });
     }),

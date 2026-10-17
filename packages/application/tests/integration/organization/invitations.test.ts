@@ -121,7 +121,7 @@ layer(ApplicationTestLayer)("organization invitations", (it) => {
           colleague.actor,
         );
         expect(accepted.actor.user.id).toBe(colleague.actor.user.id);
-        expect(accepted.actor.user.displayName).toBe("Existing Profile");
+        expect(accepted.actor.user.metadata.name).toBe("Existing Profile");
         yield* application.organization.member.suspend(
           fixture.owner.actor,
           fixture.organization.id,
@@ -332,7 +332,7 @@ layer(ApplicationTestLayer)("organization invitations", (it) => {
         const repository = yield* DatabaseRepository;
         const fixture = yield* createTestOrganization;
         const another = yield* application.organization.organization.create(fixture.owner.actor, {
-          name: "Second",
+          metadata: { name: "Second" },
           slug: "second",
         });
         const first = yield* createTestInvitation(
@@ -420,7 +420,7 @@ layer(ApplicationTestLayer)("organization invitations", (it) => {
         expect(page.invitations.map((invite) => invite.id)).toEqual([replacement.invitation.id]);
         expect(page.nextCursor).toBe(replacement.invitation.id);
         const another = yield* application.organization.organization.create(fixture.owner.actor, {
-          name: "Second",
+          metadata: { name: "Second" },
           slug: "second",
         });
         expect(

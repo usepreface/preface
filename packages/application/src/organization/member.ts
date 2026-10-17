@@ -37,7 +37,7 @@ export const makeOrganizationMemberApplication = Effect.gen(function* () {
       members: visible.map((row) =>
         publicMember(
           row.member,
-          row.displayName,
+          row.metadata,
           grants
             .filter((grant) => grant.binding.memberId === row.member.id)
             .map((grant) => grant.role),
@@ -93,6 +93,7 @@ export const makeOrganizationMemberApplication = Effect.gen(function* () {
               : yield* repository.organization.member.remove(organizationId, target.id);
         if (changed === undefined) return;
         if (action === "remove" || action === "leave") {
+          yield* repository.organization.team.member.removeAllByMember(organizationId, target.id);
           const revoked = yield* repository.organization.roleBinding.revokeAllByMemberId(
             organizationId,
             target.id,

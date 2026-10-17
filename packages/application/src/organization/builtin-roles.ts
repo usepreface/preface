@@ -5,6 +5,8 @@ export const builtinOrganizationRoles = [
     key: "owner",
     name: "Owner",
     permissions: [
+      "teams.read",
+      "teams.manage",
       "organization.read",
       "organization.update",
       "organization.archive",
@@ -19,6 +21,8 @@ export const builtinOrganizationRoles = [
     key: "admin",
     name: "Administrator",
     permissions: [
+      "teams.read",
+      "teams.manage",
       "organization.read",
       "organization.update",
       "members.read",
@@ -31,10 +35,31 @@ export const builtinOrganizationRoles = [
   {
     key: "member",
     name: "Member",
-    permissions: ["organization.read", "members.read", "roles.read"],
+    permissions: ["organization.read", "members.read", "roles.read", "teams.read"],
   },
 ] as const satisfies readonly {
   readonly key: string;
   readonly name: string;
   readonly permissions: readonly OrganizationPermission[];
 }[];
+
+export const builtinTeamRoles = [
+  {
+    key: "admin",
+    name: "Team administrator",
+    permissions: [
+      "team.read",
+      "team.update",
+      "team.archive",
+      "team.members.read",
+      "team.members.manage",
+      "team.roles.read",
+      "team.roles.assign",
+    ],
+  },
+  {
+    key: "member",
+    name: "Team member",
+    permissions: ["team.read", "team.members.read", "team.roles.read"],
+  },
+] as const;

@@ -30,7 +30,7 @@ layer(HttpTestLayer, { excludeTestServices: true })("invitation HTTP boundary", 
             ),
         });
         const created = yield* ownerApi.organizations.create({
-          payload: { name: "Knowledge", slug: "knowledge" },
+          payload: { metadata: { name: "Knowledge" }, slug: "knowledge" },
         });
         const params = { organizationId: created.organization.id };
         const memberRole = yield* repository.organization.role.findByKey(

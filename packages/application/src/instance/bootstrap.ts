@@ -289,7 +289,9 @@ export const makeBootstrapApplication = Effect.gen(function* () {
           return { state: "invalid" } as const;
         }
 
-        const user = yield* repository.auth.user.create({ displayName: challenge.ownerName });
+        const user = yield* repository.auth.user.create({
+          metadata: { version: 1, name: challenge.ownerName },
+        });
         const address = yield* repository.auth.userEmail
           .create({
             userId: user.id,

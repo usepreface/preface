@@ -35,7 +35,7 @@ const loadOwner = Effect.gen(function* () {
 | Group                        | Operations                                                                                                   |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | `instance`                   | `initialize`, `installation`, `settings`, `owner`, `challenge`                                               |
-| `auth.user`                  | `findById`, `findProfileById`, `lockById`, `create`                                                          |
+| `auth.user`                  | `findById`, `findProfileById`, `lockById`, `create`, `updateMetadata`                                        |
 | `auth.userEmail`             | `create`, `findById`, `findActiveByEmail`, `findPrimaryByUserId`                                             |
 | `auth.verification`          | `create`, `findById`, `lockById`, `retirePendingBySubject`, `recordFailure`, `consume`, `deleteExpiredBatch` |
 | `auth.sessionAuthentication` | `create`, `listUsableBySessionId`, `revokeBySessionId`                                                       |
@@ -67,6 +67,13 @@ from the Effect clock. It does not expose updates or deletion. Required audit wr
 the application's outer `TransactionService.run` with the state change; repositories do not append
 business audit events automatically. The aggregate and individual repositories use the same ambient
 transaction without accepting raw transaction clients.
+
+User, organization and team rows store typed `metadata` JSONB with an explicit version,
+replacing separate descriptive name/image columns. Identity, slugs, authority and lifecycle
+stay in relational columns. `organization.team` exposes create/find/list/update/archive;
+its nested `member` repository owns direct membership and removal. Team membership must
+reference an organization member. Role bindings and invitation assignments carry explicit
+scope/team columns with composite tenant/scope foreign keys and separate active uniqueness.
 
 ## Instance persistence
 
@@ -115,7 +122,7 @@ installation lock. Codes and email delivery are not repository responsibilities.
 
 ## Auth and audit storage
 
-- `auth.user` stores UUIDv7 identity, display name, disable state and lifecycle timestamps.
+- `auth.user` stores UUIDv7 identity, versioned metadata, disable state and lifecycle timestamps.
 - `auth.user_email` owns canonical email, primary designation, verification, login enablement,
   removal history and timestamps. Partial unique indexes protect active email ownership and one
   active primary address per user. Removed addresses cannot remain primary/login-enabled;
@@ -147,14 +154,14 @@ workflows are implemented in protocol/application. The server implements cookie 
 email sign-in, sessions, invitations and organization administration are implemented; content authorization remains
 pending. Write related lifecycle timestamps from the same Effect clock instant.
 
-The development history starts with the regenerated initial migration, followed by
-organization authority and invitations. Databases using the deleted older development history need
-a reset; databases on the current initial baseline apply subsequent migrations normally.
+The development history is one regenerated initial migration containing organization
+authority, invitations, direct teams and versioned metadata. Databases using deleted
+development history need an explicit reset; no upgrade/backfill is supplied.
 Generation and tests do not reset a developer database automatically.
 
 ## Organization persistence
 
-`DatabaseRepository.organization` groups `organization`, `member`, `role`,
+`DatabaseRepository.organization` groups `team`, `organization`, `member`, `role`,
 `roleBinding`, `authPolicy` and `invitation`. These are storage APIs; application owns authorization,
 last-owner checks, admission, permission delegation and required audit.
 
@@ -175,7 +182,7 @@ owners. Audit adds organization identity without changing global events' null sc
 All write results decode through protocol storage models. Locking and application
 mutations use the same ambient transaction.
 
-Relations live in `relations/auth.ts`, `instance.ts`, `organization.ts` and `audit.ts`.
+Relations live in `relations/auth.ts`, `instance.ts`, `organization.ts`, `team.ts` and `audit.ts`.
 Each uses `defineRelationsPart` against the schema barrel. The aggregate composes
 those parts after the schema-wide empty part, retaining unrelated table inference.
 

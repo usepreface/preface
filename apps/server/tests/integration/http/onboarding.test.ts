@@ -69,7 +69,7 @@ layer(HttpTestLayer, { excludeTestServices: true })("onboarding HTTP boundary", 
         expect(completed).toMatchObject({
           user: {
             email: "owner@example.test",
-            displayName: "Owner",
+            metadata: { version: 1, name: "Owner" },
             emailVerifiedAt: expect.any(String),
           },
           session: { expiresAt: expect.any(String) },

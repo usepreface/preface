@@ -7,6 +7,8 @@ import { makeSessionApplication } from "#/auth/session";
 import { makeBootstrapApplication } from "#/instance/bootstrap";
 import { OrganizationAccess } from "#/organization/access";
 import { makeOrganizationsApplication } from "#/organization/index";
+import { TeamAccess } from "#/organization/team/access";
+import { makeProfileApplication } from "#/profile/user";
 
 const makeApplication = Effect.gen(function* () {
   yield* DatabaseMigration;
@@ -17,7 +19,7 @@ const makeApplication = Effect.gen(function* () {
 
   return {
     instance: { bootstrap, capabilities: organizations.capabilities },
-    auth: { session, emailSignIn },
+    auth: { session, emailSignIn, profile: yield* makeProfileApplication },
     organization: organizations.organization,
   } as const;
 });
@@ -27,6 +29,6 @@ export class Application extends Context.Service<
   Effect.Success<typeof makeApplication>
 >()("@usepreface/application/Application") {
   static readonly layer = Layer.effect(Application, makeApplication).pipe(
-    Layer.provide(OrganizationAccess.layer),
+    Layer.provide(TeamAccess.layer.pipe(Layer.provideMerge(OrganizationAccess.layer))),
   );
 }

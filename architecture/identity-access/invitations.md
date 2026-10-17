@@ -15,10 +15,13 @@ organization/email is allowed. Creating another revokes the previous invitation,
 cancels its queued mail and retires its browser proofs in the same transaction.
 Expired pending records are replaced by the same path; timestamps remain history.
 
-`organization.invitation_assignment` records proposed role IDs. Composite foreign
-keys bind both invitation and role to the same organization. There is no polymorphic
-assignment payload or placeholder group/team reference. Creation requires 1–20
-unique active, delegable roles; built-in ownership is prohibited.
+`organization.invitation_assignment` records role IDs with an explicit organization/team
+scope and nullable team ID. Composite foreign keys bind invitation, role scope and team
+to one organization. Creation requires 1–20 unique organization roles and optionally up
+to 20 unique teams with 1–20 team roles each. Omitted team roles resolve to the built-in
+team member role at creation; stored assignments are explicit. Ownership is prohibited.
+Team assignment requires current team membership-management and role-assignment authority,
+or explicit organization `teams.manage`. See [teams](teams-profiles.md).
 
 Invitation tokens contain 32 random bytes and are stored as purpose-separated
 digests. They last seven days. Resend rotates the token and extends expiry to seven
@@ -76,7 +79,7 @@ invitation's assignments. Removal already revoked prior grants. Active members
 retain their existing grants and receive approved additions. A non-owner inviter
 cannot change an existing owner's assignments.
 
-Identity/email creation when necessary, membership/readmission, role grants, fresh
+Identity/email creation when necessary, organization/team membership or readmission, scoped role grants, fresh
 session/evidence, invitation/proof consumption, queued-message cancellation and
 required audit commit together. Each acceptance creates a fresh session even for
 an already signed-in matching user; it does not revoke other sessions. The new token
@@ -100,7 +103,8 @@ and reuses the committed installation identity. No general transaction retry pol
 is added. Global user-disable/address mutation workflows are not exposed; future
 ones must coordinate their own authority changes with organization admission.
 
-Creation/resend/revocation/acceptance audit records retain role IDs. Verification
+Creation/resend/revocation/acceptance audit records retain organization role IDs and team IDs.
+Individual role-grant events retain role, member and optional team identity. Verification
 request/failure records retain challenge ID and attempts, never codes, tokens or
 email bodies. Email intents use the encrypted outbox. Cancelled work may already
 be in flight externally; acceptance independently checks current credentials.
@@ -114,7 +118,7 @@ and creation also require `roles.assign`. Public POST routes under
 require the trusted Origin and JSON; acceptance can resolve an existing cookie actor.
 The temporary invitation cookie uses the session cookie's secure/same-site policy.
 
-There are no group/team assignments, SSO admission, account linking, directory
+There are no groups, SSO admission, account linking, directory
 provisioning, permanent invitation-history cleanup or public self-signup endpoints.
 An administrator can revoke an invitation or replace it with corrected roles; there
 is no separate assignment editor. UI integration remains pending.

@@ -109,7 +109,9 @@ export const makeInvitationAcceptance = Effect.gen(function* () {
           )
             return yield* new InvitationError({ code: "RECIPIENT_UNAVAILABLE" });
           if (user === undefined) {
-            user = yield* repository.auth.user.create({ displayName: decoded.displayName });
+            user = yield* repository.auth.user.create({
+              metadata: { version: 1, name: decoded.displayName },
+            });
             address = yield* repository.auth.userEmail.create({
               userId: user.id,
               email: invitation.email,
@@ -174,6 +176,41 @@ export const makeInvitationAcceptance = Effect.gen(function* () {
             });
             if (grant.created)
               yield* recordBinding(issued.actor, grant.binding, "organization.role_granted");
+          }
+          for (const assignment of inviter.teams) {
+            const previous = yield* repository.organization.team.member.find(
+              invitation.organizationId,
+              assignment.team.id,
+              member.id,
+            );
+            if (previous === undefined || previous.removedAt !== null) {
+              const membership = yield* repository.organization.team.member.add(
+                invitation.organizationId,
+                assignment.team.id,
+                member.id,
+                inviter.member.id,
+              );
+              yield* repository.audit.event.append({
+                actorKind: "user",
+                actorUserId: user.id,
+                organizationId: invitation.organizationId,
+                eventType: "team.member_added",
+                targetType: "team_member",
+                targetId: membership.id,
+                metadata: { teamId: assignment.team.id, memberId: member.id },
+              });
+            }
+            for (const role of assignment.roles) {
+              const grant = yield* repository.organization.roleBinding.grant({
+                organizationId: invitation.organizationId,
+                teamId: assignment.team.id,
+                memberId: member.id,
+                roleId: role.id,
+                grantedByMemberId: inviter.member.id,
+              });
+              if (grant.created)
+                yield* recordBinding(issued.actor, grant.binding, "organization.role_granted");
+            }
           }
           if ((yield* repository.auth.verification.consume(proof.id)) === undefined)
             return yield* new InvitationError({ code: "INVALID_PROOF" });

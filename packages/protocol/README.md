@@ -20,7 +20,11 @@ never be returned directly from an HTTP handler. Public timestamps encode as ISO
 
 Shared field schemas live in focused `src/common/` modules: display names, canonical
 email/input normalization, verification codes, credential digests, secret tokens and
-organization permissions/values. Domain identifiers use the shared factory:
+organization permissions/values. Versioned presentation schemas live in `src/metadata/`: user
+name/title/bio/image and organization/team name/description/logo. Stored metadata includes
+`version: 1`; public patch inputs omit the version. Optional image/logo values describe
+`{ type: "image", value: "https://…" }` only; upload and image editing APIs are not provided.
+Domain identifiers use the shared factory:
 
 ```ts
 import { createBrandedId } from "@usepreface/protocol";

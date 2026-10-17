@@ -11,7 +11,7 @@ export const createTestUser = Effect.fnUntraced(function* () {
   const [account] = yield* database
     .insert(user)
     .values({
-      displayName: "Test Owner",
+      metadata: { version: 1, name: "Test Owner" },
       createdAt,
       updatedAt: createdAt,
     })

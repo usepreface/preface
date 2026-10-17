@@ -22,3 +22,10 @@ export {
   InvitationTokenInput,
   AcceptInvitationInput,
 } from "#/input/organization/invitation";
+
+export {
+  CreateOrganizationInput as CreateTeamInput,
+  UpdateOrganizationInput as UpdateTeamInput,
+} from "#/input/organization/organization";
+
+export { UpdateProfileInput } from "#/input/auth/profile";

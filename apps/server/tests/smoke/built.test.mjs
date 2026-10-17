@@ -156,7 +156,7 @@ test(
     const organizationResponse = await fetch(`${base}/api/v1/organizations`, {
       method: "POST",
       headers: { origin, "content-type": "application/json", cookie: sessionCookie },
-      body: JSON.stringify({ name: "Knowledge", slug: "knowledge" }),
+      body: JSON.stringify({ metadata: { name: "Knowledge" }, slug: "knowledge" }),
     });
     assert.equal(organizationResponse.status, 201);
     const organization = await organizationResponse.json();
@@ -166,10 +166,10 @@ test(
     const updatedOrganization = await fetch(organizationPath, {
       method: "PATCH",
       headers: { origin, "content-type": "application/json", cookie: sessionCookie },
-      body: JSON.stringify({ name: "Knowledge Updated" }),
+      body: JSON.stringify({ metadata: { name: "Knowledge Updated" } }),
     });
     assert.equal(updatedOrganization.status, 200);
-    assert.equal((await updatedOrganization.json()).name, "Knowledge Updated");
+    assert.equal((await updatedOrganization.json()).metadata.name, "Knowledge Updated");
     const archived = await fetch(`${organizationPath}/archive`, {
       method: "POST",
       headers: { origin, "content-type": "application/json", cookie: sessionCookie },

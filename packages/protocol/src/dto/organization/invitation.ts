@@ -1,7 +1,7 @@
 import { Schema } from "effect";
 
 import { EmailAddress } from "#/common/email";
-import { InvitationRoleIds } from "#/common/invitation";
+import { InvitationRoleIds, InvitationTeams } from "#/common/invitation";
 import { OrganizationName } from "#/common/organization";
 import { SecretTokenFromString } from "#/common/secret-token";
 import { VerificationCode } from "#/common/verification-code";
@@ -18,6 +18,7 @@ const token = Schema.toEncoded(SecretTokenFromString).annotate({ writeOnly: true
 export const CreateInvitationRequest = Schema.Struct({
   email: Schema.String,
   roleIds: InvitationRoleIds,
+  teams: Schema.optionalKey(InvitationTeams),
 });
 export const InvitationTokenRequest = Schema.Struct({
   invitationId: OrganizationInvitationId,
@@ -44,6 +45,7 @@ export const PublicInvitation = Schema.Struct({
   email: EmailAddress,
   invitedByMemberId: OrganizationMemberId,
   roleIds: InvitationRoleIds,
+  teams: Schema.optionalKey(InvitationTeams),
   expiresAt: Schema.DateTimeUtcFromString,
   acceptedAt: Schema.NullOr(Schema.DateTimeUtcFromString),
   acceptedByUserId: Schema.NullOr(UserId),

@@ -1,6 +1,11 @@
 import { Context, DateTime, Effect, Layer, Schema } from "effect";
 
-import type { OrganizationId, OrganizationMemberId, UserId } from "@usepreface/protocol";
+import {
+  UserMetadata,
+  type OrganizationId,
+  type OrganizationMemberId,
+  type UserId,
+} from "@usepreface/protocol";
 import { CreateOrganizationMember, OrganizationMember } from "@usepreface/protocol/model";
 import { and, desc, eq, isNotNull, isNull, lt } from "drizzle-orm";
 
@@ -67,7 +72,7 @@ const makeOrganizationMemberRepository = Effect.gen(function* () {
       },
     ) {
       const rows = yield* database
-        .select({ member: organizationMember, displayName: user.displayName })
+        .select({ member: organizationMember, metadata: user.metadata })
         .from(organizationMember)
         .innerJoin(user, eq(user.id, organizationMember.userId))
         .where(
@@ -79,7 +84,10 @@ const makeOrganizationMemberRepository = Effect.gen(function* () {
         )
         .orderBy(desc(organizationMember.id))
         .limit(input.limit);
-      return rows.map((row) => ({ member: decode(row.member), displayName: row.displayName }));
+      return rows.map((row) => ({
+        member: decode(row.member),
+        metadata: Schema.decodeUnknownSync(UserMetadata)(row.metadata),
+      }));
     },
     mapToDatabaseError,
   );

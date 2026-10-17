@@ -28,11 +28,14 @@ layer(HttpTestLayer, { excludeTestServices: true })("organization HTTP boundary"
         });
         expect(yield* api.instanceCapabilities.get()).toEqual({ canCreateOrganization: true });
         const [created, response] = yield* api.organizations.create({
-          payload: { name: " Knowledge ", slug: " KNOWLEDGE " },
+          payload: { metadata: { name: " Knowledge " }, slug: " KNOWLEDGE " },
           responseMode: "decoded-and-response",
         });
         expect(response.status).toBe(201);
-        expect(created.organization).toMatchObject({ name: "Knowledge", slug: "knowledge" });
+        expect(created.organization).toMatchObject({
+          metadata: { name: "Knowledge" },
+          slug: "knowledge",
+        });
         expect(Object.keys(created.organization)).not.toContain("createdByUserId");
         expect(created.access.isOwner).toBe(true);
         const params = { organizationId: created.organization.id };
@@ -42,7 +45,8 @@ layer(HttpTestLayer, { excludeTestServices: true })("organization HTTP boundary"
           ),
         ).toEqual([created.organization.id]);
         expect(
-          (yield* api.organizations.update({ params, payload: { name: "Updated" } })).name,
+          (yield* api.organizations.update({ params, payload: { metadata: { name: "Updated" } } }))
+            .metadata.name,
         ).toBe("Updated");
         expect((yield* api.organizations.authPolicy({ params })).allowedMethods).toEqual([
           "email_code",
@@ -105,7 +109,7 @@ layer(HttpTestLayer, { excludeTestServices: true })("organization HTTP boundary"
         const application = yield* Application;
         const repository = yield* DatabaseRepository;
         const created = yield* application.organization.organization.create(owner.actor, {
-          name: "Knowledge",
+          metadata: { name: "Knowledge" },
           slug: "knowledge",
         });
         const colleague = yield* createSignedInTestUser("colleague@example.test");
@@ -148,7 +152,9 @@ layer(HttpTestLayer, { excludeTestServices: true })("organization HTTP boundary"
         });
         expect(
           yield* memberApi.organizations
-            .create({ payload: { name: "Forbidden", slug: "forbidden" } })
+            .create({
+              payload: { metadata: { name: "Forbidden" }, slug: "forbidden" },
+            })
             .pipe(Effect.flip),
         ).toMatchObject({ _tag: "OrganizationError", code: "FORBIDDEN" });
         yield* ownerApi.organizationMembers.suspend({

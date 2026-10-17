@@ -10,6 +10,7 @@ clients. Requests, responses and errors have one schema definition for that boun
 | -------------- | ------------------------------------------------------------------------------------------ | ----------------------------------------- |
 | `identifiers/` | Branded UUIDv7 installation, user, session, owner-grant and audit identities               | Protocol root                             |
 | `common/`      | Reusable field schemas, input normalization, credential codecs and branded-ID construction | Protocol root for supported shared values |
+| `metadata/`    | Versioned user, organization and team presentation schemas                                 | Protocol root                             |
 | `errors/`      | Expected failures grouped by domain, with safe public fields                               | Protocol root                             |
 | `dto/`         | Public requests and explicitly selected responses                                          | `@usepreface/protocol/dto`                |
 | `input/`       | Normalized application inputs with redacted credentials                                    | `@usepreface/protocol/input`              |

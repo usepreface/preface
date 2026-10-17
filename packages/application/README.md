@@ -141,7 +141,7 @@ export const createOrganizationForOwner = Effect.fn("createOrganizationForOwner"
   actor: SessionActor,
 ) {
   const input = yield* Schema.decodeUnknownEffect(CreateOrganizationInput)({
-    name: "Knowledge",
+    metadata: { name: "Knowledge" },
     slug: "knowledge",
   });
   return yield* (yield* Application).organization.organization.create(actor, input);
@@ -149,7 +149,7 @@ export const createOrganizationForOwner = Effect.fn("createOrganizationForOwner"
 ```
 
 Creation returns `{ organization, membership, access }` with Effect timestamps. The
-transaction creates the creator membership, built-in owner/admin/member roles,
+transaction creates the creator membership, built-in organization and team role definitions,
 explicit owner grant and default local-email auth policy with required audit.
 `instance.capabilities.get(actor)` returns `{ canCreateOrganization }`.
 
@@ -161,6 +161,7 @@ explicit owner grant and default local-email auth policy with required audit.
 - `roleBinding`: `grant`, `revoke` for direct member assignments.
 - `ownership`: protected `grant`, `revoke`, `transfer` workflows.
 - `authPolicy.get`: read the currently enforced policy.
+- `team`: `create`, `list`, `get`, `getAccess`, `update`, `archive`, `listRoles`, plus `member.add/list/remove`.
 - `invitation`: `create`, `list`, `inspect`, `resend`, `revoke`, `requestVerification`, `accept`.
 
 List inputs use an exclusive ID `cursor` and `limit` (default 25, maximum 100).
@@ -174,17 +175,19 @@ atomically. Custom roles cannot manufacture ownership or delegate permissions th
 actor lacks. Role retirement and member removal revoke assignments transactionally;
 suspension preserves them for explicit reinstatement.
 
-Groups/teams, SSO, policy editing and
+Teams use direct memberships and explicitly scoped roles. SSO, policy editing and
 content permissions are not supplied by these workflows. See the
 [organization architecture](../../architecture/identity-access/organizations.md) for boundaries.
 
 ## Invitations
 
-`invitation.create(actor, organizationId, { email, roleIds })` requires current member
+`invitation.create(actor, organizationId, { email, roleIds, teams? })` requires current member
 management and role assignment permissions. It returns a safe invitation summary;
 the token is delivered only in the encrypted invitation email. Roles must be active,
 delegable and belong to the organization; ownership is excluded. Creating another
-pending invitation for that email revokes the previous one atomically.
+pending invitation for that email revokes the previous one atomically. Optional `teams` entries
+contain `{ teamId, roleIds? }`; omission of role IDs selects the built-in team member role.
+Acceptance rechecks current team state, original inviter authority and all role permissions.
 
 `list(actor, organizationId, { cursor?, limit? })` includes lifecycle history.
 `resend(actor, organizationId, invitationId)` rotates the token and retires old proofs;
@@ -203,6 +206,21 @@ New identities are created only here or by first-owner setup. Existing profiles 
 preserved; suspended members cannot bypass suspension; removed members regain only
 approved invitation roles. Audit failure rolls back admission and consumption.
 See [invitation architecture](../../architecture/identity-access/invitations.md).
+
+## Profiles and teams
+
+`auth.profile.get(actor)` returns the current safe profile. `update(actor, { metadata })`
+merges name/title/bio patches under the user lock; `null` clears title/bio. It preserves
+omitted fields, the stored version and image reference. Profile changes require audit.
+Email and account authority are separate from presentation metadata.
+
+Team creation requires organization `teams.manage`; the creator joins and receives the
+team administrator role atomically. Team member addition accepts an already-active
+organization member and grants the built-in team member role. Removal revokes only that
+team's grants. Organization removal also removes all team memberships and grants.
+Scoped role bindings use `{ memberId, roleId, teamId }`; omit `teamId` for organization
+grants. Team role definitions use `scopeKind: "team"`. Team grants cannot grant organization
+permissions. See [teams and profiles](../../architecture/identity-access/teams-profiles.md).
 
 ## Credential policy
 
@@ -239,6 +257,6 @@ and session lifecycle. The explicit PostgreSQL lane uses disposable test configu
 and sequential files; never target a deployment database. Built tests exercise packaged
 migrations and the verification/session lifecycle.
 
-Backend-connected onboarding/sign-in UI, account recovery, teams
+Backend-connected onboarding/sign-in UI, image uploads, account recovery
 and SSO are not implemented. See the [instance setup architecture](../../architecture/identity-access/instance-setup.md)
 and [server README](../../apps/server/README.md) for current transport and deployment.

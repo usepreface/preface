@@ -26,7 +26,7 @@ export const completeTestSetup = Effect.gen(function* () {
 export const createSignedInTestUser = Effect.fnUntraced(function* (email: string) {
   const repository = yield* DatabaseRepository;
   const application = yield* Application;
-  const user = yield* repository.auth.user.create({ displayName: "Colleague" });
+  const user = yield* repository.auth.user.create({ metadata: { version: 1, name: "Colleague" } });
   yield* repository.auth.userEmail.create({
     userId: user.id,
     email,
