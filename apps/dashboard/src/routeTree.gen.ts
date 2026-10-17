@@ -8,111 +8,111 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from "./routes/__root";
-import { Route as AppRouteImport } from "./routes/_app";
-import { Route as AppIndexRouteImport } from "./routes/_app/index";
-import { Route as SetupIndexRouteImport } from "./routes/setup/index";
-import { Route as SetupOrganizationRouteImport } from "./routes/setup/organization";
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as AppRouteImport } from './routes/_app'
+import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as SetupIndexRouteImport } from './routes/setup/index'
+import { Route as SetupOrganizationRouteImport } from './routes/setup/organization'
 
 const AppRoute = AppRouteImport.update({
-  id: "/_app",
+  id: '/_app',
   getParentRoute: () => rootRouteImport,
-} as any);
-const SetupIndexRoute = SetupIndexRouteImport.update({
-  id: "/setup/",
-  path: "/setup/",
-  getParentRoute: () => rootRouteImport,
-} as any);
-const SetupOrganizationRoute = SetupOrganizationRouteImport.update({
-  id: "/setup/organization",
-  path: "/setup/organization",
-  getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const AppIndexRoute = AppIndexRouteImport.update({
-  id: "/",
-  path: "/",
+  id: '/',
+  path: '/',
   getParentRoute: () => AppRoute,
-} as any);
+} as any)
+const SetupIndexRoute = SetupIndexRouteImport.update({
+  id: '/setup/',
+  path: '/setup/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SetupOrganizationRoute = SetupOrganizationRouteImport.update({
+  id: '/setup/organization',
+  path: '/setup/organization',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
-  "/": typeof AppIndexRoute;
-  "/setup/organization": typeof SetupOrganizationRoute;
-  "/setup": typeof SetupIndexRoute;
+  '/': typeof AppIndexRoute
+  '/setup/organization': typeof SetupOrganizationRoute
+  '/setup/': typeof SetupIndexRoute
 }
 export interface FileRoutesByTo {
-  "/": typeof AppIndexRoute;
-  "/setup/organization": typeof SetupOrganizationRoute;
-  "/setup": typeof SetupIndexRoute;
+  '/setup/organization': typeof SetupOrganizationRoute
+  '/': typeof AppIndexRoute
+  '/setup': typeof SetupIndexRoute
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport;
-  "/_app": typeof AppRouteWithChildren;
-  "/setup/organization": typeof SetupOrganizationRoute;
-  "/setup/": typeof SetupIndexRoute;
-  "/_app/": typeof AppIndexRoute;
+  __root__: typeof rootRouteImport
+  '/_app': typeof AppRouteWithChildren
+  '/setup/organization': typeof SetupOrganizationRoute
+  '/_app/': typeof AppIndexRoute
+  '/setup/': typeof SetupIndexRoute
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath;
-  fullPaths: "/" | "/setup/organization" | "/setup";
-  fileRoutesByTo: FileRoutesByTo;
-  to: "/" | "/setup/organization" | "/setup";
-  id: "__root__" | "/_app" | "/setup/organization" | "/setup/" | "/_app/";
-  fileRoutesById: FileRoutesById;
+  fileRoutesByFullPath: FileRoutesByFullPath
+  fullPaths: '/' | '/setup/organization' | '/setup/'
+  fileRoutesByTo: FileRoutesByTo
+  to: '/setup/organization' | '/' | '/setup'
+  id: '__root__' | '/_app' | '/setup/organization' | '/_app/' | '/setup/'
+  fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  AppRoute: typeof AppRouteWithChildren;
-  SetupOrganizationRoute: typeof SetupOrganizationRoute;
-  SetupIndexRoute: typeof SetupIndexRoute;
+  AppRoute: typeof AppRouteWithChildren
+  SetupOrganizationRoute: typeof SetupOrganizationRoute
+  SetupIndexRoute: typeof SetupIndexRoute
 }
 
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    "/_app": {
-      id: "/_app";
-      path: "";
-      fullPath: "/";
-      preLoaderRoute: typeof AppRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/setup/": {
-      id: "/setup/";
-      path: "/setup";
-      fullPath: "/setup";
-      preLoaderRoute: typeof SetupIndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/setup/organization": {
-      id: "/setup/organization";
-      path: "/setup/organization";
-      fullPath: "/setup/organization";
-      preLoaderRoute: typeof SetupOrganizationRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/_app/": {
-      id: "/_app/";
-      path: "/";
-      fullPath: "/";
-      preLoaderRoute: typeof AppIndexRouteImport;
-      parentRoute: typeof AppRoute;
-    };
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app/': {
+      id: '/_app/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/setup/': {
+      id: '/setup/'
+      path: '/setup'
+      fullPath: '/setup/'
+      preLoaderRoute: typeof SetupIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/setup/organization': {
+      id: '/setup/organization'
+      path: '/setup/organization'
+      fullPath: '/setup/organization'
+      preLoaderRoute: typeof SetupOrganizationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 interface AppRouteChildren {
-  AppIndexRoute: typeof AppIndexRoute;
+  AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppIndexRoute: AppIndexRoute,
-};
+}
 
-const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren);
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   SetupOrganizationRoute: SetupOrganizationRoute,
   SetupIndexRoute: SetupIndexRoute,
-};
+}
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>();
+  ._addFileTypes<FileRouteTypes>()
