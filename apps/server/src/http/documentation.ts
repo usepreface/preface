@@ -5,8 +5,6 @@ import { HttpApiScalar } from "effect/http-api";
 
 import { PrefaceApi } from "@usepreface/api";
 
-import { ServerConfig } from "#/config";
-
 const DocumentationPolicy = HttpRouter.middleware(
   Effect.gen(function* () {
     const crypto = yield* Crypto.Crypto;
@@ -36,14 +34,7 @@ const DocumentationPolicy = HttpRouter.middleware(
   }),
 );
 
-export const DocumentationRoutes = Layer.unwrap(
-  Effect.gen(function* () {
-    const config = yield* ServerConfig;
-    return config.docsEnabled
-      ? HttpApiScalar.layer(PrefaceApi, {
-          path: "/api/docs",
-          scalar: { withDefaultFonts: false, showOperationId: true, theme: "default" },
-        }).pipe(Layer.provide(DocumentationPolicy.layer))
-      : Layer.empty;
-  }),
-);
+export const DocumentationRoutes = HttpApiScalar.layer(PrefaceApi, {
+  path: "/api/docs",
+  scalar: { withDefaultFonts: false, showOperationId: true, theme: "default" },
+}).pipe(Layer.provide(DocumentationPolicy.layer));

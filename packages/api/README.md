@@ -8,7 +8,7 @@ start a server or acquire persistence.
 ## Usage
 
 Install workspace dependencies with `pnpm install` from the repository root. With the backend
-running at `http://localhost:3000`, a Node client can read setup status:
+running at `http://localhost:8080`, a Node client can read setup status:
 
 ```ts
 import { Effect } from "effect";
@@ -18,7 +18,7 @@ import { HttpApiClient } from "effect/http-api";
 import { PrefaceApi } from "@usepreface/api";
 
 const status = Effect.gen(function* () {
-  const client = yield* HttpApiClient.make(PrefaceApi, { baseUrl: "http://localhost:3000" });
+  const client = yield* HttpApiClient.make(PrefaceApi, { baseUrl: "http://localhost:8080" });
   return yield* client.instanceSetup.status();
 }).pipe(Effect.provide(FetchHttpClient.layer));
 

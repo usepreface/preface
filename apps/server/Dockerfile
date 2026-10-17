@@ -20,6 +20,6 @@ WORKDIR /app
 COPY --from=build --chown=node:node /out/server ./
 RUN chmod +x dist/main.js && ln -s /app/dist/main.js /usr/local/bin/preface
 USER node
-EXPOSE 3000
+EXPOSE 8080
 ENTRYPOINT ["node", "dist/main.js"]
 CMD ["serve"]

@@ -15,7 +15,7 @@ docker compose up --build --detach --wait
 docker compose logs server
 ```
 
-The server binds to loopback on port 3000 by default. PostgreSQL has a persistent volume and no
+The server binds to loopback on port 8080 by default. PostgreSQL has a persistent volume and no
 published host port. For public deployment, terminate HTTPS at your reverse proxy and configure
 `PUBLIC_URL` with its external origin. Change `SERVER_BIND_ADDRESS` deliberately if the proxy
 cannot reach the default loopback binding. Back up the PostgreSQL volume before upgrades.
@@ -77,9 +77,9 @@ opens if migrations or startup preparation fail. Shutdown stops admission, allow
 for active requests, and releases scoped resources. Compose allows 20 seconds before forcing exit.
 
 Scalar is bundled with the pinned Effect dependency and needs no third-party CDN or fonts. Its
-CSP permits only the exact bundled script hashes; API connections stay on the same origin. Both
-documentation routes can be disabled with `API_DOCS_ENABLED=false`. Health routes are separate
-from the product OpenAPI document. Proof replacement is exclusively a local CLI command.
+CSP permits only the exact bundled script hashes; API connections stay on the same origin.
+Both documentation routes are always enabled. Health routes are separate from the product OpenAPI
+document. Proof replacement is exclusively a local CLI command.
 
 ## Configuration
 
@@ -90,8 +90,7 @@ The [database configuration](../../packages/database/README.md#configuration) is
 | ---------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | `PUBLIC_URL`           | Required  | Canonical HTTPS origin; HTTP allowed only for loopback development. No credentials, subpath, query or fragment.                 |
 | `SERVER_HOST`          | `0.0.0.0` | Node listener address.                                                                                                          |
-| `SERVER_PORT`          | `3000`    | Node listener port. In Compose, this variable instead controls the host's published port; the container always listens on 3000. |
-| `API_DOCS_ENABLED`     | `true`    | Enable Scalar and the OpenAPI JSON route together.                                                                              |
+| `SERVER_PORT`          | `8080`    | Node listener port. In Compose, this variable instead controls the host's published port; the container always listens on 8080. |
 | `CORS_ALLOWED_ORIGINS` | Empty     | Comma-separated additional browser origins. `PUBLIC_URL` is always allowed.                                                     |
 | `TRUSTED_PROXY_CIDRS`  | Empty     | Comma-separated proxy IP networks trusted for `X-Forwarded-For`.                                                                |
 

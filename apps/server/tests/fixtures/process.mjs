@@ -27,7 +27,6 @@ export function testEnvironment(databasePort, serverPort) {
     PUBLIC_URL: `http://localhost:${serverPort}`,
     SERVER_HOST: "127.0.0.1",
     SERVER_PORT: String(serverPort),
-    API_DOCS_ENABLED: "false",
     POSTGRES_HOST: "127.0.0.1",
     POSTGRES_PORT: String(databasePort),
     POSTGRES_DATABASE: "preface_test",

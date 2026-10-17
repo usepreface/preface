@@ -57,8 +57,7 @@ Routine logs use bounded route names, request IDs, status and duration. The one-
 link is an explicit bootstrap output, separate from routine request logging.
 
 Health routes are independent of OpenAPI. Readiness checks the pool after startup; pending setup
-is ready. Scalar serves the contract with bundled scripts and a response-specific hash CSP. The
-documentation flag disables both documentation routes. Detailed limits, configuration and
+is ready. Scalar serves the contract with bundled scripts and a response-specific hash CSP. Both documentation routes are always enabled. Detailed limits, configuration and
 commands belong in the [server README](../apps/server/README.md).
 
 ## Verification boundaries

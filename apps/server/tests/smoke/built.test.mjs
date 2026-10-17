@@ -51,8 +51,8 @@ test(
     const initial = setupLink(running.stdout);
     const initialToken = new URLSearchParams(initial.hash.slice(1)).get("token");
     assert.equal(initial.origin, origin);
-    assert.equal((await fetch(`${base}/api/docs`)).status, 404);
-    assert.equal((await fetch(`${base}/api/openapi.json`)).status, 404);
+    assert.equal((await fetch(`${base}/api/docs`)).status, 200);
+    assert.equal((await fetch(`${base}/api/openapi.json`)).status, 200);
 
     const { stdout } = await execute(
       process.execPath,

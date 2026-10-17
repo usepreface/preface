@@ -28,13 +28,12 @@ const makeServerConfig = Effect.gen(function* () {
     port: Config.schema(
       Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 65535 })),
       "SERVER_PORT",
-    ).pipe(Config.withDefault(3000)),
+    ).pipe(Config.withDefault(8080)),
     publicUrl: Config.schema(originSchema, "PUBLIC_URL"),
     corsOrigins: Config.Array(originSchema, "CORS_ALLOWED_ORIGINS").pipe(Config.withDefault([])),
     trustedProxyCidrs: Config.Array(networkSchema, "TRUSTED_PROXY_CIDRS").pipe(
       Config.withDefault([]),
     ),
-    docsEnabled: Config.Boolean("API_DOCS_ENABLED").pipe(Config.withDefault(true)),
   });
 
   return {

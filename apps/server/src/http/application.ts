@@ -6,7 +6,7 @@ import { HttpApiBuilder } from "effect/http-api";
 import { PrefaceApi } from "@usepreface/api";
 import type { Database } from "@usepreface/database";
 
-import { ServerConfig } from "#/config";
+import type { ServerConfig } from "#/config";
 import { DocumentationRoutes } from "#/http/documentation";
 import { RequestLimits } from "#/http/middleware/limits";
 import { makeRequestPolicy } from "#/http/middleware/request-policy";
@@ -16,20 +16,12 @@ import { HealthRoutes } from "#/http/routes/health";
 import { InstanceSetupRoutes } from "#/http/routes/instance-setup";
 import { SessionRoutes } from "#/http/routes/session";
 
-const ProductRoutes = Layer.unwrap(
-  Effect.gen(function* () {
-    const config = yield* ServerConfig;
-    return HttpApiBuilder.layer(
-      PrefaceApi,
-      config.docsEnabled ? { openapiPath: "/api/openapi.json" } : undefined,
-    ).pipe(
-      Layer.provide(
-        Layer.mergeAll(InstanceSetupRoutes, SessionRoutes).pipe(
-          Layer.provideMerge(Layer.mergeAll(SessionAuthenticationLive, SetupProtectionLive)),
-        ),
-      ),
-    );
-  }),
+const ProductRoutes = HttpApiBuilder.layer(PrefaceApi, { openapiPath: "/api/openapi.json" }).pipe(
+  Layer.provide(
+    Layer.mergeAll(InstanceSetupRoutes, SessionRoutes).pipe(
+      Layer.provideMerge(Layer.mergeAll(SessionAuthenticationLive, SetupProtectionLive)),
+    ),
+  ),
 );
 
 const makeHttpApplication = Effect.gen(function* () {
