@@ -26,8 +26,19 @@ import { ProductPage } from "./pages/product";
 import { SurfacePage } from "./pages/surface";
 import { ToastsPage } from "./pages/toasts";
 import { TypePage } from "./pages/type";
+import { SeoHead } from "./seo/seo-head.js";
 
-const rootRoute = createRootRoute({ component: Shell, notFoundComponent: NotFound });
+const rootRoute = createRootRoute({
+  component: function RootLayout() {
+    return (
+      <>
+        <SeoHead />
+        <Shell />
+      </>
+    );
+  },
+  notFoundComponent: NotFound,
+});
 
 /** Wraps a page so the header's Split view can render it in both themes. */
 const themed = (Component: () => React.ReactNode) =>

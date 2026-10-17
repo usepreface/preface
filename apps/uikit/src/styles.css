@@ -1,1 +1,30 @@
 @import "@usepreface/ui/globals.css";
+
+.seo-fallback {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+
+  h1 {
+    margin: 1rem 0;
+    font-family: var(--font-heading);
+    font-size: 2rem;
+  }
+
+  nav {
+    margin-top: 2rem;
+  }
+
+  ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+    gap: 0.75rem 1.5rem;
+  }
+
+  a {
+    color: var(--text-link);
+    text-decoration: underline;
+  }
+}

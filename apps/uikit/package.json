@@ -13,6 +13,7 @@
     "format:check": "oxfmt --check .",
     "lint": "oxlint --deny-warnings .",
     "lint:fix": "oxlint --fix .",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
@@ -27,12 +28,14 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "4.3.3",
+    "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "6.1.2",
     "klarity": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
-    "vite": "8.3.4"
+    "vite": "8.3.4",
+    "vitest": "catalog:"
   }
 }

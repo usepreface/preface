@@ -43,9 +43,9 @@ export function OverviewPage() {
           </span>
         </div>
         <div className="flex max-w-2xl flex-col gap-4">
-          <h2 className="text-display-xl text-balance text-white">
+          <h1 className="text-display-xl text-balance text-white">
             The Preface interface, as code.
-          </h2>
+          </h1>
           <p className="max-w-xl text-body-lg text-pretty text-white/70">
             Components on Base UI and shadcn/ui, AI elements, icons, logos, illustrations and
             backgrounds, all on the Figma tokens. Every page here mirrors a page in the brand kit,

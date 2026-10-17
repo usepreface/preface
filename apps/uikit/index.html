@@ -3,8 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Preface UI Kit</title>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!--seo:start-->
+    <!--seo:end-->
+    <meta name="application-name" content="Preface UI Kit" />
+    <meta name="apple-mobile-web-app-title" content="Preface UI" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0d0f12" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" sizes="any" />
+    <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+    <link rel="manifest" href="/site.webmanifest" />
     <script>
       // Apply the saved theme before first paint so the page never flashes.
       try {
@@ -16,7 +26,7 @@
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><!--seo:content--><!--seo:content-end--></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

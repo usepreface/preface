@@ -32,7 +32,7 @@ export function Page({
               Figma · {figma}
             </span>
           ) : null}
-          <h2 className="text-display-md text-foreground">{title}</h2>
+          <h1 className="text-display-md text-foreground">{title}</h1>
           {description ? (
             <p className="max-w-2xl text-body-lg text-pretty text-fg-secondary">{description}</p>
           ) : null}
@@ -64,14 +64,14 @@ export function Section({
     <section id={id} className="flex scroll-mt-20 flex-col gap-5">
       <div className="flex flex-wrap items-end gap-x-6 gap-y-2 border-b pb-3">
         <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <h3 className="group/h text-heading-3">
+          <h2 className="group/h text-heading-3">
             <a href={`#${id}`} className="outline-none">
               {title}
               <span className="ml-2 text-fg-disabled opacity-0 transition-opacity group-hover/h:opacity-100">
                 #
               </span>
             </a>
-          </h3>
+          </h2>
           {description ? (
             <p className="max-w-3xl text-13 text-fg-secondary">{description}</p>
           ) : null}

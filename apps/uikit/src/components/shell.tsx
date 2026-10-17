@@ -170,7 +170,7 @@ export function NotFound() {
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-center">
       <span className="text-overline text-fg-accent">404</span>
-      <h2 className="text-heading-1">Nothing on this page</h2>
+      <h1 className="text-heading-1">Nothing on this page</h1>
       <p className="text-body-md text-fg-secondary">The page you asked for isn't in the kit.</p>
       <Button variant="outline" nativeButton={false} render={<Link to="/" />} className="mt-2">
         Back to the overview
@@ -211,11 +211,6 @@ export function Shell() {
     : lab
       ? ["Component lab", lab.title]
       : ["Preface UI Kit"];
-
-  const pageTitle = crumb.length > 1 ? `${crumb[1]} · Preface UI Kit` : "Preface UI Kit";
-  React.useEffect(() => {
-    document.title = pageTitle;
-  }, [pageTitle]);
 
   return (
     <SidebarProvider>

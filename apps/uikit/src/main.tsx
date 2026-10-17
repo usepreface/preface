@@ -15,6 +15,11 @@ if (!root) {
   throw new Error("Missing #root");
 }
 
+// The build supplies crawler-ready metadata; React owns it after the app starts.
+for (const tag of document.head.querySelectorAll("[data-seo]")) {
+  tag.remove();
+}
+
 createRoot(root).render(
   <StrictMode>
     <ThemeProvider>
