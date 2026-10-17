@@ -13,6 +13,7 @@ import { OrganizationAccess } from "#/organization/access";
 import { builtinOrganizationRoles, builtinTeamRoles } from "#/organization/builtin-roles";
 import { publicAccess, publicMember, publicOrganization } from "#/organization/views";
 import { mergeOrganizationMetadata } from "#/profile/metadata";
+import { isInstallationAuthentication } from "#/security/authentication-method";
 
 export const makeOrganizationApplication = Effect.gen(function* () {
   const repository = yield* DatabaseRepository;
@@ -21,9 +22,12 @@ export const makeOrganizationApplication = Effect.gen(function* () {
   const capabilities = Effect.fn("Application.instance.capabilities.get")(function* (
     actor: SessionActor,
   ) {
-    yield* access.requireActor(actor);
+    const { evidence } = yield* access.requireActor(actor);
     const owner = yield* repository.instance.owner.findActiveByUserId(actor.user.id);
-    return { canCreateOrganization: owner !== undefined };
+    return {
+      canCreateOrganization:
+        owner !== undefined && evidence.some((proof) => isInstallationAuthentication(proof.method)),
+    };
   });
   const get = Effect.fn("Application.organization.organization.get")(function* (
     actor: SessionActor,
@@ -46,7 +50,9 @@ export const makeOrganizationApplication = Effect.gen(function* () {
     return yield* transaction.run(
       Effect.gen(function* () {
         yield* repository.instance.installation.lock();
-        yield* access.requireActor(actor);
+        const { evidence } = yield* access.requireActor(actor);
+        if (!evidence.some((proof) => isInstallationAuthentication(proof.method)))
+          return yield* new OrganizationError({ code: "AUTHENTICATION_REQUIRED" });
         if ((yield* repository.instance.owner.findActiveByUserId(actor.user.id)) === undefined)
           return yield* new OrganizationError({ code: "FORBIDDEN" });
         const organization = yield* repository.organization.organization
@@ -244,6 +250,9 @@ export const makeOrganizationApplication = Effect.gen(function* () {
     return {
       revision: policy.revision,
       allowedMethods: policy.allowedMethods,
+      oidcConnectionIds: (yield* repository.organization.authPolicyConnection.listByOrganization(
+        organizationId,
+      )).map((entry) => entry.identityConnectionId),
       updatedAt: policy.updatedAt,
     };
   });

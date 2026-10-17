@@ -2,7 +2,7 @@ import { NodeServices } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
 
 import { Application, AuthenticationLinks } from "@usepreface/application";
-import { NodeToken, NodeGoogleIdentity } from "@usepreface/application/node";
+import { NodeToken, NodeGoogleIdentity, NodeOidcIdentity } from "@usepreface/application/node";
 import { NodeSecretCrypto, NodeTokenCrypto } from "@usepreface/crypto/node";
 import {
   Database,
@@ -30,6 +30,13 @@ const LinksLive = Layer.effect(
   }),
 ).pipe(Layer.provide(ServerConfig.layer));
 
+const OidcLive = Layer.unwrap(
+  Effect.gen(function* () {
+    const config = yield* ServerConfig;
+    return NodeOidcIdentity.layer(config.oidcAllowedPrivateOrigins.map((url) => url.origin));
+  }),
+).pipe(Layer.provide(ServerConfig.layer));
+
 const PersistenceLive = Layer.mergeAll(DatabaseRepository.layer, DatabaseMigration.layer).pipe(
   Layer.provideMerge(TransactionService.layer.pipe(Layer.provideMerge(Database.layer))),
 );
@@ -46,6 +53,7 @@ export const BackendLive = Layer.mergeAll(Application.layer, EmailDelivery.layer
   Layer.provide(EmailLive),
   Layer.provide(LinksLive),
   Layer.provide(NodeGoogleIdentity.layer),
+  Layer.provide(OidcLive),
   Layer.provide(CryptoLive),
   Layer.provideMerge(PersistenceLive),
   Layer.merge(ServerConfig.layer),

@@ -374,3 +374,11 @@ Session evidence joins its current email source or linked account/active matchin
 revision. Source-specific nullability and composite FKs keep Google evidence tied to its user.
 The Google migration extends the existing baseline; generation never changes a developer DB.
 Repositories provide persistence/conditional writes; application owns authority and provider calls.
+
+Organization OIDC extends the same connection/account/flow repositories. Connections have exclusive
+installation/organization ownership; organization lookups and lists return the OIDC variant.
+`organization.authPolicyConnection.listByOrganization/replaceForOrganization` persists accepted
+connections with composite tenant references. Replacement requires an ambient transaction and must
+be coordinated by the application's policy revision/organization lock. Evidence queries reject
+OIDC sources with inactive membership, archived organization, unlinked account or obsolete trust.
+The additive organization-OIDC migration preserves previous migrations and existing Google data.

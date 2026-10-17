@@ -10,8 +10,7 @@ user, email address or organization membership, and matching emails never link a
 `auth.identity_connection` stores one Google connection per installation, versioned public
 client configuration, encrypted credentials, revision, test timestamps and
 `draft | tested | active | disabled` state. Installation ownership references the fixed
-installation row key, not its public UUID. Organization-owned OIDC/SAML configuration
-is not implemented.
+installation row key, not its public UUID. Organization-owned [OIDC](oidc.md) extends the same storage with explicit organization ownership; SAML is not implemented.
 
 Saving configuration requires current instance ownership and usable email evidence no
 older than five minutes. The installation lock coordinates owner changes, followed by the
@@ -139,7 +138,7 @@ cancellation and reauthentication. Real deployments must complete the actual Goo
 before activation; repository tests do not use operator credentials or send live mail.
 
 This is a backend API with Scalar as its working completion destination. Dashboard integration,
-enterprise OIDC/SAML, Google Workspace domain enforcement, Google-only organization policies,
+required SSO, SAML, Google Workspace domain enforcement, Google-only organization policies,
 provider logout and Google account-deprovisioning notifications are not implemented. A valid
 Google login establishes bounded local evidence; later external provider changes do not instantly
 revoke an already issued Preface session. Local disable/unlink and normal session expiry do.

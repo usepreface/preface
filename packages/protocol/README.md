@@ -98,13 +98,16 @@ to avoid implicitly loading ambient Node.js types; Node types are enabled only f
 
 Identity connection, account and auth-flow IDs are UUIDv7 brands. Storage models distinguish
 historical provider bindings from temporary browser transactions. Session evidence has separate
-email and Google variants with source-specific references. `email_reauthentication` verification
+email, Google and OIDC variants with source-specific references. `email_reauthentication` verification
 is bound to an existing user/address/session; it cannot be consumed as ordinary sign-in.
 
 The DTO entry exports safe Google configuration, connected-account summaries and method
 availability; secrets and tokens stay in redacted input/storage boundaries. `IdentityError` owns
 safe code/status metadata. Google configuration is versioned, and authentication return paths
-currently permit only `/api/docs`. These schemas do not implement enterprise OIDC/SAML.
+currently permit only `/api/docs`. Organization OIDC configuration/flow/evidence variants and policy connection models extend these
+contracts. `CreateOidcConnectionInput`/`UpdateOidcConnectionInput` redact credentials; safe DTOs never
+contain stored secrets. Common external-flow exports retain Google compatibility. The schemas
+alone grant no membership or provider support; required SSO and SAML remain unimplemented.
 
 ## Development
 

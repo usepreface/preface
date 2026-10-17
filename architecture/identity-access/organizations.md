@@ -156,3 +156,8 @@ repositories and cover JSON mutations, cookie authentication, CORS and managemen
 - [HTTP handlers](../../apps/server/src/http/routes/organizations.ts)
 - [Application tests](../../packages/application/tests/integration/organization)
 - [HTTP tests](../../apps/server/tests/integration/http/organizations.test.ts)
+
+Organization owners can approve optional [OIDC connections](oidc.md) through the existing revisioned
+policy editor. The connection relation enforces same-organization ownership. Email remains enabled;
+required SSO and recovery are not implemented. Every organization/team access checks exact accepted
+evidence, and method discovery remains available to active members before satisfying that policy.

@@ -2,12 +2,14 @@ import { Schema } from "effect";
 
 import { CredentialDigest } from "#/common/credential-digest";
 import { AuthenticationReturnPath, AuthFlowIntent, IdentityRevision } from "#/common/identity";
+import { IdentityProvider } from "#/common/oidc";
 import { AuthFlowId, IdentityConnectionId } from "#/identifiers/identity";
 import { OrganizationId } from "#/identifiers/organization";
 import { SessionId } from "#/identifiers/session";
 import { UserId } from "#/identifiers/user";
 export const CreateAuthFlow = Schema.Struct({
   id: AuthFlowId,
+  provider: Schema.optionalKey(IdentityProvider),
   identityConnectionId: IdentityConnectionId,
   connectionRevision: IdentityRevision,
   intent: AuthFlowIntent,
@@ -24,6 +26,7 @@ export const CreateAuthFlow = Schema.Struct({
 export type CreateAuthFlow = typeof CreateAuthFlow.Type;
 export const AuthFlow = Schema.Struct({
   ...CreateAuthFlow.fields,
+  provider: IdentityProvider,
   pkceVerifierCiphertext: Schema.NullOr(Schema.NonEmptyString),
   createdAt: Schema.DateTimeUtcFromDate,
   claimedAt: Schema.NullOr(Schema.DateTimeUtcFromDate),

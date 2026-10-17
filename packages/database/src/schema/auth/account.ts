@@ -40,8 +40,8 @@ export const account = authSchema.table(
       .where(sql`${t.unlinkedAt} is null`),
     index("account_user_idx").on(t.userId),
     check(
-      "account_google_issuer_check",
-      sql`${t.issuer} = 'https://accounts.google.com' and char_length(${t.subject}) between 1 and 255`,
+      "account_identity_check",
+      sql`char_length(${t.issuer}) between 1 and 2048 and char_length(${t.subject}) between 1 and 255`,
     ),
   ],
 );

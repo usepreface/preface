@@ -1,0 +1,30 @@
+import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema, OpenApi } from "effect/http-api";
+
+import { IdentityConnectionId, OrganizationId } from "@usepreface/protocol";
+import {
+  ExternalIdentityStartRequest,
+  ExternalIdentityStartResult,
+  ExternalIdentityCallbackQuery,
+} from "@usepreface/protocol/dto";
+
+import { identityErrors, organizationErrors, requestErrors } from "#/http-errors";
+
+export class OidcApi extends HttpApiGroup.make("oidc")
+  .add(
+    HttpApiEndpoint.post(
+      "start",
+      "/organizations/:organizationId/identity-connections/:connectionId/sign-in/start",
+      {
+        params: { organizationId: OrganizationId, connectionId: IdentityConnectionId },
+        payload: ExternalIdentityStartRequest,
+        success: ExternalIdentityStartResult,
+        error: [...identityErrors, ...organizationErrors, ...requestErrors],
+      },
+    ),
+    HttpApiEndpoint.get("callback", "/auth/oidc/callback", {
+      query: ExternalIdentityCallbackQuery,
+      success: HttpApiSchema.NoContent.pipe(HttpApiSchema.status(303)),
+      error: [...identityErrors, ...organizationErrors, ...requestErrors],
+    }),
+  )
+  .annotate(OpenApi.Title, "Organization OIDC sign-in") {}

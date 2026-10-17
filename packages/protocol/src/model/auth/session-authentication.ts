@@ -26,20 +26,25 @@ const emailFields = {
   accountId: Schema.optionalKey(Schema.Null),
   connectionRevision: Schema.optionalKey(Schema.Null),
 };
-const googleFields = {
+const externalFields = {
   sessionId: SessionId,
   userId: UserId,
-  method: Schema.Literal("google"),
+  method: Schema.Literals(["google", "oidc"]),
   userEmailId: Schema.Null,
   accountId: AccountId,
   connectionRevision: Schema.Int.check(Schema.isGreaterThan(0)),
   authenticatedAt: Schema.DateTimeUtcFromDate,
   expiresAt: Schema.DateTimeUtcFromDate,
-  assurance: Schema.Struct({ version: Schema.Literal(1), provider: Schema.Literal("google") }),
+  assurance: Schema.Struct({
+    version: Schema.Literal(1),
+    provider: Schema.Literals(["google", "oidc"]),
+  }),
 };
 export const CreateSessionAuthentication = Schema.Union([
   Schema.Struct(emailFields),
-  Schema.Struct(googleFields),
+  Schema.Struct(externalFields).check(
+    Schema.makeFilter((proof) => proof.method === proof.assurance.provider),
+  ),
 ]);
 export type CreateSessionAuthentication = typeof CreateSessionAuthentication.Type;
 const stored = {
@@ -48,6 +53,8 @@ const stored = {
 };
 export const SessionAuthentication = Schema.Union([
   Schema.Struct({ ...emailFields, ...stored }),
-  Schema.Struct({ ...googleFields, ...stored }),
+  Schema.Struct({ ...externalFields, ...stored }).check(
+    Schema.makeFilter((proof) => proof.method === proof.assurance.provider),
+  ),
 ]);
 export type SessionAuthentication = typeof SessionAuthentication.Type;

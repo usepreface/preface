@@ -8,6 +8,8 @@ import { IdentityConnectionsApi } from "#/groups/identity-connections";
 import { InstanceCapabilitiesApi } from "#/groups/instance-capabilities";
 import { InstanceSetupApi } from "#/groups/instance-setup";
 import { InvitationsApi } from "#/groups/invitations";
+import { OidcApi } from "#/groups/oidc";
+import { OrganizationIdentityConnectionsApi } from "#/groups/organization-identity-connections";
 import { OrganizationInvitationsApi } from "#/groups/organization-invitations";
 import { OrganizationMembersApi } from "#/groups/organization-members";
 import { OrganizationOwnershipApi } from "#/groups/organization-ownership";
@@ -22,6 +24,8 @@ import { TeamsApi } from "#/groups/teams";
 
 export class PrefaceApi extends HttpApi.make("PrefaceApi")
   .add(
+    OidcApi,
+    OrganizationIdentityConnectionsApi,
     GoogleApi,
     IdentityConnectionsApi,
     AccountsApi,

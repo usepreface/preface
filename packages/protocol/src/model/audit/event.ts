@@ -219,6 +219,7 @@ const profileFields = {
   }),
 };
 const connectionFields = {
+  organizationId: Schema.optionalKey(OrganizationId),
   actorKind: Schema.Literal("user"),
   actorUserId: UserId,
   eventType: Schema.Literals([
@@ -232,6 +233,7 @@ const connectionFields = {
   metadata: Schema.Struct({ revision: Schema.Int }),
 };
 const accountFields = {
+  organizationId: Schema.optionalKey(OrganizationId),
   actorKind: Schema.Literal("user"),
   actorUserId: UserId,
   eventType: Schema.Literals(["auth.account_linked", "auth.account_unlinked"]),
@@ -240,6 +242,7 @@ const accountFields = {
   metadata: Schema.Struct({ connectionId: IdentityConnectionId }),
 };
 const flowFields = {
+  organizationId: Schema.optionalKey(OrganizationId),
   ...actorFields,
   eventType: Schema.Literals(["auth.external_flow_started", "auth.external_flow_failed"]),
   targetType: Schema.Literal("auth_flow"),
@@ -249,13 +252,14 @@ const flowFields = {
   }),
 };
 const googleAuthenticatedFields = {
+  organizationId: Schema.optionalKey(OrganizationId),
   actorKind: Schema.Literal("user"),
   actorUserId: UserId,
   eventType: Schema.Literal("auth.session_authenticated"),
   targetType: Schema.Literal("session"),
   targetId: SessionId,
   metadata: Schema.Struct({
-    method: Schema.Literal("google"),
+    method: Schema.Literals(["google", "oidc"]),
     accountId: AccountId,
     connectionRevision: Schema.Int,
   }),
@@ -276,7 +280,11 @@ const policyFields = {
   eventType: Schema.Literal("organization.auth_policy_updated"),
   targetType: Schema.Literal("organization"),
   targetId: OrganizationId,
-  metadata: Schema.Struct({ revision: Schema.Int, googleEnabled: Schema.Boolean }),
+  metadata: Schema.Struct({
+    revision: Schema.Int,
+    googleEnabled: Schema.Boolean,
+    oidcConnectionIds: Schema.optionalKey(Schema.Array(IdentityConnectionId)),
+  }),
 };
 export const RecordAuditEvent = Schema.Union([
   Schema.Struct(connectionFields),
@@ -311,12 +319,17 @@ const storedFields = {
   occurredAt: Schema.DateTimeUtcFromDate,
   organizationId: Schema.Null,
 };
+const identityStoredFields = {
+  id: AuditEventId,
+  occurredAt: Schema.DateTimeUtcFromDate,
+  organizationId: Schema.NullOr(OrganizationId),
+};
 const organizationStoredFields = { id: AuditEventId, occurredAt: Schema.DateTimeUtcFromDate };
 export const AuditEvent = Schema.Union([
-  Schema.Struct({ ...connectionFields, ...storedFields }),
-  Schema.Struct({ ...accountFields, ...storedFields }),
-  Schema.Struct({ ...flowFields, ...storedFields }),
-  Schema.Struct({ ...googleAuthenticatedFields, ...storedFields }),
+  Schema.Struct({ ...connectionFields, ...identityStoredFields }),
+  Schema.Struct({ ...accountFields, ...identityStoredFields }),
+  Schema.Struct({ ...flowFields, ...identityStoredFields }),
+  Schema.Struct({ ...googleAuthenticatedFields, ...identityStoredFields }),
   Schema.Struct({ ...reauthenticationFields, ...storedFields }),
   Schema.Struct({ ...policyFields, ...organizationStoredFields }),
   Schema.Struct({ ...profileFields, ...storedFields }),

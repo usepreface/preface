@@ -93,3 +93,8 @@ least one usable source; losing Google does not remove independent email evidenc
 sign-in creates a new Preface session, while explicit linking and Google/email reauthentication
 add evidence to the current session without extending its absolute expiry. Organization policy
 checks these proofs on every access. Logout also revokes pending authenticated provider flows.
+
+[Organization OIDC](oidc.md) adds connection-backed evidence scoped to active organization membership.
+Source validation requires its current linked account, active trust revision and usable organization.
+Organization policy additionally checks the exact approved connection. OIDC proof cannot satisfy
+local recent-email requirements or another organization's connection policy.

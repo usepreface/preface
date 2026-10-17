@@ -15,6 +15,7 @@ const makeRepository = Effect.gen(function* () {
       .insert(table)
       .values({
         ...Schema.encodeSync(CreateAuthFlow)(input),
+        provider: input.provider ?? "google",
         id: input.id,
         identityConnectionId: input.identityConnectionId,
         initiatingSessionId: input.initiatingSessionId,

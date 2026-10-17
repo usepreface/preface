@@ -6,6 +6,26 @@ export const identityRelations = defineRelationsPart(schema, (r) => ({
     installation: r.one.installation({
       from: r.identityConnection.installationId,
       to: r.installation.id,
+      optional: true,
+    }),
+    organization: r.one.organization({
+      from: r.identityConnection.organizationId,
+      to: r.organization.id,
+      optional: true,
+    }),
+  },
+  organizationAuthPolicyConnection: {
+    connection: r.one.identityConnection({
+      from: [
+        r.organizationAuthPolicyConnection.identityConnectionId,
+        r.organizationAuthPolicyConnection.organizationId,
+      ],
+      to: [r.identityConnection.id, r.identityConnection.organizationId],
+      optional: false,
+    }),
+    policy: r.one.organizationAuthPolicy({
+      from: r.organizationAuthPolicyConnection.organizationId,
+      to: r.organizationAuthPolicy.organizationId,
       optional: false,
     }),
   },

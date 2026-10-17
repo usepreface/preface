@@ -8,7 +8,7 @@ coordinates business policy, transactions and audit without starting a server.
 
 Install workspace dependencies with `pnpm install`. Supply `DatabaseRepository`,
 `TransactionService`, completed `DatabaseMigration`, `TokenService`, `TokenCrypto`,
-`SecretCrypto`, `EmailJobs`, `GoogleIdentity` and `AuthenticationLinks` to `Application.layer`. Supply platform crypto from
+`SecretCrypto`, `EmailJobs`, `GoogleIdentity`, `OidcIdentity` and `AuthenticationLinks` to `Application.layer`. Supply platform crypto from
 the Node runtime edge. The server's complete composition is in
 [its runtime module](../../apps/server/src/runtime.ts).
 
@@ -287,6 +287,40 @@ and session lifecycle. The explicit PostgreSQL lane uses disposable test configu
 and sequential files; never target a deployment database. Built tests exercise packaged
 migrations and the verification/session lifecycle.
 
-Backend-connected onboarding/sign-in UI, image uploads, account recovery
-and SSO are not implemented. See the [instance setup architecture](../../architecture/identity-access/instance-setup.md)
+Backend-connected onboarding/sign-in UI, image uploads, account recovery, required SSO
+and SAML are not implemented. See the [instance setup architecture](../../architecture/identity-access/instance-setup.md)
 and [server README](../../apps/server/README.md) for current transport and deployment.
+
+## Organization OIDC
+
+Supply `OidcIdentity` to `Application.layer`. The Node entry exports
+`NodeOidcIdentity.layer(allowedPrivateOrigins?)`, using the existing `openid-client` dependency.
+It supports HTTPS discovery, authorization code/PKCE S256, RS256 ID tokens and
+`client_secret_basic`/`client_secret_post`. Private origins require an operator allowlist;
+TLS verification remains enabled. The adapter performs no network request at construction.
+
+`organization.identityConnection` exposes `list`, `get`, `createOidc`, `updateOidc`, `test`,
+`activate`, `disable` and `refreshMetadata`. Creation takes actor, organization ID and decoded
+`CreateOidcConnectionInput`; updates use `UpdateOidcConnectionInput`. Inputs redact secrets.
+All mutations require current organization ownership and recent local email. Discovery occurs
+outside SQL, followed by fresh locked authority/revision checks and required audit. Test the exact
+revision in a browser before activation. After first activation, issuer/client ID are immutable;
+use another connection to replace the identity space. Trust changes invalidate testing/evidence;
+display-name-only changes preserve them. No hard deletion is exposed.
+
+Approve an active connection with `organization.authPolicy.update(actor, organizationId,
+{ expectedRevision, oidcConnectionIds })`; the list replaces accepted OIDC connections. Omission
+preserves it, including when editing only Google. Email remains enabled. `methods` returns safe
+approved connection labels, availability and current-user link state to active members.
+
+`auth.oidc.startLink(actor, organizationId, connectionId, {})` requires active membership and recent
+email. `startSignIn(organizationId, connectionId, {}, actor?)` rejects authenticated browsers and
+requires a previously linked identity at completion. `startReauthentication(actor, organizationId,
+connectionId, {})` proves the current user again. The server owns flow cookies and calls
+`callback(input, actor?)`; successful sign-in credentials are for cookie delivery only. Linking
+and reauthentication do not extend session lifetime. No user/membership is created by OIDC and
+provider email never merges accounts. Organization access requires the exact approved connection.
+
+See [OIDC architecture](../../architecture/identity-access/oidc.md) for transactions, outbound
+restrictions and supported limits. Adapter HTTPS tests require `openssl` to generate an ephemeral
+certificate; they change certificate trust only inside their test process and clean it up.

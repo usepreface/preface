@@ -6,7 +6,9 @@ import {
   IdentityRevision,
   AuthenticationReturnPath,
 } from "#/common/identity";
+import { OrganizationOidcMethod } from "#/dto/auth/oidc";
 import { IdentityConnectionId, AccountId } from "#/identifiers/identity";
+import { OrganizationId } from "#/identifiers/organization";
 export const PublicGoogleConnection = Schema.Struct({
   id: Schema.NullOr(IdentityConnectionId),
   name: Schema.String,
@@ -39,7 +41,9 @@ export const GoogleCallbackQuery = Schema.Struct({
 });
 export const PublicAccount = Schema.Struct({
   id: AccountId,
-  provider: Schema.Literal("google"),
+  provider: Schema.Literals(["google", "oidc"]),
+  connectionId: Schema.optionalKey(IdentityConnectionId),
+  organizationId: Schema.optionalKey(Schema.NullOr(OrganizationId)),
   providerEmail: Schema.NullOr(Schema.String),
   providerEmailVerified: Schema.NullOr(Schema.Boolean),
   connectionAvailable: Schema.Boolean,
@@ -57,9 +61,13 @@ export const OrganizationAuthenticationMethods = Schema.Struct({
   googleEnabled: Schema.Boolean,
   googleAvailable: Schema.Boolean,
   googleEffective: Schema.Boolean,
+  oidc: Schema.Array(OrganizationOidcMethod),
   email: Schema.Literal(true),
 });
 export const UpdateGooglePolicyRequest = Schema.Struct({
   expectedRevision: IdentityRevision,
-  googleEnabled: Schema.Boolean,
+  googleEnabled: Schema.optionalKey(Schema.Boolean),
+  oidcConnectionIds: Schema.optionalKey(
+    Schema.Array(IdentityConnectionId).check(Schema.isMaxLength(20)),
+  ),
 });

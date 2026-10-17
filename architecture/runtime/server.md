@@ -83,6 +83,10 @@ plus a non-root backend image exposing container port 8080. The host publication
 defaults to loopback:8080. The image contains built workspace dependencies and
 migrations; landing and UI sources are excluded from its build context.
 
+Organization OIDC uses the existing encryption key and public origin. Its Node adapter enforces
+an outbound HTTPS/DNS policy. `OIDC_ALLOWED_PRIVATE_ORIGINS` optionally permits exact internal
+provider origins without relaxing TLS verification. See [organization OIDC](../identity-access/oidc.md).
+
 The operator supplies the public origin, PostgreSQL credentials, two independent
 crypto keys and selected email provider configuration through deployment secrets.
 Production requires a real provider; console delivery additionally requires explicit

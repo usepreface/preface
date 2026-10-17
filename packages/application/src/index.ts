@@ -5,3 +5,5 @@ export { SecurityError } from "#/security/errors";
 export { AuthenticationLinks } from "#/auth/links";
 
 export { GoogleIdentity, GoogleIdentityClaims } from "#/auth/google/provider";
+
+export { OidcIdentity, OidcIdentityClaims } from "#/auth/oidc/provider";

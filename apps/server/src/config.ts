@@ -31,6 +31,10 @@ const makeServerConfig = Effect.gen(function* () {
     ).pipe(Config.withDefault(8080)),
     publicUrl: Config.schema(originSchema, "PUBLIC_URL"),
     corsOrigins: Config.Array(originSchema, "CORS_ALLOWED_ORIGINS").pipe(Config.withDefault([])),
+    oidcAllowedPrivateOrigins: Config.Array(
+      originSchema.check(Schema.makeFilter((url) => url.protocol === "https:")),
+      "OIDC_ALLOWED_PRIVATE_ORIGINS",
+    ).pipe(Config.withDefault([])),
     trustedProxyCidrs: Config.Array(networkSchema, "TRUSTED_PROXY_CIDRS").pipe(
       Config.withDefault([]),
     ),

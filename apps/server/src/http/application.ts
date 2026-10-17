@@ -20,6 +20,8 @@ import { HealthRoutes } from "#/http/routes/health";
 import { IdentityConnectionsRoutes } from "#/http/routes/identity-connections";
 import { InstanceSetupRoutes } from "#/http/routes/instance-setup";
 import { InvitationsRoutes } from "#/http/routes/invitations";
+import { OidcRoutes } from "#/http/routes/oidc";
+import { OrganizationIdentityConnectionsRoutes } from "#/http/routes/organization-identity-connections";
 import { OrganizationInvitationsRoutes } from "#/http/routes/organization-invitations";
 import { OrganizationMembersRoutes } from "#/http/routes/organization-members";
 import { OrganizationOwnershipRoutes } from "#/http/routes/organization-ownership";
@@ -35,6 +37,8 @@ import { TeamsRoutes } from "#/http/routes/teams";
 const ProductRoutes = HttpApiBuilder.layer(PrefaceApi, { openapiPath: "/api/openapi.json" }).pipe(
   Layer.provide(
     Layer.mergeAll(
+      OidcRoutes,
+      OrganizationIdentityConnectionsRoutes,
       GoogleRoutes,
       IdentityConnectionsRoutes,
       AccountsRoutes,

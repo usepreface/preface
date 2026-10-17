@@ -45,13 +45,17 @@ const makeOrganizationAuthPolicyRepository = Effect.gen(function* () {
     memberId: OrganizationMemberId,
     expectedRevision: number,
     googleEnabled: boolean,
+    oidcEnabled = false,
   ) {
     const [row] = yield* database
       .update(organizationAuthPolicy)
       .set({
-        allowedMethods: googleEnabled
-          ? ["email_code", "email_link", "google"]
-          : ["email_code", "email_link"],
+        allowedMethods: [
+          "email_code",
+          "email_link",
+          ...(googleEnabled ? ["google" as const] : []),
+          ...(oidcEnabled ? ["oidc" as const] : []),
+        ],
         revision: sql`${organizationAuthPolicy.revision}+1`,
         updatedByMemberId: memberId,
         updatedAt: DateTime.toDateUtc(yield* DateTime.now),

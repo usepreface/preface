@@ -64,14 +64,28 @@ const makeOrganizationAccess = Effect.gen(function* () {
     const policy = yield* repository.organization.authPolicy.findByOrganizationId(organizationId);
     if (policy === undefined)
       return yield* Effect.die(new Error("Organization has no authentication policy"));
-    if (
-      !current.evidence.some((proof) =>
-        policy.allowedMethods.includes(
-          proof.method === "bootstrap_email_code" ? "email_code" : proof.method,
-        ),
+    const approved =
+      yield* repository.organization.authPolicyConnection.listByOrganization(organizationId);
+    let accepted = false;
+    for (const proof of current.evidence) {
+      if (proof.method !== "oidc") {
+        if (
+          policy.allowedMethods.includes(
+            proof.method === "bootstrap_email_code" ? "email_code" : proof.method,
+          )
+        )
+          accepted = true;
+        continue;
+      }
+      if (!policy.allowedMethods.includes("oidc")) continue;
+      const account = yield* repository.auth.account.findById(proof.accountId);
+      if (
+        account !== undefined &&
+        approved.some((entry) => entry.identityConnectionId === account.identityConnectionId)
       )
-    )
-      return yield* new OrganizationError({ code: "AUTHENTICATION_REQUIRED" });
+        accepted = true;
+    }
+    if (!accepted) return yield* new OrganizationError({ code: "AUTHENTICATION_REQUIRED" });
     const grants = yield* repository.organization.roleBinding.listActiveByMemberId(
       organizationId,
       member.id,

@@ -129,7 +129,7 @@ accept `includeRemoved`. Archived organization discovery is owner-only. Detail r
 
 Owner-only transitions preserve a usable owner. Custom roles/assignments are bounded
 by the actor's delegation rights. Invitations own additional admission; there is no
-direct member-creation endpoint. Owners can opt into Google with the policy editor below; enterprise SSO configuration remains pending. These endpoints are backend-only.
+direct member-creation endpoint. Owners can opt into Google with the policy editor below; organization OIDC is available as described below; required SSO and SAML remain pending. These endpoints are backend-only.
 
 `OrganizationError` codes map invalid input to 400, insufficient authority/evidence
 to 403, scoped missing organization/member/role/binding to 404, and lifecycle or
@@ -266,3 +266,34 @@ pnpm --filter @usepreface/api build
 Contract tests cover versioned paths, authentication metadata, error statuses, write-only fields
 and the wire/redacted-input boundary. Actual typed-client, cookie, middleware and startup behavior
 is tested in the server package.
+
+## Organization OIDC
+
+All paths use `/api/v1`. The `organizationIdentityConnections` client group exposes:
+
+- `list`/`create`: GET/POST `/organizations/:organizationId/identity-connections`.
+- `get`/`update`: GET/PATCH the connection's `/:connectionId` path.
+- `test`, `activate`, `disable`, `refreshMetadata`: POST its `/test`, `/activate`, `/disable`,
+  `/refresh-metadata` action, with `{ expectedRevision }`.
+- `link`/`reauthenticate`: POST its `/link/start` or `/reauthenticate/start`, with `{}` or the
+  supported return path.
+
+Creation returns 201 and takes `{ name, issuer, clientId, clientSecret,
+clientAuthenticationMethod }`. The supported authentication methods are `client_secret_basic`
+and `client_secret_post`. Update takes expected revision and optional name/issuer/client ID/
+secret/authentication method. Issuer/client ID cannot change after first activation. Configuration
+responses include versioned discovered endpoints, test/activation timestamps and secret presence;
+never credentials. Reads require organization ownership; mutations also need recent email.
+
+`oidc.start` POSTs `/organizations/:organizationId/identity-connections/:connectionId/sign-in/start`
+from a signed-out browser. `oidc.callback` is GET `/auth/oidc/callback`, a browser redirect endpoint
+returning 303. Starts return authorization URL/expiry and set the server-owned `preface_oidc_flow`
+cookie. Follow the URL in the same browser; successful sign-in sets the normal session cookie.
+Callback completion currently redirects only to `/api/docs`.
+
+The existing policy PATCH accepts `{ expectedRevision, oidcConnectionIds }`, optionally alongside
+`googleEnabled`. Omission preserves each setting; the connection list replaces OIDC approvals and
+accepts up to 20 distinct same-organization connections. Policy responses include connection IDs.
+Member method discovery returns an `oidc` array of `{ id, name, available, linked }`. The existing
+account list includes OIDC provider/connection/organization summaries, and DELETE account unlinks
+with recent email proof. Email remains enabled; required SSO and recovery are not provided here.

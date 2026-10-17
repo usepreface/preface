@@ -5,6 +5,7 @@ import { IdentityError } from "@usepreface/protocol";
 import type { SessionActor } from "@usepreface/protocol/dto";
 
 import { OrganizationAccess } from "#/organization/access";
+import { isLocalEmailAuthentication } from "#/security/authentication-method";
 import { recentEmailAuthenticationAge } from "#/security/policy";
 
 export const makeIdentityAccess = Effect.gen(function* () {
@@ -19,7 +20,8 @@ export const makeIdentityAccess = Effect.gen(function* () {
     if (
       !evidence.some(
         (proof) =>
-          proof.method !== "google" && DateTime.toEpochMillis(proof.authenticatedAt) >= cutoff,
+          isLocalEmailAuthentication(proof.method) &&
+          DateTime.toEpochMillis(proof.authenticatedAt) >= cutoff,
       )
     )
       return yield* new IdentityError({ code: "REAUTHENTICATION_REQUIRED" });

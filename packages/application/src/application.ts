@@ -1,6 +1,7 @@
 import { Context, Effect, Layer } from "effect";
 
 import { DatabaseMigration, DatabaseRepository } from "@usepreface/database";
+import type { IdentityConnectionId, OrganizationId } from "@usepreface/protocol";
 import type { SessionActor } from "@usepreface/protocol/dto";
 import type { GoogleStartInput } from "@usepreface/protocol/input";
 
@@ -10,6 +11,9 @@ import { makeEmailSignInApplication } from "#/auth/email-sign-in";
 import { makeGoogleFlowCallback } from "#/auth/google/callback";
 import { makeGoogleConnectionApplication } from "#/auth/google/connection";
 import { makeGoogleFlowStart } from "#/auth/google/start";
+import { makeOidcFlowCallback } from "#/auth/oidc/callback";
+import { makeOidcConnectionApplication } from "#/auth/oidc/connection";
+import { makeOidcFlowStart } from "#/auth/oidc/start";
 import { makeSessionApplication } from "#/auth/session";
 import { makeBootstrapApplication } from "#/instance/bootstrap";
 import { OrganizationAccess } from "#/organization/access";
@@ -26,6 +30,8 @@ const makeApplication = Effect.gen(function* () {
 
   const start = yield* makeGoogleFlowStart;
   const connections = yield* makeGoogleConnectionApplication;
+  const startOidc = yield* makeOidcFlowStart;
+  const oidcConnections = yield* makeOidcConnectionApplication;
   return {
     instance: {
       bootstrap,
@@ -52,6 +58,27 @@ const makeApplication = Effect.gen(function* () {
         google: (actor: SessionActor, input: GoogleStartInput = {}) =>
           start("reauthenticate", actor, input),
       },
+      oidc: {
+        startSignIn: (
+          organizationId: OrganizationId,
+          connectionId: IdentityConnectionId,
+          input: GoogleStartInput = {},
+          actor?: SessionActor,
+        ) => startOidc("sign_in", organizationId, connectionId, input, actor),
+        startLink: (
+          actor: SessionActor,
+          organizationId: OrganizationId,
+          connectionId: IdentityConnectionId,
+          input: GoogleStartInput = {},
+        ) => startOidc("link", organizationId, connectionId, input, actor),
+        startReauthentication: (
+          actor: SessionActor,
+          organizationId: OrganizationId,
+          connectionId: IdentityConnectionId,
+          input: GoogleStartInput = {},
+        ) => startOidc("reauthenticate", organizationId, connectionId, input, actor),
+        callback: yield* makeOidcFlowCallback,
+      },
       google: {
         start: (input: GoogleStartInput = {}, actor?: SessionActor) =>
           start("sign_in", actor, input),
@@ -62,7 +89,18 @@ const makeApplication = Effect.gen(function* () {
         return { email: true as const, google: connection?.status === "active" };
       }),
     },
-    organization: organizations.organization,
+    organization: {
+      ...organizations.organization,
+      identityConnection: {
+        ...oidcConnections,
+        test: (
+          actor: SessionActor,
+          organizationId: OrganizationId,
+          connectionId: IdentityConnectionId,
+          revision: number,
+        ) => startOidc("test", organizationId, connectionId, {}, actor, revision),
+      },
+    },
   } as const;
 });
 

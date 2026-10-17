@@ -37,3 +37,10 @@ export {
 } from "#/input/auth/identity";
 
 export { GoogleCallbackInput } from "#/input/auth/identity";
+
+export { CreateOidcConnectionInput, UpdateOidcConnectionInput } from "#/input/auth/oidc";
+
+export {
+  GoogleStartInput as ExternalIdentityStartInput,
+  GoogleCallbackInput as ExternalIdentityCallbackInput,
+} from "#/input/auth/identity";

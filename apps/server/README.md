@@ -223,3 +223,28 @@ Built process tests verify startup, explicit proof replacement, restart preserva
 setup refusal and failure before binding. They are skipped without the explicit disposable
 PostgreSQL port; configuration-free CLI help still runs. Never run these destructive fixture
 resets against an existing development or deployment database.
+
+## Organization OIDC
+
+Organization owners configure their providers through `/api/v1/organizations/:organizationId/
+identity-connections`. The [API README](../../packages/api/README.md#organization-oidc) documents
+payloads and actions. Register the returned callback URL with the provider, run the browser test,
+activate the tested revision, approve it through organization policy, then explicitly link accounts.
+Email remains available. Unknown external identities cannot create Preface accounts or memberships.
+
+The runtime supplies the OIDC SDK adapter and outbound HTTPS policy. No provider credentials are
+required in environment variables; they are encrypted using the existing application key. For a
+private-network identity provider, operators may set comma-separated exact HTTPS origins:
+
+```dotenv
+OIDC_ALLOWED_PRIVATE_ORIGINS=https://identity.internal.example
+```
+
+The default blocks private/special-use addresses, including after DNS changes. An exception permits
+only the named origin/port, never insecure HTTP or invalid certificates. Configure Node's trusted
+CA certificates in the deployment when an internal CA is used. Redirects and oversized provider
+responses are rejected; credentials and callback query values stay out of request logging.
+
+The browser flow cookie is separate from Google. Successful callbacks return 303 to `/api/docs`
+and deliver a new session only in an HttpOnly cookie. See [OIDC architecture](../../architecture/identity-access/oidc.md) for source revocation and limits. Required SSO, SAML, domain routing,
+provider logout and immediate external employee revocation notifications are not implemented.

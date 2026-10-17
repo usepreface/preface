@@ -12,6 +12,16 @@ describe("public HTTP contract", () => {
     const spec = OpenApi.fromApi(PrefaceApi);
 
     expect(Object.keys(spec.paths)).toEqual([
+      "/api/v1/organizations/{organizationId}/identity-connections/{connectionId}/sign-in/start",
+      "/api/v1/auth/oidc/callback",
+      "/api/v1/organizations/{organizationId}/identity-connections",
+      "/api/v1/organizations/{organizationId}/identity-connections/{connectionId}",
+      "/api/v1/organizations/{organizationId}/identity-connections/{connectionId}/test",
+      "/api/v1/organizations/{organizationId}/identity-connections/{connectionId}/activate",
+      "/api/v1/organizations/{organizationId}/identity-connections/{connectionId}/disable",
+      "/api/v1/organizations/{organizationId}/identity-connections/{connectionId}/refresh-metadata",
+      "/api/v1/organizations/{organizationId}/identity-connections/{connectionId}/link/start",
+      "/api/v1/organizations/{organizationId}/identity-connections/{connectionId}/reauthenticate/start",
       "/api/v1/auth/methods",
       "/api/v1/auth/google/start",
       "/api/v1/auth/google/callback",

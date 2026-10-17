@@ -116,3 +116,8 @@ tests verify default exports and packaged migration assets.
 - [Migration gate](../../packages/database/src/migrations/layer.ts)
 - [Audit model](../../packages/protocol/src/model/audit/event.ts)
 - [Persistence tests](../../packages/database/tests/integration)
+
+Organization OIDC extends identity connection ownership and provider-aware flow/evidence constraints.
+`organization.auth_policy_connection` uses composite references to its owning connection and
+approving member. The additive organization-OIDC migration preserves existing Google rows/flows.
+See [OIDC](../identity-access/oidc.md) for trust revision, policy locking and source invalidation.

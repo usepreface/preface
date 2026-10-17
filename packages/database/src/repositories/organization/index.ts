@@ -1,6 +1,7 @@
 import { Context, Effect, Layer } from "effect";
 
 import { OrganizationAuthPolicyRepository } from "#/repositories/organization/auth-policy";
+import { OrganizationAuthPolicyConnectionRepository } from "#/repositories/organization/auth-policy-connection";
 import { InvitationRepository } from "#/repositories/organization/invitation";
 import { OrganizationMemberRepository } from "#/repositories/organization/member";
 import { OrganizationRepository } from "#/repositories/organization/organization";
@@ -17,6 +18,7 @@ const makeOrganizationRepositories = Effect.gen(function* () {
     role: yield* OrganizationRoleRepository,
     roleBinding: yield* OrganizationRoleBindingRepository,
     authPolicy: yield* OrganizationAuthPolicyRepository,
+    authPolicyConnection: yield* OrganizationAuthPolicyConnectionRepository,
   } as const;
 });
 export class OrganizationRepositories extends Context.Service<
@@ -33,6 +35,7 @@ export class OrganizationRepositories extends Context.Service<
         OrganizationRoleRepository.layer,
         OrganizationRoleBindingRepository.layer,
         OrganizationAuthPolicyRepository.layer,
+        OrganizationAuthPolicyConnectionRepository.layer,
       ),
     ),
   );
@@ -44,6 +47,7 @@ export {
   OrganizationRoleRepository,
   OrganizationRoleBindingRepository,
   OrganizationAuthPolicyRepository,
+  OrganizationAuthPolicyConnectionRepository,
 };
 
 export { TeamRepository };

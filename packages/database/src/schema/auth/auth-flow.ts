@@ -27,6 +27,7 @@ export const authFlow = authSchema.table(
   "auth_flow",
   {
     id: uuid("id").$type<AuthFlowId>().primaryKey(),
+    provider: text("provider").$type<AuthFlow["provider"]>().notNull().default("google"),
     identityConnectionId: uuid("identity_connection_id")
       .$type<IdentityConnectionId>()
       .notNull()
@@ -56,6 +57,18 @@ export const authFlow = authSchema.table(
       columns: [t.initiatingSessionId, t.expectedUserId],
       foreignColumns: [session.id, session.userId],
     }).onDelete("restrict"),
+    foreignKey({
+      columns: [t.identityConnectionId, t.provider],
+      foreignColumns: [identityConnection.id, identityConnection.provider],
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [t.identityConnectionId, t.targetOrganizationId],
+      foreignColumns: [identityConnection.id, identityConnection.organizationId],
+    }).onDelete("restrict"),
+    check(
+      "auth_flow_owner_check",
+      sql`(${t.provider} = 'google' and ${t.targetOrganizationId} is null) or (${t.provider} = 'oidc' and ${t.targetOrganizationId} is not null)`,
+    ),
     uniqueIndex("auth_flow_state_uidx").on(t.stateHash),
     index("auth_flow_connection_idx").on(t.identityConnectionId),
     index("auth_flow_expiry_idx").on(t.expiresAt),

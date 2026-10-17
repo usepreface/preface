@@ -34,3 +34,5 @@ export { identityConnection } from "#/schema/auth/identity-connection";
 export { account } from "#/schema/auth/account";
 
 export { authFlow } from "#/schema/auth/auth-flow";
+
+export { organizationAuthPolicyConnection } from "#/schema/organization/auth-policy-connection";

@@ -10,6 +10,8 @@ import { account } from "#/schema/auth/account";
 import { identityConnection } from "#/schema/auth/identity-connection";
 import { sessionAuthentication } from "#/schema/auth/session-authentication";
 import { userEmail } from "#/schema/auth/user-email";
+import { organizationMember } from "#/schema/organization/member";
+import { organization } from "#/schema/organization/organization";
 
 const makeSessionAuthenticationRepository = Effect.gen(function* () {
   const database = yield* Database;
@@ -25,8 +27,9 @@ const makeSessionAuthenticationRepository = Effect.gen(function* () {
         sessionId: input.sessionId,
         userId: input.userId,
         userEmailId: input.userEmailId,
-        accountId: input.method === "google" ? input.accountId : null,
-        connectionRevision: input.method === "google" ? input.connectionRevision : null,
+        accountId: input.method === "google" || input.method === "oidc" ? input.accountId : null,
+        connectionRevision:
+          input.method === "google" || input.method === "oidc" ? input.connectionRevision : null,
       })
       .returning();
     if (row === undefined)
@@ -41,6 +44,14 @@ const makeSessionAuthenticationRepository = Effect.gen(function* () {
         .leftJoin(userEmail, eq(userEmail.id, sessionAuthentication.userEmailId))
         .leftJoin(account, eq(account.id, sessionAuthentication.accountId))
         .leftJoin(identityConnection, eq(identityConnection.id, account.identityConnectionId))
+        .leftJoin(organization, eq(organization.id, identityConnection.organizationId))
+        .leftJoin(
+          organizationMember,
+          and(
+            eq(organizationMember.organizationId, identityConnection.organizationId),
+            eq(organizationMember.userId, sessionAuthentication.userId),
+          ),
+        )
         .where(
           and(
             eq(sessionAuthentication.sessionId, sessionId),
@@ -54,7 +65,18 @@ const makeSessionAuthenticationRepository = Effect.gen(function* () {
                 eq(userEmail.loginEnabled, true),
               ),
               and(
-                eq(sessionAuthentication.method, "google"),
+                inArray(sessionAuthentication.method, ["google", "oidc"]),
+                eq(identityConnection.provider, sessionAuthentication.method),
+                or(
+                  eq(sessionAuthentication.method, "google"),
+                  and(
+                    isNotNull(organization.id),
+                    isNull(organization.archivedAt),
+                    isNotNull(organizationMember.id),
+                    isNull(organizationMember.suspendedAt),
+                    isNull(organizationMember.removedAt),
+                  ),
+                ),
                 isNotNull(account.id),
                 isNull(account.unlinkedAt),
                 eq(identityConnection.status, "active"),

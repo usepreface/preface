@@ -9,6 +9,7 @@ import { makeIdentitySecrets } from "#/auth/google/secrets";
 import { makeIdentityAccess } from "#/auth/identity-access";
 import { AuthenticationLinks } from "#/auth/links";
 import { OrganizationAccess } from "#/organization/access";
+import { isInstallationAuthentication } from "#/security/authentication-method";
 
 export const makeGoogleConnectionApplication = Effect.gen(function* () {
   const repository = yield* DatabaseRepository;
@@ -34,7 +35,9 @@ export const makeGoogleConnectionApplication = Effect.gen(function* () {
   const get = Effect.fn("Application.instance.authentication.google.get")(function* (
     actor: SessionActor,
   ) {
-    yield* actors.requireActor(actor);
+    const { evidence } = yield* actors.requireActor(actor);
+    if (!evidence.some((proof) => isInstallationAuthentication(proof.method)))
+      return yield* new IdentityError({ code: "REAUTHENTICATION_REQUIRED" });
     if ((yield* repository.instance.owner.findActiveByUserId(actor.user.id)) === undefined)
       return yield* new IdentityError({ code: "FORBIDDEN" });
     return yield* view();

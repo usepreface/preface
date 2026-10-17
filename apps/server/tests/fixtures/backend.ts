@@ -1,8 +1,8 @@
 import { NodeServices } from "@effect/platform-node";
 import { ConfigProvider, Effect, Layer } from "effect";
 
-import { Application, AuthenticationLinks } from "@usepreface/application";
-import { NodeToken, NodeGoogleIdentity } from "@usepreface/application/node";
+import { Application, AuthenticationLinks, type OidcIdentity } from "@usepreface/application";
+import { NodeToken, NodeGoogleIdentity, NodeOidcIdentity } from "@usepreface/application/node";
 import { NodeSecretCrypto, NodeTokenCrypto } from "@usepreface/crypto/node";
 import { DatabaseRepository } from "@usepreface/database";
 import { TestDatabase } from "@usepreface/database/testing";
@@ -23,29 +23,33 @@ export const TestConfigLayer = ServerConfig.layer.pipe(
   ),
 );
 const persistence = DatabaseRepository.layer.pipe(Layer.provideMerge(database));
-export const BackendTestLayer = Layer.mergeAll(
-  Application.layer.pipe(
-    Layer.provide(NodeGoogleIdentity.layer),
-    Layer.provide(
-      Layer.succeed(AuthenticationLinks, { publicOrigin: "https://preface.example.test" }),
-    ),
-    Layer.provideMerge(EmailJobs.layer.pipe(Layer.provideMerge(EmailPayloadCipher.layer))),
-    Layer.provide(
-      Layer.mergeAll(NodeToken.layer, NodeTokenCrypto.layer, NodeSecretCrypto.layer).pipe(
-        Layer.provide(
-          ConfigProvider.layer(
-            ConfigProvider.fromUnknown({
-              CRYPTO_ENCRYPTION_KEY: Buffer.alloc(32, 7).toString("base64"),
-              CRYPTO_HMAC_KEY: Buffer.alloc(32, 8).toString("base64"),
-            }),
+export const makeBackendTestLayer = (oidc: Layer.Layer<OidcIdentity> = NodeOidcIdentity.layer()) =>
+  Layer.mergeAll(
+    Application.layer.pipe(
+      Layer.provide(NodeGoogleIdentity.layer),
+      Layer.provide(oidc),
+      Layer.provide(
+        Layer.succeed(AuthenticationLinks, { publicOrigin: "https://preface.example.test" }),
+      ),
+      Layer.provideMerge(EmailJobs.layer.pipe(Layer.provideMerge(EmailPayloadCipher.layer))),
+      Layer.provide(
+        Layer.mergeAll(NodeToken.layer, NodeTokenCrypto.layer, NodeSecretCrypto.layer).pipe(
+          Layer.provide(
+            ConfigProvider.layer(
+              ConfigProvider.fromUnknown({
+                CRYPTO_ENCRYPTION_KEY: Buffer.alloc(32, 7).toString("base64"),
+                CRYPTO_HMAC_KEY: Buffer.alloc(32, 8).toString("base64"),
+              }),
+            ),
           ),
         ),
       ),
+      Layer.provideMerge(persistence),
     ),
-    Layer.provideMerge(persistence),
-  ),
-  TestConfigLayer,
-).pipe(Layer.provide(NodeServices.layer));
+    TestConfigLayer,
+  ).pipe(Layer.provide(NodeServices.layer));
+
+export const BackendTestLayer = makeBackendTestLayer();
 
 export const prepareTestInstance = Effect.gen(function* () {
   yield* (yield* TestDatabase).reset;

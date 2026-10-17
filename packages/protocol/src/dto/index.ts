@@ -73,3 +73,11 @@ export {
 export { UpdateProfileRequest } from "#/dto/auth/profile";
 
 export * from "#/dto/auth/identity";
+
+export * from "#/dto/auth/oidc";
+
+export {
+  GoogleStartRequest as ExternalIdentityStartRequest,
+  GoogleStartResult as ExternalIdentityStartResult,
+  GoogleCallbackQuery as ExternalIdentityCallbackQuery,
+} from "#/dto/auth/identity";

@@ -17,6 +17,7 @@ const makeRepository = Effect.gen(function* () {
   const findByIdentity = Effect.fn("AccountRepository.findByIdentity")(function* (
     connectionId: IdentityConnectionId,
     subject: string,
+    issuer = "https://accounts.google.com",
   ) {
     const [row] = yield* database
       .select()
@@ -24,7 +25,7 @@ const makeRepository = Effect.gen(function* () {
       .where(
         and(
           eq(table.identityConnectionId, connectionId),
-          eq(table.issuer, "https://accounts.google.com"),
+          eq(table.issuer, issuer),
           eq(table.subject, subject),
         ),
       );

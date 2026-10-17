@@ -10,3 +10,5 @@ export { invitationAssignment } from "#/schema/organization/invitation-assignmen
 
 export { team } from "#/schema/organization/team";
 export { teamMember } from "#/schema/organization/team-member";
+
+export { organizationAuthPolicyConnection } from "#/schema/organization/auth-policy-connection";

@@ -8,26 +8,18 @@ import { IdentityError, RequestError } from "@usepreface/protocol";
 import { GoogleCallbackInput } from "@usepreface/protocol/input";
 
 import { googleFlowCookie } from "#/http/cookies/browser-proof";
-import { readSessionCookie, setSessionCookie } from "#/http/cookies/session";
+import { setSessionCookie } from "#/http/cookies/session";
 import { mapInfrastructureError } from "#/http/errors";
+import { optionalSessionActor } from "#/http/routes/optional-actor";
 
 export const GoogleRoutes = HttpApiBuilder.group(PrefaceApi, "google", (handlers) =>
   Effect.gen(function* () {
     const application = yield* Application;
-    const optionalActor = Effect.gen(function* () {
-      const token = yield* readSessionCookie;
-      return token === undefined
-        ? undefined
-        : yield* application.auth.session.resolve(token).pipe(
-            Effect.catchTag("AuthenticationError", () => Effect.succeed(undefined)),
-            mapInfrastructureError,
-          );
-    });
     return handlers.handleAll({
       methods: () => application.auth.methods().pipe(mapInfrastructureError),
       start: Effect.fn("http.google.start")(function* ({ payload }) {
         const result = yield* application.auth.google
-          .start(payload, yield* optionalActor)
+          .start(payload, yield* optionalSessionActor)
           .pipe(mapInfrastructureError);
         yield* googleFlowCookie.set(result.browserToken, result.expiresAt);
         return { authorizationUrl: result.authorizationUrl, expiresAt: result.expiresAt };
@@ -40,7 +32,7 @@ export const GoogleRoutes = HttpApiBuilder.group(PrefaceApi, "google", (handlers
           browserToken: Redacted.value(browserToken),
         }).pipe(Effect.mapError(() => new RequestError({ code: "INVALID_INPUT" })));
         const result = yield* application.auth.google
-          .callback(input, yield* optionalActor)
+          .callback(input, yield* optionalSessionActor)
           .pipe(mapInfrastructureError);
         yield* googleFlowCookie.clear;
         if (result.sessionToken !== undefined && result.sessionExpiresAt !== undefined)

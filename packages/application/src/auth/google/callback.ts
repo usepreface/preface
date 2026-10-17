@@ -58,6 +58,7 @@ export const makeGoogleFlowCallback = Effect.gen(function* () {
         const pending = yield* repository.auth.authFlow.findByStateHash(stateHash);
         if (
           pending === undefined ||
+          pending.provider !== "google" ||
           !(yield* random.verifyToken({
             purpose: cryptoPurpose.authFlowBrowser,
             token: decoded.browserToken,
@@ -91,6 +92,7 @@ export const makeGoogleFlowCallback = Effect.gen(function* () {
       );
       if (
         connection === undefined ||
+        connection.provider !== "google" ||
         connection.revision !== flow.connectionRevision ||
         (flow.intent !== "test" && connection.status !== "active")
       )
@@ -118,6 +120,7 @@ export const makeGoogleFlowCallback = Effect.gen(function* () {
           const current = yield* repository.auth.identityConnection.lockById(connection.id);
           if (
             current === undefined ||
+            current.provider !== "google" ||
             current.revision !== flow.connectionRevision ||
             (flow.intent !== "test" && current.status !== "active")
           )

@@ -63,6 +63,14 @@ export {
 
 export { CreateTeam, Team, TeamMember } from "#/model/organization/team";
 
-export { IdentityConnection } from "#/model/auth/identity-connection";
+export {
+  IdentityConnection,
+  GoogleConnection,
+  OidcConnection,
+} from "#/model/auth/identity-connection";
 export { Account } from "#/model/auth/account";
 export { CreateAuthFlow, AuthFlow } from "#/model/auth/auth-flow";
+
+export { OrganizationAuthPolicyConnection } from "#/model/organization/auth-policy-connection";
+
+export { OidcConfiguration } from "#/common/oidc";
