@@ -9,6 +9,8 @@ This repository contains monorepo tooling and these workspace packages and appli
 - [application](packages/application/README.md): transactional instance setup and session workflows,
   with password and token security capabilities.
 - [api](packages/api/README.md): shared Effect HTTP contract and typed client metadata.
+- [emails](packages/emails/README.md): typed durable email jobs and provider adapters;
+  templates and server acquisition are supplied separately.
 - [server](apps/server/README.md): migration-gated backend, setup/session HTTP and operator CLI.
 - [template](packages/template/README.md): reusable starter for internal packages.
 - [ui](packages/ui/README.md): the design system - Base UI components in the shadcn/ui structure, Preface tokens,

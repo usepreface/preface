@@ -7,6 +7,11 @@ authorization and transport policy belong in application packages.
 
 The foundation, instance/auth/audit tables, and their repositories are implemented. Migrations
 create the `instance`, `auth` and `audit` PostgreSQL schemas and their tables.
+The `jobs` schema contains the encrypted email outbox, exposed through
+`DatabaseRepository.jobs.email`. Claims use token-owned leases and PostgreSQL
+`SKIP LOCKED`; completion/rescheduling reject stale or expired leases. The
+[emails package](../emails/README.md) owns payload encryption, conflict detection,
+delivery policy and provider calls. Enqueueing joins the caller's transaction.
 [Application](../application/README.md) implements bootstrap and session workflows on these
 repositories. The [server](../../apps/server/README.md) wires migration-gated startup and HTTP.
 
@@ -254,7 +259,7 @@ Build workspace dependencies through root `pnpm build` or Turbo when consuming b
 `@usepreface/database/testing` exports `TestDatabase`. Its PGlite Layer creates a fresh
 in-memory database, applies the real migrations, and provides `Database`, `TransactionService`,
 `DatabaseMigration` and `TestDatabase`. The test migration path deliberately omits the
-PostgreSQL advisory lock. `reset` truncates tables in `auth`, `instance` and `audit` and preserves
+PostgreSQL advisory lock. `reset` truncates tables in `auth`, `instance`, `audit` and `jobs` and preserves
 migration history. Tests use real tables and repositories, with shared database Layers and user
 fixtures under `tests/fixtures/`. Unit tests cover configuration/error boundaries;
 `tests/integration/` groups transaction, migration, auth persistence/session lifecycle and instance

@@ -1,4 +1,5 @@
 export { DatabaseRepository } from "#/repositories/layer";
+export { EmailJobRepository } from "#/repositories/jobs/email";
 export {
   UserRepository,
   PasswordCredentialRepository,

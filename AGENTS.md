@@ -66,6 +66,9 @@ Git history as a side effect of a refactor.
   handling and runtime startup belong to the server boundary.
 - [`packages/api`](packages/api/README.md) — runtime-neutral Effect HTTP contracts,
   middleware declarations and OpenAPI metadata, shared by server and clients.
+- [`packages/emails`](packages/emails/README.md) — typed email jobs, encrypted
+  outbox, renderer capability, provider adapters and scoped delivery worker.
+  Templates are supplied separately; workflows enqueue inside their transaction.
 - [`apps/server`](apps/server/README.md) — Node runtime composition, HTTP handlers,
   request policy, startup preparation, health/reference routes and operator CLI.
 - [`apps/landing`](apps/landing/README.md) — public marketing page and prerendering.

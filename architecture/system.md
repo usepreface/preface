@@ -3,8 +3,9 @@
 Preface is self-hosted knowledge infrastructure with installation-wide identity
 and multiple organizations as its product model. The implemented backend currently
 supports installation preparation, first-owner setup, session resolution and logout.
-Organization storage, invitations, sign-in, email delivery and knowledge ingestion
-are not implemented. The landing page illustrates the product independently of
+Email infrastructure provides a durable outbox and provider adapters, but templates
+and server acquisition are not connected. Organization storage, invitations,
+sign-in and knowledge ingestion are not implemented. The landing page illustrates the product independently of
 those backend capabilities.
 
 ## Ownership
@@ -15,6 +16,7 @@ those backend capabilities.
 | `api`          | HTTP methods, paths, middleware declarations, status-specific schemas and OpenAPI | Handlers, repositories or runtime configuration         |
 | `database`     | PostgreSQL schema, migrations, queries, transaction context and storage failures  | HTTP policy, password hashing or business authorization |
 | `application`  | Business invariants, security capabilities, transactions and required audit       | Cookies, listener configuration or browser state        |
+| `emails`       | Typed email intent, encrypted payloads, delivery worker and provider adapters     | Credentials, recipients, business authority or HTTP     |
 | `apps/server`  | Node implementations, configuration, startup, HTTP enforcement and operator CLI   | Query implementations or frontend rendering             |
 | `ui`           | Shared presentation, controls, tokens, icons and artwork                          | Backend authority or application API calls              |
 | `apps/landing` | Marketing page, metadata, demonstrations and browser interactions                 | Authenticated product workflows or persistence          |
@@ -51,7 +53,8 @@ consumption and owner changes use database coordination rather than process-loca
 locks. Request admission limits are process-local and serve a separate purpose.
 
 Detailed workflows belong to [instance setup](identity-access/instance-setup.md)
-and [sessions](identity-access/sessions.md); persistence consistency belongs to
+and [sessions](identity-access/sessions.md); [email](integrations/email.md) owns
+durable external delivery infrastructure. Persistence consistency belongs to
 [storage](data/storage.md). Logs summarize safe operational decisions. Audit rows
 record durable product events. Metrics and remote telemetry exporters are not
 currently wired.

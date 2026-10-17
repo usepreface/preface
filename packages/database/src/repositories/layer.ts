@@ -7,6 +7,7 @@ import {
   UserRepository,
 } from "#/repositories/auth/index";
 import { InstanceRepository } from "#/repositories/instance/index";
+import { EmailJobRepository } from "#/repositories/jobs/email";
 
 const makeDatabaseRepository = Effect.gen(function* () {
   const instance = yield* InstanceRepository;
@@ -14,8 +15,14 @@ const makeDatabaseRepository = Effect.gen(function* () {
   const passwordCredential = yield* PasswordCredentialRepository;
   const session = yield* SessionRepository;
   const event = yield* AuditEventRepository;
+  const email = yield* EmailJobRepository;
 
-  return { instance, auth: { user, passwordCredential, session }, audit: { event } } as const;
+  return {
+    instance,
+    auth: { user, passwordCredential, session },
+    audit: { event },
+    jobs: { email },
+  } as const;
 });
 
 export class DatabaseRepository extends Context.Service<
@@ -30,6 +37,7 @@ export class DatabaseRepository extends Context.Service<
         PasswordCredentialRepository.layer,
         SessionRepository.layer,
         AuditEventRepository.layer,
+        EmailJobRepository.layer,
       ),
     ),
   );

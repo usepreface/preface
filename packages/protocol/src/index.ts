@@ -2,6 +2,7 @@ export { InstallationId, InstanceOwnerId } from "#/identifiers/instance";
 export { UserId } from "#/identifiers/user";
 export { SessionId } from "#/identifiers/session";
 export { AuditEventId } from "#/identifiers/audit";
+export { EmailJobId } from "#/identifiers/email";
 export { UserDisplayName, UserEmail } from "#/values/user";
 export { InstanceDisplayName } from "#/values/instance";
 export { SecretToken, SecretTokenFromString } from "#/values/secret-token";

@@ -3,9 +3,19 @@ import { defineRelations } from "drizzle-orm";
 import { auditEvent } from "#/schema/audit/index";
 import { passwordCredential, session, user } from "#/schema/auth/index";
 import { installation, instanceOwner, instanceSettings } from "#/schema/instance/index";
+import { emailJob } from "#/schema/jobs/email";
 
 export const relations = defineRelations(
-  { installation, instanceSettings, instanceOwner, user, passwordCredential, session, auditEvent },
+  {
+    installation,
+    instanceSettings,
+    instanceOwner,
+    user,
+    passwordCredential,
+    session,
+    auditEvent,
+    emailJob,
+  },
   (r) => ({
     installation: {
       settings: r.one.instanceSettings({

@@ -18,6 +18,11 @@ explicit entry points. Public DTOs reuse identifiers and value schemas without i
 models. Storage models contain internal fields such as password hashes and token digests and must
 never be returned directly from an HTTP handler. Public timestamps encode as ISO strings.
 
+Internal email models define typed `instance-setup`, `sign-in` and
+`organization-invitation` payloads plus encrypted outbox lifecycle records. Their
+variable schemas are exported for template props. These contracts do not provide
+templates, grant access or implement passwordless authentication.
+
 ```ts
 import { UserId, BootstrapError } from "@usepreface/protocol";
 import { CompleteBootstrapRequest, SessionActor } from "@usepreface/protocol/dto";
