@@ -1,8 +1,8 @@
 import { expect, it } from "@effect/vitest";
 import { Deferred, Effect, Fiber, Schedule } from "effect";
 
-import { Database, DatabaseError, runDatabaseMigrations } from "../src/index.js";
-import { TestDatabase } from "../src/testing/index.js";
+import { Database, DatabaseError, runDatabaseMigrations } from "../../../src/index.js";
+import { TestDatabase } from "../../../src/testing/index.js";
 
 const port = process.env.PREFACE_TEST_POSTGRES_PORT;
 

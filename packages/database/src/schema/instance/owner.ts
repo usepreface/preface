@@ -6,6 +6,7 @@ import { sql } from "drizzle-orm";
 import { check, smallint, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
 import { generateUuid7 } from "#/id";
+import { user } from "#/schema/auth/user";
 import { installation } from "#/schema/instance/installation";
 import { instanceSchema } from "#/schema/instance/schema";
 
@@ -21,13 +22,19 @@ export const instanceOwner = instanceSchema.table(
       .notNull()
       .default(1)
       .references(() => installation.id, { onDelete: "restrict" }),
-    // Add restrictive user foreign keys with auth.user; no auth table exists yet.
-    userId: uuid("user_id").$type<UserId>().notNull(),
+    userId: uuid("user_id")
+      .$type<UserId>()
+      .notNull()
+      .references(() => user.id, { onDelete: "restrict" }),
     grantSource: text("grant_source").$type<InstanceOwnerGrantSource>().notNull(),
-    grantedByUserId: uuid("granted_by_user_id").$type<UserId>(),
+    grantedByUserId: uuid("granted_by_user_id")
+      .$type<UserId>()
+      .references(() => user.id, { onDelete: "restrict" }),
     grantedAt: timestamp("granted_at", { mode: "date", withTimezone: true }).notNull(),
     revokedAt: timestamp("revoked_at", { mode: "date", withTimezone: true }),
-    revokedByUserId: uuid("revoked_by_user_id").$type<UserId>(),
+    revokedByUserId: uuid("revoked_by_user_id")
+      .$type<UserId>()
+      .references(() => user.id, { onDelete: "restrict" }),
     revocationReason: text("revocation_reason"),
   },
   (table) => [

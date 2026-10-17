@@ -1,4 +1,5 @@
-export { authSchema } from "#/schema/auth/index";
+export { authSchema, user, passwordCredential, session } from "#/schema/auth/index";
+export { auditSchema, auditEvent } from "#/schema/audit/index";
 export {
   instanceSchema,
   installation,

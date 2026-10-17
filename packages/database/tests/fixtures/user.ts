@@ -1,0 +1,23 @@
+import assert from "node:assert/strict";
+
+import { DateTime, Effect } from "effect";
+
+import { Database, generateUuid7 } from "../../src/index.js";
+import { user } from "../../src/schema/auth/user.js";
+
+export const createTestUser = Effect.fnUntraced(function* () {
+  const database = yield* Database;
+  const createdAt = DateTime.toDateUtc(yield* DateTime.now);
+  const [account] = yield* database
+    .insert(user)
+    .values({
+      displayName: "Test Owner",
+      email: `${generateUuid7()}@example.test`,
+      createdAt,
+      updatedAt: createdAt,
+    })
+    .returning();
+
+  assert.ok(account);
+  return account;
+});

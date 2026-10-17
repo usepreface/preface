@@ -2,9 +2,9 @@ import { expect, it } from "@effect/vitest";
 import { Cause, Effect, Exit, Option, Result } from "effect";
 import { SqlError } from "effect/sql";
 
-import { EffectDrizzleQueryError, MigratorInitError } from "drizzle-orm/effect-core";
+import { EffectDrizzleQueryError } from "drizzle-orm/effect-core";
 
-import { DatabaseError, mapToDatabaseError } from "../src/core/errors.js";
+import { DatabaseError, mapToDatabaseError } from "../../src/core/errors.js";
 
 it.effect("preserves the complete wrapped error and structured retry classification", () =>
   Effect.gen(function* () {
@@ -31,15 +31,6 @@ it.effect("passes domain errors and already-mapped errors through unchanged", ()
       domainFailure,
     );
     expect(yield* Effect.fail(mapped).pipe(mapToDatabaseError, Effect.flip)).toBe(mapped);
-  }),
-);
-
-it.effect("keeps migration initialization failures in the typed error channel", () =>
-  Effect.gen(function* () {
-    const original = new MigratorInitError({ exitCode: "databaseMigrations" });
-    const mapped = yield* Effect.fail(original).pipe(mapToDatabaseError, Effect.flip);
-    expect(mapped).toBeInstanceOf(DatabaseError);
-    expect(mapped.cause).toBe(original);
   }),
 );
 

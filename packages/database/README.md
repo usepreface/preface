@@ -5,9 +5,9 @@ database schemas, relations, migrations, transaction boundaries and typed reposi
 Shared domain contracts belong in [protocol](../protocol/README.md); business workflows,
 authorization and transport policy belong in application packages.
 
-The foundation and the first three instance tables are implemented. The original migration creates
-the `instance` and `auth` PostgreSQL schemas; the next adds `instance.installation`,
-`instance.settings`, and `instance.owner`. Auth tables and application/server workflows are not implemented.
+The foundation, three instance tables and initial auth/audit storage are implemented. Migrations
+create the `instance`, `auth` and `audit` PostgreSQL schemas and their tables. Application/server
+workflows are not implemented.
 
 ## Instance persistence
 
@@ -37,16 +37,46 @@ and atomically clears token metadata while closing bootstrap. Invalid, expired, 
 replayed, or replaced tokens return `undefined`. `installation.lock()` requires an active
 `TransactionService.run`; use it to coordinate the future full bootstrap workflow.
 
-User foreign keys and user relations are deliberately deferred until `auth.user` exists. The owner
-UUID fields are branded `UserId` values, but storage cannot yet verify user existence or usability.
+Owner subjects, granting actors and revoking actors reference `auth.user` with restrictive foreign
+keys and typed relations. Storage verifies user existence, not usability.
 The last-owner safeguard protects active grants only; future authentication/lifecycle workflows
 must also check suspension and other user states. Repositories do not authorize a caller.
 
 Full bootstrap must create the user, password credential, owner grant, session and installation
 completion in one outer transaction, with its required audit event. This change does not implement
-authentication, recovery commands, authorization, audit storage, startup token generation/logging,
+authentication, recovery commands, authorization, startup token generation/logging,
 or HTTP/UI flows. Signup remains invitation-only, and only instance owners may create organizations;
 neither policy is a configurable settings column.
+
+## Auth and audit storage
+
+- `auth.user` stores UUIDv7 identity, display name, unique canonical email, nullable email
+  verification/disable timestamps and creation/update timestamps. Names are trimmed and 1–120
+  characters; canonical email is nonempty, trimmed and lowercase. Address syntax is validated by
+  protocol. Changing email must clear verification in the future application workflow.
+- `auth.password_credential` has one row per user, an opaque nonempty encoded password hash,
+  creation time and password-change time. Password changes cannot precede creation. The future
+  crypto service owns Argon2id hashing; no hashing library or authentication behavior is added here.
+- `auth.session` stores UUIDv7 session identity, user, unique SHA-256 token digest as 64 lowercase
+  hex characters, creation/activity/absolute-expiry timestamps and nullable revocation time.
+  Indexes support digest lookup, user history and expiry cleanup. Expiry must follow creation;
+  activity/revocation cannot precede it. Idle expiry, periodic activity writes, cookie transport
+  and revocation workflows belong to the application/server.
+- `audit.event` stores actor attribution, event/target types and target UUID, object metadata and
+  occurrence time. Actor foreign keys are restrictive. Protocol correlates supported events with
+  typed targets and metadata; SQL enforces actor attribution and object metadata. Polymorphic
+  targets have no foreign key. Indexes support chronology, actor history and target history.
+  Audit is append-only by application convention; this migration adds no database immutability
+  trigger or privilege policy. Future repositories must expose append/query operations only and
+  keep secrets out of event metadata. Organization scoping comes with organization persistence.
+
+All auth user foreign keys use `on delete restrict`; account disabling preserves references and
+history. There is no account-disable workflow yet. Auth and audit repositories, public DTOs,
+bootstrap/login/logout, password reset and authorization are still pending. Write related lifecycle
+timestamps explicitly from the same Effect clock instant, including `createdAt` when checking
+against it; do not mix an earlier test/application time with a later database insertion default.
+The auth/audit migration deliberately fails if older owner rows reference nonexistent users; it
+does not fabricate users or silently remove historical grants.
 
 ## Services and composition
 
@@ -110,7 +140,8 @@ application queries use Effect's native PostgreSQL driver.
 ## Schema conventions
 
 - Group tables by domain: `schema/instance/` uses `instanceSchema`, `schema/auth/` uses
-  `authSchema`. Define tables against the domain's `schema.ts` and export them from its
+  `authSchema`, and `schema/audit/` uses `auditSchema`. Define tables against the domain's
+  `schema.ts` and export them from its
   index and `schema/index.ts`. Add future domains as separate PostgreSQL schemas.
 - Use singular snake_case SQL names and camelCase TypeScript properties. Name important
   constraints and indexes explicitly, and choose foreign-key deletion behavior deliberately.
@@ -158,8 +189,12 @@ Build workspace dependencies through root `pnpm build` or Turbo when consuming b
 `@usepreface/database/testing` exports `TestDatabase`. Its PGlite Layer creates a fresh
 in-memory database, applies the real migrations, and provides `Database`, `TransactionService`,
 `DatabaseMigration` and `TestDatabase`. The test migration path deliberately omits the
-PostgreSQL advisory lock. `reset` truncates tables in the managed schemas and preserves
-migration history. Test-only probe tables and migrations live under `tests/fixtures/`.
+PostgreSQL advisory lock. `reset` truncates tables in `auth`, `instance` and `audit` and preserves
+migration history. Tests use real tables and repositories, with shared database Layers and user
+fixtures under `tests/fixtures/`. Unit tests cover configuration/error boundaries;
+`tests/integration/` groups transaction, migration, auth persistence and instance scenarios by
+domain. `tests/smoke/built.test.mjs` checks built exports and packaged migrations. The suite focuses
+on rollback, token lifecycle and concurrency; it does not repeat ordinary SQL constraint checks.
 PGlite dependencies are development-only and are not imported by the main package entry.
 
 For real driver, migration-lock and transaction coverage, run the same suites against a
