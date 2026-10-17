@@ -10,7 +10,7 @@ user, email address or organization membership, and matching emails never link a
 `auth.identity_connection` stores one Google connection per installation, versioned public
 client configuration, encrypted credentials, revision, test timestamps and
 `draft | tested | active | disabled` state. Installation ownership references the fixed
-installation row key, not its public UUID. Organization-owned [OIDC](oidc.md) extends the same storage with explicit organization ownership; SAML is not implemented.
+installation row key, not its public UUID. Organization-owned [OIDC](oidc.md) extends the same storage with explicit organization ownership; [SAML](saml.md) uses the same organization authority and evidence.
 
 Saving configuration requires current instance ownership and usable email evidence no
 older than five minutes. The installation lock coordinates owner changes, followed by the

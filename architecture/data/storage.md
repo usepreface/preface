@@ -128,3 +128,10 @@ validated provider authentication time separately from evidence acquisition. The
 migration creates `organization.auth_recovery_token`, with same-organization member references and
 one active credential per member. Consumption, policy transitions, audit and encrypted security
 notifications share application transactions. See [required SSO](../identity-access/required-sso.md).
+
+SAML extends the same connection/account/evidence aggregate and adds protocol-specific auth-flow
+checks. Claimed SAML flows can hold encrypted verified context until browser-bound completion;
+terminal transitions scrub it. `auth.sso_replay` reserves hashed Response/Assertion identifiers by
+connection and kind, independently of trust revision. Reserve both IDs with staging and audit in
+one transaction; conditional inserts prevent cross-replica replay. Maintenance removes expired
+reservations in bounded batches. See [SAML](../identity-access/saml.md).

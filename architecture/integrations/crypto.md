@@ -45,3 +45,10 @@ exercise the migrated consumers.
 - [Application adapter](../../packages/application/src/node/token.ts)
 - [Email adapter](../../packages/emails/src/cipher.ts)
 - [Compatibility tests](../../packages/crypto/tests/unit/compatibility.test.ts)
+
+`CertificateCrypto` adds Node-backed RSA signing-certificate generation and pinned-certificate
+validation for [SAML](../identity-access/saml.md). Node webcrypto generates private keys; the X.509
+adapter issues one-year self-signed certificates and validates current RSA certificate dates/strength.
+Private keys remain redacted until connection-envelope encryption or the signing boundary. Separate
+SAML purposes bind relay/browser proofs, subjects, replay identifiers and encrypted staged identity.
+Application owns certificate renewal and trust policy; the crypto service owns primitives only.

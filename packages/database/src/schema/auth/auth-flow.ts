@@ -44,7 +44,9 @@ export const authFlow = authSchema.table(
       .references(() => organization.id, { onDelete: "restrict" }),
     stateHash: text("state_hash").notNull(),
     browserBindingHash: text("browser_binding_hash").notNull(),
-    nonceHash: text("nonce_hash").notNull(),
+    nonceHash: text("nonce_hash"),
+    samlRequestId: text("saml_request_id"),
+    samlVerifiedCiphertext: text("saml_verified_ciphertext"),
     pkceVerifierCiphertext: text("pkce_verifier_ciphertext"),
     returnPath: text("return_path").$type<AuthFlow["returnPath"]>().notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
@@ -69,7 +71,16 @@ export const authFlow = authSchema.table(
     check("auth_flow_max_age_check", sql`${t.requestedMaxAgeSeconds} >= 0`),
     check(
       "auth_flow_owner_check",
-      sql`(${t.provider} = 'google' and ${t.targetOrganizationId} is null) or (${t.provider} = 'oidc' and ${t.targetOrganizationId} is not null)`,
+      sql`(${t.provider} = 'google' and ${t.targetOrganizationId} is null) or (${t.provider} in ('oidc','saml') and ${t.targetOrganizationId} is not null)`,
+    ),
+    uniqueIndex("auth_flow_saml_request_uidx").on(t.samlRequestId),
+    check(
+      "auth_flow_protocol_check",
+      sql`(${t.provider} = 'saml' and ${t.samlRequestId} is not null and ${t.nonceHash} is null and ${t.pkceVerifierCiphertext} is null) or (${t.provider} in ('google','oidc') and ${t.samlRequestId} is null and ${t.samlVerifiedCiphertext} is null and ${t.nonceHash} is not null)`,
+    ),
+    check(
+      "auth_flow_saml_verified_check",
+      sql`${t.samlVerifiedCiphertext} is null or (${t.claimedAt} is not null and ${t.consumedAt} is null and ${t.revokedAt} is null)`,
     ),
     uniqueIndex("auth_flow_state_uidx").on(t.stateHash),
     index("auth_flow_connection_idx").on(t.identityConnectionId),

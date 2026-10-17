@@ -2,10 +2,11 @@ import { Context, DateTime, Effect, Layer, Schema } from "effect";
 
 import type { AccountId, IdentityConnectionId, SessionId, UserId } from "@usepreface/protocol";
 import { CreateSessionAuthentication, SessionAuthentication } from "@usepreface/protocol/model";
-import { and, eq, gt, isNotNull, isNull, or, inArray } from "drizzle-orm";
+import { and, eq, gt, inArray, isNull } from "drizzle-orm";
 
 import { mapToDatabaseError } from "#/core/errors";
 import { Database } from "#/core/layer";
+import { usableSessionEvidenceSource } from "#/repositories/auth/session-evidence-source";
 import { account } from "#/schema/auth/account";
 import { identityConnection } from "#/schema/auth/identity-connection";
 import { sessionAuthentication } from "#/schema/auth/session-authentication";
@@ -27,9 +28,14 @@ const makeSessionAuthenticationRepository = Effect.gen(function* () {
         sessionId: input.sessionId,
         userId: input.userId,
         userEmailId: input.userEmailId,
-        accountId: input.method === "google" || input.method === "oidc" ? input.accountId : null,
+        accountId:
+          input.method === "google" || input.method === "oidc" || input.method === "saml"
+            ? input.accountId
+            : null,
         connectionRevision:
-          input.method === "google" || input.method === "oidc" ? input.connectionRevision : null,
+          input.method === "google" || input.method === "oidc" || input.method === "saml"
+            ? input.connectionRevision
+            : null,
       })
       .returning();
     if (row === undefined)
@@ -57,32 +63,7 @@ const makeSessionAuthenticationRepository = Effect.gen(function* () {
             eq(sessionAuthentication.sessionId, sessionId),
             isNull(sessionAuthentication.revokedAt),
             gt(sessionAuthentication.expiresAt, DateTime.toDateUtc(yield* DateTime.now)),
-            or(
-              and(
-                isNotNull(userEmail.id),
-                isNull(userEmail.removedAt),
-                isNotNull(userEmail.verifiedAt),
-                eq(userEmail.loginEnabled, true),
-              ),
-              and(
-                inArray(sessionAuthentication.method, ["google", "oidc"]),
-                eq(identityConnection.provider, sessionAuthentication.method),
-                or(
-                  eq(sessionAuthentication.method, "google"),
-                  and(
-                    isNotNull(organization.id),
-                    isNull(organization.archivedAt),
-                    isNotNull(organizationMember.id),
-                    isNull(organizationMember.suspendedAt),
-                    isNull(organizationMember.removedAt),
-                  ),
-                ),
-                isNotNull(account.id),
-                isNull(account.unlinkedAt),
-                eq(identityConnection.status, "active"),
-                eq(identityConnection.revision, sessionAuthentication.connectionRevision),
-              ),
-            ),
+            usableSessionEvidenceSource(),
           ),
         );
       return rows.map((row) => decode(row.evidence));

@@ -2,8 +2,13 @@ import { NodeServices } from "@effect/platform-node";
 import { ConfigProvider, Effect, Layer } from "effect";
 
 import { Application, AuthenticationLinks, type OidcIdentity } from "@usepreface/application";
-import { NodeToken, NodeGoogleIdentity, NodeOidcIdentity } from "@usepreface/application/node";
-import { NodeSecretCrypto, NodeTokenCrypto } from "@usepreface/crypto/node";
+import {
+  NodeToken,
+  NodeGoogleIdentity,
+  NodeOidcIdentity,
+  NodeSamlIdentity,
+} from "@usepreface/application/node";
+import { NodeSecretCrypto, NodeTokenCrypto, NodeCertificateCrypto } from "@usepreface/crypto/node";
 import { DatabaseRepository } from "@usepreface/database";
 import { TestDatabase } from "@usepreface/database/testing";
 import { EmailJobs, EmailPayloadCipher } from "@usepreface/emails";
@@ -15,25 +20,30 @@ const database: Layer.Layer<Layer.Success<typeof TestDatabase.layer>, unknown> =
   ? TestDatabase.layer
   : TestDatabase.postgresLayer(Number(port));
 
-export const TestConfigLayer = ServerConfig.layer.pipe(
-  Layer.provide(
-    ConfigProvider.layer(
-      ConfigProvider.fromUnknown({ PUBLIC_URL: "https://preface.example.test" }),
-    ),
-  ),
-);
+const makeTestConfigLayer = (publicOrigin: string) =>
+  ServerConfig.layer.pipe(
+    Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ PUBLIC_URL: publicOrigin }))),
+  );
+export const TestConfigLayer = makeTestConfigLayer("https://preface.example.test");
 const persistence = DatabaseRepository.layer.pipe(Layer.provideMerge(database));
-export const makeBackendTestLayer = (oidc: Layer.Layer<OidcIdentity> = NodeOidcIdentity.layer()) =>
+export const makeBackendTestLayer = (
+  oidc: Layer.Layer<OidcIdentity> = NodeOidcIdentity.layer(),
+  publicOrigin = "https://preface.example.test",
+) =>
   Layer.mergeAll(
     Application.layer.pipe(
       Layer.provide(NodeGoogleIdentity.layer),
       Layer.provide(oidc),
-      Layer.provide(
-        Layer.succeed(AuthenticationLinks, { publicOrigin: "https://preface.example.test" }),
-      ),
+      Layer.provide(NodeSamlIdentity.layer),
+      Layer.provide(Layer.succeed(AuthenticationLinks, { publicOrigin })),
       Layer.provideMerge(EmailJobs.layer.pipe(Layer.provideMerge(EmailPayloadCipher.layer))),
       Layer.provide(
-        Layer.mergeAll(NodeToken.layer, NodeTokenCrypto.layer, NodeSecretCrypto.layer).pipe(
+        Layer.mergeAll(
+          NodeToken.layer,
+          NodeTokenCrypto.layer,
+          NodeSecretCrypto.layer,
+          NodeCertificateCrypto.layer,
+        ).pipe(
           Layer.provide(
             ConfigProvider.layer(
               ConfigProvider.fromUnknown({
@@ -46,7 +56,7 @@ export const makeBackendTestLayer = (oidc: Layer.Layer<OidcIdentity> = NodeOidcI
       ),
       Layer.provideMerge(persistence),
     ),
-    TestConfigLayer,
+    makeTestConfigLayer(publicOrigin),
   ).pipe(Layer.provide(NodeServices.layer));
 
 export const BackendTestLayer = makeBackendTestLayer();

@@ -138,6 +138,8 @@ export const makeOrganizationAuthRecovery = Effect.gen(function* () {
         const approved =
           yield* repository.organization.authPolicyConnection.listByOrganization(organizationId);
         const ids = approved.map((entry) => entry.identityConnectionId);
+        const connections =
+          yield* repository.auth.identityConnection.listByOrganization(organizationId);
         yield* repository.audit.event.append({
           actorKind: "user",
           actorUserId: actor.user.id,
@@ -148,13 +150,34 @@ export const makeOrganizationAuthRecovery = Effect.gen(function* () {
           metadata: {
             revision: updated.revision,
             googleEnabled: policy.allowedMethods.includes("google"),
-            oidcConnectionIds: ids,
+            oidcConnectionIds: ids.filter((id) =>
+              connections.some(
+                (connection) => connection.id === id && connection.provider === "oidc",
+              ),
+            ),
+            samlConnectionIds: ids.filter((id) =>
+              connections.some(
+                (connection) => connection.id === id && connection.provider === "saml",
+              ),
+            ),
             ssoMode: updated.ssoMode,
             ssoMaxAgeSeconds: updated.ssoMaxAgeSeconds,
           },
         });
         yield* notify(organization, "sso-recovered", `policy-${updated.revision}`);
-        return organizationAuthPolicyView(updated, ids);
+        return organizationAuthPolicyView(
+          updated,
+          ids.filter((id) =>
+            connections.some(
+              (connection) => connection.id === id && connection.provider === "oidc",
+            ),
+          ),
+          ids.filter((id) =>
+            connections.some(
+              (connection) => connection.id === id && connection.provider === "saml",
+            ),
+          ),
+        );
       }),
     );
   });

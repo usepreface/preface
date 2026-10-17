@@ -2,26 +2,35 @@ import { DateTime, Effect } from "effect";
 
 import { DatabaseRepository } from "@usepreface/database";
 import type { SessionActor } from "@usepreface/protocol/dto";
-import type { Account, OidcConnection } from "@usepreface/protocol/model";
-export const makeOidcEvidence = Effect.gen(function* () {
+import type { Account, OrganizationIdentityConnection } from "@usepreface/protocol/model";
+export const makeOrganizationIdentityEvidence = Effect.gen(function* () {
   const repository = yield* DatabaseRepository;
-  return Effect.fn("Application.auth.oidc.recordEvidence")(function* (
+  return Effect.fn("OrganizationIdentity.recordEvidence")(function* (
     actor: SessionActor,
     account: Account,
-    connection: OidcConnection,
+    connection: OrganizationIdentityConnection,
     providerAuthenticatedAt: DateTime.Utc | null,
+    providerSessionExpiresAt: DateTime.Utc | null,
   ) {
     yield* repository.auth.sessionAuthentication.create({
       sessionId: actor.session.id,
       userId: actor.user.id,
-      method: "oidc",
+      method: connection.provider,
       userEmailId: null,
       accountId: account.id,
       connectionRevision: connection.revision,
       authenticatedAt: yield* DateTime.now,
       providerAuthenticatedAt,
-      expiresAt: actor.session.expiresAt,
-      assurance: { version: 1, provider: "oidc" },
+      expiresAt:
+        providerSessionExpiresAt === null
+          ? actor.session.expiresAt
+          : DateTime.makeUnsafe(
+              Math.min(
+                DateTime.toEpochMillis(actor.session.expiresAt),
+                DateTime.toEpochMillis(providerSessionExpiresAt),
+              ),
+            ),
+      assurance: { version: 1, provider: connection.provider },
     });
     yield* repository.audit.event.append({
       actorKind: "user",
@@ -31,7 +40,7 @@ export const makeOidcEvidence = Effect.gen(function* () {
       targetType: "session",
       targetId: actor.session.id,
       metadata: {
-        method: "oidc",
+        method: connection.provider,
         accountId: account.id,
         connectionRevision: connection.revision,
       },

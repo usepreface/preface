@@ -19,6 +19,7 @@ import { OrganizationRolesApi } from "#/groups/organization-roles";
 import { OrganizationsApi } from "#/groups/organizations";
 import { ProfileApi } from "#/groups/profile";
 import { ReauthenticationApi } from "#/groups/reauthentication";
+import { SamlApi } from "#/groups/saml";
 import { SessionApi } from "#/groups/session";
 import { SessionsApi } from "#/groups/sessions";
 import { TeamsApi } from "#/groups/teams";
@@ -26,6 +27,7 @@ import { TeamsApi } from "#/groups/teams";
 export class PrefaceApi extends HttpApi.make("PrefaceApi")
   .add(
     OidcApi,
+    SamlApi,
     OrganizationIdentityConnectionsApi,
     GoogleApi,
     IdentityConnectionsApi,

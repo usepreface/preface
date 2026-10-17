@@ -27,6 +27,31 @@ const makeRepository = Effect.gen(function* () {
     if (row === undefined) return yield* Effect.die(new Error("Flow insert returned no row"));
     return decode(row);
   }, mapToDatabaseError);
+  const findById = Effect.fn("AuthFlowRepository.findById")(function* (id: AuthFlowId) {
+    const [row] = yield* database.select().from(table).where(eq(table.id, id));
+    return row === undefined ? undefined : decode(row);
+  }, mapToDatabaseError);
+  const stageSaml = Effect.fn("AuthFlowRepository.stageSaml")(function* (
+    id: AuthFlowId,
+    ciphertext: string,
+  ) {
+    const [row] = yield* database
+      .update(table)
+      .set({ samlVerifiedCiphertext: ciphertext })
+      .where(
+        and(
+          eq(table.id, id),
+          eq(table.provider, "saml"),
+          sql`${table.claimedAt} is not null`,
+          isNull(table.samlVerifiedCiphertext),
+          isNull(table.consumedAt),
+          isNull(table.revokedAt),
+          gt(table.expiresAt, DateTime.toDateUtc(yield* DateTime.now)),
+        ),
+      )
+      .returning();
+    return row === undefined ? undefined : decode(row);
+  }, mapToDatabaseError);
   const findByStateHash = Effect.fn("AuthFlowRepository.findByStateHash")(function* (hash: string) {
     const [row] = yield* database.select().from(table).where(eq(table.stateHash, hash));
     return row === undefined ? undefined : decode(row);
@@ -52,7 +77,7 @@ const makeRepository = Effect.gen(function* () {
     const now = DateTime.toDateUtc(yield* DateTime.now);
     const [row] = yield* database
       .update(table)
-      .set({ consumedAt: now, pkceVerifierCiphertext: null })
+      .set({ consumedAt: now, pkceVerifierCiphertext: null, samlVerifiedCiphertext: null })
       .where(
         and(
           eq(table.id, id),
@@ -68,7 +93,11 @@ const makeRepository = Effect.gen(function* () {
   const revoke = Effect.fn("AuthFlowRepository.revoke")(function* (id: AuthFlowId) {
     yield* database
       .update(table)
-      .set({ revokedAt: DateTime.toDateUtc(yield* DateTime.now), pkceVerifierCiphertext: null })
+      .set({
+        revokedAt: DateTime.toDateUtc(yield* DateTime.now),
+        pkceVerifierCiphertext: null,
+        samlVerifiedCiphertext: null,
+      })
       .where(and(eq(table.id, id), isNull(table.consumedAt), isNull(table.revokedAt)));
   }, mapToDatabaseError);
   const revokeByConnection = Effect.fn("AuthFlowRepository.revokeByConnection")(function* (
@@ -76,7 +105,11 @@ const makeRepository = Effect.gen(function* () {
   ) {
     yield* database
       .update(table)
-      .set({ revokedAt: DateTime.toDateUtc(yield* DateTime.now), pkceVerifierCiphertext: null })
+      .set({
+        revokedAt: DateTime.toDateUtc(yield* DateTime.now),
+        pkceVerifierCiphertext: null,
+        samlVerifiedCiphertext: null,
+      })
       .where(
         and(eq(table.identityConnectionId, id), isNull(table.consumedAt), isNull(table.revokedAt)),
       );
@@ -86,7 +119,11 @@ const makeRepository = Effect.gen(function* () {
   ) {
     yield* database
       .update(table)
-      .set({ revokedAt: DateTime.toDateUtc(yield* DateTime.now), pkceVerifierCiphertext: null })
+      .set({
+        revokedAt: DateTime.toDateUtc(yield* DateTime.now),
+        pkceVerifierCiphertext: null,
+        samlVerifiedCiphertext: null,
+      })
       .where(
         and(eq(table.initiatingSessionId, id), isNull(table.consumedAt), isNull(table.revokedAt)),
       );
@@ -94,13 +131,17 @@ const makeRepository = Effect.gen(function* () {
   const revokeByUser = Effect.fn("AuthFlowRepository.revokeByUser")(function* (id: UserId) {
     yield* database
       .update(table)
-      .set({ revokedAt: DateTime.toDateUtc(yield* DateTime.now), pkceVerifierCiphertext: null })
+      .set({
+        revokedAt: DateTime.toDateUtc(yield* DateTime.now),
+        pkceVerifierCiphertext: null,
+        samlVerifiedCiphertext: null,
+      })
       .where(and(eq(table.expectedUserId, id), isNull(table.consumedAt), isNull(table.revokedAt)));
   }, mapToDatabaseError);
   const deleteExpiredBatch = Effect.fn("AuthFlowRepository.deleteExpiredBatch")(function* () {
     const now = DateTime.toDateUtc(yield* DateTime.now);
     const scrubbed =
-      yield* database.$client`update auth.auth_flow set pkce_verifier_ciphertext = null where id in (select id from auth.auth_flow where expires_at <= ${now} and pkce_verifier_ciphertext is not null limit 500 for update skip locked) returning id`;
+      yield* database.$client`update auth.auth_flow set pkce_verifier_ciphertext = null, saml_verified_ciphertext = null where id in (select id from auth.auth_flow where expires_at <= ${now} and (pkce_verifier_ciphertext is not null or saml_verified_ciphertext is not null) limit 500 for update skip locked) returning id`;
     const cutoff = DateTime.toDateUtc(DateTime.subtractDuration(yield* DateTime.now, "1 day"));
     const deleted =
       yield* database.$client`delete from auth.auth_flow where id in (select id from auth.auth_flow where expires_at <= ${cutoff} limit 500 for update skip locked) returning id`;
@@ -108,6 +149,8 @@ const makeRepository = Effect.gen(function* () {
   }, mapToDatabaseError);
   return {
     create,
+    findById,
+    stageSaml,
     findByStateHash,
     claim,
     consume,

@@ -7,3 +7,5 @@ export {
 } from "#/purposes";
 export { TokenCrypto, type TokenDigestInput } from "#/tokens";
 export { SecretCrypto, type FingerprintInput } from "#/secrets";
+
+export { CertificateCrypto } from "#/certificates";

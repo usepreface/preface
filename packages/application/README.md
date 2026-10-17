@@ -288,7 +288,7 @@ and sequential files; never target a deployment database. Built tests exercise p
 migrations and the verification/session lifecycle.
 
 Backend-connected onboarding/sign-in UI, image uploads, global account recovery
-and SAML are not implemented. See the [instance setup architecture](../../architecture/identity-access/instance-setup.md)
+are not implemented. See the [instance setup architecture](../../architecture/identity-access/instance-setup.md)
 and [server README](../../apps/server/README.md) for current transport and deployment.
 
 ## Organization OIDC
@@ -332,7 +332,7 @@ certificate; they change certificate trust only inside their test process and cl
 Existing Google policy input names remain aliases. Omitted settings are preserved. The installation
 Google connection does not satisfy required organization SSO.
 
-Before enabling, approve an active tested OIDC connection, link the owner's identity, complete
+Before enabling, approve an active tested OIDC or SAML connection, link the owner's identity, complete
 `auth.oidc.startReauthentication`/callback, and issue a credential through
 `organization.authRecovery.rotate(actor, organizationId)`. Save the redacted credential securely;
 ordinary reads cannot retrieve it. Pass it as `recoveryCredential` with the current policy revision
@@ -352,3 +352,32 @@ Invitations still verify the mailbox and admit membership/assignments. Required 
 Owner/connection/account mutations preserve a prepared recovery owner under the organization lock.
 See [required SSO architecture](../../architecture/identity-access/required-sso.md) for boundaries,
 credential loss, archival and provider revocation limits.
+
+## Organization SAML
+
+Supply `SamlIdentity` and `CertificateCrypto` to `Application.layer`; Node implementations are
+`NodeSamlIdentity.layer` and `NodeCertificateCrypto.layer`. Node-SAML verifies signed XML; the XML
+DOM adapter reads only its verified assertion. No new environment variables are required.
+
+`organization.identityConnection.createSaml(actor, organizationId, { name })` returns a draft
+with generated signing certificate, fixed entity/ACS URLs and metadata URL. Import that metadata
+into the IdP, then call `updateSaml` with decoded `UpdateSamlConnectionInput`: expected revision
+and optional name/IdP settings. IdP settings contain entity ID, HTTPS sign-on URL, pinned signing
+certificates and stable NameID format. Run `test`, complete the browser transaction, and `activate`
+the exact tested revision. Approve it with `{ expectedRevision, samlConnectionIds: [id] }` through
+`organization.authPolicy.update`. Existing omitted OIDC/SAML approvals are preserved independently.
+
+`auth.saml.startLink`, `startSignIn` and `startReauthentication` follow their OIDC counterparts.
+The transport calls `callback(connectionId, decoded SamlCallbackInput)` for the IdP form POST,
+then `complete(decoded CompleteSamlFlowInput, actor?)` on the browser's same-origin return.
+Callback only stages encrypted verified context; completion requires the original browser proof
+and appropriate session binding. Sign-in credentials are internal cookie-delivery results.
+No external identity creates users, memberships or roles. Required SSO and offline recovery work
+with approved SAML connections through the same policy and safeguards.
+
+The initial profile requires signed Response and Assertion, RSA-SHA256/SHA512, plaintext assertions,
+and persistent or explicitly unspecified stable NameID. Certificates must remain valid. Call
+`rotateSigningKey(actor, organizationId, connectionId, expectedRevision)` before SP expiry, import
+the new metadata into the IdP, and retest. Trust changes revoke evidence and preserve the final
+owner recovery path. See [SAML architecture](../../architecture/identity-access/saml.md) for certificate
+rollover, browser transport, replay protection and unsupported profiles.

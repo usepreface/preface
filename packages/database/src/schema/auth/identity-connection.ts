@@ -53,7 +53,7 @@ export const identityConnection = authSchema.table(
     index("identity_connection_organization_idx").on(t.organizationId, t.id),
     check(
       "identity_connection_provider_check",
-      sql`(${t.provider} = 'google' and ${t.installationId} is not null and ${t.installationId} = 1 and ${t.organizationId} is null) or (${t.provider} = 'oidc' and ${t.installationId} is null and ${t.organizationId} is not null)`,
+      sql`(${t.provider} = 'google' and ${t.installationId} is not null and ${t.installationId} = 1 and ${t.organizationId} is null) or (${t.provider} in ('oidc','saml') and ${t.installationId} is null and ${t.organizationId} is not null)`,
     ),
     check(
       "identity_connection_status_check",

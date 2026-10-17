@@ -129,7 +129,7 @@ accept `includeRemoved`. Archived organization discovery is owner-only. Detail r
 
 Owner-only transitions preserve a usable owner. Custom roles/assignments are bounded
 by the actor's delegation rights. Invitations own additional admission; there is no
-direct member-creation endpoint. Owners can opt into Google with the policy editor below; organization OIDC is available as described below; required SSO and recovery are described below; SAML remains pending. These endpoints are backend-only.
+direct member-creation endpoint. Owners can opt into Google with the policy editor below; organization OIDC is available as described below; required SSO and recovery are described below; organization SAML is described below. These endpoints are backend-only.
 
 `OrganizationError` codes map invalid input to 400, insufficient authority/evidence
 to 403, scoped missing organization/member/role/binding to 404, and lifecycle or
@@ -349,3 +349,34 @@ After recovery, issue a new credential before re-enabling required SSO.
 Invitation acceptance now includes `nextAction: "continue" | "authenticate_with_sso"`. Mailbox
 verification admits the member; required SSO must still be completed before organization access.
 Signed-out callers receive no organization provider directory.
+
+## Organization SAML
+
+The existing connection list/get and lifecycle endpoints return OIDC or SAML connection DTOs.
+SAML uses these additional `organizationIdentityConnections` actions, relative to `/api/v1`:
+
+- `createSaml`: POST `/organizations/:organizationId/identity-connections/saml` with `{ name }`.
+  Returns 201, including generated SP certificate, entity ID, ACS URL, metadata URL and `idp: null`.
+- `updateSaml`: PATCH the connection's `/:connectionId/saml` path with `{ expectedRevision, name?, idp? }`.
+- `rotateSigningKey`: POST its `/:connectionId/saml/rotate-signing-key` path with `{ expectedRevision }`.
+  Returns a draft requiring new IdP metadata import and testing.
+
+The `idp` object contains `entityId`, HTTPS `signOnUrl`, `signingCertificates` (one to five PEM
+certificates) and `nameIdFormat` (`urn:oasis:names:tc:SAML:2.0:nameid-format:persistent` or
+`urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified`). Import returned SP metadata into the IdP,
+configure the IdP values, then use the existing test/activate actions. Issuer and NameID format
+cannot change after first activation. Signing keys remain private; only certificates are public.
+Approve through policy PATCH `{ expectedRevision, samlConnectionIds }`. Discovery adds a `saml`
+array with the same safe method summaries as `oidc`; combined approvals are limited to 20.
+
+The existing sign-in/start, link/start and reauthenticate/start paths dispatch by provider; the
+compatible typed sign-in client name remains `oidc.start`. SAML starts set `preface_saml_flow`.
+The `saml` group adds public GET metadata at the returned URL, POST `/auth/saml/:connectionId/acs`
+with form-encoded `SAMLResponse` and `RelayState`, and GET `/auth/saml/complete?flowId=...`.
+Follow authorization and redirects in the same browser. ACS stages verification and redirects;
+it never sets an authentication session. Completion requires the flow cookie and original
+session for authenticated actions. Only successful signed-out sign-in sets a normal session cookie.
+
+Both Response and Assertion must be signed. Encrypted assertions, unsolicited login and SLO are
+unsupported. The [SAML architecture](../../architecture/identity-access/saml.md) describes the exact
+profile, certificate lifecycle and shared required-SSO/owner-recovery guarantees.

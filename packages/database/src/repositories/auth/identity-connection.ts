@@ -1,7 +1,13 @@
 import { Context, Effect, Layer, Option, Schema } from "effect";
 
 import type { IdentityConnectionId, OrganizationId } from "@usepreface/protocol";
-import { IdentityConnection, GoogleConnection, OidcConnection } from "@usepreface/protocol/model";
+import {
+  IdentityConnection,
+  GoogleConnection,
+  OidcConnection,
+  SamlConnection,
+  OrganizationIdentityConnection,
+} from "@usepreface/protocol/model";
 import { and, eq } from "drizzle-orm";
 
 import { mapToDatabaseError } from "#/core/errors";
@@ -62,14 +68,10 @@ const makeRepository = Effect.gen(function* () {
       const [row] = yield* database
         .select()
         .from(table)
-        .where(
-          and(
-            eq(table.id, id),
-            eq(table.organizationId, organizationId),
-            eq(table.provider, "oidc"),
-          ),
-        );
-      return row === undefined ? undefined : Schema.decodeUnknownSync(OidcConnection)(row);
+        .where(and(eq(table.id, id), eq(table.organizationId, organizationId)));
+      return row === undefined
+        ? undefined
+        : Schema.decodeUnknownSync(OrganizationIdentityConnection)(row);
     },
     mapToDatabaseError,
   );
@@ -80,7 +82,7 @@ const makeRepository = Effect.gen(function* () {
         .from(table)
         .where(eq(table.organizationId, organizationId))
         .orderBy(table.id);
-      return rows.map((row) => Schema.decodeUnknownSync(OidcConnection)(row));
+      return rows.map((row) => Schema.decodeUnknownSync(OrganizationIdentityConnection)(row));
     },
     mapToDatabaseError,
   );
@@ -99,7 +101,23 @@ const makeRepository = Effect.gen(function* () {
       return yield* Effect.die(new Error("OIDC connection insert returned no row"));
     return Schema.decodeUnknownSync(OidcConnection)(row);
   }, mapToDatabaseError);
+  const createSaml = Effect.fn("IdentityConnectionRepository.createSaml")(function* (
+    input: SamlConnection,
+  ) {
+    const [row] = yield* database
+      .insert(table)
+      .values({
+        ...Schema.encodeSync(SamlConnection)(input),
+        id: input.id,
+        organizationId: input.organizationId,
+      })
+      .returning();
+    if (row === undefined)
+      return yield* Effect.die(new Error("SAML connection insert returned no row"));
+    return Schema.decodeUnknownSync(SamlConnection)(row);
+  }, mapToDatabaseError);
   return {
+    createSaml,
     findGoogle,
     findById,
     lockById,

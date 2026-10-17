@@ -245,7 +245,11 @@ const accountFields = {
 const flowFields = {
   organizationId: Schema.optionalKey(OrganizationId),
   ...actorFields,
-  eventType: Schema.Literals(["auth.external_flow_started", "auth.external_flow_failed"]),
+  eventType: Schema.Literals([
+    "auth.external_flow_started",
+    "auth.external_flow_failed",
+    "auth.external_flow_verified",
+  ]),
   targetType: Schema.Literal("auth_flow"),
   targetId: AuthFlowId,
   metadata: Schema.Struct({
@@ -260,7 +264,7 @@ const googleAuthenticatedFields = {
   targetType: Schema.Literal("session"),
   targetId: SessionId,
   metadata: Schema.Struct({
-    method: Schema.Literals(["google", "oidc"]),
+    method: Schema.Literals(["google", "oidc", "saml"]),
     accountId: AccountId,
     connectionRevision: Schema.Int,
   }),
@@ -284,6 +288,7 @@ const policyFields = {
   metadata: Schema.Struct({
     revision: Schema.Int,
     googleEnabled: Schema.Boolean,
+    samlConnectionIds: Schema.optionalKey(Schema.Array(IdentityConnectionId)),
     ssoMode: Schema.optionalKey(Schema.Literals(["optional", "required"])),
     ssoMaxAgeSeconds: Schema.optionalKey(Schema.Natural),
     oidcConnectionIds: Schema.optionalKey(Schema.Array(IdentityConnectionId)),

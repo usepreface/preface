@@ -7,7 +7,7 @@ import { Application } from "@usepreface/application";
 import { IdentityError, RequestError } from "@usepreface/protocol";
 import { ExternalIdentityCallbackInput } from "@usepreface/protocol/input";
 
-import { oidcFlowCookie } from "#/http/cookies/browser-proof";
+import { oidcFlowCookie, samlFlowCookie } from "#/http/cookies/browser-proof";
 import { setSessionCookie } from "#/http/cookies/session";
 import { mapInfrastructureError } from "#/http/errors";
 import { optionalSessionActor } from "#/http/routes/optional-actor";
@@ -17,7 +17,7 @@ export const OidcRoutes = HttpApiBuilder.group(PrefaceApi, "oidc", (handlers) =>
     const application = yield* Application;
     return handlers.handleAll({
       start: Effect.fn("http.oidc.start")(function* ({ params, payload }) {
-        const result = yield* application.auth.oidc
+        const result = yield* application.organization.identityConnection
           .startSignIn(
             params.organizationId,
             params.connectionId,
@@ -25,7 +25,10 @@ export const OidcRoutes = HttpApiBuilder.group(PrefaceApi, "oidc", (handlers) =>
             yield* optionalSessionActor,
           )
           .pipe(mapInfrastructureError);
-        yield* oidcFlowCookie.set(result.browserToken, result.expiresAt);
+        yield* (result.provider === "saml" ? samlFlowCookie : oidcFlowCookie).set(
+          result.browserToken,
+          result.expiresAt,
+        );
         return { authorizationUrl: result.authorizationUrl, expiresAt: result.expiresAt };
       }),
       callback: Effect.fn("http.oidc.callback")(function* ({ query }) {

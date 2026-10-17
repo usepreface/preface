@@ -47,10 +47,12 @@
     "test:built": "pnpm --workspace-root exec turbo run build --filter=@usepreface/application && node --test tests/smoke/built.test.mjs"
   },
   "dependencies": {
+    "@node-saml/node-saml": "5.1.0",
     "@usepreface/crypto": "workspace:*",
     "@usepreface/database": "workspace:*",
     "@usepreface/emails": "workspace:*",
     "@usepreface/protocol": "workspace:*",
+    "@xmldom/xmldom": "0.9.12",
     "effect": "catalog:",
     "openid-client": "^6.8.8"
   },
@@ -62,7 +64,8 @@
     "publint": "catalog:",
     "tsdown": "catalog:",
     "typescript": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "xml-crypto": "6.4.0"
   },
   "inlinedDependencies": {
     "drizzle-orm": "1.0.0-rc.4"

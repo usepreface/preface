@@ -23,14 +23,14 @@ export const makeAccountApplication = Effect.gen(function* () {
       );
       if (connection === undefined) continue;
       const member =
-        connection.provider === "oidc"
+        connection.provider !== "google"
           ? yield* repository.organization.member.findByUserId(
               connection.organizationId,
               actor.user.id,
             )
           : undefined;
       const organization =
-        connection.provider === "oidc"
+        connection.provider !== "google"
           ? yield* repository.organization.organization.findById(connection.organizationId)
           : undefined;
       summaries.push({

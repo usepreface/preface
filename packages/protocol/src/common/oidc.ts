@@ -34,4 +34,4 @@ export const OidcConfiguration = Schema.Struct({
   idTokenSigningAlgorithm: Schema.Literal("RS256"),
   metadata: OidcMetadata,
 });
-export const IdentityProvider = Schema.Literals(["google", "oidc"]);
+export const IdentityProvider = Schema.Literals(["google", "oidc", "saml"]);

@@ -5,7 +5,11 @@ import {
   CreateOidcConnectionRequest,
   UpdateOidcConnectionRequest,
   PublicOidcConnection,
-  OidcConnectionList,
+  OrganizationIdentityConnectionList,
+  PublicOrganizationIdentityConnection,
+  PublicSamlConnection,
+  CreateSamlConnectionRequest,
+  UpdateSamlConnectionRequest,
   IdentityRevisionRequest,
   ExternalIdentityStartRequest,
   ExternalIdentityStartResult,
@@ -23,7 +27,7 @@ export class OrganizationIdentityConnectionsApi extends HttpApiGroup.make(
   .add(
     HttpApiEndpoint.get("list", "/", {
       params: organization,
-      success: OidcConnectionList,
+      success: OrganizationIdentityConnectionList,
       error: errors,
     }),
     HttpApiEndpoint.post("create", "/", {
@@ -32,9 +36,27 @@ export class OrganizationIdentityConnectionsApi extends HttpApiGroup.make(
       success: PublicOidcConnection.pipe(HttpApiSchema.status(201)),
       error: errors,
     }),
+    HttpApiEndpoint.post("createSaml", "/saml", {
+      params: organization,
+      payload: CreateSamlConnectionRequest,
+      success: PublicSamlConnection.pipe(HttpApiSchema.status(201)),
+      error: errors,
+    }),
+    HttpApiEndpoint.patch("updateSaml", "/:connectionId/saml", {
+      params: connection,
+      payload: UpdateSamlConnectionRequest,
+      success: PublicSamlConnection,
+      error: errors,
+    }),
+    HttpApiEndpoint.post("rotateSigningKey", "/:connectionId/saml/rotate-signing-key", {
+      params: connection,
+      payload: IdentityRevisionRequest,
+      success: PublicSamlConnection,
+      error: errors,
+    }),
     HttpApiEndpoint.get("get", "/:connectionId", {
       params: connection,
-      success: PublicOidcConnection,
+      success: PublicOrganizationIdentityConnection,
       error: errors,
     }),
     HttpApiEndpoint.patch("update", "/:connectionId", {
@@ -52,13 +74,13 @@ export class OrganizationIdentityConnectionsApi extends HttpApiGroup.make(
     HttpApiEndpoint.post("activate", "/:connectionId/activate", {
       params: connection,
       payload: IdentityRevisionRequest,
-      success: PublicOidcConnection,
+      success: PublicOrganizationIdentityConnection,
       error: errors,
     }),
     HttpApiEndpoint.post("disable", "/:connectionId/disable", {
       params: connection,
       payload: IdentityRevisionRequest,
-      success: PublicOidcConnection,
+      success: PublicOrganizationIdentityConnection,
       error: errors,
     }),
     HttpApiEndpoint.post("refreshMetadata", "/:connectionId/refresh-metadata", {
@@ -82,4 +104,4 @@ export class OrganizationIdentityConnectionsApi extends HttpApiGroup.make(
   )
   .middleware(SessionAuthentication)
   .prefix("/organizations/:organizationId/identity-connections")
-  .annotate(OpenApi.Title, "Organization OIDC connections") {}
+  .annotate(OpenApi.Title, "Organization identity connections") {}

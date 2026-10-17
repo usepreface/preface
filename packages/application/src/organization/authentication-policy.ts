@@ -64,8 +64,19 @@ export const makeAuthenticationPolicyApplication = Effect.gen(function* () {
         policy.ssoMode === "optional" &&
         policy.allowedMethods.includes("google") &&
         google?.status === "active",
+      saml: connections
+        .filter((connection) => connection.provider === "saml" && ids.includes(connection.id))
+        .map((connection) => ({
+          id: connection.id,
+          name: connection.name,
+          available: connection.status === "active",
+          linked: accounts.some(
+            (account) =>
+              account.identityConnectionId === connection.id && account.unlinkedAt === null,
+          ),
+        })),
       oidc: connections
-        .filter((connection) => ids.includes(connection.id))
+        .filter((connection) => connection.provider === "oidc" && ids.includes(connection.id))
         .map((connection) => ({
           id: connection.id,
           name: connection.name,
@@ -88,10 +99,13 @@ export const makeAuthenticationPolicyApplication = Effect.gen(function* () {
     if (
       (decoded.googleEnabled === undefined &&
         decoded.oidcConnectionIds === undefined &&
+        decoded.samlConnectionIds === undefined &&
         decoded.ssoMode === undefined &&
         decoded.ssoMaxAgeSeconds === undefined) ||
       (decoded.oidcConnectionIds !== undefined &&
-        new Set(decoded.oidcConnectionIds).size !== decoded.oidcConnectionIds.length)
+        new Set(decoded.oidcConnectionIds).size !== decoded.oidcConnectionIds.length) ||
+      (decoded.samlConnectionIds !== undefined &&
+        new Set(decoded.samlConnectionIds).size !== decoded.samlConnectionIds.length)
     )
       return yield* new IdentityError({ code: "INVALID_INPUT" });
     yield* organizations.requireOwner(actor, organizationId);
@@ -103,6 +117,7 @@ export const makeAuthenticationPolicyApplication = Effect.gen(function* () {
         const ids = [
           ...new Set([
             ...(decoded.oidcConnectionIds ?? []),
+            ...(decoded.samlConnectionIds ?? []),
             ...(google === undefined ? [] : [google.id]),
           ]),
         ].toSorted();
@@ -115,7 +130,28 @@ export const makeAuthenticationPolicyApplication = Effect.gen(function* () {
         const previous = (yield* repository.organization.authPolicyConnection.listByOrganization(
           organizationId,
         )).map((entry) => entry.identityConnectionId);
-        const oidcConnectionIds = [...(decoded.oidcConnectionIds ?? previous)].toSorted();
+        const configured =
+          yield* repository.auth.identityConnection.listByOrganization(organizationId);
+        const previousOidc = previous.filter((id) =>
+          configured.some((connection) => connection.id === id && connection.provider === "oidc"),
+        );
+        const previousSaml = previous.filter((id) =>
+          configured.some((connection) => connection.id === id && connection.provider === "saml"),
+        );
+        const oidcConnectionIds = [...(decoded.oidcConnectionIds ?? previousOidc)].toSorted();
+        const samlConnectionIds = [...(decoded.samlConnectionIds ?? previousSaml)].toSorted();
+        const approvedIds = [...oidcConnectionIds, ...samlConnectionIds].toSorted();
+        if (approvedIds.length > 20) return yield* new IdentityError({ code: "INVALID_INPUT" });
+        for (const id of samlConnectionIds) {
+          const connection = locked.find((candidate) => candidate?.id === id);
+          if (
+            decoded.samlConnectionIds !== undefined &&
+            (connection?.provider !== "saml" ||
+              connection.organizationId !== organizationId ||
+              (!previous.includes(id) && connection.status !== "active"))
+          )
+            return yield* new IdentityError({ code: "CONNECTION_UNAVAILABLE" });
+        }
         for (const id of oidcConnectionIds) {
           const connection = locked.find((candidate) => candidate?.id === id);
           if (
@@ -140,14 +176,15 @@ export const makeAuthenticationPolicyApplication = Effect.gen(function* () {
           "email_link" as const,
           ...(googleEnabled ? ["google" as const] : []),
           ...(oidcConnectionIds.length > 0 ? ["oidc" as const] : []),
+          ...(samlConnectionIds.length > 0 ? ["saml" as const] : []),
         ];
         if (
           ssoMode === resolved.policy.ssoMode &&
           ssoMaxAgeSeconds === resolved.policy.ssoMaxAgeSeconds &&
           googleEnabled === resolved.policy.allowedMethods.includes("google") &&
-          JSON.stringify(oidcConnectionIds) === JSON.stringify([...previous].toSorted())
+          JSON.stringify(approvedIds) === JSON.stringify([...previous].toSorted())
         )
-          return organizationAuthPolicyView(resolved.policy, oidcConnectionIds);
+          return organizationAuthPolicyView(resolved.policy, oidcConnectionIds, samlConnectionIds);
         const enabling = ssoMode === "required" && resolved.policy.ssoMode !== "required";
         if (enabling) {
           if (decoded.recoveryCredential === undefined)
@@ -157,7 +194,7 @@ export const makeAuthenticationPolicyApplication = Effect.gen(function* () {
           const proof = yield* evaluate(
             { ...resolved.policy, allowedMethods },
             evidence,
-            oidcConnectionIds,
+            approvedIds,
             300,
           );
           if (!proof.freshSso) return yield* new IdentityError({ code: "RECENT_SSO_REQUIRED" });
@@ -173,17 +210,17 @@ export const makeAuthenticationPolicyApplication = Effect.gen(function* () {
           },
         );
         if (policy === undefined) return yield* new IdentityError({ code: "REVISION_CONFLICT" });
-        if (decoded.oidcConnectionIds !== undefined)
+        if (decoded.oidcConnectionIds !== undefined || decoded.samlConnectionIds !== undefined)
           yield* repository.organization.authPolicyConnection.replaceForOrganization(
             organizationId,
             resolved.member.id,
-            oidcConnectionIds,
+            approvedIds,
           );
         yield* paths.requireRecoverable(organizationId);
         // Policy changes must leave the acting owner able to access the resulting required policy.
         if (ssoMode === "required") {
           const { evidence } = yield* organizations.requireActor(actor);
-          const proof = yield* evaluate(policy, evidence, oidcConnectionIds);
+          const proof = yield* evaluate(policy, evidence, approvedIds);
           if (!proof.accepted) return yield* new IdentityError({ code: "RECENT_SSO_REQUIRED" });
         }
         yield* repository.audit.event.append({
@@ -197,6 +234,7 @@ export const makeAuthenticationPolicyApplication = Effect.gen(function* () {
             revision: policy.revision,
             googleEnabled,
             oidcConnectionIds,
+            samlConnectionIds,
             ssoMode,
             ssoMaxAgeSeconds,
           },
@@ -210,7 +248,7 @@ export const makeAuthenticationPolicyApplication = Effect.gen(function* () {
               : "sso-policy-updated",
           `policy-${policy.revision}`,
         );
-        return organizationAuthPolicyView(policy, oidcConnectionIds);
+        return organizationAuthPolicyView(policy, oidcConnectionIds, samlConnectionIds);
       }),
     );
   });

@@ -246,12 +246,12 @@ CA certificates in the deployment when an internal CA is used. Redirects and ove
 responses are rejected; credentials and callback query values stay out of request logging.
 
 The browser flow cookie is separate from Google. Successful callbacks return 303 to `/api/docs`
-and deliver a new session only in an HttpOnly cookie. See [OIDC architecture](../../architecture/identity-access/oidc.md) for source revocation and limits. SAML, domain routing, provider logout and immediate external employee revocation notifications
+and deliver a new session only in an HttpOnly cookie. See [OIDC architecture](../../architecture/identity-access/oidc.md) for source revocation and limits. Domain routing, provider logout and immediate external employee revocation notifications
 are not implemented.
 
 ## Required SSO and recovery
 
-Owners can require approved organization OIDC connections through the policy editor after preparing
+Owners can require approved organization OIDC or SAML connections through the policy editor after preparing
 a tested active connection, fresh provider/email evidence and an offline recovery credential.
 The [API usage](../../packages/api/README.md#required-organization-sso) documents readiness, policy
 settings and `/auth-recovery` endpoints. Existing sessions remain global; email alone cannot access
@@ -263,3 +263,22 @@ and redeems their offline credential. Recovery makes SSO optional, consumes the 
 queues owner alerts atomically. It grants no new authority and adds no automatic fallback. This
 works for archived organizations without restoring them. Recovery secrets are shown only at
 rotation; store them securely. No additional environment variables or dependencies are needed.
+
+## Organization SAML
+
+The runtime supplies `NodeSamlIdentity` and certificate crypto using existing public-origin and
+application encryption configuration. Credentials are configured per organization, with no SAML
+environment variables. Create a named draft, import its metadata into the IdP, configure IdP values,
+complete the browser test, activate and approve it. See [API usage](../../packages/api/README.md#organization-saml).
+
+The connection ACS is the only product POST accepting an external Origin and form encoding. Its
+streaming body limit is 256 KiB; other product routes retain 32 KiB JSON limits. Both Response and
+Assertion signatures are required. The ACS stages an encrypted verified result and returns 303
+to cookie-bound same-origin completion. Session and flow cookies remain HttpOnly/SameSite=Lax;
+normal session delivery occurs only at completion. Maintenance also expires replay reservations.
+
+Certificates are pinned and must remain valid. Rotate the generated one-year SP signing certificate
+before expiry, update the IdP metadata and retest. Trust changes revoke flows/evidence, preserving
+required-SSO owner safeguards. [SAML architecture](../../architecture/identity-access/saml.md) documents
+IdP rollover, explicit account linking and the constrained supported profile. Dashboard UI, SLO,
+encrypted assertions and provider-driven provisioning are separate from this backend.

@@ -60,3 +60,15 @@ credentials to connection/revision or flow identity; this package does not decid
 Organization offline recovery uses `cryptoPurpose.organizationAuthRecovery` with the existing
 32-byte `randomToken`, `digestToken` and `verifyToken` operations. Application owns owner binding,
 single use, rotation and recovery policy; raw credentials remain redacted outside explicit issuance.
+
+## Signing certificates
+
+`CertificateCrypto` provides `generateSigningCertificate()` and
+`validateSigningCertificates(certificates)`. Supply `NodeCertificateCrypto.layer` from the Node
+entry. Generation returns a redacted PKCS8 private key, PEM certificate and expiry; it uses
+RSA-2048/SHA256 with one-year validity. Validation normalizes currently valid RSA-2048-or-stronger
+certificates. Application owns storage, trust, rollover and renewal. The focused X.509 dependency
+creates certificates because Node's built-in crypto can parse but cannot issue them.
+
+SAML adds separate purposes for RelayState/browser digests, hashed stable subjects, replay IDs
+and encrypted staged flow proofs. Never expose signing private keys or decrypted assertions.

@@ -14,7 +14,13 @@ describe("public HTTP contract", () => {
     expect(Object.keys(spec.paths)).toEqual([
       "/api/v1/organizations/{organizationId}/identity-connections/{connectionId}/sign-in/start",
       "/api/v1/auth/oidc/callback",
+      "/api/v1/organizations/{organizationId}/identity-connections/{connectionId}/saml/metadata",
+      "/api/v1/auth/saml/{connectionId}/acs",
+      "/api/v1/auth/saml/complete",
       "/api/v1/organizations/{organizationId}/identity-connections",
+      "/api/v1/organizations/{organizationId}/identity-connections/saml",
+      "/api/v1/organizations/{organizationId}/identity-connections/{connectionId}/saml",
+      "/api/v1/organizations/{organizationId}/identity-connections/{connectionId}/saml/rotate-signing-key",
       "/api/v1/organizations/{organizationId}/identity-connections/{connectionId}",
       "/api/v1/organizations/{organizationId}/identity-connections/{connectionId}/test",
       "/api/v1/organizations/{organizationId}/identity-connections/{connectionId}/activate",

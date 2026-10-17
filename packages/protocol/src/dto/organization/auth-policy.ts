@@ -9,6 +9,7 @@ export const PublicOrganizationAuthPolicy = Schema.Struct({
   ssoMode: OrganizationSsoMode,
   ssoMaxAgeSeconds: SsoMaxAgeSeconds,
   allowedMethods: Schema.Array(OrganizationLoginMethod),
+  samlConnectionIds: Schema.optionalKey(Schema.Array(IdentityConnectionId)),
   oidcConnectionIds: Schema.optionalKey(Schema.Array(IdentityConnectionId)),
   updatedAt: Schema.DateTimeUtcFromString,
 });

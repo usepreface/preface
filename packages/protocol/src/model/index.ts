@@ -78,3 +78,6 @@ export { OidcConfiguration } from "#/common/oidc";
 export { OrganizationAuthRecoveryToken } from "#/model/organization/auth-recovery-token";
 
 export { OrganizationSecurityEmailVariables } from "#/model/email/payload";
+
+export { SamlConnection, OrganizationIdentityConnection } from "#/model/auth/identity-connection";
+export { SamlConfiguration } from "#/common/saml";

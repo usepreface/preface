@@ -14,6 +14,23 @@ import { OidcIdentity } from "#/auth/oidc/provider";
 import { OrganizationAccess } from "#/organization/access";
 import { makeOrganizationOwnerPaths } from "#/organization/authentication/owner-paths";
 
+export const publicOidcConnection = (connection: OidcConnection, publicOrigin: string) => ({
+  id: connection.id,
+  organizationId: connection.organizationId,
+  provider: connection.provider,
+  name: connection.name,
+  status: connection.status,
+  revision: connection.revision,
+  configuration: connection.configuration,
+  hasClientSecret: true,
+  callbackUrl: new URL("/api/v1/auth/oidc/callback", publicOrigin).href,
+  testedRevision: connection.testedRevision,
+  testedAt: connection.testedAt,
+  activatedAt: connection.activatedAt,
+  createdAt: connection.createdAt,
+  updatedAt: connection.updatedAt,
+});
+
 export const makeOidcConnectionApplication = Effect.gen(function* () {
   const repository = yield* DatabaseRepository;
   const ownerPaths = yield* makeOrganizationOwnerPaths;
@@ -24,22 +41,7 @@ export const makeOidcConnectionApplication = Effect.gen(function* () {
   const secrets = yield* makeIdentitySecrets;
   const provider = yield* OidcIdentity;
   const links = yield* AuthenticationLinks;
-  const view = (connection: OidcConnection) => ({
-    id: connection.id,
-    organizationId: connection.organizationId,
-    provider: connection.provider,
-    name: connection.name,
-    status: connection.status,
-    revision: connection.revision,
-    configuration: connection.configuration,
-    hasClientSecret: true,
-    callbackUrl: new URL("/api/v1/auth/oidc/callback", links.publicOrigin).href,
-    testedRevision: connection.testedRevision,
-    testedAt: connection.testedAt,
-    activatedAt: connection.activatedAt,
-    createdAt: connection.createdAt,
-    updatedAt: connection.updatedAt,
-  });
+  const view = (connection: OidcConnection) => publicOidcConnection(connection, links.publicOrigin);
   const requireOwner = Effect.fn("OidcConnection.requireOwner")(function* (
     actor: SessionActor,
     organizationId: OrganizationId,
@@ -55,9 +57,9 @@ export const makeOidcConnectionApplication = Effect.gen(function* () {
   ) {
     yield* organizations.requireOwner(actor, organizationId);
     return {
-      connections: (yield* repository.auth.identityConnection.listByOrganization(
-        organizationId,
-      )).map(view),
+      connections: (yield* repository.auth.identityConnection.listByOrganization(organizationId))
+        .filter((connection) => connection.provider === "oidc")
+        .map(view),
     };
   });
   const get = Effect.fn("Application.organization.identityConnection.get")(function* (

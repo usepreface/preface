@@ -38,3 +38,5 @@ export { authFlow } from "#/schema/auth/auth-flow";
 export { organizationAuthPolicyConnection } from "#/schema/organization/auth-policy-connection";
 
 export { organizationAuthRecoveryToken } from "#/schema/organization/auth-recovery-token";
+
+export { ssoReplay } from "#/schema/auth/sso-replay";

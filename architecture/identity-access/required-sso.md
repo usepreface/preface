@@ -1,10 +1,10 @@
 # Required organization SSO
 
-Organization owners can require authentication through an approved organization OIDC connection.
+Organization owners can require authentication through an approved organization OIDC or SAML connection.
 The installation-wide Google connection does not satisfy this requirement. Global email login,
 organization membership discovery, account linking and explicit owner recovery remain available.
-Instance ownership grants no exemption. [OIDC](oidc.md) owns provider configuration and browser
-transactions; [invitations](invitations.md) own admission.
+Instance ownership grants no exemption. [OIDC](oidc.md) and [SAML](saml.md) own provider configuration
+and browser transactions; [invitations](invitations.md) own admission.
 
 ## Policy and evidence
 
@@ -14,13 +14,13 @@ is the allowlist. Email methods remain configured: required mode adds a conditio
 access, rather than disabling installation identity or mailbox verification.
 
 `OrganizationAccess` evaluates current source-backed session evidence on every organization/team
-access. Required mode accepts only OIDC evidence whose exact connection is approved, active and at
+access. Required mode accepts only OIDC or SAML evidence whose exact connection is approved, active and at
 the recorded trust revision, with a linked account, active membership and enabled identity. The
 provider authentication time must satisfy the current maximum age. Local email and installation
 Google evidence do not satisfy required SSO. Ordinary operations, including owner management, fail
 closed when suitable evidence is absent. There is no outage-triggered email fallback.
 
-`auth.session_authentication.providerAuthenticatedAt` stores the validated ID token's `auth_time`.
+`auth.session_authentication.providerAuthenticatedAt` stores validated OIDC `auth_time` or SAML `AuthnInstant`.
 The existing `authenticatedAt` remains the time Preface obtained evidence. A callback cannot make
 an old provider login fresh. Existing evidence without provider authentication time remains usable
 for optional policy and global identity, but cannot satisfy required SSO. Up to 60 seconds of future
@@ -28,7 +28,8 @@ clock skew is tolerated; deployments need synchronized clocks.
 
 `auth.auth_flow.requestedMaxAgeSeconds` records the request's `max_age` requirement. Required-mode
 sign-in/link requests use the current policy age; reauthentication uses `prompt=login`, `max_age=0`.
-The SDK validates the requested age and requires `auth_time`. Final completion additionally rechecks
+The OIDC SDK validates the requested age and requires `auth_time`. SAML uses ForceAuthn and
+checks verified AuthnInstant, including request-relative freshness for reauthentication. Final completion additionally rechecks
 the current organization policy under its lock, so tightening enforcement during an exchange cannot
 admit stale evidence. Reauthentication adds evidence without extending the session's absolute expiry. Normal request
 activity continues to follow the existing idle policy. No MFA assurance is inferred.
@@ -43,7 +44,7 @@ organization access. It does not reveal an organization directory to signed-out 
 Invitation acceptance verifies the intended mailbox and commits membership, currently authorized
 role/team assignments, email session and audit as before. Its response adds `nextAction`: required
 organizations return `authenticate_with_sso`. Email admission grants no SSO exemption. The member
-links an approved provider using recent local email proof and completes suitable OIDC authentication
+links an approved provider using recent local email proof and completes suitable OIDC or SAML authentication
 before using their assignments. There is no pending-enrollment table, email-based identity merging,
 provider-driven signup or just-in-time membership.
 
@@ -103,7 +104,7 @@ transaction. Concurrent attempts admit one transition. A failed audit or outbox 
 back consumption and policy changes. No external provider is contacted.
 
 Recovery also works for archived organizations but does not restore them. Archived organizations
-invalidate ordinary OIDC sources; an owner can recover to optional mode and then use the separate
+invalidate ordinary organization SSO sources; an owner can recover to optional mode and then use the separate
 restore operation. Recovery never grants membership, roles or instance authority. It preserves
 provider settings and account bindings for deliberate repair or disablement. Enablement after
 recovery requires a new credential and fresh provider proof.

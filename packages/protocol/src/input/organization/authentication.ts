@@ -11,6 +11,9 @@ export const UpdateOrganizationAuthPolicyInput = Schema.Struct({
   oidcConnectionIds: Schema.optionalKey(
     Schema.Array(IdentityConnectionId).check(Schema.isMaxLength(20)),
   ),
+  samlConnectionIds: Schema.optionalKey(
+    Schema.Array(IdentityConnectionId).check(Schema.isMaxLength(20)),
+  ),
   ssoMode: Schema.optionalKey(OrganizationSsoMode),
   ssoMaxAgeSeconds: Schema.optionalKey(SsoMaxAgeSeconds),
   recoveryCredential: Schema.optionalKey(SecretTokenFromString),

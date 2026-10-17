@@ -49,3 +49,10 @@ export {
   UpdateOrganizationAuthPolicyInput,
   RecoverOrganizationAuthInput,
 } from "#/input/organization/authentication";
+
+export {
+  CreateSamlConnectionInput,
+  UpdateSamlConnectionInput,
+  SamlCallbackInput,
+  CompleteSamlFlowInput,
+} from "#/input/auth/saml";

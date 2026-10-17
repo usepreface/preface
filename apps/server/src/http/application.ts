@@ -31,6 +31,7 @@ import { OrganizationRolesRoutes } from "#/http/routes/organization-roles";
 import { OrganizationsRoutes, InstanceCapabilitiesRoutes } from "#/http/routes/organizations";
 import { ProfileRoutes } from "#/http/routes/profile";
 import { ReauthenticationRoutes } from "#/http/routes/reauthentication";
+import { SamlRoutes } from "#/http/routes/saml";
 import { SessionRoutes } from "#/http/routes/session";
 import { SessionsRoutes } from "#/http/routes/sessions";
 import { TeamsRoutes } from "#/http/routes/teams";
@@ -39,6 +40,7 @@ const ProductRoutes = HttpApiBuilder.layer(PrefaceApi, { openapiPath: "/api/open
   Layer.provide(
     Layer.mergeAll(
       OidcRoutes,
+      SamlRoutes,
       OrganizationIdentityConnectionsRoutes,
       GoogleRoutes,
       IdentityConnectionsRoutes,

@@ -94,11 +94,15 @@ sign-in creates a new Preface session, while explicit linking and Google/email r
 add evidence to the current session without extending its absolute expiry. Organization policy
 checks these proofs on every access. Logout also revokes pending authenticated provider flows.
 
-[Organization OIDC](oidc.md) adds connection-backed evidence scoped to active organization membership.
+[Organization OIDC](oidc.md) and [SAML](saml.md) add connection-backed evidence scoped to active organization membership.
 Source validation requires its current linked account, active trust revision and usable organization.
-Organization policy additionally checks the exact approved connection. OIDC proof cannot satisfy
+Organization policy additionally checks the exact approved connection. Organization SSO proof cannot satisfy
 local recent-email requirements or another organization's connection policy.
 
 Required organization policy additionally evaluates the signed provider authentication time,
 independently of the callback/evidence creation time. Stale SSO evidence may still identify the
 global user while organization access requires reauthentication. See [required SSO](required-sso.md).
+
+Session listing uses the same current source predicate as resolution, including external-only
+Google/OIDC/SAML evidence. A usable external session remains visible and revocable; revoked or
+obsolete provider evidence cannot keep it in the active list.

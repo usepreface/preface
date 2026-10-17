@@ -4,7 +4,7 @@ import { test } from "node:test";
 import { NodeCrypto } from "@effect/platform-node";
 import { ConfigProvider, Effect, Layer, Predicate, Redacted, Schema } from "effect";
 
-import { NodeSecretCrypto, NodeTokenCrypto } from "@usepreface/crypto/node";
+import { NodeSecretCrypto, NodeTokenCrypto, NodeCertificateCrypto } from "@usepreface/crypto/node";
 import { DatabaseRepository } from "@usepreface/database";
 import { TestDatabase } from "@usepreface/database/testing";
 import { EmailJobs, EmailPayloadCipher } from "@usepreface/emails";
@@ -12,7 +12,12 @@ import { RequestBootstrapVerificationInput, SessionActor } from "@usepreface/pro
 import { EmailPayload } from "@usepreface/protocol/model";
 
 import { Application, AuthenticationLinks } from "../../dist/index.js";
-import { NodeToken, NodeGoogleIdentity, NodeOidcIdentity } from "../../dist/node/index.js";
+import {
+  NodeToken,
+  NodeGoogleIdentity,
+  NodeOidcIdentity,
+  NodeSamlIdentity,
+} from "../../dist/node/index.js";
 
 test("built application completes and revokes setup using packaged repositories and migrations", async () => {
   const persistence = DatabaseRepository.layer.pipe(Layer.provideMerge(TestDatabase.layer));
@@ -20,6 +25,7 @@ test("built application completes and revokes setup using packaged repositories 
     NodeToken.layer,
     NodeSecretCrypto.layer,
     NodeTokenCrypto.layer,
+    NodeCertificateCrypto.layer,
   ).pipe(
     Layer.provide(NodeCrypto.layer),
     Layer.provide(
@@ -34,6 +40,7 @@ test("built application completes and revokes setup using packaged repositories 
   const application = Application.layer.pipe(
     Layer.provide(NodeGoogleIdentity.layer),
     Layer.provide(NodeOidcIdentity.layer()),
+    Layer.provide(NodeSamlIdentity.layer),
     Layer.provide(
       Layer.succeed(AuthenticationLinks, { publicOrigin: "https://preface.example.test" }),
     ),

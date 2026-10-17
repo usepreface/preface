@@ -376,11 +376,11 @@ The Google migration extends the existing baseline; generation never changes a d
 Repositories provide persistence/conditional writes; application owns authority and provider calls.
 
 Organization OIDC extends the same connection/account/flow repositories. Connections have exclusive
-installation/organization ownership; organization lookups and lists return the OIDC variant.
+installation/organization ownership; organization lookups and lists return the OIDC/SAML discriminated union.
 `organization.authPolicyConnection.listByOrganization/replaceForOrganization` persists accepted
 connections with composite tenant references. Replacement requires an ambient transaction and must
 be coordinated by the application's policy revision/organization lock. Evidence queries reject
-OIDC sources with inactive membership, archived organization, unlinked account or obsolete trust.
+organization SSO sources with inactive membership, archived organization, unlinked account or obsolete trust.
 The additive organization-OIDC migration preserves previous migrations and existing Google data.
 
 Required SSO adds `ssoMode`/`ssoMaxAgeSeconds` to policy, `requestedMaxAgeSeconds` to auth flows,
@@ -390,3 +390,10 @@ provides owner-bound credential creation, active lookup, conditional consumption
 The repository stores digests only. `organization.authPolicy.update` writes complete settings with
 an expected revision; the existing `updateGoogle` adapter preserves current SSO settings. Authorization,
 owner safeguards, recovery and email enqueueing remain application responsibilities.
+
+Organization SAML adds nullable request ID and encrypted verified proof fields to `auth.authFlow`,
+with protocol-specific checks. `findById`/`stageSaml` support the browser completion handoff;
+consume, revocation and expiry scrub staged proofs. `auth.ssoReplay.reserve` conditionally inserts
+hashed Response/Assertion IDs; callers reserve both within the staging/audit transaction.
+Uniqueness spans replicas and trust revisions. Bounded expiry cleanup owns no authentication policy.
+The SAML migration is additive and preserves existing Google/OIDC flows and prior migration history.

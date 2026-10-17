@@ -251,7 +251,17 @@ export const makeOrganizationApplication = Effect.gen(function* () {
     const ids = (yield* repository.organization.authPolicyConnection.listByOrganization(
       organizationId,
     )).map((entry) => entry.identityConnectionId);
-    return organizationAuthPolicyView(policy, ids);
+    const connections =
+      yield* repository.auth.identityConnection.listByOrganization(organizationId);
+    return organizationAuthPolicyView(
+      policy,
+      ids.filter((id) =>
+        connections.some((connection) => connection.id === id && connection.provider === "oidc"),
+      ),
+      ids.filter((id) =>
+        connections.some((connection) => connection.id === id && connection.provider === "saml"),
+      ),
+    );
   });
   return {
     organization: { create, listMine, get, update, archive, restore, getAccess },

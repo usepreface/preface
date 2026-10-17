@@ -18,7 +18,7 @@ export const makeOrganizationAuthenticationEvidence = Effect.gen(function* () {
     let ssoLinkedEvidence = false;
     let freshSso = false;
     for (const proof of evidence) {
-      if (proof.method !== "oidc") {
+      if (proof.method !== "oidc" && proof.method !== "saml") {
         if (
           policy.ssoMode === "optional" &&
           policy.allowedMethods.includes(
@@ -28,7 +28,7 @@ export const makeOrganizationAuthenticationEvidence = Effect.gen(function* () {
           accepted = true;
         continue;
       }
-      if (!policy.allowedMethods.includes("oidc")) continue;
+      if (!policy.allowedMethods.includes(proof.method)) continue;
       const account = yield* repository.auth.account.findById(proof.accountId);
       if (account === undefined || !connectionIds.includes(account.identityConnectionId)) continue;
       ssoLinkedEvidence = true;

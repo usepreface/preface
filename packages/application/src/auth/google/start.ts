@@ -61,7 +61,11 @@ export const makeGoogleFlowStart = Effect.gen(function* () {
         if (previous === undefined)
           return yield* new IdentityError({ code: "CONNECTION_UNAVAILABLE" });
         const connection = yield* repository.auth.identityConnection.lockById(previous.id);
-        if (connection === undefined || (intent !== "test" && connection.status !== "active"))
+        if (
+          connection === undefined ||
+          connection.provider !== "google" ||
+          (intent !== "test" && connection.status !== "active")
+        )
           return yield* new IdentityError({ code: "CONNECTION_UNAVAILABLE" });
         if (intent === "test" && connection.revision !== expectedRevision)
           return yield* new IdentityError({ code: "REVISION_CONFLICT" });

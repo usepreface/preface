@@ -115,3 +115,9 @@ Required SSO and offline owner recovery use the existing session, Origin, JSON a
 policies. Recovery secrets are decoded to redacted application inputs and explicitly unwrapped only
 for the one-time issuance response. The runtime adds no provider dependency or environment variable.
 See [required SSO](../identity-access/required-sso.md).
+
+SAML adds a narrow external-Origin/form-POST exception at its exact ACS route with a 256 KiB
+streaming body cap. ACS stages verified context; a same-origin GET completes authentication using
+the dedicated Lax flow cookie and original session where required. Normal mutation/cookie policy
+is unchanged elsewhere. Runtime supplies Node-SAML and certificate crypto; cleanup includes shared
+replay reservations. See [SAML](../identity-access/saml.md) for verification and certificate lifecycle.

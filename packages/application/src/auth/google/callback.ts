@@ -84,7 +84,8 @@ export const makeGoogleFlowCallback = Effect.gen(function* () {
       if (
         decoded.error !== undefined ||
         decoded.code === undefined ||
-        flow.pkceVerifierCiphertext === null
+        flow.pkceVerifierCiphertext === null ||
+        flow.nonceHash === null
       )
         return yield* new IdentityError({ code: "INVALID_FLOW" });
       const connection = yield* repository.auth.identityConnection.findById(

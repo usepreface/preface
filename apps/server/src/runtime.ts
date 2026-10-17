@@ -2,8 +2,13 @@ import { NodeServices } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
 
 import { Application, AuthenticationLinks } from "@usepreface/application";
-import { NodeToken, NodeGoogleIdentity, NodeOidcIdentity } from "@usepreface/application/node";
-import { NodeSecretCrypto, NodeTokenCrypto } from "@usepreface/crypto/node";
+import {
+  NodeToken,
+  NodeGoogleIdentity,
+  NodeOidcIdentity,
+  NodeSamlIdentity,
+} from "@usepreface/application/node";
+import { NodeSecretCrypto, NodeTokenCrypto, NodeCertificateCrypto } from "@usepreface/crypto/node";
 import {
   Database,
   DatabaseMigration,
@@ -40,7 +45,12 @@ const OidcLive = Layer.unwrap(
 const PersistenceLive = Layer.mergeAll(DatabaseRepository.layer, DatabaseMigration.layer).pipe(
   Layer.provideMerge(TransactionService.layer.pipe(Layer.provideMerge(Database.layer))),
 );
-const CryptoLive = Layer.mergeAll(NodeToken.layer, NodeTokenCrypto.layer, NodeSecretCrypto.layer);
+const CryptoLive = Layer.mergeAll(
+  NodeToken.layer,
+  NodeTokenCrypto.layer,
+  NodeSecretCrypto.layer,
+  NodeCertificateCrypto.layer,
+);
 const CipherLive = EmailPayloadCipher.layer.pipe(Layer.provide(CryptoLive));
 const EmailLive = EmailService.layer.pipe(
   Layer.provide(Layer.mergeAll(AuthenticationEmailRenderer.layer, EmailSender.layer)),
@@ -54,6 +64,7 @@ export const BackendLive = Layer.mergeAll(Application.layer, EmailDelivery.layer
   Layer.provide(LinksLive),
   Layer.provide(NodeGoogleIdentity.layer),
   Layer.provide(OidcLive),
+  Layer.provide(NodeSamlIdentity.layer),
   Layer.provide(CryptoLive),
   Layer.provideMerge(PersistenceLive),
   Layer.merge(ServerConfig.layer),

@@ -46,7 +46,9 @@
     "test": "NODE_OPTIONS=--conditions=preface-source vitest run"
   },
   "dependencies": {
-    "effect": "catalog:"
+    "@peculiar/x509": "2.2.0",
+    "effect": "catalog:",
+    "reflect-metadata": "0.2.2"
   },
   "devDependencies": {
     "@effect/platform-node": "catalog:",

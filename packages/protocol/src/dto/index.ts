@@ -83,3 +83,5 @@ export {
 } from "#/dto/auth/identity";
 
 export * from "#/dto/organization/authentication";
+
+export * from "#/dto/auth/saml";

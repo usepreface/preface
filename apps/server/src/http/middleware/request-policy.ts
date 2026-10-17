@@ -56,6 +56,9 @@ export const makeRequestPolicy = Effect.gen(function* () {
             ),
         )?.path ?? "unmatched";
 
+      const samlCallback =
+        request.method === "POST" && routeName === "/api/v1/auth/saml/:connectionId/acs";
+      const maximumRequestBytes = samlCallback ? 256 * 1024 : maximumBodyBytes;
       const guarded = Effect.gen(function* () {
         const health = path === "/health/live" || path === "/health/ready";
         if (!health) {
@@ -69,11 +72,11 @@ export const makeRequestPolicy = Effect.gen(function* () {
             );
         }
 
-        if (!permitsMutation(request, config.allowedOrigins))
+        if (!samlCallback && !permitsMutation(request, config.allowedOrigins))
           return requestErrorResponse("FORBIDDEN");
 
         const contentLength = request.headers["content-length"];
-        if (contentLength !== undefined && Number(contentLength) > maximumBodyBytes)
+        if (contentLength !== undefined && Number(contentLength) > maximumRequestBytes)
           return requestErrorResponse("PAYLOAD_TOO_LARGE");
         if (request.method === "POST" || request.method === "PUT" || request.method === "PATCH") {
           const contentType = request.headers["content-type"]
@@ -81,7 +84,8 @@ export const makeRequestPolicy = Effect.gen(function* () {
             ?.trim()
             .toLowerCase();
           if (
-            contentType !== "application/json" ||
+            contentType !==
+              (samlCallback ? "application/x-www-form-urlencoded" : "application/json") ||
             (request.headers["content-encoding"] !== undefined &&
               request.headers["content-encoding"] !== "identity")
           ) {
@@ -91,7 +95,7 @@ export const makeRequestPolicy = Effect.gen(function* () {
 
         return yield* httpEffect;
       }).pipe(
-        Effect.provideService(HttpIncomingMessage.MaxBodySize, ByteSize.kibibytes(32)),
+        Effect.provideService(HttpIncomingMessage.MaxBodySize, ByteSize.bytes(maximumRequestBytes)),
         Effect.timeoutOrElse({
           duration: "30 seconds",
           orElse: () => Effect.succeed(requestErrorResponse("REQUEST_TIMEOUT")),

@@ -37,6 +37,13 @@ export const identityRelations = defineRelationsPart(schema, (r) => ({
       optional: false,
     }),
   },
+  ssoReplay: {
+    connection: r.one.identityConnection({
+      from: r.ssoReplay.identityConnectionId,
+      to: r.identityConnection.id,
+      optional: false,
+    }),
+  },
   authFlow: {
     connection: r.one.identityConnection({
       from: r.authFlow.identityConnectionId,

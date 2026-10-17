@@ -23,7 +23,16 @@ export const AuthenticationMaintenanceLayer = Layer.effectDiscard(
               Effect.logError("auth.flow_cleanup.failed").pipe(Effect.as(0)),
             ),
           );
-        yield* Effect.sleep(removed === 500 || flows === 500 ? "1 second" : "1 minute");
+        const replays = yield* auth.ssoReplay
+          .deleteExpiredBatch()
+          .pipe(
+            Effect.catchTag("DatabaseError", () =>
+              Effect.logError("auth.replay_cleanup.failed").pipe(Effect.as(0)),
+            ),
+          );
+        yield* Effect.sleep(
+          removed === 500 || flows === 500 || replays === 500 ? "1 second" : "1 minute",
+        );
       }
     }).pipe(Effect.forkScoped);
   }),

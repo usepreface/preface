@@ -4,9 +4,14 @@ import { HttpApiBuilder } from "effect/http-api";
 import { CurrentActor, PrefaceApi } from "@usepreface/api";
 import { Application } from "@usepreface/application";
 import { RequestError } from "@usepreface/protocol";
-import { CreateOidcConnectionInput, UpdateOidcConnectionInput } from "@usepreface/protocol/input";
+import {
+  CreateOidcConnectionInput,
+  UpdateOidcConnectionInput,
+  CreateSamlConnectionInput,
+  UpdateSamlConnectionInput,
+} from "@usepreface/protocol/input";
 
-import { oidcFlowCookie } from "#/http/cookies/browser-proof";
+import { oidcFlowCookie, samlFlowCookie } from "#/http/cookies/browser-proof";
 import { mapInfrastructureError } from "#/http/errors";
 
 export const OrganizationIdentityConnectionsRoutes = HttpApiBuilder.group(
@@ -35,6 +40,41 @@ export const OrganizationIdentityConnectionsRoutes = HttpApiBuilder.group(
             .createOidc(yield* CurrentActor, params.organizationId, input)
             .pipe(mapInfrastructureError);
         }),
+        createSaml: Effect.fn("http.identityConnections.createSaml")(function* ({
+          params,
+          payload,
+        }) {
+          const input = yield* Schema.decodeUnknownEffect(CreateSamlConnectionInput)(payload).pipe(
+            Effect.mapError(() => new RequestError({ code: "INVALID_INPUT" })),
+          );
+          return yield* connections
+            .createSaml(yield* CurrentActor, params.organizationId, input)
+            .pipe(mapInfrastructureError);
+        }),
+        updateSaml: Effect.fn("http.identityConnections.updateSaml")(function* ({
+          params,
+          payload,
+        }) {
+          const input = yield* Schema.decodeUnknownEffect(UpdateSamlConnectionInput)(payload).pipe(
+            Effect.mapError(() => new RequestError({ code: "INVALID_INPUT" })),
+          );
+          return yield* connections
+            .updateSaml(yield* CurrentActor, params.organizationId, params.connectionId, input)
+            .pipe(mapInfrastructureError);
+        }),
+        rotateSigningKey: Effect.fn("http.identityConnections.rotateSigningKey")(function* ({
+          params,
+          payload,
+        }) {
+          return yield* connections
+            .rotateSigningKey(
+              yield* CurrentActor,
+              params.organizationId,
+              params.connectionId,
+              payload.expectedRevision,
+            )
+            .pipe(mapInfrastructureError);
+        }),
         update: Effect.fn("http.oidcConnections.update")(function* ({ params, payload }) {
           const input = yield* Schema.decodeUnknownEffect(UpdateOidcConnectionInput)(payload).pipe(
             Effect.mapError(() => new RequestError({ code: "INVALID_INPUT" })),
@@ -52,7 +92,10 @@ export const OrganizationIdentityConnectionsRoutes = HttpApiBuilder.group(
               payload.expectedRevision,
             )
             .pipe(mapInfrastructureError);
-          yield* oidcFlowCookie.set(result.browserToken, result.expiresAt);
+          yield* (result.provider === "saml" ? samlFlowCookie : oidcFlowCookie).set(
+            result.browserToken,
+            result.expiresAt,
+          );
           return { authorizationUrl: result.authorizationUrl, expiresAt: result.expiresAt };
         }),
         activate: Effect.fn("http.oidcConnections.activate")(function* ({ params, payload }) {
@@ -89,17 +132,20 @@ export const OrganizationIdentityConnectionsRoutes = HttpApiBuilder.group(
             .pipe(mapInfrastructureError);
         }),
         link: Effect.fn("http.oidcConnections.link")(function* ({ params, payload }) {
-          const result = yield* application.auth.oidc
+          const result = yield* connections
             .startLink(yield* CurrentActor, params.organizationId, params.connectionId, payload)
             .pipe(mapInfrastructureError);
-          yield* oidcFlowCookie.set(result.browserToken, result.expiresAt);
+          yield* (result.provider === "saml" ? samlFlowCookie : oidcFlowCookie).set(
+            result.browserToken,
+            result.expiresAt,
+          );
           return { authorizationUrl: result.authorizationUrl, expiresAt: result.expiresAt };
         }),
         reauthenticate: Effect.fn("http.oidcConnections.reauthenticate")(function* ({
           params,
           payload,
         }) {
-          const result = yield* application.auth.oidc
+          const result = yield* connections
             .startReauthentication(
               yield* CurrentActor,
               params.organizationId,
@@ -107,7 +153,10 @@ export const OrganizationIdentityConnectionsRoutes = HttpApiBuilder.group(
               payload,
             )
             .pipe(mapInfrastructureError);
-          yield* oidcFlowCookie.set(result.browserToken, result.expiresAt);
+          yield* (result.provider === "saml" ? samlFlowCookie : oidcFlowCookie).set(
+            result.browserToken,
+            result.expiresAt,
+          );
           return { authorizationUrl: result.authorizationUrl, expiresAt: result.expiresAt };
         }),
       });

@@ -36,6 +36,7 @@ export const OrganizationLoginMethod = Schema.Literals([
   "email_link",
   "google",
   "oidc",
+  "saml",
 ]);
 export type OrganizationLoginMethod = typeof OrganizationLoginMethod.Type;
 

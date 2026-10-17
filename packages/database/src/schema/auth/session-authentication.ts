@@ -62,11 +62,11 @@ export const sessionAuthentication = authSchema.table(
     index("session_authentication_session_idx").on(table.sessionId),
     check(
       "session_authentication_method_check",
-      sql`(${table.method} in ('bootstrap_email_code', 'email_code', 'email_link') and ${table.userEmailId} is not null and ${table.accountId} is null and ${table.connectionRevision} is null) or (${table.method} in ('google','oidc') and ${table.userEmailId} is null and ${table.accountId} is not null and ${table.connectionRevision} is not null and ${table.connectionRevision} > 0)`,
+      sql`(${table.method} in ('bootstrap_email_code', 'email_code', 'email_link') and ${table.userEmailId} is not null and ${table.accountId} is null and ${table.connectionRevision} is null) or (${table.method} in ('google','oidc','saml') and ${table.userEmailId} is null and ${table.accountId} is not null and ${table.connectionRevision} is not null and ${table.connectionRevision} > 0)`,
     ),
     check(
       "session_authentication_provider_time_check",
-      sql`${table.providerAuthenticatedAt} is null or ${table.method} = 'oidc'`,
+      sql`${table.providerAuthenticatedAt} is null or ${table.method} in ('oidc','saml')`,
     ),
     check(
       "session_authentication_expiry_check",
@@ -78,7 +78,7 @@ export const sessionAuthentication = authSchema.table(
     ),
     check(
       "session_authentication_assurance_check",
-      sql`(${table.method} in ('google','oidc') and ${table.assurance} = jsonb_build_object('version',1,'provider',${table.method})) or (${table.method} in ('bootstrap_email_code','email_code','email_link') and ${table.assurance} = '{"version":1,"emailVerified":true}'::jsonb)`,
+      sql`(${table.method} in ('google','oidc','saml') and ${table.assurance} = jsonb_build_object('version',1,'provider',${table.method})) or (${table.method} in ('bootstrap_email_code','email_code','email_link') and ${table.assurance} = '{"version":1,"emailVerified":true}'::jsonb)`,
     ),
   ],
 );

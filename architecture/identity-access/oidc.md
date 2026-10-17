@@ -140,7 +140,7 @@ reauthentication against the built backend and PostgreSQL. Its development conne
 CA-verified HTTPS client; callbacks/session cookies completed in an incognito browser.
 
 OIDC has a backend-only Scalar completion destination. Required SSO and offline recovery are
-implemented in the [enforcement boundary](required-sso.md). Domain routing, SAML, SCIM, provider
+implemented in the [enforcement boundary](required-sso.md). SAML is implemented in its [own boundary](saml.md). Domain routing, SCIM, provider
 logout and immediate external employee revocation notifications are not implemented. A provider disabling an employee does not instantly
 revoke existing local evidence; local source checks and session expiry still apply. Provider
 compatibility is limited to the documented profile and must be verified against the deployment's

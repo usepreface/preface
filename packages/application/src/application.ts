@@ -12,8 +12,11 @@ import { makeGoogleFlowCallback } from "#/auth/google/callback";
 import { makeGoogleConnectionApplication } from "#/auth/google/connection";
 import { makeGoogleFlowStart } from "#/auth/google/start";
 import { makeOidcFlowCallback } from "#/auth/oidc/callback";
-import { makeOidcConnectionApplication } from "#/auth/oidc/connection";
 import { makeOidcFlowStart } from "#/auth/oidc/start";
+import { makeOrganizationIdentityConnections } from "#/auth/organization-identity/connections";
+import { makeSamlFlowCallback } from "#/auth/saml/callback";
+import { makeSamlConnectionApplication } from "#/auth/saml/connection";
+import { makeSamlFlowStart } from "#/auth/saml/start";
 import { makeSessionApplication } from "#/auth/session";
 import { makeBootstrapApplication } from "#/instance/bootstrap";
 import { OrganizationAccess } from "#/organization/access";
@@ -31,7 +34,10 @@ const makeApplication = Effect.gen(function* () {
   const start = yield* makeGoogleFlowStart;
   const connections = yield* makeGoogleConnectionApplication;
   const startOidc = yield* makeOidcFlowStart;
-  const oidcConnections = yield* makeOidcConnectionApplication;
+  const organizationConnections = yield* makeOrganizationIdentityConnections;
+  const samlConnections = yield* makeSamlConnectionApplication;
+  const startSaml = yield* makeSamlFlowStart;
+  const samlCallback = yield* makeSamlFlowCallback;
   return {
     instance: {
       bootstrap,
@@ -57,6 +63,28 @@ const makeApplication = Effect.gen(function* () {
         email: yield* makeEmailReauthenticationApplication,
         google: (actor: SessionActor, input: GoogleStartInput = {}) =>
           start("reauthenticate", actor, input),
+      },
+      saml: {
+        ...samlCallback,
+        metadata: samlConnections.metadata,
+        startSignIn: (
+          organizationId: OrganizationId,
+          id: IdentityConnectionId,
+          input: GoogleStartInput = {},
+          actor?: SessionActor,
+        ) => startSaml("sign_in", organizationId, id, input, actor),
+        startLink: (
+          actor: SessionActor,
+          organizationId: OrganizationId,
+          id: IdentityConnectionId,
+          input: GoogleStartInput = {},
+        ) => startSaml("link", organizationId, id, input, actor),
+        startReauthentication: (
+          actor: SessionActor,
+          organizationId: OrganizationId,
+          id: IdentityConnectionId,
+          input: GoogleStartInput = {},
+        ) => startSaml("reauthenticate", organizationId, id, input, actor),
       },
       oidc: {
         startSignIn: (
@@ -91,15 +119,7 @@ const makeApplication = Effect.gen(function* () {
     },
     organization: {
       ...organizations.organization,
-      identityConnection: {
-        ...oidcConnections,
-        test: (
-          actor: SessionActor,
-          organizationId: OrganizationId,
-          connectionId: IdentityConnectionId,
-          revision: number,
-        ) => startOidc("test", organizationId, connectionId, {}, actor, revision),
-      },
+      identityConnection: organizationConnections,
     },
   } as const;
 });

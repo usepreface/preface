@@ -2,6 +2,7 @@ import { Schema } from "effect";
 
 import { ConnectionStatus, GoogleConfiguration, IdentityRevision } from "#/common/identity";
 import { OidcConfiguration } from "#/common/oidc";
+import { SamlConfiguration } from "#/common/saml";
 import { IdentityConnectionId } from "#/identifiers/identity";
 import { OrganizationId } from "#/identifiers/organization";
 
@@ -33,5 +34,16 @@ export const OidcConnection = Schema.Struct({
   activatedAt: Schema.NullOr(Schema.DateTimeUtcFromDate),
 });
 export type OidcConnection = typeof OidcConnection.Type;
-export const IdentityConnection = Schema.Union([GoogleConnection, OidcConnection]);
+export const SamlConnection = Schema.Struct({
+  ...fields,
+  installationId: Schema.Null,
+  organizationId: OrganizationId,
+  provider: Schema.Literal("saml"),
+  configuration: SamlConfiguration,
+  activatedAt: Schema.NullOr(Schema.DateTimeUtcFromDate),
+});
+export type SamlConnection = typeof SamlConnection.Type;
+export const OrganizationIdentityConnection = Schema.Union([OidcConnection, SamlConnection]);
+export type OrganizationIdentityConnection = typeof OrganizationIdentityConnection.Type;
+export const IdentityConnection = Schema.Union([GoogleConnection, OidcConnection, SamlConnection]);
 export type IdentityConnection = typeof IdentityConnection.Type;

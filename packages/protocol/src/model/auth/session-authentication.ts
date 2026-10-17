@@ -29,7 +29,7 @@ const emailFields = {
 const externalFields = {
   sessionId: SessionId,
   userId: UserId,
-  method: Schema.Literals(["google", "oidc"]),
+  method: Schema.Literals(["google", "oidc", "saml"]),
   userEmailId: Schema.Null,
   accountId: AccountId,
   connectionRevision: Schema.Int.check(Schema.isGreaterThan(0)),
@@ -38,7 +38,7 @@ const externalFields = {
   expiresAt: Schema.DateTimeUtcFromDate,
   assurance: Schema.Struct({
     version: Schema.Literal(1),
-    provider: Schema.Literals(["google", "oidc"]),
+    provider: Schema.Literals(["google", "oidc", "saml"]),
   }),
 };
 export const CreateSessionAuthentication = Schema.Union([

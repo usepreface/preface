@@ -42,7 +42,7 @@ export const GoogleCallbackQuery = Schema.Struct({
 });
 export const PublicAccount = Schema.Struct({
   id: AccountId,
-  provider: Schema.Literals(["google", "oidc"]),
+  provider: Schema.Literals(["google", "oidc", "saml"]),
   connectionId: Schema.optionalKey(IdentityConnectionId),
   organizationId: Schema.optionalKey(Schema.NullOr(OrganizationId)),
   providerEmail: Schema.NullOr(Schema.String),
@@ -73,6 +73,7 @@ export const OrganizationAuthenticationMethods = Schema.Struct({
   googleAvailable: Schema.Boolean,
   googleEffective: Schema.Boolean,
   oidc: Schema.Array(OrganizationOidcMethod),
+  saml: Schema.Array(OrganizationOidcMethod),
   email: Schema.Literal(true),
 });
 export { UpdateOrganizationAuthPolicyRequest as UpdateGooglePolicyRequest } from "#/dto/organization/authentication";

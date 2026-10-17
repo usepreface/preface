@@ -1,4 +1,9 @@
 export const cryptoPurpose = {
+  samlFlow: "preface/saml/flow/v1",
+  samlRelay: "preface/saml/relay/v1",
+  samlBrowser: "preface/saml/browser/v1",
+  samlReplay: "preface/saml/replay/v1",
+  samlSubject: "preface/saml/subject/v1",
   organizationAuthRecovery: "preface/organization/auth-recovery/v1",
   identityConnection: "preface/identity/connection/v1",
   authFlowVerifier: "preface/identity/pkce/v1",
@@ -26,6 +31,10 @@ export const cryptoPurpose = {
 } as const;
 
 export type TokenPurpose =
+  | typeof cryptoPurpose.samlRelay
+  | typeof cryptoPurpose.samlBrowser
+  | typeof cryptoPurpose.samlReplay
+  | typeof cryptoPurpose.samlSubject
   | typeof cryptoPurpose.organizationAuthRecovery
   | typeof cryptoPurpose.authFlowState
   | typeof cryptoPurpose.authFlowBrowser
@@ -40,6 +49,7 @@ export type TokenPurpose =
   | typeof cryptoPurpose.emailSignInLink
   | typeof cryptoPurpose.emailSignInBrowser;
 export type EncryptionPurpose =
+  | typeof cryptoPurpose.samlFlow
   | typeof cryptoPurpose.emailOutbox
   | typeof cryptoPurpose.identityConnection
   | typeof cryptoPurpose.authFlowVerifier;

@@ -1,7 +1,7 @@
 import { NodeCrypto } from "@effect/platform-node";
 import { ConfigProvider, Layer } from "effect";
 
-import { NodeSecretCrypto, NodeTokenCrypto } from "@usepreface/crypto/node";
+import { NodeSecretCrypto, NodeTokenCrypto, NodeCertificateCrypto } from "@usepreface/crypto/node";
 import { DatabaseRepository } from "@usepreface/database";
 import { TestDatabase } from "@usepreface/database/testing";
 import { EmailJobs, EmailPayloadCipher } from "@usepreface/emails";
@@ -10,6 +10,7 @@ import { Application, AuthenticationLinks } from "../../src/index.js";
 import { NodeToken } from "../../src/node/index.js";
 import { GoogleTestProvider } from "./google-provider.js";
 import { OidcTestProvider } from "./oidc-provider.js";
+import { SamlTestProvider } from "./saml-provider.js";
 
 const port = process.env.PREFACE_TEST_POSTGRES_PORT;
 export const DatabaseTestLayer: Layer.Layer<
@@ -23,6 +24,7 @@ export const RepositoryTestLayer = DatabaseRepository.layer.pipe(
 export const SecurityTestLayer = Layer.mergeAll(
   NodeToken.layer,
   NodeTokenCrypto.layer,
+  NodeCertificateCrypto.layer,
   NodeSecretCrypto.layer,
 ).pipe(
   Layer.provide(
@@ -38,6 +40,7 @@ export const SecurityTestLayer = Layer.mergeAll(
 export const ApplicationTestLayer = Application.layer.pipe(
   Layer.provideMerge(GoogleTestProvider),
   Layer.provideMerge(OidcTestProvider),
+  Layer.provideMerge(SamlTestProvider),
   Layer.provide(
     Layer.succeed(AuthenticationLinks, { publicOrigin: "https://preface.example.test" }),
   ),

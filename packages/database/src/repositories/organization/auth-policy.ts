@@ -80,6 +80,7 @@ const makeOrganizationAuthPolicyRepository = Effect.gen(function* () {
         "email_link",
         ...(googleEnabled ? ["google" as const] : []),
         ...(oidcEnabled ? ["oidc" as const] : []),
+        ...(policy.allowedMethods.includes("saml") ? ["saml" as const] : []),
       ],
     });
   });

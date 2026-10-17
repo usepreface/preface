@@ -2,13 +2,18 @@ import { Context, DateTime, Duration, Effect, Layer, Schema } from "effect";
 
 import type { SessionId, UserId } from "@usepreface/protocol";
 import { CreateSession, Session } from "@usepreface/protocol/model";
-import { and, desc, eq, exists, gt, isNotNull, isNull, lt, sql } from "drizzle-orm";
+import { and, desc, eq, exists, gt, isNull, lt, sql } from "drizzle-orm";
 
 import { mapToDatabaseError } from "#/core/errors";
 import { Database } from "#/core/layer";
+import { usableSessionEvidenceSource } from "#/repositories/auth/session-evidence-source";
+import { account } from "#/schema/auth/account";
+import { identityConnection } from "#/schema/auth/identity-connection";
 import { session } from "#/schema/auth/session";
 import { sessionAuthentication } from "#/schema/auth/session-authentication";
 import { userEmail } from "#/schema/auth/user-email";
+import { organizationMember } from "#/schema/organization/member";
+import { organization } from "#/schema/organization/organization";
 
 const makeSessionRepository = Effect.gen(function* () {
   const database = yield* Database;
@@ -114,15 +119,23 @@ const makeSessionRepository = Effect.gen(function* () {
     const evidence = database
       .select({ id: sessionAuthentication.id })
       .from(sessionAuthentication)
-      .innerJoin(userEmail, eq(userEmail.id, sessionAuthentication.userEmailId))
+      .leftJoin(userEmail, eq(userEmail.id, sessionAuthentication.userEmailId))
+      .leftJoin(account, eq(account.id, sessionAuthentication.accountId))
+      .leftJoin(identityConnection, eq(identityConnection.id, account.identityConnectionId))
+      .leftJoin(organization, eq(organization.id, identityConnection.organizationId))
+      .leftJoin(
+        organizationMember,
+        and(
+          eq(organizationMember.organizationId, identityConnection.organizationId),
+          eq(organizationMember.userId, sessionAuthentication.userId),
+        ),
+      )
       .where(
         and(
           eq(sessionAuthentication.sessionId, session.id),
           isNull(sessionAuthentication.revokedAt),
           gt(sessionAuthentication.expiresAt, now),
-          isNull(userEmail.removedAt),
-          isNotNull(userEmail.verifiedAt),
-          eq(userEmail.loginEnabled, true),
+          usableSessionEvidenceSource(),
         ),
       );
     const rows = yield* database
