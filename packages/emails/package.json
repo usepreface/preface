@@ -52,6 +52,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-sesv2": "3.1152.0",
+    "@usepreface/crypto": "workspace:*",
     "@usepreface/database": "workspace:*",
     "@usepreface/protocol": "workspace:*",
     "effect": "catalog:",

@@ -8,6 +8,8 @@ Executable schemas, migrations, source and tests settle disagreements with prose
 
 - [Contracts](integrations/contracts.md): protocol modules, DTOs, application inputs,
   persistence codecs, errors and the shared HTTP contract.
+- [Shared cryptography](integrations/crypto.md): credential primitives, keyed
+  fingerprints, encryption and compatibility boundaries.
 - [Outbound email](integrations/email.md): typed intent, encrypted outbox, provider
   adapters, retries and the renderer/server integration boundary.
 - [Instance setup](identity-access/instance-setup.md): installation preparation,

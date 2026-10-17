@@ -27,7 +27,9 @@ verification codes vulnerable to guessing from a database digest alone. The
 recoverable ciphertext contains recipient and template variables; authentication
 workflows must separately store their verification digests/HMACs.
 
-The encryption key belongs to deployment secrets. There is no key-ring/rotation
+The shared [crypto package](../../packages/crypto/README.md) owns the encryption
+and fingerprint implementation; the email cipher service supplies its fixed purposes
+and translates crypto failures. The encryption key belongs to deployment secrets. There is no key-ring/rotation
 workflow; retain the configured key with database backups. Terminal transitions
 clear ciphertext. Rows retain safe metadata and fingerprints; retention deletion
 is not implemented.

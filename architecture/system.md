@@ -16,6 +16,7 @@ those backend capabilities.
 | `api`          | HTTP methods, paths, middleware declarations, status-specific schemas and OpenAPI | Handlers, repositories or runtime configuration         |
 | `database`     | PostgreSQL schema, migrations, queries, transaction context and storage failures  | HTTP policy, password hashing or business authorization |
 | `application`  | Business invariants, security capabilities, transactions and required audit       | Cookies, listener configuration or browser state        |
+| `crypto`       | Credential primitives, purpose separation and authenticated encryption            | Business authority, persistence or HTTP                 |
 | `emails`       | Typed email intent, encrypted payloads, delivery worker and provider adapters     | Credentials, recipients, business authority or HTTP     |
 | `apps/server`  | Node implementations, configuration, startup, HTTP enforcement and operator CLI   | Query implementations or frontend rendering             |
 | `ui`           | Shared presentation, controls, tokens, icons and artwork                          | Backend authority or application API calls              |

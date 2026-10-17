@@ -48,6 +48,7 @@
   },
   "dependencies": {
     "@node-rs/argon2": "2.2.2",
+    "@usepreface/crypto": "workspace:*",
     "@usepreface/database": "workspace:*",
     "@usepreface/protocol": "workspace:*",
     "effect": "catalog:"

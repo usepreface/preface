@@ -41,6 +41,7 @@ const cipher = NodeEmailPayloadCipher.layer.pipe(
     ConfigProvider.layer(
       ConfigProvider.fromUnknown({
         EMAIL_ENCRYPTION_KEY: Buffer.alloc(32, 7).toString("base64"),
+        CRYPTO_HMAC_KEY: Buffer.alloc(32, 8).toString("base64"),
       }),
     ),
   ),

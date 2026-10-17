@@ -45,6 +45,7 @@ already in flight. The linked operation must independently enforce revocation.
 ## Services and Layers
 
 - `EmailJobs.layer` requires `DatabaseRepository` and `EmailPayloadCipher`.
+  `EmailPayloadCipher.layer` adapts the shared `SecretCrypto` service.
   Enqueueing does not require a renderer or provider.
 - `EmailRenderer` accepts `EmailPayload` and returns
   `{ subject, html, text }` as an Effect with `EmailError`. Implement it with
@@ -78,19 +79,20 @@ No new worker application or in-memory queue is required.
 `NodeEmailPayloadCipher.layer`. Configuration is acquired through Effect Config,
 never read on import. Supply `NodeCrypto.layer` at the runtime boundary.
 
-| Variable                         | Meaning                                                                                    |
-| -------------------------------- | ------------------------------------------------------------------------------------------ |
-| `EMAIL_PROVIDER`                 | Required: `development`, `smtp`, `resend`, `ses` or `inbound`.                             |
-| `EMAIL_FROM`                     | Required sender for `EmailSender.layer`, e.g. `Preface <notifications@example.com>`.       |
-| `EMAIL_REPLY_TO`                 | Optional reply-to address.                                                                 |
-| `EMAIL_ENCRYPTION_KEY`           | Required 32-byte encryption key encoded as standard base64.                                |
-| `RESEND_API_KEY`                 | Required only for Resend.                                                                  |
-| `INBOUND_API_KEY`                | Required only for Inbound.                                                                 |
-| `AWS_REGION`                     | Required only for SES; credentials use the AWS SDK default chain, including IAM roles.     |
-| `SMTP_HOST`                      | Required only for SMTP.                                                                    |
-| `SMTP_PORT`                      | SMTP port, default `587`.                                                                  |
-| `SMTP_SECURE`                    | Immediate TLS, default `false`; use `true` for port `465`. Otherwise STARTTLS is required. |
-| `SMTP_USERNAME`, `SMTP_PASSWORD` | Optional paired SMTP credentials for authenticated relays.                                 |
+| Variable                         | Meaning                                                                                            |
+| -------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `EMAIL_PROVIDER`                 | Required: `development`, `smtp`, `resend`, `ses` or `inbound`.                                     |
+| `EMAIL_FROM`                     | Required sender for `EmailSender.layer`, e.g. `Preface <notifications@example.com>`.               |
+| `EMAIL_REPLY_TO`                 | Optional reply-to address.                                                                         |
+| `CRYPTO_ENCRYPTION_KEY`          | Required 32-byte standard-base64 encryption key; legacy `EMAIL_ENCRYPTION_KEY` remains a fallback. |
+| `CRYPTO_HMAC_KEY`                | Required independent 32-byte standard-base64 HMAC key for shared crypto.                           |
+| `RESEND_API_KEY`                 | Required only for Resend.                                                                          |
+| `INBOUND_API_KEY`                | Required only for Inbound.                                                                         |
+| `AWS_REGION`                     | Required only for SES; credentials use the AWS SDK default chain, including IAM roles.             |
+| `SMTP_HOST`                      | Required only for SMTP.                                                                            |
+| `SMTP_PORT`                      | SMTP port, default `587`.                                                                          |
+| `SMTP_SECURE`                    | Immediate TLS, default `false`; use `true` for port `465`. Otherwise STARTTLS is required.         |
+| `SMTP_USERNAME`, `SMTP_PASSWORD` | Optional paired SMTP credentials for authenticated relays.                                         |
 
 `ConfiguredEmailProvider` reads only the selected provider's configuration. For
 console delivery, set both `EMAIL_PROVIDER=development` and `NODE_ENV=development`.
@@ -106,6 +108,7 @@ with the database:
 node --input-type=module -e 'import { randomBytes } from "node:crypto"; console.log(randomBytes(32).toString("base64"))'
 ```
 
+The [crypto package](../crypto/README.md) owns AES-256-GCM encryption and keyed fingerprints.
 AES-256-GCM encrypts recoverable outbox payloads. A purpose-separated HMAC identifies
 equivalent payloads without exposing low-entropy codes to offline digest guessing.
 Changing the key makes outstanding jobs unreadable and changes deduplication
