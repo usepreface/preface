@@ -17,4 +17,7 @@ export {
   BootstrapStatus,
   BootstrapTokenInfo,
   CompleteBootstrapInput,
+  CompleteBootstrapRequest,
+  InspectBootstrapRequest,
 } from "#/instance/bootstrap";
+export { RequestError, RequestErrorCode } from "#/http/error";

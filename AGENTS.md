@@ -64,6 +64,8 @@ Git history as a side effect of a refactor.
 - [`packages/application`](packages/application/README.md) — instance bootstrap,
   session workflows, security capabilities and Node security adapters. HTTP
   handling and runtime startup remain at the future server boundary.
+- [`packages/api`](packages/api/README.md) — runtime-neutral Effect HTTP contracts,
+  middleware declarations and OpenAPI metadata, shared by server and clients.
 - [`packages/template`](packages/template/README.md) — starter for new workspace
   packages.
 

@@ -20,6 +20,15 @@ Keep validation errors containing raw input out of responses/logs. `SessionActor
 by authentication and must not be accepted as a client-supplied identity. Its only fields are safe
 `user` identity/profile and `session` identity/expiry; it contains no credential or authority grant.
 
+`CompleteBootstrapRequest` and `InspectBootstrapRequest` are encodable HTTP wire schemas with
+string credentials. They derive their token/password validation from the existing input schemas;
+server handlers immediately decode them into redacted inputs. This distinction lets typed HTTP
+clients transmit credentials without making internal secret-input encoding available.
+Write-only schema annotations document sensitive request fields. JSON Schema counts Unicode code
+points while the existing length policy counts UTF-16 code units; generated bounds are conservative
+and descriptions state the exact policy. `RequestError` contains only a closed transport error code.
+HTTP paths, statuses and middleware contracts belong to `@usepreface/api`.
+
 Storage codecs decode driver `Date` values into Effect `DateTime.Utc` and encode them back for writes.
 Installation, grant, credential and session codecs validate lifecycle consistency. User emails
 must already be trimmed and lowercase; ordinary address syntax is validated without rewriting
