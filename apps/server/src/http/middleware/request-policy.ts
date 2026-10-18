@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { ByteSize, Clock, Effect } from "effect";
+import { ByteSize, Effect } from "effect";
 import {
   HttpIncomingMessage,
   HttpMiddleware,
@@ -44,7 +44,9 @@ export const makeRequestPolicy = Effect.gen(function* () {
     Effect.gen(function* () {
       const request = yield* HttpServerRequest.HttpServerRequest;
       const requestId = randomUUID();
-      const startedAt = yield* Clock.currentTimeMillis;
+
+      if (config.isDevelopment) yield* Effect.sleep("300 millis");
+
       const path = request.url.split(/[?#]/, 1)[0] ?? "/";
       const segments = path.split("/");
       const routeName =
@@ -108,16 +110,6 @@ export const makeRequestPolicy = Effect.gen(function* () {
         result.status === 429 && result.headers["retry-after"] === undefined
           ? HttpServerResponse.setHeader(result, "retry-after", "60")
           : result;
-      const finishedAt = yield* Clock.currentTimeMillis;
-      if (!path.startsWith("/health/")) {
-        yield* Effect.logInfo("HTTP request", {
-          requestId,
-          method: request.method,
-          route: routeName,
-          status: response.status,
-          durationMs: finishedAt - startedAt,
-        });
-      }
 
       return HttpServerResponse.setHeaders(response, {
         "x-request-id": requestId,

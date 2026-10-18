@@ -60,10 +60,14 @@ connection before the application can write its error response.
 
 Handled responses receive a generated request ID, no-store, no-referrer, nosniff and
 frame protection. HTTPS public origins also receive HSTS. Malformed input is sanitized;
-operational errors never expose SQL, payloads or native causes. Routine logs contain
-request ID, method, bounded route name, status and duration. They omit arbitrary URLs,
-queries, credentials and bodies. The one-time operator link is a separate supported
-bootstrap output. Metrics/exporters are not currently configured.
+operational errors never expose SQL, payloads or native causes. Routine request access
+logging is disabled. Sanitized dependency/defect logs and the supported one-time
+operator setup output remain enabled. Metrics/exporters are not currently configured.
+
+When `NODE_ENV` is exactly `development`, the request policy adds an interruptible
+300 ms wait before CORS or admission handling. This covers successful and rejected
+requests, preflights, documentation and health checks. Other environments do not
+add latency.
 
 ## Operational routes and deployment
 

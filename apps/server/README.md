@@ -24,6 +24,9 @@ Turbo's persistent dev tasks. The server's `dev` and `preface` scripts load thos
 fallback values, then optional `apps/server/.env` overrides. Package-local commands
 honor shell overrides; root Turbo also passes through `NODE_EXTRA_CA_CERTS`. Existing files and non-empty keys are never rewritten.
 Keep the generated crypto keys for as long as the development database is retained.
+With `NODE_ENV=development`, every backend request waits an additional 300 ms to
+simulate network latency, including health, documentation and preflight requests.
+Other environments have no artificial delay.
 
 The server runs on port 8080 and the dashboard on port 3000. On an empty database,
 startup creates the installation and default settings and prints a 30-minute operator
@@ -39,7 +42,7 @@ pnpm --filter @usepreface/server preface instance setup-link reissue
 
 Replacement invalidates the previous proof and refuses an already completed
 installation. Treat the printed link as a credential. Its proof is in the URL
-fragment; routine request logs omit bodies, cookies and setup credentials.
+fragment; routine HTTP access logging is disabled.
 
 To run just the backend after services are ready:
 
@@ -161,8 +164,8 @@ need a shared admission layer when distributed enforcement becomes necessary.
 
 Expected domain errors retain their public tagged shape. Malformed input becomes a sanitized
 `RequestError`; SQL, validation issues, codes and native causes are omitted. Retryable storage
-failures return 503; unexpected failures return 500. Logs contain a request ID, known route name,
-method, status and duration, with no arbitrary paths or queries. Do not automatically retry setup
+failures return 503; unexpected failures return 500. Routine request access logs are
+disabled; sanitized operational error logs remain enabled. Do not automatically retry setup
 completion: a lost response can follow a committed completion, and the proof cannot be replayed.
 
 Logout is idempotent for an absent, malformed or invalid cookie. Operational failures still fail

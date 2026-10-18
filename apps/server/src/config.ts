@@ -24,6 +24,10 @@ const networkSchema = Schema.String.check(
 
 const makeServerConfig = Effect.gen(function* () {
   const config = yield* Config.all({
+    isDevelopment: Config.String("NODE_ENV").pipe(
+      Config.withDefault("production"),
+      Config.map((environment) => environment === "development"),
+    ),
     host: Config.NonEmptyString("SERVER_HOST").pipe(Config.withDefault("0.0.0.0")),
     port: Config.schema(
       Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 65535 })),
