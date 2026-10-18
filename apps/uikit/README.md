@@ -79,3 +79,5 @@ light on the left and dark on the right. Popovers and menus open in the light th
 `src/lab/*` is generated from the shadcn/ui repository's `apps/v4/registry/bases/base/examples`
 (MIT) with imports pointed at `@usepreface/ui`, icons swapped for Hugeicons and the docs-only style
 variants removed. `src/shims` stands in for `next/link` and `next/image` in those examples.
+The generated index references `gen/examples.py`, which is not included in this checkout.
+Restore that generator and its upstream inputs before regenerating the lab.

@@ -5,8 +5,8 @@ database schemas, relations, migrations, transaction boundaries and typed reposi
 Shared domain contracts belong in [protocol](../protocol/README.md); business workflows,
 authorization and transport policy belong in application packages.
 
-The foundation, instance/auth/audit tables, and their repositories are implemented. Migrations
-create the `instance`, `auth`, `organization` and `audit` PostgreSQL schemas and their tables.
+The instance, authentication, organization and audit tables and repositories are implemented.
+Migrations create their `instance`, `auth`, `organization` and `audit` PostgreSQL schemas.
 The `jobs` schema contains the encrypted email outbox, exposed through
 `DatabaseRepository.jobs.email`. Claims use token-owned leases and PostgreSQL
 `SKIP LOCKED`; completion/rescheduling reject stale or expired leases. The
@@ -17,7 +17,7 @@ repositories. The [server](../../apps/server/README.md) wires migration-gated st
 
 ## Repository API
 
-`DatabaseRepository.layer` composes the existing instance repository with auth and audit
+`DatabaseRepository.layer` composes instance, auth, organization, audit and email-job
 repositories. It requires `Database` and `TransactionService` from the same database composition.
 Application code can acquire one service:
 
@@ -40,7 +40,8 @@ const loadOwner = Effect.gen(function* () {
 | `auth.verification`          | `create`, `findById`, `lockById`, `retirePendingBySubject`, `recordFailure`, `consume`, `deleteExpiredBatch` |
 | `auth.sessionAuthentication` | `create`, `listUsableBySessionId`, `revokeBySessionId`                                                       |
 | `auth.session`               | `create`, `findActiveByTokenHash`, `recordActivity`, `listActiveByUserId`, `revoke`, `revokeAllByUserId`     |
-| `audit.event`                | `append`                                                                                                     |
+| `organization`               | Organization, membership, roles, teams, invitations, domains and authentication policy repositories          |
+| `audit.event`                | `append`, `list`, `hasCertificateWarning`                                                                    |
 | `jobs.email`                 | Durable outbox repository used by the emails package                                                         |
 
 Writes encode the focused protocol input, and every returned row decodes into its protocol model,
@@ -144,9 +145,9 @@ installation lock. Codes and email delivery are not repository responsibilities.
   typed targets and metadata; SQL enforces actor attribution and object metadata. Polymorphic
   targets have no foreign key. Indexes support chronology, actor history and target history.
   Audit is append-only by application convention; this migration adds no database immutability
-  trigger or privilege policy. Its repository exposes append only; queries can be added with the
-  workflows that need them. Keep secrets out of event metadata. Organization scoping comes with
-  organization persistence.
+  trigger or privilege policy. Its repository exposes append and filtered, cursor-paginated reads,
+  with organization scope supplied explicitly. Instance reads select installation events and
+  operator domain approvals, rather than every global authentication event. Keep secrets out of metadata.
 
 All auth user foreign keys use `on delete restrict`; account disabling preserves references and
 history. There is no account-disable workflow yet. Public DTOs and application bootstrap/session
@@ -154,9 +155,9 @@ workflows are implemented in protocol/application. The server implements cookie 
 email sign-in, sessions, invitations and organization administration are implemented; content authorization remains
 pending. Write related lifecycle timestamps from the same Effect clock instant.
 
-The development history is one regenerated initial migration containing organization
-authority, invitations, direct teams and versioned metadata. Databases using deleted
-development history need an explicit reset; no upgrade/backfill is supplied.
+The development history contains a regenerated baseline and additive migrations for verified
+identity handoff time, audit-read permission and SAML signing-key rotation. Databases using
+deleted development history need an explicit reset; no upgrade/backfill is supplied for that history.
 Generation and tests do not reset a developer database automatically.
 
 ## Organization persistence
@@ -182,7 +183,8 @@ owners. Audit adds organization identity without changing global events' null sc
 All write results decode through protocol storage models. Locking and application
 mutations use the same ambient transaction.
 
-Relations live in `relations/auth.ts`, `instance.ts`, `organization.ts`, `team.ts` and `audit.ts`.
+Relations live in `relations/auth.ts`, `identity.ts`, `instance.ts`, `organization.ts`,
+`organization-authentication.ts`, `team.ts` and `audit.ts`.
 Each uses `defineRelationsPart` against the schema barrel. The aggregate composes
 those parts after the schema-wide empty part, retaining unrelated table inference.
 
@@ -190,7 +192,7 @@ those parts after the schema-wide empty part, retaining unrelated table inferenc
 
 - `Database.layer` acquires one scoped PostgreSQL pool and the typed Drizzle database.
   Importing or building the package does not read deployment configuration or connect.
-- `DatabaseRepository.layer` exposes the instance, auth, and audit repositories without acquiring
+- `DatabaseRepository.layer` exposes instance, auth, organization, audit and job repositories without acquiring
   another pool. Its internal services capture the shared database and perform queries at call time.
 - `TransactionService.layer` depends on `Database`. `run(effect)` uses the underlying
   Effect SQL client's transaction context, so repositories can capture `Database` once
@@ -220,7 +222,8 @@ const PersistenceLive = Layer.mergeAll(DatabaseRepository.layer, DatabaseMigrati
 
 HTTP listeners and workers must explicitly require `DatabaseMigration` before acquisition.
 Merging their Layers alongside migrations does not establish startup order. The server requires
-completed startup preparation before binding; future workers must establish the same migration gate.
+completed startup preparation before binding and starting its email worker; additional workers
+must establish the same migration gate.
 
 Transactions commit on success and roll back on failure, defects or interruption. Nested
 `TransactionService.run` calls join the current transaction without a savepoint. Catching
@@ -374,7 +377,6 @@ old flow rows in bounded batches. Connection row locks require an ambient transa
 
 Session evidence joins its current email source or linked account/active matching connection
 revision. Source-specific nullability and composite FKs keep Google evidence tied to its user.
-The Google migration extends the existing baseline; generation never changes a developer DB.
 Repositories provide persistence/conditional writes; application owns authority and provider calls.
 
 Organization OIDC extends the same connection/account/flow repositories. Connections have exclusive
@@ -383,19 +385,19 @@ installation/organization ownership; organization lookups and lists return the O
 connections with composite tenant references. Replacement requires an ambient transaction and must
 be coordinated by the application's policy revision/organization lock. Evidence queries reject
 organization SSO sources with inactive membership, archived organization, unlinked account or obsolete trust.
-The additive organization-OIDC migration preserves previous migrations and existing Google data.
 
-Required SSO adds `ssoMode`/`ssoMaxAgeSeconds` to policy, `requestedMaxAgeSeconds` to auth flows,
-and `providerAuthenticatedAt` to external evidence. Its additive migration preserves existing rows
-with optional policy and unknown provider authentication time. `organization.authRecoveryToken`
+Required SSO uses `ssoMode`/`ssoMaxAgeSeconds` in policy, `requestedMaxAgeSeconds` in auth flows,
+and `providerAuthenticatedAt` in external evidence. `organization.authRecoveryToken`
 provides owner-bound credential creation, active lookup, conditional consumption and revocation.
 The repository stores digests only. `organization.authPolicy.update` writes complete settings with
 an expected revision; the existing `updateGoogle` adapter preserves current SSO settings. Authorization,
 owner safeguards, recovery and email enqueueing remain application responsibilities.
 
 Organization SAML adds nullable request ID and encrypted verified proof fields to `auth.authFlow`,
-with protocol-specific checks. `findById`/`stageSaml` support the browser completion handoff;
+with protocol-specific checks. `findById`/`stageVerifiedIdentity` support the browser completion handoff;
 consume, revocation and expiry scrub staged proofs. `auth.ssoReplay.reserve` conditionally inserts
 hashed Response/Assertion IDs; callers reserve both within the staging/audit transaction.
 Uniqueness spans replicas and trust revisions. Bounded expiry cleanup owns no authentication policy.
-The SAML migration is additive and preserves existing Google/OIDC flows and prior migration history.
+`auth.identityConnectionKey` stores pending and retiring SAML signing certificates. Pending private
+keys are encrypted; activation and retirement clear that row's private-key ciphertext. Flow references
+bind a pending-key test to its connection. Application workflows own testing, activation and overlap policy.

@@ -39,7 +39,7 @@ the ten-minute proof. It uses Secure for HTTPS public origins. Both code and lin
 completion require this binding. Opening the email on another device requires
 entering its code in the browser that requested sign-in.
 
-Links use the configured trusted `PUBLIC_URL` origin and put challenge identity and
+Links use the configured trusted `DASHBOARD_URL` origin, falling back to `PUBLIC_URL`, and put challenge identity and
 credential in `/auth/email/verify#challengeId=…&token=…`. The server does not render
 this frontend route. A future client must read the fragment and explicitly POST
 completion; a GET never consumes a proof, and a request cannot supply a redirect URL.

@@ -81,7 +81,7 @@ to organization permissions; see [teams and profiles](teams-profiles.md).
 The owner role is additionally recognized as a protected authority, not something
 custom permission strings can manufacture.
 
-The current vocabulary is `organization.read`, `organization.update`,
+The current vocabulary is `audit.read`, `organization.read`, `organization.update`,
 `organization.archive`, `members.read`, `members.manage`, `roles.read`,
 `roles.manage`, `roles.assign`, `teams.read` and `teams.manage`. Custom-role permissions must fit the actor's
 current delegation envelope and cannot include archiving. Editing/retiring a role

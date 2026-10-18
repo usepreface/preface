@@ -31,11 +31,12 @@ old evidence cannot revive. Repeated active/disabled actions are authorized no-o
 `auth.account` binds a user to connection, issuer and case-sensitive subject. The tuple is
 unique across linked and unlinked history; an identity cannot be claimed by another user
 after unlink. One active identity per user/Google connection is supported. The same user can
-explicitly reconnect an old binding. Provider email/verification are display claims and do
-not attach, verify or replace Preface email. Profile metadata and pictures are unchanged.
+explicitly reconnect an old binding. Explicit linking does not replace or verify Preface email.
+External enrollment can use verified Gmail or matching Workspace hosted-domain claims as email
+ownership proof, subject to invitation and membership checks. Profile metadata and pictures are unchanged.
 Google access, refresh and identity tokens are not persisted.
 
-`auth.auth_flow` records `sign_in | link | reauthenticate | test`, connection/revision,
+`auth.auth_flow` records `sign_in | link | reauthenticate | test | accept_invitation`, connection/revision,
 initiating user/session where applicable, state/browser/nonce digests, encrypted PKCE context,
 expiry and claim/consumption/revocation. Authenticated intents require the exact initiating
 session and user. Composite references prevent mismatched source identities. Flows expire
@@ -76,9 +77,11 @@ audit share their business transaction.
 
 Linking requires recent email evidence at initiation and finalization. It binds only the
 current user, refuses another user's historical identity, and records Google evidence in the
-current session. Ordinary sign-in is signed-out only and requires an active linked account,
-enabled user and usable verified primary email recovery path. It issues the existing opaque
-Preface cookie session. Google reauthentication requires the returned binding to belong to
+current session. Ordinary sign-in is signed-out only. A linked identity requires an enabled user
+and usable verified primary email recovery path. Unknown identities enter the shared
+[external enrollment](enrollment.md) flow, which requires email ownership proof and an existing
+account or valid invitation. Completion issues the existing opaque Preface cookie session.
+Google reauthentication requires the returned binding to belong to
 the initiating user; it adds evidence without changing session identity or expiry.
 
 Email reauthentication is separate from signed-out email sign-in. It reuses `auth.verification`

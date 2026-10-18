@@ -127,9 +127,9 @@ connections. The host-only `preface_session` cookie has `HttpOnly`, `SameSite=La
 absolute expiry. HTTPS installations also use `Secure` and HSTS. Additional CORS origins do not
 override browser SameSite rules; use a same-site frontend for cookie authentication.
 
-Migration history is one regenerated initial baseline including organization authority,
-team assignments and versioned metadata. Databases using deleted development history need
-an explicit reset. Startup never resets a database.
+Migration history contains a regenerated baseline and additive handoff, audit-permission and
+SAML-key migrations. Databases using deleted development history need an explicit reset.
+Startup never resets a database.
 
 ## Request policy
 
@@ -182,8 +182,9 @@ Organization owners opt in with `PATCH /api/v1/organizations/:organizationId/aut
 `POST /api/v1/users/me/accounts/google/start`; ordinary Google login starts at
 `POST /api/v1/auth/google/start`. Every start returns an authorization URL and sets a separate
 HttpOnly browser-flow cookie. Follow the URL in that same browser. The callback sets any new
-session only by cookie and returns 303 to `/api/docs`, the current supported completion path.
-Google alone cannot create an account or grant organization membership.
+session only by cookie and returns 303 to the configured dashboard destination, or `/api/docs`
+when no dashboard is configured. A valid invitation can enroll a user directly through Google;
+an uninvited login cannot create organization membership. See external enrollment below.
 
 Signed-in users can request an email proof at `/api/v1/auth/reauthentication/email/request`,
 replace it at `/resend`, and verify code/link at `/verify`. The temporary cookie and current
@@ -194,8 +195,9 @@ changes. Ordinary signed-out email sign-in remains separate.
 Disabling the instance connection invalidates Google evidence everywhere; unlinking an account
 invalidates its evidence. Independent email proof remains usable. Maintenance scrubs expired
 external-flow context and removes old flows after startup, alongside existing email proofs.
-Google Workspace domain admission and Google-side logout/deprovisioning notifications are not
-implemented. Required organization OIDC SSO is described below. See [Google architecture](../../architecture/identity-access/google.md).
+Verified Gmail or matching Workspace hosted-domain claims can supply email ownership proof for
+external enrollment. Invitation and membership requirements still apply. Google-side logout and
+deprovisioning notifications are not implemented. See [Google architecture](../../architecture/identity-access/google.md).
 
 ## Verification
 
@@ -213,7 +215,7 @@ OpenAPI and Scalar. Unit tests exercise rate windows, concurrent admission and t
 
 For real PostgreSQL, run `pnpm test:postgres` from the workspace root with a local Docker
 runtime. It owns the container, credentials, readiness and cleanup, and runs the database,
-application and server suites sequentially. Built process tests verify startup, proof replacement,
+email, application and server suites sequentially. Built process tests verify startup, proof replacement,
 restart preservation, completed setup refusal and failure before binding. Manual built-process
 runs skip their destructive cases without `PREFACE_TEST_POSTGRES_PORT` (and the matching
 `PREFACE_TEST_POSTGRES_PASSWORD` when password authentication is used).

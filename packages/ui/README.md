@@ -123,6 +123,10 @@ with the `nova` style compiled in, then:
 `data-checked` … variants and the `shimmer`, `scroll-fade` and `no-scrollbar` utilities the
 components rely on.
 
+Illustrations and objects identify `gen/art.py` as their Figma exporter; logo modules identify
+thesvg.org as their source. The exporter and logo-generation workflow are not included in this
+checkout. Restore those sources before regenerating the catalogs so fixes remain reproducible.
+
 ## Checks
 
 ```sh

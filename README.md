@@ -8,6 +8,7 @@ This repository contains monorepo tooling and these workspace packages and appli
 - [database](packages/database/README.md): Node.js persistence with Effect and Drizzle ORM/Kit.
 - [application](packages/application/README.md): transactional instance setup, email sign-in, sessions and organization administration.
 - [api](packages/api/README.md): shared Effect HTTP contract and typed client metadata.
+- [crypto](packages/crypto/README.md): credential generation, purpose-separated digests and authenticated encryption.
 - [emails](packages/emails/README.md): typed durable email jobs and provider adapters;
   operational setup/sign-in rendering and scoped delivery.
 - [server](apps/server/README.md): migration-gated backend, setup/session HTTP and operator CLI.
@@ -62,6 +63,7 @@ source-first development with the `preface-source` condition.
 | `pnpm test`            | Run workspace tests through Turborepo                                                                      |
 | `pnpm test:postgres`   | Run sequential integration and built smoke suites in disposable PostgreSQL                                 |
 | `pnpm test:auth`       | Build the backend and run Chromium journeys with PostgreSQL, Keycloak and Mailpit                          |
+| `pnpm test:uikit`      | Run Chromium keyboard and pointer regressions against shared components in the UI Kit                      |
 | `pnpm typecheck:tests` | Typecheck root infrastructure and browser fixtures                                                         |
 | `pnpm dev`             | Run workspace development tasks through Turborepo                                                          |
 
@@ -80,6 +82,7 @@ alongside Klarity's workspace lint, typecheck and test tasks. GitHub Actions ins
 lockfile under the pinned Node version. Separate jobs run `pnpm check`/`pnpm test`,
 `pnpm test:postgres` and `pnpm test:auth`. The latter two require a local Docker-compatible runtime;
 auth journeys also need `openssl` and `pnpm exec playwright install chromium`.
+That browser job also runs `pnpm test:uikit` against its dedicated local UI Kit server.
 
 ## VS Code
 
