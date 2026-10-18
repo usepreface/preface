@@ -70,3 +70,12 @@ Sources: [key workflows](../../packages/application/src/auth/saml/keys.ts),
 [maintenance](../../packages/application/src/auth/organization-identity/maintenance.ts),
 [key storage](../../packages/database/src/schema/auth/identity-connection-key.ts),
 [HTTP contracts](../../packages/api/src/groups/connection-operations.ts).
+
+## IdP application tile
+
+`GET /api/v1/organizations/:organizationId/identity-connections/:connectionId/saml/login`
+starts a fresh SP-bound transaction and redirects to the IdP after setting the browser proof cookie.
+It accepts an optional validated relative `returnPath`. A signed-out visitor enters normal SSO sign-in;
+an authenticated current member enters forced reauthentication. The connection must be active and
+approved. Unsolicited responses still fail request correlation, and this entry point creates no
+membership without an invitation. An unlinked signed-in member uses the explicit linking workflow.

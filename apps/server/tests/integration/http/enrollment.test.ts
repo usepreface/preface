@@ -176,6 +176,20 @@ layer(
         const session = authenticated.cookies.cookies.preface_session?.value;
         if (session === undefined) throw new Error("Expected session cookie after admission");
         const actor = yield* application.auth.session.resolve(Redacted.make(session));
+        const invalidSaml = yield* http.execute(
+          HttpClientRequest.post(`/api/v1/auth/saml/${connection.id}/acs`).pipe(
+            HttpClientRequest.setHeader("origin", "https://identity.example.test"),
+            HttpClientRequest.bodyUrlParams({
+              RelayState: "unused-disposable-relay-state-credential-12345",
+              SAMLResponse: "eA==",
+            }),
+          ),
+        );
+        expect(invalidSaml.status).toBe(303);
+        expect(invalidSaml.headers.location).toBe(
+          "https://dashboard.example.test/auth/error?code=INVALID_FLOW",
+        );
+        expect(invalidSaml.cookies.cookies.preface_session).toBeUndefined();
         expect(actor.user.email).toBe("company@example.test");
         expect(
           (yield* application.organization.organization.get(actor, organizationId)).organization.id,

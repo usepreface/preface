@@ -434,3 +434,7 @@ Staged SAML rollover uses `/saml/keys` to list/prepare, then `/:keyId/test`, `/:
 All mutations require recent email authentication. Key responses contain no private keys.
 Invitation managers can inspect `GET /api/v1/organizations/:organizationId/invitations/:invitationId/delivery`
 for safe current-job status and retry diagnostics.
+
+For an IdP application tile, use `GET /api/v1/organizations/:organizationId/identity-connections/:connectionId/saml/login`
+with an optional relative `returnPath`. It redirects into a fresh SP-bound login, or forced
+reauthentication for an authenticated current member. It does not accept unsolicited assertions.

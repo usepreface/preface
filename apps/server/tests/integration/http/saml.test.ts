@@ -149,19 +149,14 @@ layer(HttpTestLayer, { excludeTestServices: true })("SAML HTTP", (it) => {
         expect(linked.status).toBe(303);
         expect((yield* api.accounts.list()).accounts[0]?.provider).toBe("saml");
 
-        const signedOut = yield* HttpApiClient.make(PrefaceApi, {
-          transformClient: (client) =>
-            HttpClient.mapRequest(
-              client,
-              HttpClientRequest.setHeader("origin", "https://preface.example.test"),
-            ),
-        });
-        const [login, loggingIn] = yield* signedOut.oidc.start({
-          params,
-          payload: {},
-          responseMode: "decoded-and-response",
-        });
-        const loginRequest = readSamlStart(login.authorizationUrl);
+        const loggingIn = yield* http.execute(
+          HttpClientRequest.get(
+            `/api/v1/organizations/${organization.id}/identity-connections/${created.id}/saml/login`,
+          ),
+        );
+        expect(loggingIn.status).toBe(303);
+        if (loggingIn.headers.location === undefined) throw new Error("Expected SP login redirect");
+        const loginRequest = readSamlStart(loggingIn.headers.location);
         const loginPayload = {
           RelayState: loginRequest.relayState,
           SAMLResponse: Redacted.value(

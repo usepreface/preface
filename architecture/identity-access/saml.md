@@ -23,14 +23,14 @@ revision tested: it creates no account or session. Activation requires that test
 it separately through `samlConnectionIds` in organization policy. Omitted OIDC/SAML lists are preserved
 independently; there are at most 20 combined approvals.
 
-Trust edits and explicit SP key rotation increment revision, return to draft, clear testing and revoke
+Trust edits and the legacy direct SP key rotation increment revision, return to draft, clear testing and revoke
 outstanding flows/evidence. Update the IdP's imported SP certificate after rotation and test again.
 Name-only edits preserve trust. IdP issuer and NameID format are immutable after first activation;
 replacing the identity namespace requires a new connection. Disablement retains history and invalidates
 its evidence. All mutations and audit rows share a transaction and preserve the last prepared owner.
 For rollover, add a currently valid IdP certificate alongside the old one, test and activate the new
-revision, then remove the retiring certificate before it expires. Expired certificates are rejected,
-including an expired certificate remaining in a configured set. SP certificates need deliberate
+revision, then remove the retiring certificate. Runtime verification excludes expired or not-yet-valid
+IdP pins and requires a usable current certificate; an expired retired pin cannot disable a valid replacement. SP certificates need deliberate
 rotation before their one-year expiry. [Staged rollover](connection-operations.md) publishes overlapping SP certificates and preserves identity trust; automatic renewal is not implemented.
 
 ## Browser transaction

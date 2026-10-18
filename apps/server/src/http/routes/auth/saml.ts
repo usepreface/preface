@@ -19,6 +19,19 @@ export const SamlRoutes = HttpApiBuilder.group(PrefaceApi, "saml", (handlers) =>
   Effect.gen(function* () {
     const saml = (yield* Application).auth.saml;
     return handlers.handleAll({
+      tileStart: Effect.fn("http.saml.tileStart")(function* ({ params, query }) {
+        const actor = yield* optionalSessionActor;
+        const started = yield* (
+          actor === undefined
+            ? saml.startSignIn(params.organizationId, params.connectionId, query)
+            : saml.startReauthentication(actor, params.organizationId, params.connectionId, query)
+        ).pipe(mapInfrastructureError);
+        yield* samlFlowCookie.set(started.browserToken, started.expiresAt);
+        return HttpServerResponse.empty({
+          status: 303,
+          headers: { location: started.authorizationUrl },
+        });
+      }, authenticationFailureRedirect(samlFlowCookie)),
       metadata: Effect.fn("http.saml.metadata")(function* ({ params }) {
         return yield* saml
           .metadata(params.organizationId, params.connectionId)
@@ -36,7 +49,7 @@ export const SamlRoutes = HttpApiBuilder.group(PrefaceApi, "saml", (handlers) =>
           status: 303,
           headers: { location: `/api/v1/auth/saml/complete?flowId=${result.flowId}` },
         });
-      }),
+      }, authenticationFailureRedirect(samlFlowCookie)),
       complete: Effect.fn("http.saml.complete")(function* ({ query }) {
         const browserToken = yield* samlFlowCookie.read;
         if (browserToken === undefined) return yield* new IdentityError({ code: "INVALID_FLOW" });
