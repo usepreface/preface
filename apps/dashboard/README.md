@@ -50,7 +50,8 @@ recovery credentials are written to local/session storage.
 ## Available workflows
 
 - `/setup`, `/setup/verify`, `/setup/organization`: owner email verification and
-  first organization. Setup can be completed before an organization is created.
+  first organization, followed by a setup summary with links to open the organization
+  or invite members. Setup can be completed before an organization is created.
 - `/sign-in`, `/sign-in/verify`: email discovery, codes and available Google/OIDC/SAML
   methods. `/auth/email/verify` handles browser-bound email links.
 - `/invitations/accept`: review an invitation, verify by code/link, or enroll directly

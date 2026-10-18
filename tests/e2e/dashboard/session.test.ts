@@ -17,11 +17,11 @@ test("returning owner without an organization signs in through the dashboard", a
   await page.getByRole("button", { name: "Account", exact: true }).click();
   await page.getByRole("menuitem", { name: "Sign out", exact: true }).click();
   await expect(page).toHaveURL(/\/sign-in\/?$/);
-  await page.getByLabel("Email", { exact: true }).fill(owner.email);
+  await page.getByLabel("Work email", { exact: true }).fill(owner.email);
   await page.getByRole("button", { name: "Continue", exact: true }).click();
   await page.getByRole("button", { name: "Email me a code", exact: true }).click();
   await expect(page).toHaveURL(/\/sign-in\/verify$/);
-  await page.getByLabel("Verification code", { exact: true }).fill(await mailbox.code(owner.email));
+  await page.getByLabel("Sign-in code", { exact: true }).fill(await mailbox.code(owner.email));
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(/\/organizations\/?$/);
   await expect(page.getByRole("link", { name: "New organization", exact: true })).toBeVisible();
@@ -97,7 +97,7 @@ test("a background profile refresh keeps dirty input and saves only the edited f
   await page.evaluate(() => window.dispatchEvent(new Event("focus")));
   await refreshed;
   await expect(page.getByLabel("Display name", { exact: true })).toHaveValue("Edited Operator");
-  await page.getByRole("button", { name: "Save profile", exact: true }).click();
+  await page.getByRole("button", { name: "Save changes", exact: true }).click();
   await expect(page.getByLabel("Title", { exact: true })).toHaveValue("New server title");
   await page.getByRole("button", { name: "Account", exact: true }).click();
   await expect(page.getByText("Edited Operator", { exact: true }).last()).toBeVisible();

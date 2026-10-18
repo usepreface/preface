@@ -13,7 +13,7 @@ test("dashboard email links reject a different browser and finish in the request
   const owner = await onboardOwner(api, backend, mailbox);
   expect((await api.request("/auth/session", "DELETE")).status()).toBe(204);
   await page.goto(`${backend.dashboard}/sign-in`);
-  await page.getByLabel("Email", { exact: true }).fill(owner.email);
+  await page.getByLabel("Work email", { exact: true }).fill(owner.email);
   await page.getByRole("button", { name: "Continue", exact: true }).click();
   await page.getByRole("button", { name: "Email me a code", exact: true }).click();
   await expect(page).toHaveURL(/\/sign-in\/verify$/);

@@ -33,10 +33,12 @@ export function ResendNotice({
   remaining,
   prompt = "Didn’t get it? Check spam, or resend in",
   onResend,
+  disabled,
 }: {
   remaining?: string;
   prompt?: string;
   onResend?: () => void;
+  disabled?: boolean;
 }) {
   return (
     <p className="flex flex-wrap items-center gap-1.5 text-sm text-fg-tertiary" aria-live="polite">
@@ -50,7 +52,8 @@ export function ResendNotice({
           <button
             type="button"
             onClick={onResend}
-            className="rounded-sm font-medium text-fg-accent outline-none hover:underline focus-visible:ring-3 focus-visible:ring-focus-ring"
+            disabled={disabled}
+            className="rounded-sm font-medium text-fg-accent outline-none hover:underline focus-visible:ring-3 focus-visible:ring-focus-ring disabled:pointer-events-none disabled:opacity-50"
           >
             Resend code
           </button>

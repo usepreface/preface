@@ -7,7 +7,7 @@ import { organizationUrlPrefix } from "#/lib/urls";
 
 /*
  * Name, URL and description: the fields of every form that creates an organization. The URL
- * follows the name until it is edited, and a taken URL offers free alternatives.
+ * follows the name until it is edited. Availability is checked when creating the organization.
  */
 export function OrganizationFields({
   form,
@@ -34,6 +34,7 @@ export function OrganizationFields({
           name="slug"
           label="URL"
           prefix={organizationUrlPrefix}
+          source={form.watch("metadata.name")}
           disabled={disabled}
           description="Lowercase letters, numbers and dashes. Availability is checked when you create the organization."
         />
@@ -44,7 +45,7 @@ export function OrganizationFields({
         label="Description"
         optional
         description="Shown when people choose an organization."
-        textareaProps={{ rows: 3, disabled }}
+        textareaProps={{ rows: 4, className: "min-h-28", disabled }}
       />
     </>
   );

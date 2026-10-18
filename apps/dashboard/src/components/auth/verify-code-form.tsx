@@ -10,6 +10,8 @@ import { SubmitButton } from "#/components/form/submit-button";
 import { verificationCodeForm, emptyCode } from "#/forms/verification";
 import { useSchemaForm } from "#/lib/forms/use-schema-form";
 
+import { ResendNotice } from "./auth-parts";
+
 export function VerifyCodeForm({
   label = "Verification code",
   submitLabel,
@@ -41,6 +43,17 @@ export function VerifyCodeForm({
   const resendSeconds = resendAt
     ? Math.max(0, Math.ceil((DateTime.toEpochMillis(resendAt) - now) / 1000))
     : 0;
+
+  async function resendCode() {
+    if (!onResend || resending || pending || resendSeconds > 0) return;
+    setResending(true);
+    try {
+      await onResend();
+    } finally {
+      setResending(false);
+    }
+  }
+
   return (
     <form
       className="flex flex-col gap-5"
@@ -53,32 +66,38 @@ export function VerifyCodeForm({
         <Notice tone="warning">This code expired. Request a new code to continue.</Notice>
       ) : null}
       <CodeField control={form.control} name="code" label={label} disabled={pending || expired} />
-      {onResend ? (
+      {onResend && expired ? (
         <Button
           type="button"
-          variant="ghost"
           disabled={resending || pending || resendSeconds > 0}
-          onClick={async () => {
-            setResending(true);
-            try {
-              await onResend();
-            } finally {
-              setResending(false);
-            }
-          }}
+          size="lg"
+          onClick={() => void resendCode()}
         >
-          {resendSeconds > 0 ? `Resend in ${resendSeconds}s` : "Resend code"}
+          Send a new code
         </Button>
+      ) : onResend ? (
+        <ResendNotice
+          remaining={
+            resendSeconds > 0
+              ? `${Math.floor(resendSeconds / 60)}:${String(resendSeconds % 60).padStart(2, "0")}`
+              : undefined
+          }
+          disabled={resending || pending}
+          onResend={() => void resendCode()}
+        />
       ) : null}
       {children}
-      <SubmitButton
-        size="lg"
-        wide
-        pending={pending || form.formState.isSubmitting}
-        disabled={expired || form.watch("code").length !== 8}
-      >
-        {submitLabel}
-      </SubmitButton>
+      {!expired ? (
+        <SubmitButton
+          size="lg"
+          wide
+          arrow
+          pending={pending || form.formState.isSubmitting}
+          disabled={expired || form.watch("code").length !== 8}
+        >
+          {submitLabel}
+        </SubmitButton>
+      ) : null}
     </form>
   );
 }

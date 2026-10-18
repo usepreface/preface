@@ -79,7 +79,10 @@ values. Proof acceptance is an explicit submission, avoiding mount-time replay.
 Email/browser binding, expiry and single consumption remain server responsibilities.
 
 Setup creates the owner session, then permits first-organization creation or a later
-return. Invitations support email code/link acceptance and first-time Google/OIDC/SAML
+return. First-organization creation shows a completion summary from the successful
+API response; opening the organization or its members page is an explicit navigation.
+That summary remains in component memory and is not an additional setup authority.
+Invitations support email code/link acceptance and first-time Google/OIDC/SAML
 enrollment. External callbacks can redirect into `/auth/verify-email`; that page
 requests/verifies a browser-bound code or resumes a verified flow before continuing.
 Required organization SSO renders an authentication gate, with explicit account

@@ -31,7 +31,8 @@ function InstanceSetup() {
       aside={<InstanceAside />}
     >
       <AuthHeading title="Set up your instance">
-        Name this instance and verify its owner’s email.
+        Name this Preface instance and add its owner. We’ll email the owner a code to confirm it’s
+        really them.
       </AuthHeading>
       {instance.state === "ready" ? (
         <Notice>
@@ -52,24 +53,36 @@ function InstanceSetup() {
             await navigate({ to: "/setup/verify" });
           })}
         >
-          <TextField control={form.control} name="instanceName" label="Instance name" size="lg" />
           <TextField
             control={form.control}
-            name="ownerName"
-            label="Owner display name"
+            name="instanceName"
+            label="Instance name"
+            description="Shown on the sign-in page and in every email Preface sends."
             size="lg"
-            inputProps={{ autoComplete: "name" }}
           />
-          <TextField
-            control={form.control}
-            name="email"
-            label="Owner email"
-            size="lg"
-            inputProps={{ type: "email", autoComplete: "email" }}
-          />
-          <SubmitButton wide size="lg" pending={request.pending}>
+          <div className="grid gap-5 sm:grid-cols-2">
+            <TextField
+              control={form.control}
+              name="ownerName"
+              label="Owner display name"
+              size="lg"
+              inputProps={{ autoComplete: "name" }}
+            />
+            <TextField
+              control={form.control}
+              name="email"
+              label="Owner email"
+              size="lg"
+              inputProps={{ type: "email", autoComplete: "email" }}
+            />
+          </div>
+          <SubmitButton wide arrow size="lg" pending={request.pending}>
             Send verification code
           </SubmitButton>
+          <p className="text-xs text-fg-tertiary">
+            No password needed. The owner signs in with email codes, Google or SSO once an
+            organization adds it.
+          </p>
         </form>
       )}
     </AuthLayout>

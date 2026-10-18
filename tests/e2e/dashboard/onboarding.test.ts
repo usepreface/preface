@@ -23,6 +23,8 @@ test("dashboard setup, team creation and invitation admission persist through th
   await expect(page).toHaveURL(/\/setup\/organization$/);
   await page.getByLabel("Organization name", { exact: true }).fill("Knowledge");
   await page.getByRole("button", { name: "Create organization", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Knowledge is ready" })).toBeVisible();
+  await page.getByRole("link", { name: "Open Knowledge", exact: true }).click();
   await expect(page).toHaveURL(/\/org\/knowledge\/?$/);
   await expect(page.getByRole("heading", { name: "Welcome to Knowledge, Operator" })).toBeVisible();
   const organizations = await api.json(OrganizationList, "/organizations");
