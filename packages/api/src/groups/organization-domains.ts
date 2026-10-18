@@ -20,6 +20,16 @@ const errors = [...identityErrors, ...organizationErrors, ...requestErrors];
 
 export class OrganizationDomainsApi extends HttpApiGroup.make("organizationDomains")
   .add(
+    HttpApiEndpoint.get(
+      "inspectForOperator",
+      "/instance/organizations/:organizationId/domains/:domainId",
+      { params, success: PublicOrganizationDomain, error: errors },
+    ),
+    HttpApiEndpoint.post(
+      "withdrawApproval",
+      "/instance/organizations/:organizationId/domains/:domainId/revoke",
+      { params, payload: DomainRevisionRequest, success: PublicOrganizationDomain, error: errors },
+    ),
     HttpApiEndpoint.get("list", "/organizations/:organizationId/domains", {
       params: { organizationId: OrganizationId },
       success: OrganizationDomainList,

@@ -248,12 +248,20 @@ export const makeDomainApplication = Effect.gen(function* () {
     organizationId: OrganizationId,
     id: OrganizationDomainId,
     revision: number,
+    operator = false,
   ) {
     return yield* transaction.run(
       Effect.gen(function* () {
-        yield* access.requireOwner(actor, organizationId, { lock: true });
-        yield* identityAccess.requireRecentEmail(actor);
+        if (operator) {
+          yield* repository.organization.organization.lockById(organizationId);
+          yield* identityAccess.requireInstanceOwner(actor);
+        } else {
+          yield* access.requireOwner(actor, organizationId, { lock: true });
+          yield* identityAccess.requireRecentEmail(actor);
+        }
         const domain = yield* requireDomain(organizationId, id, revision);
+        if (operator && domain.verificationMethod !== "operator")
+          return yield* new IdentityError({ code: "FORBIDDEN" });
         const now = yield* DateTime.now;
         const changed = yield* repository.organization.domain.update(
           {
@@ -349,5 +357,11 @@ export const makeDomainApplication = Effect.gen(function* () {
       }),
     );
   });
-  return { list, create, request, verify, revoke, connectionDomains, bind };
+  const inspectForOperator = Effect.fn("Application.organization.domain.inspectForOperator")(
+    function* (actor: SessionActor, organizationId: OrganizationId, id: OrganizationDomainId) {
+      yield* identityAccess.requireInstanceOwner(actor);
+      return publicDomain(yield* requireDomain(organizationId, id));
+    },
+  );
+  return { list, create, request, verify, revoke, connectionDomains, bind, inspectForOperator };
 });

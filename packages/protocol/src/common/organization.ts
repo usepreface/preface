@@ -12,6 +12,7 @@ export const OrganizationRoleKey = Schema.String.check(
   Schema.isPattern(/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/),
 );
 export const OrganizationPermission = Schema.Literals([
+  "audit.read",
   "teams.read",
   "teams.manage",
   "organization.read",

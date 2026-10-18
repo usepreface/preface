@@ -5,6 +5,7 @@ import type { IdentityConnectionId, OrganizationId } from "@usepreface/protocol"
 import type { SessionActor } from "@usepreface/protocol/dto";
 import type { GoogleStartInput } from "@usepreface/protocol/input";
 
+import { makeAuditHistory } from "#/audit/history";
 import { makeAccountApplication } from "#/auth/account";
 import { makeAuthenticationDiscovery } from "#/auth/discovery";
 import { makeEmailReauthenticationApplication } from "#/auth/email-reauthentication";
@@ -43,6 +44,7 @@ const makeApplication = Effect.gen(function* () {
   const startSaml = yield* makeSamlFlowStart;
   const samlCallback = yield* makeSamlFlowCallback;
   return {
+    audit: yield* makeAuditHistory,
     instance: {
       bootstrap,
       capabilities: organizations.capabilities,

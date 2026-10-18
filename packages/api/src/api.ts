@@ -1,6 +1,7 @@
 import { HttpApi, OpenApi } from "effect/http-api";
 
 import { AccountsApi } from "#/groups/accounts";
+import { AuditApi } from "#/groups/audit";
 import {
   AuthenticationDiscoveryApi,
   OrganizationSelectionApi,
@@ -32,6 +33,7 @@ import { TeamsApi } from "#/groups/teams";
 
 export class PrefaceApi extends HttpApi.make("PrefaceApi")
   .add(
+    AuditApi,
     AuthenticationDiscoveryApi,
     OrganizationSelectionApi,
     ExternalAuthenticationApi,

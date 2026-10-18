@@ -31,6 +31,8 @@ Executable schemas, migrations, source and tests settle disagreements with prose
 - [Domain authority](identity-access/domains.md): DNS/operator verification and exact connection-domain trust.
 - [External enrollment](identity-access/enrollment.md): first-time invitation SSO, verified implicit linking,
   resumable mailbox proofs, discovery and dashboard completion contracts.
+- [Audit access](identity-access/audit.md): organization permissions, instance-history separation,
+  chronological pagination and bounded CSV export.
 - [Required SSO](identity-access/required-sso.md): organization authentication age, invitation enrollment,
   owner safeguards and offline recovery.
 - [Sessions](identity-access/sessions.md): credential resolution, expiry, activity,

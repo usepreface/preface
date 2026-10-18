@@ -411,3 +411,12 @@ Keep `publicOrigin` as the provider callback origin. The runtime validates those
 See [enrollment architecture](../../architecture/identity-access/enrollment.md) for authority,
 transactions, proof expiry and restrictions. Canonical email changes, new factors and SCIM
 remain outside these workflows.
+
+## Audit history
+
+`application.audit.list(actor, organizationId, query?)` returns a scoped event page;
+`exportCsv` returns a bounded CSV page with a continuation cursor. Supply `null` for the narrow
+instance-administration scope. Organization scope requires current `audit.read`; instance scope
+requires instance ownership and recent local email. See [audit architecture](../../architecture/identity-access/audit.md).
+`organization.domain.inspectForOperator` permits reviewing a claim before manual approval;
+`revoke(..., true)` withdraws operator approval without granting organization content access.

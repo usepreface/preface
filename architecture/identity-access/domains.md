@@ -21,7 +21,10 @@ authority, challenge revision and expiry under the organization lock before comm
 An instance owner can manually approve a claim through
 `/api/v1/instance/organizations/:organizationId/domains/:domainId/approve` after independently
 establishing control, including private/internal deployments. This requires fresh local email;
-ordinary organization administration cannot self-attest through this route. It grants no
+ordinary organization administration cannot self-attest through this route. The matching instance
+GET permits reviewing the exact claim before approval, and POST `/revoke` withdraws only a manual
+operator approval. Both require fresh instance-owner authentication and reveal no organization
+content. Organization owners can revoke their own claims through the ordinary route. It grants no
 organization content access to the operator.
 
 Connection owners explicitly replace a connection's approved domains through its `/domains`

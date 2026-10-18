@@ -413,3 +413,17 @@ require a trusted Origin. Flow IDs alone are insufficient authority.
 availability plus eligible enterprise connections. It does not disclose whether an account or
 membership exists. Authenticated organization selection uses a JSON `{}` POST to
 `/api/v1/auth/organizations/:organizationId/select`, returning current authentication requirements.
+
+## Audit history
+
+`GET /api/v1/organizations/:organizationId/audit-events` requires `audit.read`; built-in owners
+and administrators have it. `GET /api/v1/instance/audit-events` requires recent-email-authenticated
+instance ownership and returns only instance administration and operator domain decisions.
+List responses are `{ events, nextCursor }`; limits default to 25 and cap at 100. Filters are
+`eventType`, `actorUserId`, `targetId`, `after`, `before` and the returned opaque JSON `cursor`.
+Each path's `/export` returns `{ contentType, filename, content, nextCursor }` containing a CSV
+page of at most 1,000 events. Continue with `nextCursor` when present; exports retain scope checks.
+
+Instance owners review a domain before manual approval with
+`GET /api/v1/instance/organizations/:organizationId/domains/:domainId` and can withdraw manual
+approval with its `/revoke` POST and `{ expectedRevision }`. This grants no organization membership.

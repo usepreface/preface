@@ -91,3 +91,5 @@ export * from "#/dto/organization/domain";
 export * from "#/dto/auth/external";
 
 export * from "#/dto/auth/discovery";
+
+export * from "#/dto/audit/event";

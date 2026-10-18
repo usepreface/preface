@@ -46,7 +46,7 @@ export const organizationRole = organizationSchema.table(
     ),
     check(
       "role_permissions_check",
-      sql`jsonb_typeof(${table.permissions}) = 'array' and ((${table.scopeKind} = 'organization' and ${table.permissions} <@ '["organization.read","organization.update","organization.archive","members.read","members.manage","roles.read","roles.manage","roles.assign","teams.read","teams.manage"]'::jsonb) or (${table.scopeKind} = 'team' and ${table.permissions} <@ '["team.read","team.update","team.archive","team.members.read","team.members.manage","team.roles.read","team.roles.assign"]'::jsonb))`,
+      sql`jsonb_typeof(${table.permissions}) = 'array' and ((${table.scopeKind} = 'organization' and ${table.permissions} <@ '["audit.read","organization.read","organization.update","organization.archive","members.read","members.manage","roles.read","roles.manage","roles.assign","teams.read","teams.manage"]'::jsonb) or (${table.scopeKind} = 'team' and ${table.permissions} <@ '["team.read","team.update","team.archive","team.members.read","team.members.manage","team.roles.read","team.roles.assign"]'::jsonb))`,
     ),
   ],
 );

@@ -15,6 +15,25 @@ export const OrganizationDomainsRoutes = HttpApiBuilder.group(
     Effect.gen(function* () {
       const domains = (yield* Application).organization.domain;
       return handlers.handleAll({
+        inspectForOperator: Effect.fn("http.domains.inspectForOperator")(function* ({ params }) {
+          return yield* domains
+            .inspectForOperator(yield* CurrentActor, params.organizationId, params.domainId)
+            .pipe(mapInfrastructureError);
+        }),
+        withdrawApproval: Effect.fn("http.domains.withdrawApproval")(function* ({
+          params,
+          payload,
+        }) {
+          return yield* domains
+            .revoke(
+              yield* CurrentActor,
+              params.organizationId,
+              params.domainId,
+              payload.expectedRevision,
+              true,
+            )
+            .pipe(mapInfrastructureError);
+        }),
         list: Effect.fn("http.domains.list")(function* ({ params }) {
           return yield* domains
             .list(yield* CurrentActor, params.organizationId)

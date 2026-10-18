@@ -5,6 +5,7 @@ export const builtinOrganizationRoles = [
     key: "owner",
     name: "Owner",
     permissions: [
+      "audit.read",
       "teams.read",
       "teams.manage",
       "organization.read",
@@ -21,6 +22,7 @@ export const builtinOrganizationRoles = [
     key: "admin",
     name: "Administrator",
     permissions: [
+      "audit.read",
       "teams.read",
       "teams.manage",
       "organization.read",

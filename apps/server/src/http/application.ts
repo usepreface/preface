@@ -12,6 +12,7 @@ import { RequestLimits } from "#/http/middleware/limits";
 import { makeRequestPolicy } from "#/http/middleware/request-policy";
 import { SessionAuthenticationLive } from "#/http/middleware/session-authentication";
 import { SetupProtectionLive } from "#/http/middleware/setup-protection";
+import { AuditRoutes } from "#/http/routes/audit/history";
 import { AccountsRoutes } from "#/http/routes/auth/accounts";
 import {
   AuthenticationDiscoveryRoutes,
@@ -48,6 +49,7 @@ import { ProfileRoutes } from "#/http/routes/user/profile";
 const ProductRoutes = HttpApiBuilder.layer(PrefaceApi, { openapiPath: "/api/openapi.json" }).pipe(
   Layer.provide(
     Layer.mergeAll(
+      AuditRoutes,
       AuthenticationDiscoveryRoutes,
       OrganizationSelectionRoutes,
       ExternalAuthenticationRoutes,
