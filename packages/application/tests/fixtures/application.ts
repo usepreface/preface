@@ -17,7 +17,9 @@ const port = process.env.PREFACE_TEST_POSTGRES_PORT;
 export const DatabaseTestLayer: Layer.Layer<
   Layer.Success<typeof TestDatabase.layer>,
   unknown
-> = port === undefined ? TestDatabase.layer : TestDatabase.postgresLayer(Number(port));
+> = port === undefined
+  ? TestDatabase.layer
+  : TestDatabase.postgresLayer(Number(port), process.env.PREFACE_TEST_POSTGRES_PASSWORD);
 
 export const RepositoryTestLayer = DatabaseRepository.layer.pipe(
   Layer.provideMerge(DatabaseTestLayer),

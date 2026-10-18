@@ -37,7 +37,10 @@ test(
   "built startup, operator replacement, restart and completion share durable state",
   { skip: databasePort === undefined, timeout: 30_000 },
   async (context) => {
-    const database = TestDatabase.postgresLayer(Number(databasePort));
+    const database = TestDatabase.postgresLayer(
+      Number(databasePort),
+      process.env.PREFACE_TEST_POSTGRES_PASSWORD,
+    );
     await Effect.runPromise(
       Effect.gen(function* () {
         yield* (yield* TestDatabase).reset;
@@ -289,7 +292,14 @@ test(
             assert.rejects(fetch(`http://127.0.0.1:${port}/health/live`)),
           );
         }),
-      ).pipe(Effect.provide(TestDatabase.postgresLayer(Number(databasePort)))),
+      ).pipe(
+        Effect.provide(
+          TestDatabase.postgresLayer(
+            Number(databasePort),
+            process.env.PREFACE_TEST_POSTGRES_PASSWORD,
+          ),
+        ),
+      ),
     );
     const recovered = spawnBackend(testEnvironment(databasePort, port));
     context.after(() => recovered.close());

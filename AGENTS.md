@@ -362,6 +362,10 @@ important behavior over a large matrix of obvious assertions.
 - Use PGlite for fast persistence checks and disposable PostgreSQL for advisory
   locks and concurrency. Run PostgreSQL files sequentially and use the explicit
   test configuration; never fall back to a developer or deployment database.
+- Root-owned cross-package auth journeys live in `tests/e2e/`; infrastructure fixtures live in
+  `tests/e2e/fixtures/` and the PostgreSQL runner in `tooling/testing/`. Use `pnpm test:postgres`
+  and `pnpm test:auth` with local Docker. Keep generated TLS, browser state and reports ignored.
+  Use Mailpit for SMTP delivery and a fresh database/realm/context per browser test; never live inboxes.
 - Keep compile-only API assertions in the test typecheck lane. Do not remove
   distinct authorization, concurrency, or recovery regressions solely to reach
   a smaller test count.

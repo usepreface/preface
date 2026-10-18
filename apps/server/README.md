@@ -211,18 +211,29 @@ The small HTTP suite uses real application workflows, crypto, repositories and m
 It covers setup/session cookies, unsafe mutations, sanitized errors, request limits, readiness,
 OpenAPI and Scalar. Unit tests exercise rate windows, concurrent admission and trusted proxies.
 
-For real PostgreSQL, start the explicit disposable test container described in the database
-README, wait for readiness, then run these commands sequentially:
+For real PostgreSQL, run `pnpm test:postgres` from the workspace root with a local Docker
+runtime. It owns the container, credentials, readiness and cleanup, and runs the database,
+application and server suites sequentially. Built process tests verify startup, proof replacement,
+restart preservation, completed setup refusal and failure before binding. Manual built-process
+runs skip their destructive cases without `PREFACE_TEST_POSTGRES_PORT` (and the matching
+`PREFACE_TEST_POSTGRES_PASSWORD` when password authentication is used).
+
+For real browser/provider journeys:
 
 ```sh
-PREFACE_TEST_POSTGRES_PORT=55439 pnpm --filter @usepreface/server test
-PREFACE_TEST_POSTGRES_PORT=55439 pnpm --filter @usepreface/server test:built
+pnpm exec playwright install chromium
+pnpm test:auth
 ```
 
-Built process tests verify startup, explicit proof replacement, restart preservation, completed
-setup refusal and failure before binding. They are skipped without the explicit disposable
-PostgreSQL port; configuration-free CLI help still runs. Never run these destructive fixture
-resets against an existing development or deployment database.
+This lane requires local Docker and `openssl`. It builds the server, starts disposable PostgreSQL,
+Keycloak and Mailpit, and uses Chromium with a fresh database, realm and browser context per test.
+Mail travels through the real SMTP worker with STARTTLS to Mailpit. Generated test certificates
+are explicitly trusted by the backend; browser/controller certificate exceptions apply only to
+these local fixtures. The test frontend is a controlled authentication destination, not the dashboard.
+See [testing architecture](../../architecture/engineering/development.md#disposable-authentication-journeys)
+for coverage and limits. No deployment configuration, live inbox or real provider credentials are used.
+Failures retain local Playwright reports/traces under ignored `playwright-report/` and `test-results/`.
+They can contain synthetic session credentials; CI retains failure artifacts for three days.
 
 ## Organization OIDC
 

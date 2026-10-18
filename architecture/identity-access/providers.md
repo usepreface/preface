@@ -18,13 +18,14 @@ SAML metadata is supplied by the owner, not fetched from an arbitrary URL. SHA-1
 entity declarations remain rejected. An IdP application tile should send the user into a fresh
 SP-initiated login; unsolicited assertions are not accepted.
 
+The maintained [Playwright suite](../../tests/e2e/auth) runs Keycloak journeys against the built
+server and disposable PostgreSQL with Mailpit capturing real STARTTLS delivery. It checks the
+browser redirect/cookie handoff, direct invited admission, email-first linking and staged SP
+rollover. The SAML test imports the candidate SP certificate before its signed round trip, then
+activates it and retires the old certificate while preserving the admitted member session.
+Keycloak uses one configured client signing certificate in this fixture; an IdP without overlapping
+SP pins still requires a coordinated import/activation window.
+
 Vendor tenant checks require actual test credentials. Okta and Entra are not certified or claimed
-verified by synthetic fixtures. The local Keycloak check ran against the built server and disposable PostgreSQL on 2026-10-18.
-It imported the candidate SP certificate before testing and activated it after a successful signed
-round trip. Retiring the old certificate preserved the already admitted member session. Keycloak
-uses a single configured client signing certificate in this setup; do not promise zero downtime
-for an IdP that cannot accept overlapping SP pins. Coordinate its import/activation window.
-The test used console email and generated local TLS material; it sent no live email.
-Browser automation did not accept the disposable self-signed TLS certificate; the real protocol
-journeys above used a client that explicitly trusted that test CA. Browser cookie behavior is
-verified separately on loopback HTTP and by HTTP boundary tests.
+verified by synthetic fixtures. Google SDK/security cases remain in the fast application suite;
+this local browser lane does not contact Google. See [test infrastructure and limits](../engineering/development.md#disposable-authentication-journeys).

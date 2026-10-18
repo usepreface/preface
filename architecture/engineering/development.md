@@ -20,15 +20,16 @@ startup, scoped shutdown and migration asset paths.
 
 ## Verification lanes
 
-| Boundary     | Current checks                                                                               |
-| ------------ | -------------------------------------------------------------------------------------------- |
-| Protocol     | Typed audit transformations and safe credential encoding through API tests                   |
-| API          | OpenAPI paths/statuses/security and wire/application-input transformations                   |
-| Database     | Real migrated repositories, transaction propagation, lifecycle and migration behavior        |
-| Application  | Setup concurrency/replay/expiry, audit rollback, session lifecycle and security adapters     |
-| Server       | Real HTTP setup/session boundary, request policy, trusted proxy interpretation and admission |
-| Built server | Configuration-free help and opt-in PostgreSQL startup/reissue/restart/failure behavior       |
-| Landing      | Lint/typecheck, production prerender and complete generated-HTML smoke test                  |
+| Boundary      | Current checks                                                                               |
+| ------------- | -------------------------------------------------------------------------------------------- |
+| Protocol      | Typed audit transformations and safe credential encoding through API tests                   |
+| API           | OpenAPI paths/statuses/security and wire/application-input transformations                   |
+| Database      | Real migrated repositories, transaction propagation, lifecycle and migration behavior        |
+| Application   | Setup concurrency/replay/expiry, audit rollback, session lifecycle and security adapters     |
+| Server        | Real HTTP setup/session boundary, request policy, trusted proxy interpretation and admission |
+| Built server  | Configuration-free help and opt-in PostgreSQL startup/reissue/restart/failure behavior       |
+| Auth journeys | Built server, SMTP delivery, browser cookies, Keycloak OIDC/SAML and recovery                |
+| Landing       | Lint/typecheck, production prerender and complete generated-HTML smoke test                  |
 
 Use PGlite for fast persistence tests and disposable PostgreSQL for driver/advisory-lock
 behavior. PostgreSQL test configuration pins loopback and the test database/user and
@@ -48,6 +49,44 @@ verification protects durable failed attempts and a retry after final admission/
 The [provider matrix](../identity-access/providers.md) distinguishes real local-provider checks from
 SDK fixtures. Controlled browser destinations verify credentialed CORS, HttpOnly session behavior
 and logout without introducing dashboard implementation into backend tests.
+
+## Disposable authentication journeys
+
+Root-owned [test fixtures](../../tests/e2e/fixtures) compose infrastructure across package boundaries.
+`pnpm test:postgres` owns one PostgreSQL container and runs the database, application and server
+suites plus their built smoke checks sequentially. Generated credentials reach only the explicit
+test configuration. Fast `pnpm test` remains independent of Docker. The runner uses Node 24 native TypeScript
+execution, so its direct module import retains the `.ts` extension.
+
+`pnpm test:auth` builds the server graph and runs [Playwright journeys](../../tests/e2e/auth).
+A worker owns pinned PostgreSQL, Keycloak and Mailpit containers. Every test receives a fresh
+database, browser context and cleared inbox; provider tests also create a fresh Keycloak realm. Execution uses one worker; test order
+is not part of the fixture contract. Resources are acquired with scoped cleanup, including partial
+startup failure. Container names and host ports are assigned automatically; no persistent volumes,
+deployment database configuration or reusable authentication state are used.
+
+The built server runs with migrations, real repositories, crypto adapters and email delivery worker.
+Mailpit requires STARTTLS and captures actual SMTP messages. Tests read codes and invitation links
+from its API, not the outbox ciphertext or server logs. Only the supported operator setup link comes
+from startup output. Local certificates include localhost and 127.0.0.1; Node trusts that generated CA
+explicitly. The browser/controller accepts fixture certificates without changing system trust.
+Keycloak uses 127.0.0.1 while the API and controlled frontend use localhost. This makes SAML POSTs
+cross-site and tests the Lax proof cookie's return on the subsequent same-origin completion GET.
+
+The journeys cover setup, returning email code/link sign-in, direct invited OIDC/SAML admission, implicit
+email-first account linking and explicit owner linking, role/team assignment, untrusted-email continuation bound to its browser,
+required-SSO gating and offline owner recovery, invitation/connection revocation, assertion replay,
+SAML tile login, and staged SP key rollover without losing admitted membership. Aging an invitation's
+delivery timestamp in its disposable database models reading an old email without waiting ten minutes.
+The IdP's signature, PKCE, nonce and malformed-response failure matrix remains in focused SDK tests;
+Keycloak success cannot certify Google, Okta or Entra. These are backend auth journeys, not dashboard
+UI or a promise that all possible identity-provider profiles are supported.
+
+[CI](../../.github/workflows/ci.yml) separates fast checks, disposable PostgreSQL and browser journeys.
+Failure traces, screenshots and backend output are ignored locally and retained for three days in
+CI; they contain only synthetic fixture identities but may include usable test-session credentials.
+Do not upload them to public issues without inspection. Root test tooling has a dedicated TypeScript
+lane included in `pnpm check`.
 
 ## Extending the foundation
 
@@ -76,4 +115,6 @@ never an input to runtime code or maintained documentation.
 - [Protocol build](../../packages/protocol/tsdown.config.ts)
 - [Database test layers](../../packages/database/src/testing)
 - [HTTP fixtures](../../apps/server/tests/fixtures)
+- [Disposable PostgreSQL runner](../../tooling/testing/run-postgres.ts)
+- [Browser auth configuration](../../playwright.config.ts)
 - [Landing artifact test](../../apps/landing/tests/smoke/build.test.mjs)

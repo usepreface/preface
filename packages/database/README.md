@@ -342,17 +342,19 @@ For real driver, migration-lock and transaction coverage, run the same suites ag
 disposable PostgreSQL database:
 
 ```sh
-docker run --detach --rm --name preface-database-test \
-  -e POSTGRES_USER=preface_test -e POSTGRES_DB=preface_test \
-  -e POSTGRES_HOST_AUTH_METHOD=trust -p 127.0.0.1:55439:5432 postgres:17-alpine
-PREFACE_TEST_POSTGRES_PORT=55439 pnpm --filter @usepreface/database test
-docker stop preface-database-test
+pnpm test:postgres
 ```
 
-Wait for PostgreSQL to become ready before running tests. `TestDatabase.postgresLayer(port)`
-pins the host to loopback, database/user to `preface_test`, disables TLS, uses an empty
-password, and rejects port 5432. It never falls back to deployment configuration. Files
-run serially in this lane because they reset shared tables. Do not run two test processes
+Run this from the workspace root with a local Docker-compatible runtime. Testcontainers starts
+PostgreSQL on a random port with a generated password, waits for readiness, runs database,
+application and server suites sequentially, including built-package/process smoke tests, and
+stops the container in cleanup. No existing database or Compose stack is used.
+
+`TestDatabase.postgresLayer(port, password?)` pins the host to loopback, database/user to
+`preface_test`, disables TLS, and rejects port 5432. The password defaults to an empty string
+for an explicitly configured trust-auth fixture; the runner supplies a generated password through
+`PREFACE_TEST_POSTGRES_PASSWORD`. `PREFACE_TEST_POSTGRES_PORT` is required for the manual lane.
+It never falls back to deployment configuration. Do not run two destructive test processes
 against the same database. `test:built` checks built imports and migration asset resolution.
 
 ## Drizzle compatibility patch

@@ -42,7 +42,11 @@ it.live.skipIf(port === undefined)("serializes migrations behind a transaction a
       where locktype = 'advisory' and pid in
         (select pid from pg_stat_activity where application_name = 'preface')`;
     expect(locks).toEqual([]);
-  }).pipe(Effect.provide(TestDatabase.postgresLayer(Number(port)))),
+  }).pipe(
+    Effect.provide(
+      TestDatabase.postgresLayer(Number(port), process.env.PREFACE_TEST_POSTGRES_PASSWORD),
+    ),
+  ),
 );
 
 it.live.skipIf(port === undefined)(
@@ -55,5 +59,9 @@ it.live.skipIf(port === undefined)(
         .pipe(Effect.flip);
       expect(failure).toBeInstanceOf(DatabaseError);
       expect(failure.cause).toBeInstanceOf(Error);
-    }).pipe(Effect.provide(TestDatabase.postgresLayer(Number(port)))),
+    }).pipe(
+      Effect.provide(
+        TestDatabase.postgresLayer(Number(port), process.env.PREFACE_TEST_POSTGRES_PASSWORD),
+      ),
+    ),
 );

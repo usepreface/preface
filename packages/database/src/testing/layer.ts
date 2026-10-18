@@ -57,7 +57,7 @@ export class TestDatabase extends Context.Service<
   );
 
   /** Only an explicit, disposable loopback test database can use destructive resets. */
-  static postgresLayer(port: number) {
+  static postgresLayer(port: number, password = "") {
     if (!Number.isInteger(port) || port < 1024 || port > 65535 || port === 5432) {
       throw new Error("PostgreSQL tests require a dedicated loopback port, not 5432");
     }
@@ -73,7 +73,7 @@ export class TestDatabase extends Context.Service<
               POSTGRES_PORT: port,
               POSTGRES_DATABASE: "preface_test",
               POSTGRES_USERNAME: "preface_test",
-              POSTGRES_PASSWORD: "",
+              POSTGRES_PASSWORD: password,
               POSTGRES_SSL: false,
             },
             { preserveEmptyStrings: true },

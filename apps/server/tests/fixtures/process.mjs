@@ -36,7 +36,7 @@ export function testEnvironment(databasePort, serverPort) {
     POSTGRES_PORT: String(databasePort),
     POSTGRES_DATABASE: "preface_test",
     POSTGRES_USERNAME: "preface_test",
-    POSTGRES_PASSWORD: "unused-by-disposable-trust-database",
+    POSTGRES_PASSWORD: process.env.PREFACE_TEST_POSTGRES_PASSWORD ?? "",
     POSTGRES_SSL: "false",
     NO_COLOR: "1",
   };

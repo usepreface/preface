@@ -38,3 +38,8 @@ coverage/
 !.vscode/settings.json
 .DS_Store
 Thumbs.db
+
+# Disposable browser-test artifacts (may contain synthetic session credentials)
+/test-results/
+/playwright-report/
+/playwright/.auth/

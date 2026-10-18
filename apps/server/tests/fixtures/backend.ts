@@ -19,7 +19,7 @@ import { ServerConfig } from "../../src/config.js";
 const port = process.env.PREFACE_TEST_POSTGRES_PORT;
 const database: Layer.Layer<Layer.Success<typeof TestDatabase.layer>, unknown> = port === undefined
   ? TestDatabase.layer
-  : TestDatabase.postgresLayer(Number(port));
+  : TestDatabase.postgresLayer(Number(port), process.env.PREFACE_TEST_POSTGRES_PASSWORD);
 
 const makeTestConfigLayer = (publicOrigin: string, dashboardOrigin?: string) =>
   ServerConfig.layer.pipe(

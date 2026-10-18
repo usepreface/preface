@@ -24,8 +24,7 @@ schemas. Protocol provides storage models, public bootstrap/session contracts an
 Application implements first-owner setup, browser-bound email code/link sign-in, sessions and
 organization creation, membership, roles and ownership. The server wires
 startup preparation, operator links, HTTP handlers, always-available Scalar/OpenAPI and Compose
-on port 8080. The dashboard defaults to port 3000 and the landing page to port 4000. Backend-connected onboarding/sign-in UI, invitations, teams and SSO
-remain subsequent features.
+on port 8080. The dashboard defaults to port 3000 and the landing page to port 4000. Backend-connected onboarding/sign-in and organization-management UI remain subsequent features.
 
 Start with the [architecture index](architecture/README.md) for system boundaries, contracts,
 identity flows, storage, runtime and frontend ownership. The [server README](apps/server/README.md)
@@ -50,18 +49,21 @@ source-first development with the `preface-source` condition.
 
 ## Commands
 
-| Command             | Purpose                                                                                                    |
-| ------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `pnpm check`        | Check formatting, lint root configuration, typecheck it with TypeScript 7, and run workspace checks/builds |
-| `pnpm check:root`   | Check formatting, lint and typecheck root tooling without workspace tasks                                  |
-| `pnpm format`       | Format tracked and unignored files with Oxfmt                                                              |
-| `pnpm format:check` | Check formatting without writing changes                                                                   |
-| `pnpm lint`         | Run Oxlint, then workspace lint tasks                                                                      |
-| `pnpm lint:fix`     | Apply Oxlint fixes                                                                                         |
-| `pnpm typecheck`    | Check root TypeScript configuration files, then workspace typechecks                                       |
-| `pnpm build`        | Run workspace builds through Turborepo                                                                     |
-| `pnpm test`         | Run workspace tests through Turborepo                                                                      |
-| `pnpm dev`          | Run workspace development tasks through Turborepo                                                          |
+| Command                | Purpose                                                                                                    |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `pnpm check`           | Check formatting, lint root configuration, typecheck it with TypeScript 7, and run workspace checks/builds |
+| `pnpm check:root`      | Check formatting, lint and typecheck root tooling without workspace tasks                                  |
+| `pnpm format`          | Format tracked and unignored files with Oxfmt                                                              |
+| `pnpm format:check`    | Check formatting without writing changes                                                                   |
+| `pnpm lint`            | Run Oxlint, then workspace lint tasks                                                                      |
+| `pnpm lint:fix`        | Apply Oxlint fixes                                                                                         |
+| `pnpm typecheck`       | Check root TypeScript configuration files, then workspace typechecks                                       |
+| `pnpm build`           | Run workspace builds through Turborepo                                                                     |
+| `pnpm test`            | Run workspace tests through Turborepo                                                                      |
+| `pnpm test:postgres`   | Run sequential integration and built smoke suites in disposable PostgreSQL                                 |
+| `pnpm test:auth`       | Build the backend and run Chromium journeys with PostgreSQL, Keycloak and Mailpit                          |
+| `pnpm typecheck:tests` | Typecheck root infrastructure and browser fixtures                                                         |
+| `pnpm dev`             | Run workspace development tasks through Turborepo                                                          |
 
 Workspace checks and builds run across the workspace. Database tests cover configuration,
 error mapping, transactions and migrations with PGlite; an opt-in PostgreSQL lane verifies the
@@ -70,12 +72,14 @@ lifecycle, audit rollback, session lifecycle and security adapters. See the
 [database README](packages/database/README.md) and [application README](packages/application/README.md).
 Klarity supplies the strict TypeScript, tsdown, Oxlint, Oxfmt, Conventional Commit and Lefthook presets.
 Each package should choose its own environment-appropriate Klarity TypeScript preset; the root config
-checks root and workspace tooling files only.
+checks root and workspace tooling files; a separate test configuration checks cross-package fixtures.
 
 Pre-commit hooks format staged files and lint staged JavaScript/TypeScript. Commit messages must use
 Conventional Commits, for example `chore: bootstrap repository tooling`. Pre-push runs root checks
 alongside Klarity's workspace lint, typecheck and test tasks. GitHub Actions installs the frozen
-lockfile under the pinned Node version, runs `pnpm check`, then runs `pnpm test`.
+lockfile under the pinned Node version. Separate jobs run `pnpm check`/`pnpm test`,
+`pnpm test:postgres` and `pnpm test:auth`. The latter two require a local Docker-compatible runtime;
+auth journeys also need `openssl` and `pnpm exec playwright install chromium`.
 
 ## VS Code
 
