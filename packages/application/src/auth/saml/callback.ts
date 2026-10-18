@@ -7,9 +7,9 @@ import type { SessionActor } from "@usepreface/protocol/dto";
 import { SamlCallbackInput, CompleteSamlFlowInput } from "@usepreface/protocol/input";
 
 import { matchesFlowActor } from "#/auth/external/binding";
+import { makeExternalCompletion } from "#/auth/external/completion";
 import { makeExternalProof } from "#/auth/external/proof";
 import { makeIdentitySecrets } from "#/auth/google/secrets";
-import { makeOrganizationIdentityCompletion } from "#/auth/organization-identity/completion";
 import { makeExternalFlowFailure } from "#/auth/organization-identity/failure";
 import { SamlIdentity } from "#/auth/saml/provider";
 
@@ -20,7 +20,7 @@ export const makeSamlFlowCallback = Effect.gen(function* () {
   const secrets = yield* makeIdentitySecrets;
   const proofs = yield* makeExternalProof;
   const provider = yield* SamlIdentity;
-  const completeIdentity = yield* makeOrganizationIdentityCompletion;
+  const completeIdentity = yield* makeExternalCompletion;
   const failFlow = yield* makeExternalFlowFailure;
   const callback = Effect.fn("Application.auth.saml.callback")(function* (
     connectionId: IdentityConnectionId,

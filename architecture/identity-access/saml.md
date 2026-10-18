@@ -95,7 +95,7 @@ the normal session cookie while clearing the flow cookie. Deployments must compl
 - [Models](../../packages/protocol/src/model/auth/identity-connection.ts)
 - [Replay storage](../../packages/database/src/schema/auth/sso-replay.ts)
 - [SAML workflows](../../packages/application/src/auth/saml)
-- [Shared completion](../../packages/application/src/auth/organization-identity/completion.ts)
+- [Shared completion](../../packages/application/src/auth/external/completion.ts)
 - [Node adapter](../../packages/application/src/node/saml.ts)
 - [Certificate adapter](../../packages/crypto/src/node/certificates.ts)
 - [HTTP contracts](../../packages/api/src/groups/auth/saml.ts)

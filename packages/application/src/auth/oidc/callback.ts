@@ -7,12 +7,12 @@ import type { SessionActor } from "@usepreface/protocol/dto";
 import { ExternalIdentityCallbackInput } from "@usepreface/protocol/input";
 
 import { matchesFlowActor } from "#/auth/external/binding";
+import { makeExternalCompletion } from "#/auth/external/completion";
 import { makeIdentitySecrets } from "#/auth/google/secrets";
 import { makeIdentityAccess } from "#/auth/identity-access";
 import { AuthenticationLinks } from "#/auth/links";
 import { makeOidcAccess } from "#/auth/oidc/access";
 import { OidcIdentity } from "#/auth/oidc/provider";
-import { makeOrganizationIdentityCompletion } from "#/auth/organization-identity/completion";
 import { makeExternalFlowFailure } from "#/auth/organization-identity/failure";
 import { OrganizationAccess } from "#/organization/access";
 
@@ -26,7 +26,7 @@ export const makeOidcFlowCallback = Effect.gen(function* () {
   const organizationAccess = yield* makeOidcAccess;
   const actors = yield* OrganizationAccess;
   const links = yield* AuthenticationLinks;
-  const complete = yield* makeOrganizationIdentityCompletion;
+  const complete = yield* makeExternalCompletion;
   const failFlow = yield* makeExternalFlowFailure;
   return Effect.fn("Application.auth.oidc.callback")(function* (
     input: ExternalIdentityCallbackInput,
