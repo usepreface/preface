@@ -53,8 +53,8 @@ and logout without introducing dashboard implementation into backend tests.
 ## Disposable authentication journeys
 
 Root-owned [test fixtures](../../tests/e2e/fixtures) compose infrastructure across package boundaries.
-`pnpm test:postgres` owns one PostgreSQL container and runs the database, application and server
-suites plus their built smoke checks sequentially. Generated credentials reach only the explicit
+`pnpm test:postgres` owns one PostgreSQL container and runs the database, email, application and server
+suites plus available built smoke checks sequentially. Generated credentials reach only the explicit
 test configuration. Fast `pnpm test` remains independent of Docker. The runner uses Node 24 native TypeScript
 execution, so its direct module import retains the `.ts` extension.
 

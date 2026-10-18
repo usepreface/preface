@@ -18,7 +18,7 @@ import { TestEmails } from "../../src/testing/index.js";
 const port = process.env.PREFACE_TEST_POSTGRES_PORT;
 const database: Layer.Layer<Layer.Success<typeof TestDatabase.layer>, unknown> = port === undefined
   ? TestDatabase.layer
-  : TestDatabase.postgresLayer(Number(port));
+  : TestDatabase.postgresLayer(Number(port), process.env.PREFACE_TEST_POSTGRES_PASSWORD);
 const repositories = DatabaseRepository.layer.pipe(Layer.provideMerge(database));
 
 // Test-only renderer: real React Email templates are intentionally outside this change.

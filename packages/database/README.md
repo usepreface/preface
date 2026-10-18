@@ -347,7 +347,7 @@ pnpm test:postgres
 
 Run this from the workspace root with a local Docker-compatible runtime. Testcontainers starts
 PostgreSQL on a random port with a generated password, waits for readiness, runs database,
-application and server suites sequentially, including built-package/process smoke tests, and
+email, application and server suites sequentially, including available built-package/process smoke tests, and
 stops the container in cleanup. No existing database or Compose stack is used.
 
 `TestDatabase.postgresLayer(port, password?)` pins the host to loopback, database/user to

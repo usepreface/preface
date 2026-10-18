@@ -13,6 +13,7 @@ try {
   // Each package resets the same disposable database. Keep package suites sequential.
   for (const [name, script] of [
     ["database", "test"],
+    ["emails", "test"],
     ["application", "test"],
     ["server", "test"],
     ["database", "test:built"],
