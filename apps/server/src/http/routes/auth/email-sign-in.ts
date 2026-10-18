@@ -10,20 +10,16 @@ import {
   VerifyEmailSignInInput,
 } from "@usepreface/protocol/input";
 
-import { readSessionCookie, setSessionCookie } from "#/http/cookies/session";
+import { setSessionCookie } from "#/http/cookies/session";
 import { readSignInCookie, setSignInCookie, clearSignInCookie } from "#/http/cookies/sign-in";
 import { mapInfrastructureError } from "#/http/errors";
+import { optionalSessionActor } from "#/http/routes/auth/optional-actor";
 
 export const EmailSignInRoutes = HttpApiBuilder.group(PrefaceApi, "emailSignIn", (handlers) =>
   Effect.gen(function* () {
     const application = yield* Application;
     const requireSignedOut = Effect.gen(function* () {
-      const token = yield* readSessionCookie;
-      if (token === undefined) return;
-      const actor = yield* application.auth.session.resolve(token).pipe(
-        Effect.catchTag("AuthenticationError", () => Effect.succeed(undefined)),
-        mapInfrastructureError,
-      );
+      const actor = yield* optionalSessionActor;
       if (actor !== undefined)
         return yield* new EmailSignInError({ code: "ALREADY_AUTHENTICATED" });
     });

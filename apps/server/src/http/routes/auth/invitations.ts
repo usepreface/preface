@@ -11,8 +11,9 @@ import {
   setInvitationCookie,
   clearInvitationCookie,
 } from "#/http/cookies/invitation";
-import { readSessionCookie, setSessionCookie } from "#/http/cookies/session";
+import { setSessionCookie } from "#/http/cookies/session";
 import { mapInfrastructureError } from "#/http/errors";
+import { optionalSessionActor } from "#/http/routes/auth/optional-actor";
 
 export const InvitationsRoutes = HttpApiBuilder.group(PrefaceApi, "invitations", (handlers) =>
   Effect.gen(function* () {
@@ -47,14 +48,7 @@ export const InvitationsRoutes = HttpApiBuilder.group(PrefaceApi, "invitations",
           ...payload,
           browserToken: Redacted.value(browserToken),
         }).pipe(Effect.mapError(() => new RequestError({ code: "INVALID_INPUT" })));
-        const sessionToken = yield* readSessionCookie;
-        const actor =
-          sessionToken === undefined
-            ? undefined
-            : yield* application.auth.session.resolve(sessionToken).pipe(
-                Effect.catchTag("AuthenticationError", () => Effect.succeed(undefined)),
-                mapInfrastructureError,
-              );
+        const actor = yield* optionalSessionActor;
         const result = yield* invitations.accept(input, actor).pipe(mapInfrastructureError);
         yield* setSessionCookie(result.sessionToken, result.actor.session.expiresAt);
         yield* clearInvitationCookie;
