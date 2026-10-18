@@ -35,7 +35,10 @@ function initialField(seed: number) {
 
 function GlyphField() {
   const ref = React.useRef<SVGSVGElement>(null);
-  const field = React.useRef(initialField(21));
+  const field = React.useRef<string[][] | null>(null);
+  if (field.current === null) field.current = initialField(21);
+
+  const glyphs = field.current;
   const [, setFrame] = React.useState(0);
   const inView = useInView(ref, "120px");
   const reduced = useReducedMotion();
@@ -45,12 +48,12 @@ function GlyphField() {
       return;
     }
     const filled: [number, number][] = [];
-    field.current.forEach((row, r) => row.forEach((ch, c) => ch !== " " && filled.push([r, c])));
+    glyphs.forEach((row, r) => row.forEach((ch, c) => ch !== " " && filled.push([r, c])));
     const perFrame = Math.max(1, Math.round(filled.length * 0.03));
     const id = window.setInterval(() => {
       for (let i = 0; i < perFrame; i++) {
         const cell = filled[Math.floor(Math.random() * filled.length)];
-        const row = cell && field.current[cell[0]];
+        const row = cell && glyphs[cell[0]];
         if (cell && row) {
           row[cell[1]] = GLYPHS[Math.floor(Math.random() * GLYPHS.length)] ?? ".";
         }
@@ -58,7 +61,7 @@ function GlyphField() {
       setFrame((f) => f + 1);
     }, 80);
     return () => window.clearInterval(id);
-  }, [inView, reduced]);
+  }, [inView, reduced, glyphs]);
 
   return (
     <svg
@@ -74,7 +77,7 @@ function GlyphField() {
         fontSize={13}
         style={{ whiteSpace: "pre" }}
       >
-        {field.current.map((row, i) => (
+        {glyphs.map((row, i) => (
           <text key={i} x={0} y={(i + 1) * LINE - 5} xmlSpace="preserve">
             {row.join("")}
           </text>
