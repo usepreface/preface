@@ -25,6 +25,7 @@ export const CreateOrganizationInvitation = Schema.Struct({
 export type CreateOrganizationInvitation = typeof CreateOrganizationInvitation.Type;
 export const OrganizationInvitation = Schema.Struct({
   ...CreateOrganizationInvitation.fields,
+  revision: Schema.Int.check(Schema.isGreaterThan(0)),
   acceptedAt: Schema.NullOr(Schema.DateTimeUtcFromDate),
   acceptedByUserId: Schema.NullOr(UserId),
   revokedAt: Schema.NullOr(Schema.DateTimeUtcFromDate),

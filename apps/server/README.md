@@ -230,7 +230,7 @@ Organization owners configure their providers through `/api/v1/organizations/:or
 identity-connections`. The [API README](../../packages/api/README.md#organization-oidc) documents
 payloads and actions. Register the returned callback URL with the provider, run the browser test,
 activate the tested revision, approve it through organization policy, then explicitly link accounts.
-Email remains available. Unknown external identities cannot create Preface accounts or memberships.
+Email remains available. Unknown identities require verified email and existing membership or a valid invitation; see external enrollment below.
 
 The runtime supplies the OIDC SDK adapter and outbound HTTPS policy. No provider credentials are
 required in environment variables; they are encrypted using the existing application key. For a
@@ -245,8 +245,8 @@ only the named origin/port, never insecure HTTP or invalid certificates. Configu
 CA certificates in the deployment when an internal CA is used. Redirects and oversized provider
 responses are rejected; credentials and callback query values stay out of request logging.
 
-The browser flow cookie is separate from Google. Successful callbacks return 303 to `/api/docs`
-and deliver a new session only in an HttpOnly cookie. See [OIDC architecture](../../architecture/identity-access/oidc.md) for source revocation and limits. Domain routing, provider logout and immediate external employee revocation notifications
+The browser flow cookie is separate from Google. Successful callbacks return 303 to `/api/docs` or the configured dashboard origin
+and deliver a new session only in an HttpOnly cookie. See [OIDC architecture](../../architecture/identity-access/oidc.md) for source revocation and limits. Provider logout and immediate external employee revocation notifications
 are not implemented.
 
 ## Required SSO and recovery
@@ -282,3 +282,20 @@ before expiry, update the IdP metadata and retest. Trust changes revoke flows/ev
 required-SSO owner safeguards. [SAML architecture](../../architecture/identity-access/saml.md) documents
 IdP rollover, explicit account linking and the constrained supported profile. Dashboard UI, SLO,
 encrypted assertions and provider-driven provisioning are separate from this backend.
+
+## External enrollment and frontend destinations
+
+Set optional `DASHBOARD_URL` to the trusted frontend origin, such as `http://localhost:3000`
+for local development. Empty/unset configuration keeps `/api/docs` completion. The dashboard
+origin is included in trusted mutation/CORS origins. `PUBLIC_URL` remains the backend origin
+for provider callback, SAML ACS and metadata. Email/setup URLs use the dashboard when configured.
+Use HTTPS and same-site dashboard/API origins in deployments; session cookies stay HttpOnly,
+host-only and SameSite=Lax. Arbitrary third-party-site cookie deployments are not supported.
+
+Invitation SSO starts and callbacks support verified implicit linking and direct first-time
+admission. Pending provider proof uses the shared encrypted flow and a separate
+`preface_external_flow` browser cookie. See [API usage](../../packages/api/README.md#direct-invitation-sso-and-continuation)
+and [enrollment architecture](../../architecture/identity-access/enrollment.md). An uninvited
+IdP login cannot create membership. Authentication routes are grouped under `http/routes/auth`,
+organization administration under `http/routes/organization`, and instance/profile routes under
+their owning folders. Product dashboard integration remains separate.

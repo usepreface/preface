@@ -26,6 +26,9 @@ export const SamlIdentityProviderConfiguration = Schema.Struct({
     Schema.isMaxLength(5),
   ),
   nameIdFormat: SamlNameIdFormat,
+  emailAttribute: Schema.optionalKey(
+    Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(512), Schema.isTrimmed()),
+  ),
 });
 export const SamlConfiguration = Schema.Struct({
   version: Schema.Literal(1),

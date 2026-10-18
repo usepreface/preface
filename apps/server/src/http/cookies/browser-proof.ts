@@ -48,3 +48,5 @@ export const googleFlowCookie = browserProofCookie("preface_google_flow");
 export const emailReauthenticationCookie = browserProofCookie("preface_email_reauthentication");
 export const oidcFlowCookie = browserProofCookie("preface_oidc_flow");
 export const samlFlowCookie = browserProofCookie("preface_saml_flow");
+
+export const externalFlowCookie = browserProofCookie("preface_external_flow");

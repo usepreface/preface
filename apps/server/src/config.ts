@@ -30,6 +30,13 @@ const makeServerConfig = Effect.gen(function* () {
       "SERVER_PORT",
     ).pipe(Config.withDefault(8080)),
     publicUrl: Config.schema(originSchema, "PUBLIC_URL"),
+    dashboardUrl: Config.schema(
+      Schema.Union([originSchema, Schema.Literal("")]),
+      "DASHBOARD_URL",
+    ).pipe(
+      Config.withDefault(""),
+      Config.map((value) => (value === "" ? undefined : value)),
+    ),
     corsOrigins: Config.Array(originSchema, "CORS_ALLOWED_ORIGINS").pipe(Config.withDefault([])),
     oidcAllowedPrivateOrigins: Config.Array(
       originSchema.check(Schema.makeFilter((url) => url.protocol === "https:")),
@@ -45,6 +52,7 @@ const makeServerConfig = Effect.gen(function* () {
     secureCookies: config.publicUrl.protocol === "https:",
     allowedOrigins: new Set([
       config.publicUrl.origin,
+      ...(config.dashboardUrl === undefined ? [] : [config.dashboardUrl.origin]),
       ...config.corsOrigins.map((url) => url.origin),
     ]),
     trustedProxyNetworks: config.trustedProxyCidrs.map(IpNetwork.fromStringUnsafe),

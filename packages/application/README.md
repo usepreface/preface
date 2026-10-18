@@ -265,8 +265,7 @@ require current instance ownership and email evidence no older than five minutes
 explicit linking; `unlink(actor, accountId)` retains history and revokes Google evidence. Linking
 and unlinking require recent email proof. `auth.google.start({}, actor?)` is signed-out only;
 `callback(input, actor?)` is for the server's browser-bound transport. Callback results can contain
-an internal session token: unwrap only for cookie delivery. Unknown Google identities create no
-users or memberships. Provider email never merges accounts or replaces Preface email/profile.
+an internal session token: unwrap only for cookie delivery. Unknown identities require verified email and existing admission or a valid invitation. See external enrollment below; provider claims never merge users or overwrite canonical email/profile.
 
 `auth.reauthentication.google(actor, {})` adds Google proof for the current user.
 `auth.reauthentication.email.request/resend/verify` uses existing email proof inputs and binds them
@@ -322,11 +321,10 @@ approved connection labels, availability and current-user link state to active m
 
 `auth.oidc.startLink(actor, organizationId, connectionId, {})` requires active membership and recent
 email. `startSignIn(organizationId, connectionId, {}, actor?)` rejects authenticated browsers and
-requires a previously linked identity at completion. `startReauthentication(actor, organizationId,
+resolves a stable binding or verified email with current membership at completion. `startReauthentication(actor, organizationId,
 connectionId, {})` proves the current user again. The server owns flow cookies and calls
 `callback(input, actor?)`; successful sign-in credentials are for cookie delivery only. Linking
-and reauthentication do not extend session lifetime. No user/membership is created by OIDC and
-provider email never merges accounts. Organization access requires the exact approved connection.
+and reauthentication do not extend session lifetime. Only invitation-authorized OIDC enrollment creates users/memberships; verified email can attach an identity to an existing user without merging user records. Organization access requires the exact approved connection.
 
 See [OIDC architecture](../../architecture/identity-access/oidc.md) for transactions, outbound
 restrictions and supported limits. Adapter HTTPS tests require `openssl` to generate an ephemeral
@@ -379,7 +377,7 @@ The transport calls `callback(connectionId, decoded SamlCallbackInput)` for the 
 then `complete(decoded CompleteSamlFlowInput, actor?)` on the browser's same-origin return.
 Callback only stages encrypted verified context; completion requires the original browser proof
 and appropriate session binding. Sign-in credentials are internal cookie-delivery results.
-No external identity creates users, memberships or roles. Required SSO and offline recovery work
+Invitation-authorized external enrollment creates users/memberships and applies the invitation’s currently valid role/team assignments. Required SSO and offline recovery work
 with approved SAML connections through the same policy and safeguards.
 
 The initial profile requires signed Response and Assertion, RSA-SHA256/SHA512, plaintext assertions,
@@ -388,3 +386,28 @@ and persistent or explicitly unspecified stable NameID. Certificates must remain
 the new metadata into the IdP, and retest. Trust changes revoke evidence and preserve the final
 owner recovery path. See [SAML architecture](../../architecture/identity-access/saml.md) for certificate
 rollover, browser transport, replay protection and unsupported profiles.
+
+## External enrollment and discovery
+
+`auth.external.invitation.methods({ invitationId, token })` returns eligible provider choices.
+`start({ invitationId, token, connectionId, displayName, returnPath? }, actor?)` starts direct
+OIDC/SAML or enabled Google enrollment. Inputs use `InvitationAuthenticationInput`; credentials
+are redacted. A callback returns `nextAction: "continue" | "verify_email"`, a flow ID and safe
+return path. Completed credentials remain internal cookie-delivery values.
+
+When verification is needed, `auth.external.status`, `request`, `verify` and `resume` use a
+flow ID and the original redacted browser token. `request` returns a challenge; `verify`
+also takes challenge ID and redacted code. Provider proof is encrypted and browser-bound,
+so code verification does not repeat the provider exchange. Direct admission uses exact
+connection-domain authority, a fresh emailed invitation, or the inline mailbox proof.
+
+`auth.discover({ email, organizationSlug? })` returns eligible login choices independently of
+account existence. Existing current-session, capabilities and organization-list APIs supply
+returning-owner state; no organization is required to sign back in. Organization selection
+uses `organization.authPolicy.methods` and does not grant access by itself.
+
+`AuthenticationLinks` optionally accepts `dashboardOrigin` for frontend email/return URLs.
+Keep `publicOrigin` as the provider callback origin. The runtime validates those origins.
+See [enrollment architecture](../../architecture/identity-access/enrollment.md) for authority,
+transactions, proof expiry and restrictions. Canonical email changes, new factors and SCIM
+remain outside these workflows.

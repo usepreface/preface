@@ -11,6 +11,7 @@ import { IdentityError } from "@usepreface/protocol";
 
 import { SamlIdentity, SamlIdentityClaims, type SamlClient } from "#/auth/saml/provider";
 import {
+  children,
   attribute,
   oneChild,
   parseSamlXml,
@@ -172,9 +173,23 @@ export const NodeSamlIdentity = {
                 attribute(confirmationData, "InResponseTo") !== input.requestId
               )
                 throw new IdentityError({ code: "INVALID_FLOW" });
+              let email: string | null = null;
+              if (idp.emailAttribute !== undefined) {
+                const attributes = children(assertion, "AttributeStatement")
+                  .flatMap((statement) => children(statement, "Attribute"))
+                  .filter((entry) => entry.getAttribute("Name") === idp.emailAttribute);
+                if (attributes.length > 1) throw new IdentityError({ code: "INVALID_FLOW" });
+                if (attributes[0] !== undefined) {
+                  const values = children(attributes[0], "AttributeValue");
+                  if (values.length !== 1 || values[0] === undefined)
+                    throw new IdentityError({ code: "INVALID_FLOW" });
+                  email = scalarText(values[0]);
+                }
+              }
               const conditions = oneChild(assertion, "Conditions");
               const authentication = oneChild(assertion, "AuthnStatement");
               return {
+                email,
                 issuer: idp.entityId,
                 subject: JSON.stringify([format, qualifier, spQualifier, scalarText(name)]),
                 authenticatedAt: attribute(authentication, "AuthnInstant"),

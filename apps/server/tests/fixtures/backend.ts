@@ -21,15 +21,23 @@ const database: Layer.Layer<Layer.Success<typeof TestDatabase.layer>, unknown> =
   ? TestDatabase.layer
   : TestDatabase.postgresLayer(Number(port));
 
-const makeTestConfigLayer = (publicOrigin: string) =>
+const makeTestConfigLayer = (publicOrigin: string, dashboardOrigin?: string) =>
   ServerConfig.layer.pipe(
-    Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ PUBLIC_URL: publicOrigin }))),
+    Layer.provide(
+      ConfigProvider.layer(
+        ConfigProvider.fromUnknown({
+          PUBLIC_URL: publicOrigin,
+          ...(dashboardOrigin === undefined ? {} : { DASHBOARD_URL: dashboardOrigin }),
+        }),
+      ),
+    ),
   );
 export const TestConfigLayer = makeTestConfigLayer("https://preface.example.test");
 const persistence = DatabaseRepository.layer.pipe(Layer.provideMerge(database));
 export const makeBackendTestLayer = (
   oidc: Layer.Layer<OidcIdentity> = NodeOidcIdentity.layer(),
   publicOrigin = "https://preface.example.test",
+  dashboardOrigin?: string,
 ) =>
   Layer.mergeAll(
     Application.layer.pipe(
@@ -37,7 +45,7 @@ export const makeBackendTestLayer = (
       Layer.provide(oidc),
       Layer.provide(NodeSamlIdentity.layer),
       Layer.provide(NodeDomainDns.layer),
-      Layer.provide(Layer.succeed(AuthenticationLinks, { publicOrigin })),
+      Layer.provide(Layer.succeed(AuthenticationLinks, { publicOrigin, dashboardOrigin })),
       Layer.provideMerge(EmailJobs.layer.pipe(Layer.provideMerge(EmailPayloadCipher.layer))),
       Layer.provide(
         Layer.mergeAll(
@@ -58,7 +66,7 @@ export const makeBackendTestLayer = (
       ),
       Layer.provideMerge(persistence),
     ),
-    makeTestConfigLayer(publicOrigin),
+    makeTestConfigLayer(publicOrigin, dashboardOrigin),
   ).pipe(Layer.provide(NodeServices.layer));
 
 export const BackendTestLayer = makeBackendTestLayer();

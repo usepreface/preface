@@ -59,7 +59,7 @@ export const makeInvitationVerification = Effect.gen(function* () {
         const settings = yield* repository.instance.settings.find();
         if (settings === undefined)
           return yield* Effect.die(new Error("Prepared installation has no settings"));
-        const url = new URL("/invitations/accept", links.publicOrigin);
+        const url = new URL("/invitations/accept", links.dashboardOrigin ?? links.publicOrigin);
         url.hash = new URLSearchParams({
           invitationId: invitation.id,
           token: Redacted.value(decoded.token),

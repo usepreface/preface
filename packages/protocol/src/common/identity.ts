@@ -1,6 +1,12 @@
 import { Schema } from "effect";
 export const ConnectionStatus = Schema.Literals(["draft", "tested", "active", "disabled"]);
-export const AuthFlowIntent = Schema.Literals(["sign_in", "link", "reauthenticate", "test"]);
+export const AuthFlowIntent = Schema.Literals([
+  "sign_in",
+  "link",
+  "reauthenticate",
+  "test",
+  "accept_invitation",
+]);
 export type AuthFlowIntent = typeof AuthFlowIntent.Type;
 export const GoogleConfiguration = Schema.Struct({
   version: Schema.Literal(1),
@@ -8,7 +14,19 @@ export const GoogleConfiguration = Schema.Struct({
 });
 export const IdentityRevision = Schema.Int.check(Schema.isGreaterThan(0));
 // Backend-only navigation currently has one supported destination. Extend with real client routes.
-export const AuthenticationReturnPath = Schema.Literal("/api/docs");
+export const AuthenticationReturnPath = Schema.String.check(
+  Schema.isMaxLength(2048),
+  Schema.makeFilter(
+    (value) =>
+      value.startsWith("/") &&
+      !value.startsWith("//") &&
+      !value.includes("\\") &&
+      Array.from(value).every(
+        (character) => character.charCodeAt(0) > 32 && character.charCodeAt(0) !== 127,
+      ) &&
+      !/%(?:0[ad]|5c)/i.test(value),
+  ),
+);
 export const GoogleSubject = Schema.String.check(
   Schema.isMinLength(1),
   Schema.isMaxLength(255),

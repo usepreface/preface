@@ -4,9 +4,9 @@ import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema, OpenApi } from "effect/ht
 import { IdentityConnectionId, OrganizationId } from "@usepreface/protocol";
 import { SamlCallbackRequest, SamlCompletionQuery } from "@usepreface/protocol/dto";
 
-import { identityErrors, organizationErrors, requestErrors } from "#/http-errors";
+import { identityErrors, invitationErrors, organizationErrors, requestErrors } from "#/http-errors";
 
-const errors = [...identityErrors, ...organizationErrors, ...requestErrors];
+const errors = [...identityErrors, ...invitationErrors, ...organizationErrors, ...requestErrors];
 export class SamlApi extends HttpApiGroup.make("saml")
   .add(
     HttpApiEndpoint.get(

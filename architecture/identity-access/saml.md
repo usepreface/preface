@@ -49,7 +49,7 @@ ACS resolves and atomically claims the database flow before SDK verification. No
 interface receives only this already-claimed request context; no process-local cache owns admission.
 The adapter verifies both Response and Assertion signatures against pinned certificates, exact request
 correlation, issuer, destination, bearer recipient, audience, conditions and authentication dates.
-Only the verified assertion subtree supplies NameID and AuthnInstant; arbitrary attributes are ignored.
+Only the verified assertion subtree supplies NameID, AuthnInstant and the optional configured scalar email attribute; other attributes are ignored.
 
 The stable subject is a purpose-separated digest of the NameID format, qualifiers and value. Accounts
 remain scoped to the connection and issuer. Qualifiers, when present, must identify the configured IdP
@@ -68,7 +68,7 @@ A mismatched browser cannot consume a staged proof.
 
 Final completion shares OIDC's locked connection → organization → user checks and transaction.
 It rechecks trust, current membership, policy, account identity, freshness and expiry. Explicit linking
-requires recent local email; sign-in requires an existing link. Required audit, account/session/evidence
+requires recent local email; sign-in resolves a stable link or verified email through [external enrollment](enrollment.md). Required audit, account/session/evidence
 writes and conditional flow consumption commit together. Failures revoke/scrub temporary context;
 consumption clears it. Maintenance scrubs expired proofs and removes expired replay rows in bounded
 batches. Raw XML, NameID, keys and flow credentials are absent from routine logs and audit metadata.
@@ -77,9 +77,7 @@ batches. Raw XML, NameID, keys and flow credentials are absent from routine logs
 
 The supported profile is SP-initiated HTTP Redirect → HTTP POST, with both Response and Assertion
 signed using RSA-SHA256 or RSA-SHA512 and SHA256/SHA512 digests, and one plaintext assertion.
-There is no unsolicited IdP-initiated login, assertion encryption, SLO, SCIM, domain routing,
-provider-driven signup or attribute-based authorization. Browser completion currently returns to
-`/api/docs`; dashboard UI is separate. IdP employee revocation does not instantly invalidate local
+There is no unsolicited IdP-initiated login, assertion encryption, SLO, SCIM or attribute-based authorization. Domain discovery and invitation-authorized signup use [external enrollment](enrollment.md). Browser completion returns to `/api/docs` or the configured dashboard origin; dashboard UI remains separate. IdP employee revocation does not instantly invalidate local
 evidence. Current local sources, provider age and local expiry still govern access.
 
 Node-SAML owns XML signature verification; the adapter adds Preface's constrained protocol profile

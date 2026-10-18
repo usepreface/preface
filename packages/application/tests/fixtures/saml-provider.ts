@@ -8,6 +8,7 @@ const makeTestSaml = Effect.gen(function* () {
   const identity = yield* Ref.make<{
     readonly issuer: string;
     readonly subject: string;
+    readonly email?: string | null;
     readonly authenticatedAt?: DateTime.Utc | null;
     readonly sessionExpiresAt?: DateTime.Utc | null;
     readonly responseId?: string;
@@ -46,6 +47,7 @@ export const SamlTestProvider = Layer.effect(
         if (identity.authenticatedAt === null)
           return yield* new IdentityError({ code: "INVALID_FLOW" });
         return {
+          email: identity.email ?? null,
           issuer: identity.issuer,
           subject: identity.subject,
           authenticatedAt: identity.authenticatedAt ?? now,

@@ -241,7 +241,18 @@ const accountFields = {
   eventType: Schema.Literals(["auth.account_linked", "auth.account_unlinked"]),
   targetType: Schema.Literal("account"),
   targetId: AccountId,
-  metadata: Schema.Struct({ connectionId: IdentityConnectionId }),
+  metadata: Schema.Struct({
+    connectionId: IdentityConnectionId,
+    linkSource: Schema.optionalKey(
+      Schema.Literals([
+        "explicit",
+        "email_challenge",
+        "trusted_domain",
+        "recent_invitation",
+        "google",
+      ]),
+    ),
+  }),
 };
 const flowFields = {
   organizationId: Schema.optionalKey(OrganizationId),
@@ -254,7 +265,7 @@ const flowFields = {
   targetType: Schema.Literal("auth_flow"),
   targetId: AuthFlowId,
   metadata: Schema.Struct({
-    intent: Schema.Literals(["sign_in", "link", "reauthenticate", "test"]),
+    intent: Schema.Literals(["sign_in", "link", "reauthenticate", "test", "accept_invitation"]),
   }),
 };
 const googleAuthenticatedFields = {
@@ -328,7 +339,21 @@ const connectionDomainFields = {
   targetId: IdentityConnectionId,
   metadata: Schema.Struct({ revision: Schema.Int, domainIds: Schema.Array(OrganizationDomainId) }),
 };
+const externalEmailFields = {
+  organizationId: Schema.optionalKey(OrganizationId),
+  actorKind: Schema.Literal("system"),
+  actorUserId: Schema.Null,
+  eventType: Schema.Literals([
+    "auth.external_email_requested",
+    "auth.external_email_failed",
+    "auth.external_email_verified",
+  ]),
+  targetType: Schema.Literal("auth_flow"),
+  targetId: AuthFlowId,
+  metadata: Schema.Struct({ attempts: Schema.Natural }),
+};
 export const RecordAuditEvent = Schema.Union([
+  Schema.Struct(externalEmailFields),
   Schema.Struct(domainFields),
   Schema.Struct(connectionDomainFields),
   Schema.Struct(recoveryFields),
@@ -371,6 +396,7 @@ const identityStoredFields = {
 };
 const organizationStoredFields = { id: AuditEventId, occurredAt: Schema.DateTimeUtcFromDate };
 export const AuditEvent = Schema.Union([
+  Schema.Struct({ ...externalEmailFields, ...identityStoredFields }),
   Schema.Struct({ ...domainFields, ...organizationStoredFields }),
   Schema.Struct({ ...connectionDomainFields, ...organizationStoredFields }),
   Schema.Struct({ ...recoveryFields, ...organizationStoredFields }),

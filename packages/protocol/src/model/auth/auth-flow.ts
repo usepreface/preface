@@ -1,9 +1,11 @@
 import { Schema } from "effect";
 
 import { CredentialDigest } from "#/common/credential-digest";
+import { DisplayName } from "#/common/display-name";
 import { AuthenticationReturnPath, AuthFlowIntent, IdentityRevision } from "#/common/identity";
 import { IdentityProvider } from "#/common/oidc";
 import { AuthFlowId, IdentityConnectionId } from "#/identifiers/identity";
+import { OrganizationInvitationId } from "#/identifiers/organization";
 import { OrganizationId } from "#/identifiers/organization";
 import { SessionId } from "#/identifiers/session";
 import { UserId } from "#/identifiers/user";
@@ -17,6 +19,9 @@ export const CreateAuthFlow = Schema.Struct({
   initiatingSessionId: Schema.NullOr(SessionId),
   expectedUserId: Schema.NullOr(UserId),
   targetOrganizationId: Schema.NullOr(OrganizationId),
+  invitationId: Schema.optionalKey(Schema.NullOr(OrganizationInvitationId)),
+  invitationRevision: Schema.optionalKey(Schema.NullOr(IdentityRevision)),
+  displayName: Schema.optionalKey(Schema.NullOr(DisplayName)),
   stateHash: CredentialDigest,
   browserBindingHash: CredentialDigest,
   nonceHash: Schema.NullOr(CredentialDigest),
@@ -32,7 +37,12 @@ export const AuthFlow = Schema.Struct({
   requestedMaxAgeSeconds: Schema.NullOr(Schema.Natural),
   pkceVerifierCiphertext: Schema.NullOr(Schema.NonEmptyString),
   samlRequestId: Schema.NullOr(Schema.NonEmptyString),
-  samlVerifiedCiphertext: Schema.NullOr(Schema.NonEmptyString),
+  verifiedIdentityCiphertext: Schema.NullOr(Schema.NonEmptyString),
+  verifiedAt: Schema.NullOr(Schema.DateTimeUtcFromDate),
+  emailVerifiedAt: Schema.NullOr(Schema.DateTimeUtcFromDate),
+  invitationId: Schema.NullOr(OrganizationInvitationId),
+  invitationRevision: Schema.NullOr(IdentityRevision),
+  displayName: Schema.NullOr(DisplayName),
   createdAt: Schema.DateTimeUtcFromDate,
   claimedAt: Schema.NullOr(Schema.DateTimeUtcFromDate),
   consumedAt: Schema.NullOr(Schema.DateTimeUtcFromDate),

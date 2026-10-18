@@ -6,6 +6,7 @@ import { AuthFlowId, IdentityError, type AuthFlowIntent } from "@usepreface/prot
 import type { SessionActor } from "@usepreface/protocol/dto";
 import { GoogleStartInput } from "@usepreface/protocol/input";
 
+import type { InvitationEnrollment } from "#/auth/external/binding";
 import { GoogleIdentity } from "#/auth/google/provider";
 import { makeIdentitySecrets } from "#/auth/google/secrets";
 import { makeIdentityAccess } from "#/auth/identity-access";
@@ -26,13 +27,16 @@ export const makeGoogleFlowStart = Effect.gen(function* () {
     actor: SessionActor | undefined,
     input: GoogleStartInput = {},
     expectedRevision?: number,
+    enrollment?: InvitationEnrollment,
   ) {
     const decoded = yield* Schema.decodeUnknownEffect(GoogleStartInput)(input).pipe(
       Effect.mapError(() => new IdentityError({ code: "INVALID_INPUT" })),
     );
     if (intent === "sign_in" && actor !== undefined)
       return yield* new IdentityError({ code: "ALREADY_AUTHENTICATED" });
-    if (intent !== "sign_in" && actor === undefined)
+    if (intent !== "sign_in" && intent !== "accept_invitation" && actor === undefined)
+      return yield* new IdentityError({ code: "INVALID_FLOW" });
+    if ((intent === "accept_invitation") !== (enrollment !== undefined))
       return yield* new IdentityError({ code: "INVALID_FLOW" });
     const state = yield* tokens.randomToken();
     const nonce = yield* tokens.randomToken();
@@ -88,14 +92,18 @@ export const makeGoogleFlowStart = Effect.gen(function* () {
           identityConnectionId: connection.id,
           connectionRevision: connection.revision,
           intent,
+          invitationId: enrollment?.invitationId ?? null,
+          invitationRevision: enrollment?.invitationRevision ?? null,
+          displayName: enrollment?.displayName ?? null,
           initiatingSessionId: actor?.session.id ?? null,
           expectedUserId: actor?.user.id ?? null,
-          targetOrganizationId: null,
+          targetOrganizationId: enrollment?.targetOrganizationId ?? null,
           stateHash,
           nonceHash,
           browserBindingHash,
           pkceVerifierCiphertext: ciphertext,
-          returnPath: decoded.returnPath ?? "/api/docs",
+          returnPath:
+            decoded.returnPath ?? (links.dashboardOrigin === undefined ? "/api/docs" : "/"),
           expiresAt,
         });
         yield* repository.audit.event.append({

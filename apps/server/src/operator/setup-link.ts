@@ -21,7 +21,7 @@ export const writeSetupPreparation = Effect.fn("operator.writeSetupPreparation")
   }
 
   const config = yield* ServerConfig;
-  const url = new URL("/setup", config.publicUrl);
+  const url = new URL("/setup", config.dashboardUrl ?? config.publicUrl);
   url.hash = new URLSearchParams({ token: Redacted.value(prepared.token) }).toString();
 
   // Supported one-time operator output, emitted only after its issuance transaction committed.

@@ -29,6 +29,8 @@ Executable schemas, migrations, source and tests settle disagreements with prose
 - [Organization SAML](identity-access/saml.md): signed browser transactions, metadata, replay protection
   and certificate lifecycle.
 - [Domain authority](identity-access/domains.md): DNS/operator verification and exact connection-domain trust.
+- [External enrollment](identity-access/enrollment.md): first-time invitation SSO, verified implicit linking,
+  resumable mailbox proofs, discovery and dashboard completion contracts.
 - [Required SSO](identity-access/required-sso.md): organization authentication age, invitation enrollment,
   owner safeguards and offline recovery.
 - [Sessions](identity-access/sessions.md): credential resolution, expiry, activity,

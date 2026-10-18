@@ -392,3 +392,24 @@ Instance owners may manually approve the exact claim through
 Connection `/domains` GET/PUT reads or replaces approved claims with
 `{ expectedRevision, domainIds }`. Only verified claims for that organization are accepted.
 These mutations require recent local email and do not create accounts or memberships.
+
+## Direct invitation SSO and continuation
+
+`POST /api/v1/invitations/inspect` accepts invitation ID/token and returns organization/expiry,
+`methods: [{ connectionId, provider, name }]` and `ssoRequired`. Start the chosen method with
+`POST /api/v1/invitations/authentication/start` and
+`{ invitationId, token, connectionId, displayName, returnPath? }`. The server sets the provider
+flow cookie and returns `{ authorizationUrl, expiresAt }`. Follow that URL in the same browser.
+
+A callback either sets the normal session or redirects to an inline email-verification route,
+setting a separate HttpOnly continuation cookie. Use `GET /api/v1/auth/external/flows/:flowId`
+to read `{ flowId, provider, nextAction, maskedEmail, expiresAt }`. Request a code with a JSON
+`{}` POST to its `/email/request`, then submit `{ challengeId, code }` to `/email/verify`.
+`/complete` can resume a previously verified flow with a JSON `{}` POST. Completion returns
+`{ nextAction, redirectTo }` and delivers a session only through its cookie. All these POSTs
+require a trusted Origin. Flow IDs alone are insufficient authority.
+
+`POST /api/v1/auth/discovery` accepts `{ email, organizationSlug? }` and returns email/Google
+availability plus eligible enterprise connections. It does not disclose whether an account or
+membership exists. Authenticated organization selection uses a JSON `{}` POST to
+`/api/v1/auth/organizations/:organizationId/select`, returning current authentication requirements.

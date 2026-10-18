@@ -9,7 +9,7 @@ import { AcceptInvitationInput } from "@usepreface/protocol/input";
 
 import { makeSessionIssuance } from "#/auth/session-issuance";
 import { OrganizationAccess } from "#/organization/access";
-import { makeBindingAudit } from "#/organization/binding-audit";
+import { makeInvitationAdmission } from "#/organization/invitation/admission";
 import { makeInvitationAudit } from "#/organization/invitation/audit";
 import { makeInvitationAuthority } from "#/organization/invitation/authority";
 import { TokenService } from "#/security/token";
@@ -25,7 +25,7 @@ export const makeInvitationAcceptance = Effect.gen(function* () {
   const authority = yield* makeInvitationAuthority;
   const audit = yield* makeInvitationAudit;
   const issueSession = yield* makeSessionIssuance;
-  const recordBinding = yield* makeBindingAudit;
+  const admit = yield* makeInvitationAdmission;
   return Effect.fn("Application.organization.invitation.accept")(function* (
     input: AcceptInvitationInput,
     actor?: SessionActor,
@@ -38,7 +38,6 @@ export const makeInvitationAcceptance = Effect.gen(function* () {
       .run(
         Effect.gen(function* () {
           const { invitation } = yield* authority.requireToken(decoded, true);
-          const inviter = yield* authority.requireInviter(invitation);
           const proof = yield* repository.auth.verification.lockById(decoded.challengeId);
           if (
             proof === undefined ||
@@ -130,101 +129,16 @@ export const makeInvitationAcceptance = Effect.gen(function* () {
           }
           if (address === undefined)
             return yield* Effect.die(new Error("Invitation recipient has no email identity"));
-          let member = yield* repository.organization.member.findByUserId(
-            invitation.organizationId,
-            user.id,
-          );
-          if (member?.suspendedAt !== null && member?.suspendedAt !== undefined)
-            return yield* new InvitationError({ code: "RECIPIENT_UNAVAILABLE" });
-          if (member !== undefined) {
-            const grants = yield* repository.organization.roleBinding.listActiveByMemberId(
-              invitation.organizationId,
-              member.id,
-            );
-            if (
-              !inviter.isOwner &&
-              grants.some((grant) => grant.role.kind === "builtin" && grant.role.key === "owner")
-            )
-              return yield* new InvitationError({ code: "INVITER_NOT_AUTHORIZED" });
-            if (member.removedAt !== null) {
-              // Removal revokes grants. Readmission restores only this invitation's approved assignments.
-              member = yield* repository.organization.member.readmit(
-                invitation.organizationId,
-                member.id,
-              );
-              if (member === undefined)
-                return yield* new InvitationError({ code: "RECIPIENT_UNAVAILABLE" });
-            }
-          } else {
-            member = yield* repository.organization.member.create({
-              organizationId: invitation.organizationId,
-              userId: user.id,
-            });
-          }
           const issued = yield* issueSession({
             userId: user.id,
             userEmailId: address.id,
             credential,
             method,
           });
-          for (const role of inviter.roles) {
-            const grant = yield* repository.organization.roleBinding.grant({
-              organizationId: invitation.organizationId,
-              memberId: member.id,
-              roleId: role.id,
-              grantedByMemberId: inviter.member.id,
-            });
-            if (grant.created)
-              yield* recordBinding(issued.actor, grant.binding, "organization.role_granted");
-          }
-          for (const assignment of inviter.teams) {
-            const previous = yield* repository.organization.team.member.find(
-              invitation.organizationId,
-              assignment.team.id,
-              member.id,
-            );
-            if (previous === undefined || previous.removedAt !== null) {
-              const membership = yield* repository.organization.team.member.add(
-                invitation.organizationId,
-                assignment.team.id,
-                member.id,
-                inviter.member.id,
-              );
-              yield* repository.audit.event.append({
-                actorKind: "user",
-                actorUserId: user.id,
-                organizationId: invitation.organizationId,
-                eventType: "team.member_added",
-                targetType: "team_member",
-                targetId: membership.id,
-                metadata: { teamId: assignment.team.id, memberId: member.id },
-              });
-            }
-            for (const role of assignment.roles) {
-              const grant = yield* repository.organization.roleBinding.grant({
-                organizationId: invitation.organizationId,
-                teamId: assignment.team.id,
-                memberId: member.id,
-                roleId: role.id,
-                grantedByMemberId: inviter.member.id,
-              });
-              if (grant.created)
-                yield* recordBinding(issued.actor, grant.binding, "organization.role_granted");
-            }
-          }
+          const member = yield* admit(invitation, issued.actor);
           if ((yield* repository.auth.verification.consume(proof.id)) === undefined)
             return yield* new InvitationError({ code: "INVALID_PROOF" });
-          if (
-            (yield* repository.organization.invitation.accept(
-              invitation.organizationId,
-              invitation.id,
-              user.id,
-            )) === undefined
-          )
-            return yield* new InvitationError({ code: "INVALID_INVITATION" });
           yield* emails.cancel(proof.emailJobId);
-          yield* emails.cancel(invitation.emailJobId);
-          yield* audit.record(invitation, "organization.invitation_accepted", issued.actor);
           return {
             ...issued,
             organizationId: invitation.organizationId,

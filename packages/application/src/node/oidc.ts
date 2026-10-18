@@ -187,6 +187,7 @@ const makeOidcIdentity = Effect.gen(function* () {
           subject: claims?.sub,
           email: claims?.email ?? null,
           emailVerified: claims?.email_verified ?? null,
+          validUntil: claims?.exp === undefined ? null : new Date(claims.exp * 1000),
           authenticatedAt:
             claims?.auth_time === undefined ? null : new Date(claims.auth_time * 1000),
         }).pipe(Effect.mapError(() => new IdentityError({ code: "INVALID_FLOW" })));

@@ -58,3 +58,7 @@ export {
 } from "#/input/auth/saml";
 
 export * from "#/input/organization/domain";
+
+export * from "#/input/auth/external";
+
+export * from "#/input/auth/discovery";

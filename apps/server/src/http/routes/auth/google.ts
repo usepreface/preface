@@ -1,5 +1,4 @@
 import { Effect, Redacted, Schema } from "effect";
-import { HttpServerResponse } from "effect/http";
 import { HttpApiBuilder } from "effect/http-api";
 
 import { PrefaceApi } from "@usepreface/api";
@@ -8,8 +7,11 @@ import { IdentityError, RequestError } from "@usepreface/protocol";
 import { GoogleCallbackInput } from "@usepreface/protocol/input";
 
 import { googleFlowCookie } from "#/http/cookies/browser-proof";
-import { setSessionCookie } from "#/http/cookies/session";
 import { mapInfrastructureError } from "#/http/errors";
+import {
+  externalCallbackResponse,
+  authenticationFailureRedirect,
+} from "#/http/routes/auth/completion";
 import { optionalSessionActor } from "#/http/routes/auth/optional-actor";
 
 export const GoogleRoutes = HttpApiBuilder.group(PrefaceApi, "google", (handlers) =>
@@ -35,10 +37,8 @@ export const GoogleRoutes = HttpApiBuilder.group(PrefaceApi, "google", (handlers
           .callback(input, yield* optionalSessionActor)
           .pipe(mapInfrastructureError);
         yield* googleFlowCookie.clear;
-        if (result.sessionToken !== undefined && result.sessionExpiresAt !== undefined)
-          yield* setSessionCookie(result.sessionToken, result.sessionExpiresAt);
-        return HttpServerResponse.empty({ status: 303, headers: { location: result.returnPath } });
-      }),
+        return yield* externalCallbackResponse(result, browserToken);
+      }, authenticationFailureRedirect(googleFlowCookie)),
     });
   }),
 );

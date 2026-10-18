@@ -12,6 +12,7 @@ import {
 import type { SessionActor } from "@usepreface/protocol/dto";
 import { ExternalIdentityStartInput } from "@usepreface/protocol/input";
 
+import type { InvitationEnrollment } from "#/auth/external/binding";
 import { makeIdentitySecrets } from "#/auth/google/secrets";
 import { makeIdentityAccess } from "#/auth/identity-access";
 import { AuthenticationLinks } from "#/auth/links";
@@ -36,13 +37,16 @@ export const makeOidcFlowStart = Effect.gen(function* () {
     input: ExternalIdentityStartInput = {},
     actor?: SessionActor,
     expectedRevision?: number,
+    enrollment?: InvitationEnrollment,
   ) {
     const decoded = yield* Schema.decodeUnknownEffect(ExternalIdentityStartInput)(input).pipe(
       Effect.mapError(() => new IdentityError({ code: "INVALID_INPUT" })),
     );
     if (intent === "sign_in" && actor !== undefined)
       return yield* new IdentityError({ code: "ALREADY_AUTHENTICATED" });
-    if (intent !== "sign_in" && actor === undefined)
+    if (intent !== "sign_in" && intent !== "accept_invitation" && actor === undefined)
+      return yield* new IdentityError({ code: "INVALID_FLOW" });
+    if ((intent === "accept_invitation") !== (enrollment !== undefined))
       return yield* new IdentityError({ code: "INVALID_FLOW" });
     const state = yield* random.randomToken();
     const nonce = yield* random.randomToken();
@@ -76,12 +80,13 @@ export const makeOidcFlowStart = Effect.gen(function* () {
         } else {
           if (connection.status !== "active")
             return yield* new IdentityError({ code: "CONNECTION_UNAVAILABLE" });
-          if (actor !== undefined) yield* access.requireActorMember(actor, organizationId, true);
+          if (actor !== undefined && intent !== "accept_invitation")
+            yield* access.requireActorMember(actor, organizationId, true);
           if (intent === "link") {
             if (actor === undefined) return yield* new IdentityError({ code: "INVALID_FLOW" });
             yield* identityAccess.requireRecentEmail(actor);
           }
-          if (intent === "sign_in" || intent === "reauthenticate")
+          if (intent === "sign_in" || intent === "reauthenticate" || intent === "accept_invitation")
             yield* access.requireApproved(organizationId, connectionId);
           // Signed-out starts expose no member information and still reject archived organizations.
           const organization = yield* repository.organization.organization.findById(organizationId);
@@ -115,6 +120,9 @@ export const makeOidcFlowStart = Effect.gen(function* () {
           identityConnectionId: connectionId,
           connectionRevision: connection.revision,
           intent,
+          invitationId: enrollment?.invitationId ?? null,
+          invitationRevision: enrollment?.invitationRevision ?? null,
+          displayName: enrollment?.displayName ?? null,
           requestedMaxAgeSeconds,
           initiatingSessionId: actor?.session.id ?? null,
           expectedUserId: actor?.user.id ?? null,
@@ -123,7 +131,8 @@ export const makeOidcFlowStart = Effect.gen(function* () {
           browserBindingHash,
           nonceHash,
           pkceVerifierCiphertext: ciphertext,
-          returnPath: decoded.returnPath ?? "/api/docs",
+          returnPath:
+            decoded.returnPath ?? (links.dashboardOrigin === undefined ? "/api/docs" : "/"),
           expiresAt,
         });
         yield* repository.audit.event.append({

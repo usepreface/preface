@@ -8,8 +8,11 @@ import { IdentityError, RequestError } from "@usepreface/protocol";
 import { SamlCallbackInput } from "@usepreface/protocol/input";
 
 import { samlFlowCookie } from "#/http/cookies/browser-proof";
-import { setSessionCookie } from "#/http/cookies/session";
 import { mapInfrastructureError } from "#/http/errors";
+import {
+  externalCallbackResponse,
+  authenticationFailureRedirect,
+} from "#/http/routes/auth/completion";
 import { optionalSessionActor } from "#/http/routes/auth/optional-actor";
 
 export const SamlRoutes = HttpApiBuilder.group(PrefaceApi, "saml", (handlers) =>
@@ -41,10 +44,8 @@ export const SamlRoutes = HttpApiBuilder.group(PrefaceApi, "saml", (handlers) =>
           .complete({ flowId: query.flowId, browserToken }, yield* optionalSessionActor)
           .pipe(mapInfrastructureError);
         yield* samlFlowCookie.clear;
-        if (result.sessionToken !== undefined && result.sessionExpiresAt !== undefined)
-          yield* setSessionCookie(result.sessionToken, result.sessionExpiresAt);
-        return HttpServerResponse.empty({ status: 303, headers: { location: result.returnPath } });
-      }),
+        return yield* externalCallbackResponse(result, browserToken);
+      }, authenticationFailureRedirect(samlFlowCookie)),
     });
   }),
 );

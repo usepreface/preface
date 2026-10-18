@@ -1,4 +1,7 @@
 export const cryptoPurpose = {
+  externalIdentityProof: "preface/external-identity/proof/v1",
+  externalEmailCode: "preface/external-identity/email-code/v1",
+  externalEmailSubject: "preface/external-identity/email-subject/v1",
   domainChallenge: "preface/domain/challenge/v1",
   samlFlow: "preface/saml/flow/v1",
   samlRelay: "preface/saml/relay/v1",
@@ -51,11 +54,14 @@ export type TokenPurpose =
   | typeof cryptoPurpose.emailSignInLink
   | typeof cryptoPurpose.emailSignInBrowser;
 export type EncryptionPurpose =
+  | typeof cryptoPurpose.externalIdentityProof
   | typeof cryptoPurpose.samlFlow
   | typeof cryptoPurpose.emailOutbox
   | typeof cryptoPurpose.identityConnection
   | typeof cryptoPurpose.authFlowVerifier;
 export type FingerprintPurpose =
+  | typeof cryptoPurpose.externalEmailCode
+  | typeof cryptoPurpose.externalEmailSubject
   | typeof cryptoPurpose.emailReauthenticationCode
   | typeof cryptoPurpose.emailReauthenticationSubject
   | typeof cryptoPurpose.invitationCode

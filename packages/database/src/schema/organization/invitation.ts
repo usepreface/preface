@@ -6,7 +6,16 @@ import type {
   EmailJobId,
 } from "@usepreface/protocol";
 import { sql } from "drizzle-orm";
-import { check, foreignKey, index, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import {
+  check,
+  foreignKey,
+  index,
+  integer,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
 
 import { user } from "#/schema/auth/user";
 import { emailJob } from "#/schema/jobs/email";
@@ -23,6 +32,7 @@ export const organizationInvitation = organizationSchema.table(
       .$type<OrganizationId>()
       .notNull()
       .references(() => organization.id, { onDelete: "restrict" }),
+    revision: integer("revision").notNull().default(1),
     email: text("email").notNull(),
     invitedByMemberId: uuid("invited_by_member_id").$type<OrganizationMemberId>().notNull(),
     tokenHash: text("token_hash").notNull(),

@@ -110,7 +110,7 @@ export const makeEmailSignInApplication = Effect.gen(function* () {
             permitsEmailProof(address) &&
             (yield* recipientKey(address.email)) === subjectKey;
           const expiresAt = DateTime.addDuration(yield* DateTime.now, "10 minutes");
-          const url = new URL("/auth/email/verify", links.publicOrigin);
+          const url = new URL("/auth/email/verify", links.dashboardOrigin ?? links.publicOrigin);
           url.hash = new URLSearchParams({
             challengeId: id,
             token: Redacted.value(linkToken),

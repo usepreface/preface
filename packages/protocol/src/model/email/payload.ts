@@ -50,6 +50,11 @@ export const OrganizationSecurityEmailVariables = Schema.Struct({
 export type OrganizationSecurityEmailVariables = typeof OrganizationSecurityEmailVariables.Type;
 export const EmailPayload = Schema.Union([
   Schema.Struct({
+    type: Schema.Literal("identity-verification"),
+    to: UserEmail,
+    variables: SignInEmailVariables,
+  }),
+  Schema.Struct({
     type: Schema.Literal("organization-security"),
     to: UserEmail,
     variables: OrganizationSecurityEmailVariables,

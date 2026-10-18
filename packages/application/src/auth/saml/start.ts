@@ -12,8 +12,10 @@ import {
 import type { SessionActor } from "@usepreface/protocol/dto";
 import { ExternalIdentityStartInput } from "@usepreface/protocol/input";
 
+import type { InvitationEnrollment } from "#/auth/external/binding";
 import { makeIdentitySecrets } from "#/auth/google/secrets";
 import { makeIdentityAccess } from "#/auth/identity-access";
+import { AuthenticationLinks } from "#/auth/links";
 import { makeOrganizationIdentityAccess } from "#/auth/organization-identity/access";
 import { makeSamlConnectionApplication } from "#/auth/saml/connection";
 import { SamlIdentity } from "#/auth/saml/provider";
@@ -29,6 +31,7 @@ export const makeSamlFlowStart = Effect.gen(function* () {
   const organizations = yield* OrganizationAccess;
   const connections = yield* makeSamlConnectionApplication;
   const provider = yield* SamlIdentity;
+  const links = yield* AuthenticationLinks;
   return Effect.fn("Application.auth.saml.start")(function* (
     intent: AuthFlowIntent,
     organizationId: OrganizationId,
@@ -36,13 +39,16 @@ export const makeSamlFlowStart = Effect.gen(function* () {
     input: ExternalIdentityStartInput = {},
     actor?: SessionActor,
     expectedRevision?: number,
+    enrollment?: InvitationEnrollment,
   ) {
     const decoded = yield* Schema.decodeUnknownEffect(ExternalIdentityStartInput)(input).pipe(
       Effect.mapError(() => new IdentityError({ code: "INVALID_INPUT" })),
     );
     if (intent === "sign_in" && actor !== undefined)
       return yield* new IdentityError({ code: "ALREADY_AUTHENTICATED" });
-    if (intent !== "sign_in" && actor === undefined)
+    if (intent !== "sign_in" && intent !== "accept_invitation" && actor === undefined)
+      return yield* new IdentityError({ code: "INVALID_FLOW" });
+    if ((intent === "accept_invitation") !== (enrollment !== undefined))
       return yield* new IdentityError({ code: "INVALID_FLOW" });
     const relayState = yield* random.randomToken();
     const browserToken = yield* random.randomToken();
@@ -68,9 +74,10 @@ export const makeSamlFlowStart = Effect.gen(function* () {
         } else {
           if (connection.status !== "active")
             return yield* new IdentityError({ code: "CONNECTION_UNAVAILABLE" });
-          if (actor !== undefined) yield* members.requireActorMember(actor, organizationId, true);
+          if (actor !== undefined && intent !== "accept_invitation")
+            yield* members.requireActorMember(actor, organizationId, true);
           if (intent === "link" && actor !== undefined) yield* identities.requireRecentEmail(actor);
-          if (intent === "sign_in" || intent === "reauthenticate")
+          if (intent === "sign_in" || intent === "reauthenticate" || intent === "accept_invitation")
             yield* members.requireApproved(organizationId, connectionId);
           const organization = yield* repository.organization.organization.findById(organizationId);
           if (organization?.archivedAt !== null)
@@ -100,6 +107,9 @@ export const makeSamlFlowStart = Effect.gen(function* () {
           identityConnectionId: connectionId,
           connectionRevision: connection.revision,
           intent,
+          invitationId: enrollment?.invitationId ?? null,
+          invitationRevision: enrollment?.invitationRevision ?? null,
+          displayName: enrollment?.displayName ?? null,
           requestedMaxAgeSeconds,
           initiatingSessionId: actor?.session.id ?? null,
           expectedUserId: actor?.user.id ?? null,
@@ -109,7 +119,8 @@ export const makeSamlFlowStart = Effect.gen(function* () {
           samlRequestId: requestId,
           nonceHash: null,
           pkceVerifierCiphertext: null,
-          returnPath: decoded.returnPath ?? "/api/docs",
+          returnPath:
+            decoded.returnPath ?? (links.dashboardOrigin === undefined ? "/api/docs" : "/"),
           expiresAt,
         });
         yield* repository.audit.event.append({

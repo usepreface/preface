@@ -88,6 +88,8 @@ export const NodeGoogleIdentity = {
             subject: claims?.sub,
             email: claims?.email ?? null,
             emailVerified: claims?.email_verified ?? null,
+            hostedDomain: claims?.hd ?? null,
+            validUntil: claims?.exp === undefined ? null : new Date(claims.exp * 1000),
           }).pipe(Effect.mapError(() => new IdentityError({ code: "INVALID_FLOW" })));
         },
         Effect.timeoutOrElse({

@@ -8,6 +8,7 @@ export const OidcIdentityClaims = Schema.Struct({
   subject: Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(255)),
   email: Schema.NullOr(Schema.String),
   emailVerified: Schema.NullOr(Schema.Boolean),
+  validUntil: Schema.optionalKey(Schema.NullOr(Schema.DateTimeUtcFromDate)),
   authenticatedAt: Schema.optionalKey(Schema.NullOr(Schema.DateTimeUtcFromDate)),
 });
 export type OidcIdentityClaims = typeof OidcIdentityClaims.Type;

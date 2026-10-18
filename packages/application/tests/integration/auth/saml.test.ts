@@ -61,7 +61,7 @@ layer(ApplicationTestLayer)("Organization SAML", (it) => {
           owner.actor,
         );
         expect(
-          (yield* repository.auth.authFlow.findById(staged.flowId))?.samlVerifiedCiphertext,
+          (yield* repository.auth.authFlow.findById(staged.flowId))?.verifiedIdentityCiphertext,
         ).toBeNull();
         expect(
           yield* application.auth.saml

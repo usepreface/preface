@@ -87,3 +87,7 @@ export * from "#/dto/organization/authentication";
 export * from "#/dto/auth/saml";
 
 export * from "#/dto/organization/domain";
+
+export * from "#/dto/auth/external";
+
+export * from "#/dto/auth/discovery";

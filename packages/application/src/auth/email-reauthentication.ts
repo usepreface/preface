@@ -94,7 +94,10 @@ export const makeEmailReauthenticationApplication = Effect.gen(function* () {
         const settings = yield* repository.instance.settings.find();
         if (settings === undefined)
           return yield* Effect.die(new Error("Installation settings missing"));
-        const url = new URL("/auth/email/reauthenticate", links.publicOrigin);
+        const url = new URL(
+          "/auth/email/reauthenticate",
+          links.dashboardOrigin ?? links.publicOrigin,
+        );
         url.hash = new URLSearchParams({ challengeId: id, token: Redacted.value(link) }).toString();
         const emailJobId = yield* emails.enqueue({
           type: "email-reauthentication",

@@ -1,8 +1,8 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "597ee0fd-1f09-4de8-9ecb-5a7a6455c791",
-  "prevIds": ["45362bf6-3847-4845-be36-70cc8b822dfc"],
+  "id": "f2b87375-c916-458a-b99e-de97c18b5c9a",
+  "prevIds": ["00000000-0000-0000-0000-000000000000"],
   "ddl": [
     {
       "name": "audit",
@@ -570,6 +570,71 @@
       "table": "auth_flow"
     },
     {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "connection_organization_id",
+      "entityType": "columns",
+      "schema": "auth",
+      "table": "auth_flow"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "invitation_id",
+      "entityType": "columns",
+      "schema": "auth",
+      "table": "auth_flow"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "invitation_revision",
+      "entityType": "columns",
+      "schema": "auth",
+      "table": "auth_flow"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "display_name",
+      "entityType": "columns",
+      "schema": "auth",
+      "table": "auth_flow"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "email_verified_at",
+      "entityType": "columns",
+      "schema": "auth",
+      "table": "auth_flow"
+    },
+    {
       "type": "text",
       "typeSchema": null,
       "notNull": true,
@@ -629,7 +694,7 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "saml_verified_ciphertext",
+      "name": "verified_identity_ciphertext",
       "entityType": "columns",
       "schema": "auth",
       "table": "auth_flow"
@@ -2229,6 +2294,19 @@
       "generated": null,
       "identity": null,
       "name": "organization_id",
+      "entityType": "columns",
+      "schema": "organization",
+      "table": "invitation"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "1",
+      "generated": null,
+      "identity": null,
+      "name": "revision",
       "entityType": "columns",
       "schema": "organization",
       "table": "invitation"
@@ -5339,13 +5417,26 @@
     },
     {
       "nameExplicit": false,
-      "columns": ["identity_connection_id", "target_organization_id"],
+      "columns": ["identity_connection_id", "connection_organization_id"],
       "schemaTo": "auth",
       "tableTo": "identity_connection",
       "columnsTo": ["id", "organization_id"],
       "onUpdate": "NO ACTION",
       "onDelete": "RESTRICT",
-      "name": "auth_flow_31dXdzqk2BiZ_fkey",
+      "name": "auth_flow_GPPtImLNqL3M_fkey",
+      "entityType": "fks",
+      "schema": "auth",
+      "table": "auth_flow"
+    },
+    {
+      "nameExplicit": false,
+      "columns": ["invitation_id", "target_organization_id"],
+      "schemaTo": "organization",
+      "tableTo": "invitation",
+      "columnsTo": ["id", "organization_id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "auth_flow_RYv32z20lZ0N_fkey",
       "entityType": "fks",
       "schema": "auth",
       "table": "auth_flow"
@@ -6250,6 +6341,13 @@
       "table": "event"
     },
     {
+      "value": "(\"intent\" = 'accept_invitation' and \"invitation_id\" is not null and \"invitation_revision\" > 0 and \"target_organization_id\" is not null and \"display_name\" is not null) or (\"intent\" <> 'accept_invitation' and \"invitation_id\" is null and \"invitation_revision\" is null)",
+      "name": "auth_flow_invitation_check",
+      "entityType": "checks",
+      "schema": "auth",
+      "table": "auth_flow"
+    },
+    {
       "value": "\"requested_max_age_seconds\" >= 0",
       "name": "auth_flow_max_age_check",
       "entityType": "checks",
@@ -6257,28 +6355,28 @@
       "table": "auth_flow"
     },
     {
-      "value": "(\"provider\" = 'google' and \"target_organization_id\" is null) or (\"provider\" in ('oidc','saml') and \"target_organization_id\" is not null)",
+      "value": "(\"provider\" = 'google' and \"connection_organization_id\" is null and (\"target_organization_id\" is null or \"intent\" = 'accept_invitation')) or (\"provider\" in ('oidc','saml') and \"target_organization_id\" is not null and \"connection_organization_id\" = \"target_organization_id\")",
       "name": "auth_flow_owner_check",
       "entityType": "checks",
       "schema": "auth",
       "table": "auth_flow"
     },
     {
-      "value": "(\"provider\" = 'saml' and \"saml_request_id\" is not null and \"nonce_hash\" is null and \"pkce_verifier_ciphertext\" is null) or (\"provider\" in ('google','oidc') and \"saml_request_id\" is null and \"saml_verified_ciphertext\" is null and \"nonce_hash\" is not null)",
+      "value": "(\"provider\" = 'saml' and \"saml_request_id\" is not null and \"nonce_hash\" is null and \"pkce_verifier_ciphertext\" is null) or (\"provider\" in ('google','oidc') and \"saml_request_id\" is null and \"nonce_hash\" is not null)",
       "name": "auth_flow_protocol_check",
       "entityType": "checks",
       "schema": "auth",
       "table": "auth_flow"
     },
     {
-      "value": "\"saml_verified_ciphertext\" is null or (\"claimed_at\" is not null and \"consumed_at\" is null and \"revoked_at\" is null)",
+      "value": "\"verified_identity_ciphertext\" is null or (\"claimed_at\" is not null and \"consumed_at\" is null and \"revoked_at\" is null)",
       "name": "auth_flow_saml_verified_check",
       "entityType": "checks",
       "schema": "auth",
       "table": "auth_flow"
     },
     {
-      "value": "(\"intent\" = 'sign_in' and \"initiating_session_id\" is null and \"expected_user_id\" is null) or (\"intent\" in ('link','reauthenticate','test') and \"initiating_session_id\" is not null and \"expected_user_id\" is not null)",
+      "value": "(\"intent\" = 'sign_in' and \"initiating_session_id\" is null and \"expected_user_id\" is null) or (\"intent\" = 'accept_invitation' and ((\"initiating_session_id\" is null and \"expected_user_id\" is null) or (\"initiating_session_id\" is not null and \"expected_user_id\" is not null))) or (\"intent\" in ('link','reauthenticate','test') and \"initiating_session_id\" is not null and \"expected_user_id\" is not null)",
       "name": "auth_flow_intent_check",
       "entityType": "checks",
       "schema": "auth",
@@ -6292,7 +6390,7 @@
       "table": "auth_flow"
     },
     {
-      "value": "\"return_path\" = '/api/docs'",
+      "value": "left(\"return_path\", 1) = '/' and left(\"return_path\", 2) <> '//' and length(\"return_path\") <= 2048",
       "name": "auth_flow_return_path_check",
       "entityType": "checks",
       "schema": "auth",
@@ -6712,7 +6810,7 @@
       "table": "user_email"
     },
     {
-      "value": "\"purpose\" in ('email_sign_in', 'invitation_email', 'email_reauthentication')",
+      "value": "\"purpose\" in ('email_sign_in', 'invitation_email', 'email_reauthentication', 'external_identity_email')",
       "name": "verification_purpose_check",
       "entityType": "checks",
       "schema": "auth",
@@ -6747,7 +6845,7 @@
       "table": "verification"
     },
     {
-      "value": "(\"purpose\" = 'email_sign_in' and ((\"user_id\" is null and \"user_email_id\" is null and \"email_job_id\" is null) or (\"user_id\" is not null and \"user_email_id\" is not null and \"email_job_id\" is not null))) or (\"purpose\" = 'email_reauthentication' and \"user_id\" is not null and \"user_email_id\" is not null and \"email_job_id\" is not null) or (\"purpose\" = 'invitation_email' and \"user_id\" is null and \"user_email_id\" is null and \"email_job_id\" is not null)",
+      "value": "(\"purpose\" = 'email_sign_in' and ((\"user_id\" is null and \"user_email_id\" is null and \"email_job_id\" is null) or (\"user_id\" is not null and \"user_email_id\" is not null and \"email_job_id\" is not null))) or (\"purpose\" = 'email_reauthentication' and \"user_id\" is not null and \"user_email_id\" is not null and \"email_job_id\" is not null) or (\"purpose\" in ('invitation_email', 'external_identity_email') and \"user_id\" is null and \"user_email_id\" is null and \"email_job_id\" is not null)",
       "name": "verification_source_check",
       "entityType": "checks",
       "schema": "auth",
@@ -6761,7 +6859,7 @@
       "table": "verification"
     },
     {
-      "value": "(\"purpose\" = 'email_sign_in' and \"context\" = '{\"version\":1}'::jsonb) or (\"purpose\" = 'email_reauthentication' and jsonb_typeof(\"context\") = 'object' and \"context\"->>'version' = '1' and \"context\"->>'sessionId' ~ '^[0-9a-f-]{36}$') or (\"purpose\" = 'invitation_email' and jsonb_typeof(\"context\") = 'object' and \"context\"->>'version' = '1' and \"context\"->>'invitationId' ~ '^[0-9a-f-]{36}$')",
+      "value": "(\"purpose\" = 'email_sign_in' and \"context\" = '{\"version\":1}'::jsonb) or (\"purpose\" = 'email_reauthentication' and jsonb_typeof(\"context\") = 'object' and \"context\"->>'version' = '1' and \"context\"->>'sessionId' ~ '^[0-9a-f-]{36}$') or (\"purpose\" = 'external_identity_email' and jsonb_typeof(\"context\") = 'object' and \"context\"->>'version' = '1' and \"context\"->>'flowId' ~ '^[0-9a-f-]{36}$' and jsonb_typeof(\"context\"->'email') = 'string') or (\"purpose\" = 'invitation_email' and jsonb_typeof(\"context\") = 'object' and \"context\"->>'version' = '1' and \"context\"->>'invitationId' ~ '^[0-9a-f-]{36}$')",
       "name": "verification_context_check",
       "entityType": "checks",
       "schema": "auth",

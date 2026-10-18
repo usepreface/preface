@@ -6,6 +6,7 @@ import { IdentityError } from "@usepreface/protocol";
 import type { SessionActor } from "@usepreface/protocol/dto";
 import { ExternalIdentityCallbackInput } from "@usepreface/protocol/input";
 
+import { matchesFlowActor } from "#/auth/external/binding";
 import { makeIdentitySecrets } from "#/auth/google/secrets";
 import { makeIdentityAccess } from "#/auth/identity-access";
 import { AuthenticationLinks } from "#/auth/links";
@@ -52,15 +53,8 @@ export const makeOidcFlowCallback = Effect.gen(function* () {
           }))
         )
           return yield* new IdentityError({ code: "INVALID_FLOW" });
-        if (
-          pending.intent !== "sign_in" &&
-          (actor === undefined ||
-            actor.user.id !== pending.expectedUserId ||
-            actor.session.id !== pending.initiatingSessionId)
-        )
+        if (!matchesFlowActor(pending, actor))
           return yield* new IdentityError({ code: "INVALID_FLOW" });
-        if (pending.intent === "sign_in" && actor !== undefined)
-          return yield* new IdentityError({ code: "ALREADY_AUTHENTICATED" });
         const claimed = yield* repository.auth.authFlow.claim(pending.id);
         if (claimed === undefined) return yield* new IdentityError({ code: "INVALID_FLOW" });
         return claimed;
@@ -90,7 +84,7 @@ export const makeOidcFlowCallback = Effect.gen(function* () {
         yield* actors.requireOwner(actor, connection.organizationId);
         yield* access.requireRecentEmail(actor);
       } else {
-        if (actor !== undefined)
+        if (actor !== undefined && flow.intent !== "accept_invitation")
           yield* organizationAccess.requireActorMember(actor, connection.organizationId);
         if (flow.intent === "link" && actor !== undefined) yield* access.requireRecentEmail(actor);
         if (flow.intent !== "link")
@@ -124,7 +118,7 @@ export const makeOidcFlowCallback = Effect.gen(function* () {
         {
           ...identity,
           authenticatedAt: identity.authenticatedAt ?? null,
-          validUntil: null,
+          validUntil: identity.validUntil ?? null,
           sessionExpiresAt: null,
         },
         actor,

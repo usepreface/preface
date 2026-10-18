@@ -5,6 +5,8 @@ export const GoogleIdentityClaims = Schema.Struct({
   subject: GoogleSubject,
   email: Schema.NullOr(Schema.String),
   emailVerified: Schema.NullOr(Schema.Boolean),
+  hostedDomain: Schema.optionalKey(Schema.NullOr(Schema.String)),
+  validUntil: Schema.optionalKey(Schema.NullOr(Schema.DateTimeUtcFromDate)),
 });
 export type GoogleIdentityClaims = typeof GoogleIdentityClaims.Type;
 export interface GoogleClient {

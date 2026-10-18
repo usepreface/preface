@@ -1,5 +1,7 @@
 # Organization invitations
 
+Invitations also support direct enterprise SSO/Google enrollment and inline mailbox verification through [external enrollment](enrollment.md). The email-only path below remains available; its required-SSO next action does not apply when enrollment already supplies acceptable enterprise evidence.
+
 Invitations admit people to an existing organization. Creating one requires current
 `members.manage` and `roles.assign` permissions, scoped to that organization. A
 pending invitation grants no access and creates no identity. Instance ownership

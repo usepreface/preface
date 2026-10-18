@@ -7,7 +7,7 @@ import {
   ExternalIdentityCallbackQuery,
 } from "@usepreface/protocol/dto";
 
-import { identityErrors, organizationErrors, requestErrors } from "#/http-errors";
+import { identityErrors, invitationErrors, organizationErrors, requestErrors } from "#/http-errors";
 
 export class OidcApi extends HttpApiGroup.make("oidc")
   .add(
@@ -18,13 +18,13 @@ export class OidcApi extends HttpApiGroup.make("oidc")
         params: { organizationId: OrganizationId, connectionId: IdentityConnectionId },
         payload: ExternalIdentityStartRequest,
         success: ExternalIdentityStartResult,
-        error: [...identityErrors, ...organizationErrors, ...requestErrors],
+        error: [...identityErrors, ...invitationErrors, ...organizationErrors, ...requestErrors],
       },
     ),
     HttpApiEndpoint.get("callback", "/auth/oidc/callback", {
       query: ExternalIdentityCallbackQuery,
       success: HttpApiSchema.NoContent.pipe(HttpApiSchema.status(303)),
-      error: [...identityErrors, ...organizationErrors, ...requestErrors],
+      error: [...identityErrors, ...invitationErrors, ...organizationErrors, ...requestErrors],
     }),
   )
   .annotate(OpenApi.Title, "Organization OIDC sign-in") {}

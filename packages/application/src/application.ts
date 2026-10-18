@@ -6,8 +6,11 @@ import type { SessionActor } from "@usepreface/protocol/dto";
 import type { GoogleStartInput } from "@usepreface/protocol/input";
 
 import { makeAccountApplication } from "#/auth/account";
+import { makeAuthenticationDiscovery } from "#/auth/discovery";
 import { makeEmailReauthenticationApplication } from "#/auth/email-reauthentication";
 import { makeEmailSignInApplication } from "#/auth/email-sign-in";
+import { makeExternalContinuation } from "#/auth/external/continuation";
+import { makeInvitationAuthentication } from "#/auth/external/invitation";
 import { makeGoogleFlowCallback } from "#/auth/google/callback";
 import { makeGoogleConnectionApplication } from "#/auth/google/connection";
 import { makeGoogleFlowStart } from "#/auth/google/start";
@@ -52,6 +55,11 @@ const makeApplication = Effect.gen(function* () {
       },
     },
     auth: {
+      discover: yield* makeAuthenticationDiscovery,
+      external: {
+        ...(yield* makeExternalContinuation),
+        invitation: yield* makeInvitationAuthentication,
+      },
       session,
       emailSignIn,
       profile: yield* makeProfileApplication,

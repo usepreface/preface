@@ -1,5 +1,7 @@
 # Required organization SSO
 
+Invitations also support direct enterprise SSO/Google enrollment and inline mailbox verification through [external enrollment](enrollment.md). The email-only path below remains available; its required-SSO next action does not apply when enrollment already supplies acceptable enterprise evidence.
+
 Organization owners can require authentication through an approved organization OIDC or SAML connection.
 The installation-wide Google connection does not satisfy this requirement. Global email login,
 organization membership discovery, account linking and explicit owner recovery remain available.

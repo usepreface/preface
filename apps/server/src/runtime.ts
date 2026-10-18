@@ -32,7 +32,7 @@ const LinksLive = Layer.effect(
   AuthenticationLinks,
   Effect.gen(function* () {
     const config = yield* ServerConfig;
-    return { publicOrigin: config.publicUrl.origin };
+    return { publicOrigin: config.publicUrl.origin, dashboardOrigin: config.dashboardUrl?.origin };
   }),
 ).pipe(Layer.provide(ServerConfig.layer));
 

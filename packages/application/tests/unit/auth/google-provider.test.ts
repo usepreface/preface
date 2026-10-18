@@ -1,4 +1,4 @@
-import { Effect, Redacted } from "effect";
+import { DateTime, Effect, Redacted } from "effect";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -19,6 +19,8 @@ afterEach(() => vi.unstubAllGlobals());
 describe("Google OIDC adapter", () => {
   it("validates a signed identity and exchanges the code with the bound verifier and fixed callback", async () => {
     const provider = new GoogleOidcFixture();
+    const expiresAt = Math.floor(Date.now() / 1000) + 300;
+    provider.claims.exp = expiresAt;
     vi.stubGlobal("fetch", provider.fetch);
     const identity = await Effect.runPromise(
       Effect.gen(function* () {
@@ -29,6 +31,8 @@ describe("Google OIDC adapter", () => {
       subject: "google-subject",
       email: "provider@example.test",
       emailVerified: true,
+      hostedDomain: null,
+      validUntil: DateTime.makeUnsafe(expiresAt * 1000),
     });
     expect(provider.tokenParameters?.get("code_verifier")).toBe(Redacted.value(input.verifier));
     expect(provider.tokenParameters?.get("redirect_uri")).toBe(input.redirectUri);

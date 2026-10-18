@@ -41,7 +41,7 @@ layer(ApplicationTestLayer)("SAML transactional boundaries", (it) => {
       expect((yield* application.auth.account.list(owner.actor)).accounts).toEqual([]);
       const flow = yield* repository.auth.authFlow.findById(staged.flowId);
       expect(flow?.revokedAt).not.toBeNull();
-      expect(flow?.samlVerifiedCiphertext).toBeNull();
+      expect(flow?.verifiedIdentityCiphertext).toBeNull();
       expect(
         yield* application.auth.saml
           .complete({ ...staged, browserToken: started.browserToken }, owner.actor)

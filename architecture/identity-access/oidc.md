@@ -3,8 +3,7 @@
 Organization owners can configure OIDC login connections and approve them for optional or
 [required SSO](required-sso.md). An existing member explicitly
 links an external identity, then uses it for sign-in or reauthentication. Preface continues to own
-users, verified email, admission, roles and teams. OIDC callbacks never create users or memberships
-and never merge accounts by email. Instance ownership grants no organization connection authority. Conversely, organization OIDC
+users, verified email, admission, roles and teams. Invitation-authorized callbacks can create users/memberships through [external enrollment](enrollment.md); verified email can attach a new provider identity to an existing user. User records are never merged. Instance ownership grants no organization connection authority. Conversely, organization OIDC
 evidence cannot authorize instance configuration reads or organization creation by itself; those
 require an installation-trusted email/Google proof, and sensitive changes still require recent email.
 
@@ -55,10 +54,7 @@ not issuer settings or credentials. Full connection configuration is owner-only.
 
 Linking needs an active organization member and recent local email at both start and completion.
 It can prepare an active connection before policy approval; it grants no content access by itself.
-An invited member first completes existing mailbox-verified admission and can then link. Ordinary
-OIDC sign-in needs an already linked identity, active membership, an active approved connection,
-an enabled user and a usable verified primary Preface email. There is no provider-driven signup,
-just-in-time membership, domain admission or role synchronization.
+An invitation can start SSO directly through [external enrollment](enrollment.md). Ordinary OIDC sign-in resolves a stable link or safely attaches an identity after verified email, with active membership, an approved connection and usable local identity. There is no uninvited JIT membership, domain admission or role synchronization.
 
 Organization access checks exact approved connection evidence. Removing an approval takes effect
 on subsequent organization access; it need not invalidate the global Preface session. Suspension,
@@ -76,8 +72,7 @@ Google and OIDC callback routes reject each other's flows before claiming them.
 Authenticated starts and callbacks require the exact initiating session/user. Starts set a separate
 `preface_oidc_flow` HttpOnly, host-only, SameSite=Lax cookie, Secure on HTTPS. Browser callbacks are
 cross-site GETs correlated by state and that cookie; mutation starts require the trusted Origin and
-JSON. The current completion destination is only `/api/docs`; caller-supplied external return URLs
-are rejected. A successful callback returns 303 and exposes a new session credential only by cookie.
+JSON. `DASHBOARD_URL` enables trusted frontend completion and bounded local return paths; unset configuration retains `/api/docs`. Caller-supplied external destinations are rejected. A successful callback returns 303 and exposes a new session credential only by cookie.
 
 Callback processing has three boundaries:
 
@@ -139,7 +134,7 @@ A disposable Dex 2.46.0 run also verified discovery, test, activation, linking, 
 reauthentication against the built backend and PostgreSQL. Its development connector used a
 CA-verified HTTPS client; callbacks/session cookies completed in an incognito browser.
 
-OIDC has a backend-only Scalar completion destination. Required SSO and offline recovery are
+OIDC supports backend-only Scalar completion or a configured dashboard destination. Required SSO and offline recovery are
 implemented in the [enforcement boundary](required-sso.md). SAML is implemented in its [own boundary](saml.md). Domain routing, SCIM, provider
 logout and immediate external employee revocation notifications are not implemented. A provider disabling an employee does not instantly
 revoke existing local evidence; local source checks and session expiry still apply. Provider

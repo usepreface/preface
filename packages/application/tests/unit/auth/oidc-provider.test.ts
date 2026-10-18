@@ -24,6 +24,8 @@ const proof = {
 describe("OIDC SDK adapter", () => {
   it("discovers a provider and validates a signed identity with explicit client authentication and PKCE", async () => {
     const issuer = new OidcIssuerFixture();
+    const expiresAt = Math.floor(Date.now() / 1000) + 300;
+    issuer.claims.exp = expiresAt;
     const identity = await Effect.runPromise(
       Effect.gen(function* () {
         const provider = yield* OidcIdentity;
@@ -40,6 +42,7 @@ describe("OIDC SDK adapter", () => {
       email: "provider@example.test",
       emailVerified: true,
       authenticatedAt: null,
+      validUntil: DateTime.makeUnsafe(expiresAt * 1000),
     });
     expect(issuer.tokenParameters?.get("code_verifier")).toBe(Redacted.value(proof.verifier));
     expect(issuer.tokenParameters?.get("redirect_uri")).toBe(proof.redirectUri);

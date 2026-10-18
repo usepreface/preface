@@ -6,6 +6,7 @@ import type { SamlConfiguration } from "@usepreface/protocol/model";
 export const SamlIdentityClaims = Schema.Struct({
   issuer: Schema.NonEmptyString,
   subject: Schema.NonEmptyString,
+  email: Schema.optionalKey(Schema.NullOr(Schema.String)),
   authenticatedAt: Schema.DateTimeUtcFromDate,
   validUntil: Schema.DateTimeUtcFromDate,
   sessionExpiresAt: Schema.NullOr(Schema.DateTimeUtcFromDate),

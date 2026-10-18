@@ -2,8 +2,7 @@
 
 Google is an installation-owned login connection. Instance owners configure and test
 credentials; organization owners opt into accepting Google evidence. User identity,
-organization admission and roles stay in Preface. A Google callback never creates a
-user, email address or organization membership, and matching emails never link accounts.
+organization admission and roles stay in Preface. A valid invitation can enroll a user directly through Google. Unknown identities can link to an existing account after verified email proof; see [external enrollment](enrollment.md). No callback grants uninvited membership.
 
 ## Configuration and ownership
 

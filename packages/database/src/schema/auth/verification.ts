@@ -53,7 +53,7 @@ export const verification = authSchema.table(
     index("verification_expiry_idx").on(table.expiresAt),
     check(
       "verification_purpose_check",
-      sql`${table.purpose} in ('email_sign_in', 'invitation_email', 'email_reauthentication')`,
+      sql`${table.purpose} in ('email_sign_in', 'invitation_email', 'email_reauthentication', 'external_identity_email')`,
     ),
     check("verification_attempts_check", sql`${table.attempts} between 0 and 5`),
     check("verification_expiry_check", sql`${table.expiresAt} > ${table.createdAt}`),
@@ -67,7 +67,7 @@ export const verification = authSchema.table(
     ),
     check(
       "verification_source_check",
-      sql`(${table.purpose} = 'email_sign_in' and ((${table.userId} is null and ${table.userEmailId} is null and ${table.emailJobId} is null) or (${table.userId} is not null and ${table.userEmailId} is not null and ${table.emailJobId} is not null))) or (${table.purpose} = 'email_reauthentication' and ${table.userId} is not null and ${table.userEmailId} is not null and ${table.emailJobId} is not null) or (${table.purpose} = 'invitation_email' and ${table.userId} is null and ${table.userEmailId} is null and ${table.emailJobId} is not null)`,
+      sql`(${table.purpose} = 'email_sign_in' and ((${table.userId} is null and ${table.userEmailId} is null and ${table.emailJobId} is null) or (${table.userId} is not null and ${table.userEmailId} is not null and ${table.emailJobId} is not null))) or (${table.purpose} = 'email_reauthentication' and ${table.userId} is not null and ${table.userEmailId} is not null and ${table.emailJobId} is not null) or (${table.purpose} in ('invitation_email', 'external_identity_email') and ${table.userId} is null and ${table.userEmailId} is null and ${table.emailJobId} is not null)`,
     ),
     check(
       "verification_digest_check",
@@ -75,7 +75,7 @@ export const verification = authSchema.table(
     ),
     check(
       "verification_context_check",
-      sql`(${table.purpose} = 'email_sign_in' and ${table.context} = '{"version":1}'::jsonb) or (${table.purpose} = 'email_reauthentication' and jsonb_typeof(${table.context}) = 'object' and ${table.context}->>'version' = '1' and ${table.context}->>'sessionId' ~ '^[0-9a-f-]{36}$') or (${table.purpose} = 'invitation_email' and jsonb_typeof(${table.context}) = 'object' and ${table.context}->>'version' = '1' and ${table.context}->>'invitationId' ~ '^[0-9a-f-]{36}$')`,
+      sql`(${table.purpose} = 'email_sign_in' and ${table.context} = '{"version":1}'::jsonb) or (${table.purpose} = 'email_reauthentication' and jsonb_typeof(${table.context}) = 'object' and ${table.context}->>'version' = '1' and ${table.context}->>'sessionId' ~ '^[0-9a-f-]{36}$') or (${table.purpose} = 'external_identity_email' and jsonb_typeof(${table.context}) = 'object' and ${table.context}->>'version' = '1' and ${table.context}->>'flowId' ~ '^[0-9a-f-]{36}$' and jsonb_typeof(${table.context}->'email') = 'string') or (${table.purpose} = 'invitation_email' and jsonb_typeof(${table.context}) = 'object' and ${table.context}->>'version' = '1' and ${table.context}->>'invitationId' ~ '^[0-9a-f-]{36}$')`,
     ),
   ],
 );

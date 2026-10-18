@@ -7,6 +7,7 @@ import { SecretTokenFromString } from "#/common/secret-token";
 import { VerificationCode } from "#/common/verification-code";
 import { SessionActor } from "#/dto/auth/session";
 import { VerificationId } from "#/identifiers/auth";
+import { IdentityConnectionId } from "#/identifiers/identity";
 import {
   OrganizationId,
   OrganizationInvitationId,
@@ -64,6 +65,14 @@ export const InvitationList = Schema.Struct({
   nextCursor: Schema.NullOr(OrganizationInvitationId),
 });
 export const InvitationPreview = Schema.Struct({
+  methods: Schema.Array(
+    Schema.Struct({
+      connectionId: IdentityConnectionId,
+      provider: Schema.Literals(["google", "oidc", "saml"]),
+      name: Schema.String,
+    }),
+  ),
+  ssoRequired: Schema.Boolean,
   organization: Schema.Struct({ id: OrganizationId, name: OrganizationName }),
   expiresAt: Schema.DateTimeUtcFromString,
 });

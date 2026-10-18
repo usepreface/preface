@@ -13,7 +13,7 @@ import {
   OrganizationInvitation,
   InvitationAssignment,
 } from "@usepreface/protocol/model";
-import { and, desc, eq, gt, isNull, lt } from "drizzle-orm";
+import { and, desc, eq, gt, isNull, lt, sql } from "drizzle-orm";
 
 import { mapToDatabaseError } from "#/core/errors";
 import { Database } from "#/core/layer";
@@ -160,6 +160,7 @@ const makeInvitationRepository = Effect.gen(function* () {
     const [row] = yield* database
       .update(invitation)
       .set({
+        revision: sql`${invitation.revision} + 1`,
         tokenHash: input.tokenHash,
         emailJobId: input.emailJobId,
         expiresAt: DateTime.toDateUtc(input.expiresAt),

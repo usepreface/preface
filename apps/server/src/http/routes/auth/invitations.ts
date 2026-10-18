@@ -23,7 +23,11 @@ export const InvitationsRoutes = HttpApiBuilder.group(PrefaceApi, "invitations",
         const input = yield* Schema.decodeUnknownEffect(InvitationTokenInput)(payload).pipe(
           Effect.mapError(() => new RequestError({ code: "INVALID_INPUT" })),
         );
-        return yield* invitations.inspect(input).pipe(mapInfrastructureError);
+        const preview = yield* invitations.inspect(input).pipe(mapInfrastructureError);
+        const methods = yield* application.auth.external.invitation
+          .methods(input)
+          .pipe(mapInfrastructureError);
+        return { ...preview, ...methods };
       }),
       requestVerification: Effect.fn("http.invitations.requestVerification")(function* ({
         payload,

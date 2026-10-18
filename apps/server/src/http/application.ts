@@ -13,7 +13,12 @@ import { makeRequestPolicy } from "#/http/middleware/request-policy";
 import { SessionAuthenticationLive } from "#/http/middleware/session-authentication";
 import { SetupProtectionLive } from "#/http/middleware/setup-protection";
 import { AccountsRoutes } from "#/http/routes/auth/accounts";
+import {
+  AuthenticationDiscoveryRoutes,
+  OrganizationSelectionRoutes,
+} from "#/http/routes/auth/discovery";
 import { EmailSignInRoutes } from "#/http/routes/auth/email-sign-in";
+import { ExternalAuthenticationRoutes } from "#/http/routes/auth/external";
 import { GoogleRoutes } from "#/http/routes/auth/google";
 import { InvitationsRoutes } from "#/http/routes/auth/invitations";
 import { OidcRoutes } from "#/http/routes/auth/oidc";
@@ -43,6 +48,9 @@ import { ProfileRoutes } from "#/http/routes/user/profile";
 const ProductRoutes = HttpApiBuilder.layer(PrefaceApi, { openapiPath: "/api/openapi.json" }).pipe(
   Layer.provide(
     Layer.mergeAll(
+      AuthenticationDiscoveryRoutes,
+      OrganizationSelectionRoutes,
+      ExternalAuthenticationRoutes,
       OrganizationDomainsRoutes,
       OidcRoutes,
       SamlRoutes,

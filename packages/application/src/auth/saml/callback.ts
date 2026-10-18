@@ -6,10 +6,11 @@ import { IdentityError, type IdentityConnectionId } from "@usepreface/protocol";
 import type { SessionActor } from "@usepreface/protocol/dto";
 import { SamlCallbackInput, CompleteSamlFlowInput } from "@usepreface/protocol/input";
 
+import { matchesFlowActor } from "#/auth/external/binding";
+import { makeExternalProof } from "#/auth/external/proof";
 import { makeIdentitySecrets } from "#/auth/google/secrets";
 import { makeOrganizationIdentityCompletion } from "#/auth/organization-identity/completion";
 import { makeExternalFlowFailure } from "#/auth/organization-identity/failure";
-import { makeSamlFlowProof } from "#/auth/saml/proof";
 import { SamlIdentity } from "#/auth/saml/provider";
 
 export const makeSamlFlowCallback = Effect.gen(function* () {
@@ -17,7 +18,7 @@ export const makeSamlFlowCallback = Effect.gen(function* () {
   const transaction = yield* TransactionService;
   const random = yield* TokenCrypto;
   const secrets = yield* makeIdentitySecrets;
-  const proofs = yield* makeSamlFlowProof;
+  const proofs = yield* makeExternalProof;
   const provider = yield* SamlIdentity;
   const completeIdentity = yield* makeOrganizationIdentityCompletion;
   const failFlow = yield* makeExternalFlowFailure;
@@ -79,6 +80,8 @@ export const makeSamlFlowCallback = Effect.gen(function* () {
       const ciphertext = yield* proofs.encrypt(flow.id, {
         issuer: verified.issuer,
         subject,
+        email: verified.email ?? null,
+        emailVerified: null,
         authenticatedAt: verified.authenticatedAt,
         validUntil: verified.validUntil,
         sessionExpiresAt: verified.sessionExpiresAt,
@@ -126,7 +129,10 @@ export const makeSamlFlowCallback = Effect.gen(function* () {
             ))
           )
             return yield* new IdentityError({ code: "SAML_REPLAY" });
-          if ((yield* repository.auth.authFlow.stageSaml(flow.id, ciphertext)) === undefined)
+          if (
+            (yield* repository.auth.authFlow.stageVerifiedIdentity(flow.id, ciphertext)) ===
+            undefined
+          )
             return yield* new IdentityError({ code: "INVALID_FLOW" });
           yield* repository.audit.event.append({
             actorKind: flow.expectedUserId === null ? "system" : "user",
@@ -152,7 +158,7 @@ export const makeSamlFlowCallback = Effect.gen(function* () {
     const flow = yield* repository.auth.authFlow.findById(decoded.flowId);
     if (
       flow?.provider !== "saml" ||
-      flow.samlVerifiedCiphertext === null ||
+      flow.verifiedIdentityCiphertext === null ||
       flow.consumedAt !== null ||
       flow.revokedAt !== null ||
       DateTime.toEpochMillis(flow.expiresAt) <= DateTime.toEpochMillis(yield* DateTime.now) ||
@@ -163,23 +169,11 @@ export const makeSamlFlowCallback = Effect.gen(function* () {
       }))
     )
       return yield* new IdentityError({ code: "INVALID_FLOW" });
-    if (
-      flow.intent !== "sign_in" &&
-      (actor === undefined ||
-        actor.user.id !== flow.expectedUserId ||
-        actor.session.id !== flow.initiatingSessionId)
-    )
-      return yield* new IdentityError({ code: "INVALID_FLOW" });
-    if (flow.intent === "sign_in" && actor !== undefined)
-      return yield* new IdentityError({ code: "ALREADY_AUTHENTICATED" });
-    const ciphertext = flow.samlVerifiedCiphertext;
+    if (!matchesFlowActor(flow, actor)) return yield* new IdentityError({ code: "INVALID_FLOW" });
+    const ciphertext = flow.verifiedIdentityCiphertext;
     return yield* Effect.gen(function* () {
       const identity = yield* proofs.decrypt(flow.id, ciphertext);
-      return yield* completeIdentity(
-        flow,
-        { ...identity, email: null, emailVerified: null },
-        actor,
-      );
+      return yield* completeIdentity(flow, identity, actor);
     }).pipe(Effect.catch((error) => failFlow(flow).pipe(Effect.andThen(Effect.fail(error)))));
   });
   return { callback, complete };
