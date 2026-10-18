@@ -20,6 +20,13 @@ check authentication requirements and organization access. An instance-owner gra
 never bypasses membership. Lists expose cursor controls; assignment/invitation
 choices collect both role scopes and all relevant pages, rejecting repeated cursors.
 
+The shell contains route suspension inside its main panel, keeping its top bar and
+sidebar mounted during page-code loading. Route pending states and query boundaries
+render accessible skeletons only around unresolved content. The router reveals pending
+UI after 150 ms without a minimum display time; successful query data stays visible
+during background refresh. Initial session/organization checks still gate protected
+rendering, and confirmed access changes still clear the protected cache.
+
 A mutation hook creates its own runtime function atom, preventing independent
 forms from interrupting each other. It blocks duplicate submissions, reports safe
 public errors, invalidates only after backend success and drops late results after

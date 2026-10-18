@@ -5,6 +5,8 @@ import { Button } from "@usepreface/ui/components/button";
 import { Notice } from "#/components/feedback/notice";
 import { apiErrorMessage } from "#/lib/api-errors";
 
+import { QueryLoading } from "./query-loading";
+
 export function QueryState({
   query,
   children,
@@ -18,12 +20,7 @@ export function QueryState({
   };
   children: ReactNode;
 }) {
-  if (query.isPending)
-    return (
-      <p role="status" className="p-6 text-sm text-fg-secondary">
-        Loading…
-      </p>
-    );
+  if (query.isPending) return <QueryLoading className="p-0" />;
   if (query.isError)
     return (
       <Notice tone="warning" title="Couldn’t load this page">

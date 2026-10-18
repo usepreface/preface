@@ -4,6 +4,8 @@ import { useRouterState } from "@tanstack/react-router";
 
 import { Sheet, SheetContent, SheetTitle } from "@usepreface/ui/components/sheet";
 
+import { QueryLoading } from "#/components/api/query-loading";
+
 export type SidebarRender = (props: {
   /** Collapses the desktop sidebar; undefined inside the mobile sheet. */
   onCollapse?: () => void;
@@ -57,7 +59,7 @@ export function ShellLayout({
             })
           : null}
         <main className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl border bg-background">
-          {children}
+          <React.Suspense fallback={<QueryLoading />}>{children}</React.Suspense>
         </main>
       </div>
       {sidebar ? (
