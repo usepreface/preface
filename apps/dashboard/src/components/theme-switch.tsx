@@ -11,9 +11,10 @@ const options: [Theme, string, IconComponent][] = [
 /** Light, dark or follow the system. */
 export function ThemeSwitch({ className }: { className?: string }) {
   const { theme, setTheme } = useTheme();
+
   return (
     <div
-      role="radiogroup"
+      role="group"
       aria-label="Colour theme"
       className={cn("flex items-center gap-0.5 rounded-full bg-surface-3 p-0.5", className)}
     >
@@ -21,11 +22,10 @@ export function ThemeSwitch({ className }: { className?: string }) {
         <button
           key={value}
           type="button"
-          role="radio"
-          aria-checked={theme === value}
+          aria-pressed={theme === value}
           aria-label={label}
           onClick={() => setTheme(value)}
-          className="flex size-6 items-center justify-center rounded-full text-icon-secondary outline-none transition-colors hover:text-foreground focus-visible:ring-3 focus-visible:ring-focus-ring aria-checked:bg-surface-1 aria-checked:text-icon aria-checked:shadow-xs"
+          className="flex size-6 items-center justify-center rounded-full text-icon-secondary outline-none transition-colors hover:text-foreground focus-visible:ring-3 focus-visible:ring-focus-ring aria-pressed:bg-surface-1 aria-pressed:text-icon aria-pressed:shadow-xs"
         >
           <Icon size={13} />
         </button>
