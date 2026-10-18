@@ -1,4 +1,6 @@
-import { generateKeyPairSync, sign } from "node:crypto";
+import { generateKeyPairSync } from "node:crypto";
+
+import { signedIdToken } from "./signed-id-token.js";
 
 // A signed OIDC issuer fixture replaces HTTP only; the production adapter and SDK verify it.
 export class GoogleOidcFixture {
@@ -32,23 +34,11 @@ export class GoogleOidcFixture {
       throw new Error("Unexpected external destination");
     this.tokenRequests += 1;
     this.tokenParameters = new URLSearchParams(String(options?.body));
-    const now = Math.floor(Date.now() / 1000);
-    const header = Buffer.from(JSON.stringify({ alg: "RS256", kid: "fixture-key" })).toString(
-      "base64url",
-    );
-    const payload = Buffer.from(
-      JSON.stringify({ iat: now, exp: now + 300, ...this.claims }),
-    ).toString("base64url");
-    const signature = sign(
-      "RSA-SHA256",
-      Buffer.from(`${header}.${payload}`),
-      this.keys.privateKey,
-    ).toString("base64url");
     return Response.json({
       token_type: "Bearer",
       access_token: "fixture-access-token",
       expires_in: 300,
-      id_token: `${header}.${payload}.${this.tamperSignature ? "A".repeat(signature.length) : signature}`,
+      id_token: signedIdToken(this.keys.privateKey, this.claims, this.tamperSignature),
     });
   };
 }

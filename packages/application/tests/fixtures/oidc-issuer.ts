@@ -1,6 +1,8 @@
-import { generateKeyPairSync, sign } from "node:crypto";
+import { generateKeyPairSync } from "node:crypto";
 
 import type { CustomFetch } from "openid-client";
+
+import { signedIdToken } from "./signed-id-token.js";
 
 // Only HTTP is substituted. The production adapter and openid-client validate the signed tokens.
 export class OidcIssuerFixture {
@@ -46,23 +48,11 @@ export class OidcIssuerFixture {
     if (url !== `${this.issuer}/token`) throw new Error("Unexpected OIDC destination");
     this.tokenParameters = new URLSearchParams(String(options?.body));
     this.tokenAuthorization = new Headers(options?.headers).get("authorization");
-    const now = Math.floor(Date.now() / 1000);
-    const header = Buffer.from(JSON.stringify({ alg: "RS256", kid: "fixture-key" })).toString(
-      "base64url",
-    );
-    const payload = Buffer.from(
-      JSON.stringify({ iat: now, exp: now + 300, ...this.claims }),
-    ).toString("base64url");
-    const signature = sign(
-      "RSA-SHA256",
-      Buffer.from(`${header}.${payload}`),
-      this.keys.privateKey,
-    ).toString("base64url");
     return Response.json({
       token_type: "Bearer",
       access_token: "fixture-access-token",
       expires_in: 300,
-      id_token: `${header}.${payload}.${this.tamperSignature ? "A".repeat(signature.length) : signature}`,
+      id_token: signedIdToken(this.keys.privateKey, this.claims, this.tamperSignature),
     });
   };
 }
