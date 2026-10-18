@@ -121,8 +121,8 @@ and creation also require `roles.assign`. Public POST routes under
 require the trusted Origin and JSON; acceptance can resolve an existing cookie actor.
 The temporary invitation cookie uses the session cookie's secure/same-site policy.
 
-There are no groups, SSO admission, account linking, directory
-provisioning, permanent invitation-history cleanup or public self-signup endpoints.
+There are no groups, directory provisioning, permanent invitation-history cleanup or public
+self-signup endpoints. [External enrollment](enrollment.md) owns SSO admission and account linking.
 An administrator can revoke an invitation or replace it with corrected roles; there
 is no separate assignment editor. UI integration remains pending.
 
@@ -141,7 +141,7 @@ escaping of untrusted names.
 - [Tables](../../packages/database/src/schema/organization/invitation.ts)
 - [Repository](../../packages/database/src/repositories/organization/invitation.ts)
 - [Application](../../packages/application/src/organization/invitation)
-- [Management contract](../../packages/api/src/groups/organization-invitations.ts)
+- [Management contract](../../packages/api/src/groups/organization/invitations.ts)
 - [Acceptance handlers](../../apps/server/src/http/routes/auth/invitations.ts)
 - [Application tests](../../packages/application/tests/integration/organization/invitations.test.ts)
 

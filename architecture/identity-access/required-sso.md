@@ -131,8 +131,8 @@ competing recovery/revocation. SDK tests validate `max_age` and signed `auth_tim
 policy/recovery payload decoding, cookie sessions, safe output and access rejection. PostgreSQL is
 the concurrency lane; PGlite supplies fast persistence checks.
 
-SAML, domain routing, SCIM, provider logout and immediate external deprovisioning remain outside this
-feature. Local evidence may remain usable until its configured age elapses after an employee is
+[SAML](saml.md) and [domain routing](domains.md) use their own boundaries. SCIM, provider logout
+and immediate external deprovisioning remain unsupported. Local evidence may remain usable until its configured age elapses after an employee is
 disabled at the provider; explicit Preface membership/session revocation remains available.
 
 ## Source

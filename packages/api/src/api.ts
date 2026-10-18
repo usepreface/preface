@@ -1,36 +1,33 @@
 import { HttpApi, OpenApi } from "effect/http-api";
 
-import { AccountsApi } from "#/groups/accounts";
 import { AuditApi } from "#/groups/audit";
-import {
-  AuthenticationDiscoveryApi,
-  OrganizationSelectionApi,
-} from "#/groups/authentication-discovery";
-import { AuthenticationPolicyApi } from "#/groups/authentication-policy";
-import { ConnectionOperationsApi } from "#/groups/connection-operations";
-import { EmailSignInApi } from "#/groups/email-sign-in";
-import { ExternalAuthenticationApi } from "#/groups/external-authentication";
-import { GoogleApi } from "#/groups/google";
-import { IdentityConnectionsApi } from "#/groups/identity-connections";
-import { InstanceCapabilitiesApi } from "#/groups/instance-capabilities";
-import { InstanceSetupApi } from "#/groups/instance-setup";
-import { InvitationsApi } from "#/groups/invitations";
-import { OidcApi } from "#/groups/oidc";
-import { OrganizationAuthRecoveryApi } from "#/groups/organization-auth-recovery";
-import { OrganizationDomainsApi } from "#/groups/organization-domains";
-import { OrganizationIdentityConnectionsApi } from "#/groups/organization-identity-connections";
-import { OrganizationInvitationsApi } from "#/groups/organization-invitations";
-import { OrganizationMembersApi } from "#/groups/organization-members";
-import { OrganizationOwnershipApi } from "#/groups/organization-ownership";
-import { OrganizationRoleBindingsApi } from "#/groups/organization-role-bindings";
-import { OrganizationRolesApi } from "#/groups/organization-roles";
-import { OrganizationsApi } from "#/groups/organizations";
+import { AccountsApi } from "#/groups/auth/accounts";
+import { AuthenticationDiscoveryApi, OrganizationSelectionApi } from "#/groups/auth/discovery";
+import { EmailSignInApi } from "#/groups/auth/email-sign-in";
+import { ExternalAuthenticationApi } from "#/groups/auth/external";
+import { GoogleApi } from "#/groups/auth/google";
+import { InvitationsApi } from "#/groups/auth/invitations";
+import { OidcApi } from "#/groups/auth/oidc";
+import { ReauthenticationApi } from "#/groups/auth/reauthentication";
+import { SamlApi } from "#/groups/auth/saml";
+import { SessionApi } from "#/groups/auth/session";
+import { SessionsApi } from "#/groups/auth/sessions";
+import { InstanceCapabilitiesApi } from "#/groups/instance/capabilities";
+import { IdentityConnectionsApi } from "#/groups/instance/identity-connections";
+import { InstanceSetupApi } from "#/groups/instance/setup";
+import { OrganizationAuthRecoveryApi } from "#/groups/organization/auth-recovery";
+import { AuthenticationPolicyApi } from "#/groups/organization/authentication-policy";
+import { ConnectionOperationsApi } from "#/groups/organization/connection-operations";
+import { OrganizationDomainsApi } from "#/groups/organization/domains";
+import { OrganizationIdentityConnectionsApi } from "#/groups/organization/identity-connections";
+import { OrganizationInvitationsApi } from "#/groups/organization/invitations";
+import { OrganizationMembersApi } from "#/groups/organization/members";
+import { OrganizationsApi } from "#/groups/organization/organizations";
+import { OrganizationOwnershipApi } from "#/groups/organization/ownership";
+import { OrganizationRoleBindingsApi } from "#/groups/organization/role-bindings";
+import { OrganizationRolesApi } from "#/groups/organization/roles";
+import { TeamsApi } from "#/groups/organization/teams";
 import { ProfileApi } from "#/groups/profile";
-import { ReauthenticationApi } from "#/groups/reauthentication";
-import { SamlApi } from "#/groups/saml";
-import { SessionApi } from "#/groups/session";
-import { SessionsApi } from "#/groups/sessions";
-import { TeamsApi } from "#/groups/teams";
 
 export class PrefaceApi extends HttpApi.make("PrefaceApi")
   .add(

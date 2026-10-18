@@ -10,7 +10,9 @@ import {
 
 import { identityErrors, organizationErrors, requestErrors } from "#/http-errors";
 import { SessionAuthentication } from "#/middleware/session-authentication";
+
 const errors = [...identityErrors, ...organizationErrors, ...requestErrors];
+
 export class AuthenticationPolicyApi extends HttpApiGroup.make("authenticationPolicy")
   .add(
     HttpApiEndpoint.get("methods", "/:organizationId/authentication/methods", {

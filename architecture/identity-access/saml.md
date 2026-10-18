@@ -98,7 +98,7 @@ the normal session cookie while clearing the flow cookie. Deployments must compl
 - [Shared completion](../../packages/application/src/auth/organization-identity/completion.ts)
 - [Node adapter](../../packages/application/src/node/saml.ts)
 - [Certificate adapter](../../packages/crypto/src/node/certificates.ts)
-- [HTTP contracts](../../packages/api/src/groups/saml.ts)
+- [HTTP contracts](../../packages/api/src/groups/auth/saml.ts)
 - [HTTP handlers](../../apps/server/src/http/routes/auth/saml.ts)
 - [Signed SDK tests](../../packages/application/tests/unit/auth/saml-provider.test.ts)
 - [HTTP tests](../../apps/server/tests/integration/http/saml.test.ts)

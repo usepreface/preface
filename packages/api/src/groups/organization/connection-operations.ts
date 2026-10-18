@@ -15,9 +15,13 @@ import {
 
 import { identityErrors, organizationErrors, requestErrors } from "#/http-errors";
 import { SessionAuthentication } from "#/middleware/session-authentication";
+
 const params = { organizationId: OrganizationId, connectionId: IdentityConnectionId };
+
 const keyParams = { ...params, keyId: IdentityConnectionKeyId };
+
 const error = [...identityErrors, ...organizationErrors, ...requestErrors];
+
 export class ConnectionOperationsApi extends HttpApiGroup.make("connectionOperations")
   .add(
     HttpApiEndpoint.get("health", "/health", { params, success: ConnectionHealth, error }),

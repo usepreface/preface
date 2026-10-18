@@ -9,7 +9,9 @@ import {
 
 import { identityErrors, requestErrors } from "#/http-errors";
 import { SessionAuthentication } from "#/middleware/session-authentication";
+
 const errors = [...identityErrors, ...requestErrors];
+
 export class IdentityConnectionsApi extends HttpApiGroup.make("identityConnections")
   .add(
     HttpApiEndpoint.get("getGoogle", "/google", { success: PublicGoogleConnection, error: errors }),

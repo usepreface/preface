@@ -4,6 +4,7 @@ import { PublicUser, UpdateProfileRequest } from "@usepreface/protocol/dto";
 
 import { profileErrors, requestErrors } from "#/http-errors";
 import { SessionAuthentication } from "#/middleware/session-authentication";
+
 export class ProfileApi extends HttpApiGroup.make("profile")
   .add(
     HttpApiEndpoint.get("get", "/me", {

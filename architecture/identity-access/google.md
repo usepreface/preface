@@ -39,7 +39,8 @@ Google access, refresh and identity tokens are not persisted.
 initiating user/session where applicable, state/browser/nonce digests, encrypted PKCE context,
 expiry and claim/consumption/revocation. Authenticated intents require the exact initiating
 session and user. Composite references prevent mismatched source identities. Flows expire
-in ten minutes. The backend currently allows only `/api/docs` as its return destination.
+in ten minutes. Completion accepts bounded relative paths on the configured dashboard origin;
+backend-only deployments return to `/api/docs`. See [completion configuration](enrollment.md#http-and-deployment).
 
 The encrypted temporary PKCE envelope includes flow ID, verifier and the exact nonce/state
 needed by the OIDC library. The ID is validated after decrypt; independent digests provide
@@ -136,9 +137,9 @@ audience, nonce and PKCE/callback exchange. HTTP tests cover secret-free configu
 cancellation and reauthentication. Real deployments must complete the actual Google browser test
 before activation; repository tests do not use operator credentials or send live mail.
 
-This is a backend API with Scalar as its working completion destination. Dashboard integration,
-SAML, Google Workspace domain enforcement, Google-only organization policies,
-provider logout and Google account-deprovisioning notifications are not implemented. A valid
+Completion uses Scalar or the configured dashboard origin. Dashboard UI, Google-only
+organization policies, provider logout and Google account-deprovisioning notifications remain
+pending. [SAML](saml.md) and [domain authority](domains.md) have separate boundaries. A valid
 Google login establishes bounded local evidence; later external provider changes do not instantly
 revoke an already issued Preface session. Local disable/unlink and normal session expiry do.
 
@@ -149,7 +150,7 @@ revoke an already issued Preface session. Local disable/unlink and normal sessio
 - [Google workflows](../../packages/application/src/auth/google)
 - [Email reauthentication](../../packages/application/src/auth/email-reauthentication.ts)
 - [Google adapter](../../packages/application/src/node/google.ts)
-- [HTTP contracts](../../packages/api/src/groups/google.ts)
+- [HTTP contracts](../../packages/api/src/groups/auth/google.ts)
 - [HTTP handlers](../../apps/server/src/http/routes/auth/google.ts)
 - [Workflow tests](../../packages/application/tests/integration/auth/google.test.ts)
 - [Provider validation tests](../../packages/application/tests/unit/auth/google-provider.test.ts)

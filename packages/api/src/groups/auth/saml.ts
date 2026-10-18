@@ -11,6 +11,7 @@ import {
 import { identityErrors, invitationErrors, organizationErrors, requestErrors } from "#/http-errors";
 
 const errors = [...identityErrors, ...invitationErrors, ...organizationErrors, ...requestErrors];
+
 export class SamlApi extends HttpApiGroup.make("saml")
   .add(
     HttpApiEndpoint.get(

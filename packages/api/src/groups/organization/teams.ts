@@ -17,8 +17,11 @@ import {
 
 import { teamErrors, organizationErrors, requestErrors } from "#/http-errors";
 import { SessionAuthentication } from "#/middleware/session-authentication";
+
 const errors = [...teamErrors, ...organizationErrors, ...requestErrors];
+
 const params = { organizationId: OrganizationId, teamId: TeamId };
+
 export class TeamsApi extends HttpApiGroup.make("teams")
   .add(
     HttpApiEndpoint.post("create", "/:organizationId/teams", {

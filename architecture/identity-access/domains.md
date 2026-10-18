@@ -50,6 +50,6 @@ authentication flow when wired.
 - [Repository](../../packages/database/src/repositories/organization/domain.ts)
 - [Workflows](../../packages/application/src/organization/domain/application.ts)
 - [Node DNS](../../packages/application/src/node/domain-dns.ts)
-- [HTTP contracts](../../packages/api/src/groups/organization-domains.ts)
+- [HTTP contracts](../../packages/api/src/groups/organization/domains.ts)
 - [HTTP handlers](../../apps/server/src/http/routes/organization/domains.ts)
 - [Tests](../../packages/application/tests/integration/organization/domains.test.ts)

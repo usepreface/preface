@@ -12,6 +12,7 @@ import { identityErrors, organizationErrors, requestErrors } from "#/http-errors
 import { SessionAuthentication } from "#/middleware/session-authentication";
 
 const errors = [...identityErrors, ...organizationErrors, ...requestErrors];
+
 export class AuditApi extends HttpApiGroup.make("audit")
   .add(
     HttpApiEndpoint.get("organization", "/organizations/:organizationId/audit-events", {

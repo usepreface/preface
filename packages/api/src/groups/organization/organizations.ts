@@ -1,6 +1,5 @@
 import { Schema } from "effect";
-import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/http-api";
-import { HttpApiSchema } from "effect/http-api";
+import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema, OpenApi } from "effect/http-api";
 
 import { OrganizationId } from "@usepreface/protocol";
 import {

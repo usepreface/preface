@@ -50,6 +50,7 @@ export const teamErrors = Record.keys(TeamError.statuses).map((code) =>
     HttpApiSchema.status(TeamError.statuses[code]),
   ),
 );
+
 export const profileErrors = Record.keys(ProfileError.statuses).map((code) =>
   Schema.Struct({ ...ProfileError.fields, code: Schema.Literal(code) }).pipe(
     HttpApiSchema.status(ProfileError.statuses[code]),

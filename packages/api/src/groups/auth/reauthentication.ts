@@ -11,7 +11,9 @@ import {
 
 import { identityErrors, requestErrors } from "#/http-errors";
 import { SessionAuthentication } from "#/middleware/session-authentication";
+
 const errors = [...identityErrors, ...requestErrors];
+
 export class ReauthenticationApi extends HttpApiGroup.make("reauthentication")
   .add(
     HttpApiEndpoint.post("requestEmail", "/email/request", {

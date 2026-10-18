@@ -19,8 +19,11 @@ import { identityErrors, organizationErrors, requestErrors } from "#/http-errors
 import { SessionAuthentication } from "#/middleware/session-authentication";
 
 const organization = { organizationId: OrganizationId };
+
 const connection = { ...organization, connectionId: IdentityConnectionId };
+
 const errors = [...identityErrors, ...organizationErrors, ...requestErrors];
+
 export class OrganizationIdentityConnectionsApi extends HttpApiGroup.make(
   "organizationIdentityConnections",
 )

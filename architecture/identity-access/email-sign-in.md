@@ -74,8 +74,8 @@ Email expiry and terminal payload removal belong to the email worker. Cleanup
 failure logs a bounded message and retries next cycle; it does not alter proof
 validity checks.
 
-Additional-address management, Google, enterprise SSO and the sign-in
-UI are not implemented. This phase does not add distributed request throttling.
+Additional-address management and sign-in UI remain pending. [Google](google.md) and
+[enterprise SSO](oidc.md) use separate provider flows. Sign-in adds no distributed request throttling.
 
 ## Verification and source
 

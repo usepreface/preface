@@ -13,7 +13,9 @@ import { identityErrors, organizationErrors, requestErrors } from "#/http-errors
 import { SessionAuthentication } from "#/middleware/session-authentication";
 
 const params = { organizationId: OrganizationId };
+
 const errors = [...identityErrors, ...organizationErrors, ...requestErrors];
+
 export class OrganizationAuthRecoveryApi extends HttpApiGroup.make("organizationAuthRecovery")
   .add(
     HttpApiEndpoint.get("get", "/", {

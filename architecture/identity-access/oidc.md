@@ -135,8 +135,8 @@ reauthentication against the built backend and PostgreSQL. Its development conne
 CA-verified HTTPS client; callbacks/session cookies completed in an incognito browser.
 
 OIDC supports backend-only Scalar completion or a configured dashboard destination. Required SSO and offline recovery are
-implemented in the [enforcement boundary](required-sso.md). SAML is implemented in its [own boundary](saml.md). Domain routing, SCIM, provider
-logout and immediate external employee revocation notifications are not implemented. A provider disabling an employee does not instantly
+implemented in the [enforcement boundary](required-sso.md). SAML is implemented in its [own boundary](saml.md). [Domain routing](domains.md) and [external enrollment](enrollment.md) are separate boundaries. SCIM,
+provider logout and immediate external employee revocation notifications are not implemented. A provider disabling an employee does not instantly
 revoke existing local evidence; local source checks and session expiry still apply. Provider
 compatibility is limited to the documented profile and must be verified against the deployment's
 actual provider using the built-in browser test before activation.
@@ -150,7 +150,7 @@ actual provider using the built-in browser test before activation.
 - [OIDC SDK adapter](../../packages/application/src/node/oidc.ts)
 - [Outbound transport](../../packages/application/src/node/oidc/http.ts)
 - [Organization access](../../packages/application/src/organization/access.ts)
-- [HTTP contracts](../../packages/api/src/groups/organization-identity-connections.ts)
+- [HTTP contracts](../../packages/api/src/groups/organization/identity-connections.ts)
 - [HTTP sign-in/callback](../../apps/server/src/http/routes/auth/oidc.ts)
 - [Workflow tests](../../packages/application/tests/integration/auth/oidc.test.ts)
 - [HTTP tests](../../apps/server/tests/integration/http/oidc.test.ts)

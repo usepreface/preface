@@ -82,12 +82,13 @@ removal cascades, cross-organization lookup, archival, required-audit rollback, 
 preservation and clearing, revoked actors, atomic invitation admission and stale team assignments.
 HTTP tests exercise typed profile/team payloads, role grants and public metadata codecs.
 Disposable PostgreSQL additionally exercises shared organization locking and packaged startup.
-No dashboard integration, images service, enterprise SSO or external directory provisioning is wired.
+Dashboard integration, image uploads and external directory provisioning remain pending.
+Organization authentication, including [required SSO](required-sso.md), applies to team access.
 
 - [Metadata schemas](../../packages/protocol/src/metadata)
 - [Team persistence](../../packages/database/src/schema/organization/team.ts)
 - [Team queries](../../packages/database/src/repositories/organization/team.ts)
 - [Team workflows](../../packages/application/src/organization/team)
 - [Profile workflow](../../packages/application/src/profile/user.ts)
-- [HTTP contracts](../../packages/api/src/groups/teams.ts)
+- [HTTP contracts](../../packages/api/src/groups/organization/teams.ts)
 - [Team tests](../../packages/application/tests/integration/organization/teams.test.ts)

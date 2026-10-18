@@ -1,3 +1,5 @@
+import { fileURLToPath } from "node:url";
+
 import defineConfig from "klarity/tsdown/library";
 import type { UserConfig } from "tsdown";
 
@@ -14,4 +16,3 @@ export default defineConfig({
   publint: "ci-only",
   unbundle: true,
 }) as UserConfig;
-import { fileURLToPath } from "node:url";

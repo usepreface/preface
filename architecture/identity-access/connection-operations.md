@@ -69,7 +69,7 @@ Sources: [key workflows](../../packages/application/src/auth/saml/keys.ts),
 [health](../../packages/application/src/auth/organization-identity/health.ts),
 [maintenance](../../packages/application/src/auth/organization-identity/maintenance.ts),
 [key storage](../../packages/database/src/schema/auth/identity-connection-key.ts),
-[HTTP contracts](../../packages/api/src/groups/connection-operations.ts).
+[HTTP contracts](../../packages/api/src/groups/organization/connection-operations.ts).
 
 ## IdP application tile
 

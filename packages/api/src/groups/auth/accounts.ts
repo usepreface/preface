@@ -5,6 +5,7 @@ import { AccountList, GoogleStartRequest, GoogleStartResult } from "@usepreface/
 
 import { identityErrors, organizationErrors, requestErrors } from "#/http-errors";
 import { SessionAuthentication } from "#/middleware/session-authentication";
+
 export class AccountsApi extends HttpApiGroup.make("accounts")
   .add(
     HttpApiEndpoint.get("list", "/", {

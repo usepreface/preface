@@ -151,7 +151,7 @@ repositories and cover JSON mutations, cookie authentication, CORS and managemen
 - [Repositories](../../packages/database/src/repositories/organization)
 - [Access checks](../../packages/application/src/organization/access.ts)
 - [Application workflows](../../packages/application/src/organization)
-- [HTTP contracts](../../packages/api/src/groups/organizations.ts)
+- [HTTP contracts](../../packages/api/src/groups/organization/organizations.ts)
 - [HTTP handlers](../../apps/server/src/http/routes/organization/organizations.ts)
 - [Application tests](../../packages/application/tests/integration/organization)
 - [HTTP tests](../../apps/server/tests/integration/http/organizations.test.ts)

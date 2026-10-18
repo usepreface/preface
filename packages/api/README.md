@@ -129,7 +129,8 @@ accept `includeRemoved`. Archived organization discovery is owner-only. Detail r
 
 Owner-only transitions preserve a usable owner. Custom roles/assignments are bounded
 by the actor's delegation rights. Invitations own additional admission; there is no
-direct member-creation endpoint. Owners can opt into Google with the policy editor below; organization OIDC is available as described below; required SSO and recovery are described below; organization SAML is described below. These endpoints are backend-only.
+direct member-creation endpoint. Organization owners configure accepted Google, OIDC and SAML methods through the policy editor.
+The authentication sections below describe connection setup, required SSO and owner recovery.
 
 `OrganizationError` codes map invalid input to 400, insufficient authority/evidence
 to 403, scoped missing organization/member/role/binding to 404, and lifecycle or
@@ -138,15 +139,15 @@ uniqueness conflicts to 409. Outsiders and removed/suspended memberships receive
 
 ## Invitations
 
-| Method | Path                                                              | Result                                                    |
-| ------ | ----------------------------------------------------------------- | --------------------------------------------------------- |
-| POST   | `/organizations/:organizationId/invitations`                      | 201 `PublicInvitation`                                    |
-| GET    | `/organizations/:organizationId/invitations`                      | `InvitationList`                                          |
-| POST   | `/organizations/:organizationId/invitations/:invitationId/resend` | `PublicInvitation`                                        |
-| DELETE | `/organizations/:organizationId/invitations/:invitationId`        | 204                                                       |
-| POST   | `/invitations/inspect`                                            | `InvitationPreview`                                       |
-| POST   | `/invitations/verification/request`                               | 202 challenge identity/expiry; browser cookie             |
-| POST   | `/invitations/accept`                                             | 201 `{ actor, organizationId, memberId }`; session cookie |
+| Method | Path                                                              | Result                                                                |
+| ------ | ----------------------------------------------------------------- | --------------------------------------------------------------------- |
+| POST   | `/organizations/:organizationId/invitations`                      | 201 `PublicInvitation`                                                |
+| GET    | `/organizations/:organizationId/invitations`                      | `InvitationList`                                                      |
+| POST   | `/organizations/:organizationId/invitations/:invitationId/resend` | `PublicInvitation`                                                    |
+| DELETE | `/organizations/:organizationId/invitations/:invitationId`        | 204                                                                   |
+| POST   | `/invitations/inspect`                                            | `InvitationPreview`                                                   |
+| POST   | `/invitations/verification/request`                               | 202 challenge identity/expiry; browser cookie                         |
+| POST   | `/invitations/accept`                                             | 201 `{ nextAction, actor, organizationId, memberId }`; session cookie |
 
 Paths use the same `/api/v1` prefix. Typed-client groups are `organizationInvitations`
 and `invitations`. Management requires cookie authentication; listing/revocation need
@@ -235,7 +236,7 @@ proof are enforced by application workflows.
 
 `accounts.list/startGoogle/unlink` map to GET `/users/me/accounts`, POST its `/google/start`, and
 DELETE `/:accountId`. `reauthentication.startGoogle` maps to POST `/auth/reauthentication/google/start`.
-All starts accept `{ returnPath?: "/api/docs" }`. Account responses include safe provider email,
+All starts accept `{ returnPath?: string }` with a bounded relative path on the configured frontend origin. Account responses include safe provider email,
 link history and connection availability; they contain neither stable provider subjects nor tokens.
 
 `reauthentication.requestEmail/resendEmail/verifyEmail` map to POST

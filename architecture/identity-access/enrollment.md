@@ -98,7 +98,7 @@ unsolicited IdP-initiated SAML or provider logout is implied by these workflows.
 - [Completion and proof modules](../../packages/application/src/auth/external)
 - [Shared invitation admission](../../packages/application/src/organization/invitation/admission.ts)
 - [Flow storage](../../packages/database/src/schema/auth/auth-flow.ts)
-- [HTTP contracts](../../packages/api/src/groups/external-authentication.ts)
+- [HTTP contracts](../../packages/api/src/groups/auth/external.ts)
 - [Discovery](../../packages/application/src/auth/discovery.ts)
 - [HTTP handlers](../../apps/server/src/http/routes/auth/external.ts)
 - [Workflow tests](../../packages/application/tests/integration/auth/enrollment.test.ts)
