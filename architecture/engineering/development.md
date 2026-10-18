@@ -41,6 +41,14 @@ Tests compose actual repositories/application code and substitute external capab
 at their owning boundary. Keep assertions about meaningful outcomes and durable
 effects instead of repeating ordinary database constraints or type checking.
 
+Authentication release verification combines the migrated application/HTTP suites with the built
+server PostgreSQL smoke lane. It exercises startup gating, operator-link replacement, restart and
+failed-preparation recovery. Cross-organization enrollment races use PostgreSQL; resumable mailbox
+verification protects durable failed attempts and a retry after final admission/audit rollback.
+The [provider matrix](../identity-access/providers.md) distinguishes real local-provider checks from
+SDK fixtures. Controlled browser destinations verify credentialed CORS, HttpOnly session behavior
+and logout without introducing dashboard implementation into backend tests.
+
 ## Extending the foundation
 
 Add the contracts required by a workflow, then persistence, application coordination,

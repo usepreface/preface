@@ -13,15 +13,12 @@ export const AuthenticationMaintenanceLayer = Layer.effectDiscard(
     yield* Effect.gen(function* () {
       let cursor: IdentityConnectionId | undefined;
       while (true) {
-        const scanned = yield* maintainConnections(cursor).pipe(
-          Effect.map((next) => ({ ok: true as const, next })),
+        const nextCursor = yield* maintainConnections(cursor).pipe(
           Effect.catch(() =>
-            Effect.logError("auth.connection_maintenance.failed").pipe(
-              Effect.as({ ok: false as const, next: cursor }),
-            ),
+            Effect.logError("auth.connection_maintenance.failed").pipe(Effect.as(cursor)),
           ),
         );
-        cursor = scanned.next;
+        cursor = nextCursor;
         const removed = yield* repository
           .deleteExpiredBatch()
           .pipe(

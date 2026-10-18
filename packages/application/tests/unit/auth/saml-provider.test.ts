@@ -1,4 +1,5 @@
 import { DateTime, Effect, Layer, Redacted } from "effect";
+import { TestClock } from "effect/testing";
 
 import { CertificateCrypto } from "@usepreface/crypto";
 import { NodeCertificateCrypto } from "@usepreface/crypto/node";
@@ -33,6 +34,26 @@ describe("SAML SDK adapter", () => {
           "immutable-employee-42",
         ]);
         expect(DateTime.toEpochMillis(verified.authenticatedAt)).toBe(authenticatedAt.getTime());
+        const retired = yield* (yield* CertificateCrypto)
+          .generateSigningCertificate()
+          .pipe(Effect.provide(TestClock.layer()));
+        if (issuer.configuration.idp === null) throw new Error("Expected IdP");
+        const overlapping = yield* provider.validateResponse({
+          ...issuer,
+          configuration: {
+            ...issuer.configuration,
+            idp: {
+              ...issuer.configuration.idp,
+              signingCertificates: [
+                retired.certificate,
+                ...issuer.configuration.idp.signingCertificates,
+              ],
+            },
+          },
+          requestId,
+          response: issuer.response(requestId),
+        });
+        expect(overlapping.subject).toBe(verified.subject);
         const metadata = yield* provider.metadata(issuer);
         expect(metadata).toContain('AuthnRequestsSigned="true"');
         expect(metadata).not.toContain("PRIVATE KEY");
