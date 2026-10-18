@@ -7,7 +7,9 @@
     },
     "dev": {
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "dependsOn": ["//#dev:setup"],
+      "passThroughEnv": ["NODE_EXTRA_CA_CERTS"]
     },
     "lint": {
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/oxlint.config.ts"],
@@ -25,6 +27,9 @@
     "test:watch": {
       "cache": false,
       "persistent": true
+    },
+    "//#dev:setup": {
+      "cache": false
     }
   }
 }

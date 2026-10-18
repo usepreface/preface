@@ -21,8 +21,8 @@ Configuration-free help/version do not acquire PostgreSQL. The proof lifecycle a
 first-owner transaction belong to [instance setup](../identity-access/instance-setup.md).
 
 Node receives SIGTERM/SIGINT through the scoped Effect runtime. Shutdown stops new
-requests, allows up to 15 seconds for active requests and releases resources. Compose
-allows 20 seconds before forcing exit. The scoped email worker starts after startup preparation and stops with the runtime.
+requests, allows up to 15 seconds for active requests and releases resources. Deployment
+should allow at least 20 seconds before forcing exit. The scoped email worker starts after startup preparation and stops with the runtime.
 A second scoped task removes expired sign-in and invitation proofs in bounded batches.
 The operator CLI starts neither worker.
 
@@ -78,10 +78,12 @@ Its response-specific CSP permits only hashes of the actual bundled inline scrip
 same-origin API connections and the inline styles Scalar needs. The reference is
 marked noindex/no-follow.
 
-Compose runs PostgreSQL with a persistent volume and no published database port,
-plus a non-root backend image exposing container port 8080. The host publication
-defaults to loopback:8080. The image contains built workspace dependencies and
-migrations; landing and UI sources are excluded from its build context.
+The local Compose project runs PostgreSQL and HTTPS Keycloak with persistent volumes
+and loopback-only publications. The root development workflow runs the backend on
+the host; [development](../engineering/development.md) owns generated defaults and TLS.
+The separate non-root backend image contains built dependencies and migrations;
+landing and UI sources are excluded from its build context. Production hosting and
+its database/provider configuration are supplied by the operator.
 
 Organization OIDC uses the existing encryption key and public origin. Its Node adapter enforces
 an outbound HTTPS/DNS policy. `OIDC_ALLOWED_PRIVATE_ORIGINS` optionally permits exact internal

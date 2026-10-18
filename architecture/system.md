@@ -48,7 +48,7 @@ check membership, role bindings and acceptable evidence under the organization p
 
 One server composition shares the PostgreSQL pool, transaction service,
 repositories, migrations and application workflows. The listener opens only after
-migrations and committed instance preparation. The Compose stack contains PostgreSQL and this backend, with an in-process email
+migrations and committed instance preparation. Local Compose supplies PostgreSQL and Keycloak; the host backend runs an in-process email
 worker and no dashboard.
 
 Business state, durable email intent and required audit rows commit in one transaction.

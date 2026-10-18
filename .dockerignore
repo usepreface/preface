@@ -1,4 +1,6 @@
 .git
+.local
+.cache
 **/node_modules
 **/dist
 **/.turbo

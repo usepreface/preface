@@ -6,15 +6,17 @@ pnpm 12.14.0 and the Preface backend.
 
 ## Run locally
 
-Install workspace dependencies with `pnpm install`. Configure the backend's
-`PUBLIC_URL=http://localhost:8080` and `DASHBOARD_URL=http://localhost:3000`.
-Configure PostgreSQL and an email provider as described in the
-[server README](../server/README.md), then run both apps:
+Install workspace dependencies with `pnpm install`. From the root, run:
 
 ```sh
-pnpm --filter @usepreface/server dev
-pnpm --filter @usepreface/dashboard dev
+pnpm services:up
+pnpm dev
 ```
+
+This starts local PostgreSQL and Keycloak, then runs the backend, dashboard and
+landing page. Generated defaults configure `PUBLIC_URL=http://localhost:8080`,
+`DASHBOARD_URL=http://localhost:3000` and console email. Optional backend overrides
+belong in `apps/server/.env`; see the [server README](../server/README.md).
 
 Open the operator link printed by the backend to initialize an empty instance.
 Development runs on port 3000 and proxies `/api` to localhost:8080. The browser

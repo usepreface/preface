@@ -15,6 +15,7 @@ coverage/
 *.tsbuildinfo
 
 # Local environment and credentials
+/.local/
 .env
 .env.*
 !.env.example

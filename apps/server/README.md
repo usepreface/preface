@@ -4,62 +4,72 @@ Preface's Node.js 24 backend. Runs migrations and instance preparation before op
 listener, serves the shared Effect HTTP API, and provides local operator commands. Development
 requires pnpm 12.14.0 and PostgreSQL. Docker Compose includes PostgreSQL.
 
-## Run with Docker Compose
-
-From the repository root:
-
-```sh
-cp .env.example .env
-# Edit .env: set database password, public origin, two crypto keys and email provider.
-docker compose up --build --detach --wait
-docker compose logs server
-```
-
-The server binds to loopback on port 8080 by default. PostgreSQL has a persistent volume and no
-published host port. For public deployment, terminate HTTPS at your reverse proxy and configure
-`PUBLIC_URL` with its external origin. Change `SERVER_BIND_ADDRESS` deliberately if the proxy
-cannot reach the default loopback binding. Back up the PostgreSQL volume before upgrades.
-
-On an empty database, startup commits the installation, default settings and a 30-minute setup
-proof, then prints its one-time operator link. Restarting preserves a valid pending proof. If the
-output is lost, replace it explicitly:
-
-```sh
-docker compose exec server preface instance setup-link reissue
-```
-
-Replacement invalidates the previous proof and refuses an already completed installation.
-Treat the printed link as a credential. Its proof is in the URL fragment, outside HTTP request
-paths and queries. Routine logs never contain request bodies, cookies or setup credentials.
-
-The backend serves the API and reference, while the [dashboard](../dashboard/README.md)
-serves onboarding and administration. Run or host the dashboard separately and set
-`DASHBOARD_URL` to its exact origin. The printed `/setup#token=…` link then opens its
-instance-name/owner-name/email form, followed by code verification and organization
-creation. A returning owner can sign in later even without an organization.
-
-The backend image does not serve dashboard assets. With no dashboard configured,
-use the same-origin Scalar reference at `/api/docs` for API operations. Invitation
-and email links require the dashboard pages; codes work on internal hosts in the
-browser that requested them. Image uploads and knowledge ingestion remain unavailable.
-
 ## Develop locally
 
-Copy `apps/server/.env.example` to `apps/server/.env` and configure an existing local PostgreSQL
-database. Generate both crypto keys and select the explicit console provider for development.
-The server's commands load that package-local `.env` explicitly; imports never load it.
+From the repository root, with Docker running:
+
+```sh
+pnpm services:up
+pnpm dev
+```
+
+The root workflow starts PostgreSQL and Keycloak, then runs the server, dashboard
+and landing page through Turbo. Development PostgreSQL credentials are `preface`
+for database, username and password. Stop app watchers with Ctrl+C; run
+`pnpm services:down` to stop infrastructure without deleting its data.
+
+Setup generates `.local/development/server.env` with loopback origins, console email,
+independent random crypto keys and trust for local Keycloak HTTPS. It runs before
+Turbo's persistent dev tasks. The server's `dev` and `preface` scripts load those
+fallback values, then optional `apps/server/.env` overrides. Package-local commands
+honor shell overrides; root Turbo also passes through `NODE_EXTRA_CA_CERTS`. Existing files and non-empty keys are never rewritten.
+Keep the generated crypto keys for as long as the development database is retained.
+
+The server runs on port 8080 and the dashboard on port 3000. On an empty database,
+startup creates the installation and default settings and prints a 30-minute operator
+link. Open it to enter the instance name, owner name and email, then verify the code
+printed by the development email provider. Setup creates the owner session; an
+organization can be created immediately or later.
+
+If a pending link is lost or expired, replace it locally:
+
+```sh
+pnpm --filter @usepreface/server preface instance setup-link reissue
+```
+
+Replacement invalidates the previous proof and refuses an already completed
+installation. Treat the printed link as a credential. Its proof is in the URL
+fragment; routine request logs omit bodies, cookies and setup credentials.
+
+To run just the backend after services are ready:
 
 ```sh
 pnpm --filter @usepreface/server dev
 pnpm --filter @usepreface/server preface --help
-pnpm --filter @usepreface/server preface instance setup-link reissue
+```
+
+See the [root development guide](../../README.md#local-development) for service URLs,
+Keycloak credentials and generated configuration. To use a separate database/provider,
+set overrides in `apps/server/.env` using `.env.example` as the reference.
+
+## Build and deploy
+
+```sh
 pnpm exec turbo run build --filter=@usepreface/server
 pnpm --filter @usepreface/server start
 ```
 
-The Docker image uses the built CLI and production dependencies, includes database migrations,
-and runs as the unprivileged `node` user. `preface --help` and `preface --version` require neither
-deployment configuration nor a database connection.
+`start` loads only the package-local `.env` and shell configuration; it does not load
+local development defaults. Deployment requires PostgreSQL, stable crypto keys and a
+real email provider. The root `.env.example` describes the required configuration.
+
+Build the backend image with `docker build -f apps/server/Dockerfile -t preface-server .`.
+It runs as the unprivileged `node` user and contains built dependencies and migrations.
+The repository Compose file supplies local services only; it does not deploy this
+image. Terminate HTTPS at the deployment proxy and set `PUBLIC_URL` to its external
+origin. The dashboard is hosted separately and configured through `DASHBOARD_URL`.
+The image does not serve dashboard assets. `preface --help` and `preface --version`
+require neither deployment configuration nor a database connection.
 
 ## HTTP API
 
@@ -81,7 +91,7 @@ The [API package](../../packages/api/README.md) owns the transport contract and 
 
 Pending instance setup is healthy: an operator must be able to finish onboarding. No listener
 opens if migrations or startup preparation fail. Shutdown stops admission, allows up to 15 seconds
-for active requests, and releases scoped resources. Compose allows 20 seconds before forcing exit.
+for active requests, and releases scoped resources. Allow at least 20 seconds before forcing container shutdown.
 
 Scalar is bundled with the pinned Effect dependency and needs no third-party CDN or fonts. Its
 CSP permits only the exact bundled script hashes; API connections stay on the same origin.
@@ -93,22 +103,22 @@ document. Proof replacement is exclusively a local CLI command.
 The [database configuration](../../packages/database/README.md#configuration) is required by
 `serve` and proof replacement. Secrets use Effect `Config`/`Redacted`.
 
-| Variable               | Default   | Meaning                                                                                                                         |
-| ---------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `PUBLIC_URL`           | Required  | Canonical HTTPS origin; HTTP allowed only for loopback development. No credentials, subpath, query or fragment.                 |
-| `SERVER_HOST`          | `0.0.0.0` | Node listener address.                                                                                                          |
-| `SERVER_PORT`          | `8080`    | Node listener port. In Compose, this variable instead controls the host's published port; the container always listens on 8080. |
-| `CORS_ALLOWED_ORIGINS` | Empty     | Comma-separated additional browser origins. `PUBLIC_URL` is always allowed.                                                     |
-| `TRUSTED_PROXY_CIDRS`  | Empty     | Comma-separated proxy IP networks trusted for `X-Forwarded-For`.                                                                |
+| Variable               | Default   | Meaning                                                                                                         |
+| ---------------------- | --------- | --------------------------------------------------------------------------------------------------------------- |
+| `PUBLIC_URL`           | Required  | Canonical HTTPS origin; HTTP allowed only for loopback development. No credentials, subpath, query or fragment. |
+| `SERVER_HOST`          | `0.0.0.0` | Node listener address.                                                                                          |
+| `SERVER_PORT`          | `8080`    | Node listener port.                                                                                             |
+| `CORS_ALLOWED_ORIGINS` | Empty     | Comma-separated additional browser origins. `PUBLIC_URL` is always allowed.                                     |
+| `TRUSTED_PROXY_CIDRS`  | Empty     | Comma-separated proxy IP networks trusted for `X-Forwarded-For`.                                                |
 
 Setup also requires `CRYPTO_ENCRYPTION_KEY`, `CRYPTO_HMAC_KEY`, `EMAIL_PROVIDER`,
 `EMAIL_FROM` and the selected provider's credentials. Generate each 32-byte base64 key
 independently with `openssl rand -base64 32`; keep them stable across replicas/restarts
 and preserve them with backups. Legacy `EMAIL_ENCRYPTION_KEY` remains a fallback for
-the encryption key in direct server deployments. Compose uses the new explicit names.
+the encryption key in direct server deployments.
 The [email README](../../packages/emails/README.md#configuration) documents provider variables.
 
-Production Compose defaults to `NODE_ENV=production` and requires a real provider.
+Production requires a real provider.
 For local console delivery, explicitly set both `NODE_ENV=development` and
 `EMAIL_PROVIDER=development`; logs then include verification codes. There is no
 silent delivery fallback. Configuration errors prevent binding, while transient

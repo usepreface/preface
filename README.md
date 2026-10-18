@@ -24,12 +24,12 @@ PGlite/PostgreSQL test layers, and instance, auth and audit tables/repositories 
 schemas. Protocol provides storage models, public bootstrap/session contracts and branded identities.
 Application implements first-owner setup, browser-bound email code/link sign-in, sessions and
 organization creation, membership, roles and ownership. The server wires
-startup preparation, operator links, HTTP handlers, always-available Scalar/OpenAPI and Compose
+startup preparation, operator links, HTTP handlers and always-available Scalar/OpenAPI
 on port 8080. The dashboard defaults to port 3000 and the landing page to port 4000. The dashboard connects setup, sign-in, organizations, teams, roles, invitations and enterprise authentication.
 
 Start with the [architecture index](architecture/README.md) for system boundaries, contracts,
 identity flows, storage, runtime and frontend ownership. The [server README](apps/server/README.md)
-explains deployment configuration and starting the Compose stack.
+explains backend configuration and deployment.
 
 ## Setup
 
@@ -47,6 +47,52 @@ package keep their versions in that package's manifest. Catalog mode is `manual`
 dependencies are not automatically added to the catalog. Workspace packages live under
 `apps/*` and `packages/*`. Copy `packages/template` to start an internal package; its README covers setup and
 source-first development with the `preface-source` condition.
+
+## Local development
+
+With Docker running and `openssl` available, start from the repository root:
+
+```sh
+pnpm services:up
+pnpm dev
+```
+
+`services:up` starts healthy PostgreSQL and Keycloak containers from `compose.yaml`.
+Database name, username and password are all `preface`. Keycloak's admin username and
+password are also `preface`. These fixed credentials and loopback ports are for local
+use only; the development Compose file does not read the root `.env`.
+
+`pnpm dev` uses Turbo to run the server, dashboard and landing page. The UI kit stays
+separate: `pnpm --filter @usepreface/uikit dev`.
+
+| App                     | URL                            |
+| ----------------------- | ------------------------------ |
+| Dashboard               | http://localhost:3000          |
+| Landing page            | http://localhost:4000          |
+| Backend / API reference | http://localhost:8080/api/docs |
+| Keycloak admin          | https://localhost:8443/admin   |
+| PostgreSQL              | `127.0.0.1:5432`               |
+
+Setup generates `.local/development/server.env` with stable random crypto keys and
+console email delivery, plus a local Keycloak certificate. No manual `.env` copy or
+key generation is required. The server loads those defaults before optional
+`apps/server/.env` overrides; existing overrides and keys are never changed. Keep the
+generated directory while retaining the database, because it contains encryption keys.
+
+Open the operator link printed by the server to set up the instance. Email codes
+appear in the same terminal. Keycloak uses HTTPS to work with Preface's provider
+policy; accept its self-signed development certificate in your browser when opening
+it locally. The backend trusts only that added certificate, without changing system
+trust. Create a Keycloak realm/client when you want to configure an SSO connection.
+
+Stop the app watchers with Ctrl+C, then stop the services:
+
+```sh
+pnpm services:down
+```
+
+Stopping services preserves database and Keycloak volumes. These persistent local
+services are separate from the disposable infrastructure used by automated tests.
 
 ## Commands
 
@@ -66,7 +112,9 @@ source-first development with the `preface-source` condition.
 | `pnpm test:dashboard`  | Build the SPA and run browser workflows against disposable PostgreSQL, Keycloak and Mailpit                |
 | `pnpm test:uikit`      | Run Chromium keyboard and pointer regressions against shared components in the UI Kit                      |
 | `pnpm typecheck:tests` | Typecheck root infrastructure and browser fixtures                                                         |
-| `pnpm dev`             | Run workspace development tasks through Turborepo                                                          |
+| `pnpm services:up`     | Start healthy local PostgreSQL and Keycloak services                                                       |
+| `pnpm services:down`   | Stop local services while retaining their data                                                             |
+| `pnpm dev`             | Start server, dashboard and landing page through Turborepo                                                 |
 
 Workspace checks and builds run across the workspace. Database tests cover configuration,
 error mapping, transactions and migrations with PGlite; an opt-in PostgreSQL lane verifies the

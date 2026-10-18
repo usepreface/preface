@@ -8,6 +8,8 @@
     "tooling/testing/**/*.ts",
     "tests/e2e/**/*.ts",
     "playwright.config.ts",
-    "playwright.dashboard.config.ts"
+    "playwright.dashboard.config.ts",
+    "tooling/development/**/*.ts",
+    "tests/unit/development/**/*.ts"
   ]
 }

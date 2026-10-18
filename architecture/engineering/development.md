@@ -5,6 +5,31 @@ Package manifests own their dependencies. The manual default catalog holds share
 versions; package-specific dependencies remain local. Klarity supplies the common
 TypeScript, build, formatting, lint and Git-hook presets.
 
+## Local service and process ownership
+
+`pnpm services:up` prepares local defaults and starts the `preface-dev` Compose
+project, waiting for PostgreSQL and Keycloak health checks. Credentials are fixed to
+`preface`; published ports bind only to IPv4 loopback. `services:down` removes
+containers/network while preserving named data volumes. Keycloak's development-file
+database retains realms separately from Preface's PostgreSQL database.
+
+The root `pnpm dev` filters Turbo to server, dashboard and landing. Their uncached,
+persistent tasks depend on one uncached root `dev:setup` task. Package watchers own
+process lifetime; infrastructure has its own explicit lifecycle. No build or test
+container is a prerequisite for development, and UI kit development is opt-in.
+
+Preparation writes ignored `.local/development/server.env` and Keycloak TLS files
+only when absent. Random crypto keys and the local TLS identity persist across
+restarts. The server's dev/CLI scripts load generated defaults before optional
+package-local `.env` overrides; production `start` never loads the dev defaults.
+Deleting this directory while retaining encrypted database state loses its generated keys.
+
+Keycloak listens on local HTTPS port 8443. Node loads its generated CA through
+`NODE_EXTRA_CA_CERTS` before Node starts; the private-origin exception is exact.
+Turbo passes through an explicit shell CA override. Browsers must accept
+the self-signed local certificate separately. This does not disable verification,
+change system trust or configure an organization connection automatically.
+
 ## Source and built boundaries
 
 Backend libraries use unbundled ESM builds with explicit package exports. Development
@@ -117,6 +142,8 @@ never an input to runtime code or maintained documentation.
 ## Source
 
 - [Workspace scripts](../../package.json)
+- [Development services](../../compose.yaml)
+- [Development preparation](../../tooling/development)
 - [Turbo tasks](../../turbo.json)
 - [Contributor guidance](../../AGENTS.md)
 - [Protocol build](../../packages/protocol/tsdown.config.ts)

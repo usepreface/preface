@@ -1,17 +1,56 @@
+# Local development services only. Credentials are intentionally public.
+name: preface-dev
+
 services:
   postgres:
     image: postgres:17-alpine
     environment:
-      POSTGRES_USER: ${POSTGRES_USERNAME:-preface}
-      POSTGRES_DB: ${POSTGRES_DATABASE:-preface}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-preface}
+      POSTGRES_USER: preface
+      POSTGRES_DB: preface
+      POSTGRES_PASSWORD: preface
+    ports:
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      test: ["CMD-SHELL", "pg_isready -U preface -d preface"]
       interval: 5s
       timeout: 3s
       retries: 10
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.8.1
+    command: ["start-dev"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: preface
+      KC_BOOTSTRAP_ADMIN_PASSWORD: preface
+      KC_HOSTNAME: https://localhost:8443
+      KC_HTTP_ENABLED: "false"
+      KC_HTTPS_CERTIFICATE_FILE: /opt/keycloak/conf/dev-tls/certificate.pem
+      KC_HTTPS_CERTIFICATE_KEY_FILE: /opt/keycloak/conf/dev-tls/private.key
+      KC_HEALTH_ENABLED: "true"
+      KC_HTTP_MANAGEMENT_SCHEME: http
+      JAVA_OPTS_KC_HEAP: "-Xms256m -Xmx768m"
+    ports:
+      - "127.0.0.1:8443:8443"
+    volumes:
+      - keycloak-data:/opt/keycloak/data
+      - ./.local/development/keycloak:/opt/keycloak/conf/dev-tls:ro
+    healthcheck:
+      test:
+        - CMD
+        - bash
+        - -ec
+        - >-
+          exec 3<>/dev/tcp/127.0.0.1/9000;
+          printf 'HEAD /health/ready HTTP/1.0\r\n\r\n' >&3;
+          IFS= read -r status <&3;
+          [[ "$$status" == *" 200 "* ]]
+      interval: 5s
+      timeout: 3s
+      start_period: 30s
+      retries: 24
+
 volumes:
   postgres-data:
+  keycloak-data:

@@ -18,7 +18,7 @@
   },
   "scripts": {
     "build": "tsdown --config tsdown.config.ts",
-    "dev": "node --env-file-if-exists=.env --conditions=preface-source --watch src/main.ts serve",
+    "dev": "NODE_EXTRA_CA_CERTS=${NODE_EXTRA_CA_CERTS:-../../.local/development/keycloak/certificate.pem} node --env-file-if-exists=../../.local/development/server.env --env-file-if-exists=.env --conditions=preface-source --watch src/main.ts serve",
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check .",
     "lint": "oxlint --deny-warnings .",
@@ -28,7 +28,7 @@
     "test": "NODE_OPTIONS=--conditions=preface-source vitest run",
     "test:built": "pnpm --workspace-root exec turbo run build --filter=@usepreface/server && node --test tests/smoke/built.test.mjs",
     "start": "node --env-file-if-exists=.env dist/main.js serve",
-    "preface": "node --env-file-if-exists=.env --conditions=preface-source src/main.ts"
+    "preface": "node --env-file-if-exists=../../.local/development/server.env --env-file-if-exists=.env --conditions=preface-source src/main.ts"
   },
   "dependencies": {
     "@effect/platform-node": "catalog:",
