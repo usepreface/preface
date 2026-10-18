@@ -56,3 +56,5 @@ export {
   SamlCallbackInput,
   CompleteSamlFlowInput,
 } from "#/input/auth/saml";
+
+export * from "#/input/organization/domain";

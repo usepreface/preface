@@ -7,6 +7,7 @@ import {
   NodeGoogleIdentity,
   NodeOidcIdentity,
   NodeSamlIdentity,
+  NodeDomainDns,
 } from "@usepreface/application/node";
 import { NodeSecretCrypto, NodeTokenCrypto, NodeCertificateCrypto } from "@usepreface/crypto/node";
 import { DatabaseRepository } from "@usepreface/database";
@@ -35,6 +36,7 @@ export const makeBackendTestLayer = (
       Layer.provide(NodeGoogleIdentity.layer),
       Layer.provide(oidc),
       Layer.provide(NodeSamlIdentity.layer),
+      Layer.provide(NodeDomainDns.layer),
       Layer.provide(Layer.succeed(AuthenticationLinks, { publicOrigin })),
       Layer.provideMerge(EmailJobs.layer.pipe(Layer.provideMerge(EmailPayloadCipher.layer))),
       Layer.provide(

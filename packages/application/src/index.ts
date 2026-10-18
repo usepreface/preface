@@ -9,3 +9,5 @@ export { GoogleIdentity, GoogleIdentityClaims } from "#/auth/google/provider";
 export { OidcIdentity, OidcIdentityClaims } from "#/auth/oidc/provider";
 
 export { SamlIdentity, SamlIdentityClaims } from "#/auth/saml/provider";
+
+export { DomainDns } from "#/organization/domain/dns";

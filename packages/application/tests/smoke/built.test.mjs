@@ -17,6 +17,7 @@ import {
   NodeGoogleIdentity,
   NodeOidcIdentity,
   NodeSamlIdentity,
+  NodeDomainDns,
 } from "../../dist/node/index.js";
 
 test("built application completes and revokes setup using packaged repositories and migrations", async () => {
@@ -41,6 +42,7 @@ test("built application completes and revokes setup using packaged repositories 
     Layer.provide(NodeGoogleIdentity.layer),
     Layer.provide(NodeOidcIdentity.layer()),
     Layer.provide(NodeSamlIdentity.layer),
+    Layer.provide(NodeDomainDns.layer),
     Layer.provide(
       Layer.succeed(AuthenticationLinks, { publicOrigin: "https://preface.example.test" }),
     ),

@@ -19,6 +19,13 @@ Application workflows require neither a delivery provider nor renderer. The serv
 starts delivery separately, after migrations and startup preparation.
 `AuthenticationLinks` supplies the trusted public origin used to build sign-in links.
 
+Supply `DomainDns` for organization-domain verification. The Node entry exports
+`NodeDomainDns.layer`, which performs bounded, cancellable TXT resolution. Tests can replace
+only this capability. `application.organization.domain` exposes `list`, `create`, `request`,
+`verify`, `revoke`, `connectionDomains` and `bind`. Organization mutations require owner
+authority and recent local email; `verify(..., "operator")` requires instance ownership.
+Verification and exact connection binding are separate and do not grant membership.
+
 ## Instance setup
 
 ```ts

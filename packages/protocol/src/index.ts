@@ -99,3 +99,6 @@ export {
 export { OrganizationAuthRecoveryTokenId } from "#/identifiers/organization";
 
 export { SsoReadinessBlocker } from "#/common/organization-authentication";
+
+export { OrganizationDomainId } from "#/identifiers/identity";
+export { DomainName, DomainNameInput } from "#/common/domain";

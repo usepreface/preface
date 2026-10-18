@@ -8,6 +8,7 @@ import { EmailJobs, EmailPayloadCipher } from "@usepreface/emails";
 
 import { Application, AuthenticationLinks } from "../../src/index.js";
 import { NodeToken } from "../../src/node/index.js";
+import { DomainDnsTestLayer } from "./domain-dns.js";
 import { GoogleTestProvider } from "./google-provider.js";
 import { OidcTestProvider } from "./oidc-provider.js";
 import { SamlTestProvider } from "./saml-provider.js";
@@ -41,6 +42,7 @@ export const ApplicationTestLayer = Application.layer.pipe(
   Layer.provideMerge(GoogleTestProvider),
   Layer.provideMerge(OidcTestProvider),
   Layer.provideMerge(SamlTestProvider),
+  Layer.provideMerge(DomainDnsTestLayer),
   Layer.provide(
     Layer.succeed(AuthenticationLinks, { publicOrigin: "https://preface.example.test" }),
   ),

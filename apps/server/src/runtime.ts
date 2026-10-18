@@ -7,6 +7,7 @@ import {
   NodeGoogleIdentity,
   NodeOidcIdentity,
   NodeSamlIdentity,
+  NodeDomainDns,
 } from "@usepreface/application/node";
 import { NodeSecretCrypto, NodeTokenCrypto, NodeCertificateCrypto } from "@usepreface/crypto/node";
 import {
@@ -65,6 +66,7 @@ export const BackendLive = Layer.mergeAll(Application.layer, EmailDelivery.layer
   Layer.provide(NodeGoogleIdentity.layer),
   Layer.provide(OidcLive),
   Layer.provide(NodeSamlIdentity.layer),
+  Layer.provide(NodeDomainDns.layer),
   Layer.provide(CryptoLive),
   Layer.provideMerge(PersistenceLive),
   Layer.merge(ServerConfig.layer),

@@ -380,3 +380,15 @@ session for authenticated actions. Only successful signed-out sign-in sets a nor
 Both Response and Assertion must be signed. Encrypted assertions, unsolicited login and SLO are
 unsupported. The [SAML architecture](../../architecture/identity-access/saml.md) describes the exact
 profile, certificate lifecycle and shared required-SSO/owner-recovery guarantees.
+
+## Organization domains
+
+Authenticated organization owners manage `/api/v1/organizations/:organizationId/domains`.
+Create with `{ domain }`; verification request/confirm and revocation take
+`{ expectedRevision }`. Request returns `{ domain, recordName, recordValue, expiresAt }` for
+the DNS TXT instruction. Claims last one year after verification; challenges last 30 minutes.
+Instance owners may manually approve the exact claim through
+`POST /api/v1/instance/organizations/:organizationId/domains/:domainId/approve`.
+Connection `/domains` GET/PUT reads or replaces approved claims with
+`{ expectedRevision, domainIds }`. Only verified claims for that organization are accepted.
+These mutations require recent local email and do not create accounts or memberships.

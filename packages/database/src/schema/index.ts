@@ -40,3 +40,5 @@ export { organizationAuthPolicyConnection } from "#/schema/organization/auth-pol
 export { organizationAuthRecoveryToken } from "#/schema/organization/auth-recovery-token";
 
 export { ssoReplay } from "#/schema/auth/sso-replay";
+
+export { organizationDomain, identityConnectionDomain } from "#/schema/organization/domain";

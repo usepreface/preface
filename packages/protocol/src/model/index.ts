@@ -81,3 +81,5 @@ export { OrganizationSecurityEmailVariables } from "#/model/email/payload";
 
 export { SamlConnection, OrganizationIdentityConnection } from "#/model/auth/identity-connection";
 export { SamlConfiguration } from "#/common/saml";
+
+export { OrganizationDomain } from "#/model/organization/domain";

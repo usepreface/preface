@@ -20,6 +20,7 @@ import { makeSamlFlowStart } from "#/auth/saml/start";
 import { makeSessionApplication } from "#/auth/session";
 import { makeBootstrapApplication } from "#/instance/bootstrap";
 import { OrganizationAccess } from "#/organization/access";
+import { makeDomainApplication } from "#/organization/domain/application";
 import { makeOrganizationsApplication } from "#/organization/index";
 import { TeamAccess } from "#/organization/team/access";
 import { makeProfileApplication } from "#/profile/user";
@@ -119,6 +120,7 @@ const makeApplication = Effect.gen(function* () {
     },
     organization: {
       ...organizations.organization,
+      domain: yield* makeDomainApplication,
       identityConnection: organizationConnections,
     },
   } as const;

@@ -3,6 +3,7 @@ import { Context, Effect, Layer } from "effect";
 import { OrganizationAuthPolicyRepository } from "#/repositories/organization/auth-policy";
 import { OrganizationAuthPolicyConnectionRepository } from "#/repositories/organization/auth-policy-connection";
 import { OrganizationAuthRecoveryTokenRepository } from "#/repositories/organization/auth-recovery-token";
+import { OrganizationDomainRepository } from "#/repositories/organization/domain";
 import { InvitationRepository } from "#/repositories/organization/invitation";
 import { OrganizationMemberRepository } from "#/repositories/organization/member";
 import { OrganizationRepository } from "#/repositories/organization/organization";
@@ -12,6 +13,7 @@ import { TeamRepository } from "#/repositories/organization/team";
 
 const makeOrganizationRepositories = Effect.gen(function* () {
   return {
+    domain: yield* OrganizationDomainRepository,
     team: yield* TeamRepository,
     invitation: yield* InvitationRepository,
     organization: yield* OrganizationRepository,
@@ -30,6 +32,7 @@ export class OrganizationRepositories extends Context.Service<
   static readonly layer = Layer.effect(OrganizationRepositories, makeOrganizationRepositories).pipe(
     Layer.provide(
       Layer.mergeAll(
+        OrganizationDomainRepository.layer,
         TeamRepository.layer,
         InvitationRepository.layer,
         OrganizationRepository.layer,

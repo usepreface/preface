@@ -5,3 +5,6 @@ export const AccountId = createBrandedId("AccountId");
 export type AccountId = typeof AccountId.Type;
 export const AuthFlowId = createBrandedId("AuthFlowId");
 export type AuthFlowId = typeof AuthFlowId.Type;
+
+export const OrganizationDomainId = createBrandedId("OrganizationDomainId");
+export type OrganizationDomainId = typeof OrganizationDomainId.Type;

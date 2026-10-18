@@ -1,4 +1,5 @@
 export const cryptoPurpose = {
+  domainChallenge: "preface/domain/challenge/v1",
   samlFlow: "preface/saml/flow/v1",
   samlRelay: "preface/saml/relay/v1",
   samlBrowser: "preface/saml/browser/v1",
@@ -31,6 +32,7 @@ export const cryptoPurpose = {
 } as const;
 
 export type TokenPurpose =
+  | typeof cryptoPurpose.domainChallenge
   | typeof cryptoPurpose.samlRelay
   | typeof cryptoPurpose.samlBrowser
   | typeof cryptoPurpose.samlReplay

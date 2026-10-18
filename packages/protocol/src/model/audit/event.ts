@@ -9,6 +9,7 @@ import {
 import { AuditEventId } from "#/identifiers/audit";
 import { VerificationId, UserEmailId } from "#/identifiers/auth";
 import { BootstrapChallengeId } from "#/identifiers/bootstrap";
+import { OrganizationDomainId } from "#/identifiers/identity";
 import { IdentityConnectionId, AccountId, AuthFlowId } from "#/identifiers/identity";
 import { InstallationId, InstanceOwnerId } from "#/identifiers/instance";
 import {
@@ -305,7 +306,31 @@ const recoveryFields = {
   targetId: OrganizationAuthRecoveryTokenId,
   metadata: Schema.Struct({ memberId: OrganizationMemberId }),
 };
+const domainFields = {
+  ...organizationActor,
+  eventType: Schema.Literals([
+    "organization.domain_created",
+    "organization.domain_challenge_rotated",
+    "organization.domain_verified",
+    "organization.domain_revoked",
+  ]),
+  targetType: Schema.Literal("organization_domain"),
+  targetId: OrganizationDomainId,
+  metadata: Schema.Struct({
+    revision: Schema.Int,
+    method: Schema.NullOr(Schema.Literals(["dns", "operator"])),
+  }),
+};
+const connectionDomainFields = {
+  ...organizationActor,
+  eventType: Schema.Literal("auth.connection_domains_updated"),
+  targetType: Schema.Literal("identity_connection"),
+  targetId: IdentityConnectionId,
+  metadata: Schema.Struct({ revision: Schema.Int, domainIds: Schema.Array(OrganizationDomainId) }),
+};
 export const RecordAuditEvent = Schema.Union([
+  Schema.Struct(domainFields),
+  Schema.Struct(connectionDomainFields),
   Schema.Struct(recoveryFields),
   Schema.Struct(connectionFields),
   Schema.Struct(accountFields),
@@ -346,6 +371,8 @@ const identityStoredFields = {
 };
 const organizationStoredFields = { id: AuditEventId, occurredAt: Schema.DateTimeUtcFromDate };
 export const AuditEvent = Schema.Union([
+  Schema.Struct({ ...domainFields, ...organizationStoredFields }),
+  Schema.Struct({ ...connectionDomainFields, ...organizationStoredFields }),
   Schema.Struct({ ...recoveryFields, ...organizationStoredFields }),
   Schema.Struct({ ...connectionFields, ...identityStoredFields }),
   Schema.Struct({ ...accountFields, ...identityStoredFields }),
