@@ -1,8 +1,7 @@
 import { Schema } from "effect";
 
 import { CredentialDigest } from "#/common/credential-digest";
-import { DisplayName as InstanceDisplayName } from "#/common/display-name";
-import { DisplayName as UserDisplayName } from "#/common/display-name";
+import { DisplayName } from "#/common/display-name";
 import { EmailAddress as UserEmail } from "#/common/email";
 import { BootstrapChallengeId } from "#/identifiers/bootstrap";
 import { EmailJobId } from "#/identifiers/email";
@@ -10,8 +9,8 @@ import { EmailJobId } from "#/identifiers/email";
 export const CreateBootstrapChallenge = Schema.Struct({
   id: BootstrapChallengeId,
   bootstrapTokenHash: CredentialDigest,
-  instanceName: InstanceDisplayName,
-  ownerName: UserDisplayName,
+  instanceName: DisplayName,
+  ownerName: DisplayName,
   email: UserEmail,
   codeHash: CredentialDigest,
   emailJobId: EmailJobId,

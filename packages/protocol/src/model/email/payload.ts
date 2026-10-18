@@ -1,15 +1,14 @@
 import { Schema } from "effect";
 
-import { DisplayName as InstanceDisplayName } from "#/common/display-name";
-import { DisplayName as UserDisplayName } from "#/common/display-name";
+import { DisplayName } from "#/common/display-name";
 import { EmailAddress as UserEmail } from "#/common/email";
 import { VerificationCode } from "#/common/verification-code";
 
 const EmailLink = Schema.String.check(Schema.isPattern(/^https?:\/\/[^\s]+$/));
 
 export const InstanceSetupEmailVariables = Schema.Struct({
-  instanceName: InstanceDisplayName,
-  displayName: UserDisplayName,
+  instanceName: DisplayName,
+  displayName: DisplayName,
   code: VerificationCode,
   magicLinkUrl: Schema.optionalKey(EmailLink),
   expiresAt: Schema.DateTimeUtcFromString,
@@ -17,7 +16,7 @@ export const InstanceSetupEmailVariables = Schema.Struct({
 export type InstanceSetupEmailVariables = typeof InstanceSetupEmailVariables.Type;
 
 export const SignInEmailVariables = Schema.Struct({
-  instanceName: InstanceDisplayName,
+  instanceName: DisplayName,
   code: VerificationCode,
   magicLinkUrl: Schema.optionalKey(EmailLink),
   expiresAt: Schema.DateTimeUtcFromString,
@@ -25,9 +24,9 @@ export const SignInEmailVariables = Schema.Struct({
 export type SignInEmailVariables = typeof SignInEmailVariables.Type;
 
 export const OrganizationInvitationEmailVariables = Schema.Struct({
-  instanceName: InstanceDisplayName,
+  instanceName: DisplayName,
   organizationName: Schema.NonEmptyString,
-  inviterName: UserDisplayName,
+  inviterName: DisplayName,
   roleName: Schema.NonEmptyString,
   invitationUrl: EmailLink,
   expiresAt: Schema.DateTimeUtcFromString,

@@ -9,9 +9,13 @@ import {
 import { AuditEventId } from "#/identifiers/audit";
 import { VerificationId, UserEmailId } from "#/identifiers/auth";
 import { BootstrapChallengeId } from "#/identifiers/bootstrap";
-import { IdentityConnectionKeyId } from "#/identifiers/identity";
-import { OrganizationDomainId } from "#/identifiers/identity";
-import { IdentityConnectionId, AccountId, AuthFlowId } from "#/identifiers/identity";
+import {
+  IdentityConnectionKeyId,
+  OrganizationDomainId,
+  IdentityConnectionId,
+  AccountId,
+  AuthFlowId,
+} from "#/identifiers/identity";
 import { InstallationId, InstanceOwnerId } from "#/identifiers/instance";
 import {
   OrganizationAuthRecoveryTokenId,

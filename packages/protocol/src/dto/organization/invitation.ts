@@ -3,6 +3,7 @@ import { Schema } from "effect";
 import { EmailAddress } from "#/common/email";
 import { InvitationRoleIds, InvitationTeams } from "#/common/invitation";
 import { OrganizationName } from "#/common/organization";
+import { PageSize } from "#/common/pagination";
 import { SecretTokenFromString } from "#/common/secret-token";
 import { VerificationCode } from "#/common/verification-code";
 import { SessionActor } from "#/dto/auth/session";
@@ -16,15 +17,18 @@ import {
 import { UserId } from "#/identifiers/user";
 
 const token = Schema.toEncoded(SecretTokenFromString).annotate({ writeOnly: true });
+
 export const CreateInvitationRequest = Schema.Struct({
   email: Schema.String,
   roleIds: InvitationRoleIds,
   teams: Schema.optionalKey(InvitationTeams),
 });
+
 export const InvitationTokenRequest = Schema.Struct({
   invitationId: OrganizationInvitationId,
   token,
 });
+
 export const AcceptInvitationRequest = Schema.Union([
   Schema.Struct({
     ...InvitationTokenRequest.fields,
@@ -41,6 +45,7 @@ export const AcceptInvitationRequest = Schema.Union([
     proofToken: token,
   }),
 ]);
+
 export const PublicInvitation = Schema.Struct({
   id: OrganizationInvitationId,
   email: EmailAddress,
@@ -55,15 +60,18 @@ export const PublicInvitation = Schema.Struct({
   updatedAt: Schema.DateTimeUtcFromString,
 });
 export type PublicInvitation = typeof PublicInvitation.Type;
+
 export const ListInvitationsQuery = Schema.Struct({
   cursor: Schema.optionalKey(OrganizationInvitationId),
-  limit: Schema.optionalKey(Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 100 }))),
+  limit: Schema.optionalKey(PageSize),
 });
 export type ListInvitationsQuery = typeof ListInvitationsQuery.Type;
+
 export const InvitationList = Schema.Struct({
   invitations: Schema.Array(PublicInvitation),
   nextCursor: Schema.NullOr(OrganizationInvitationId),
 });
+
 export const InvitationPreview = Schema.Struct({
   methods: Schema.Array(
     Schema.Struct({
@@ -76,6 +84,7 @@ export const InvitationPreview = Schema.Struct({
   organization: Schema.Struct({ id: OrganizationId, name: OrganizationName }),
   expiresAt: Schema.DateTimeUtcFromString,
 });
+
 export const InvitationAcceptance = Schema.Struct({
   nextAction: Schema.Literals(["continue", "authenticate_with_sso"]),
   actor: SessionActor,

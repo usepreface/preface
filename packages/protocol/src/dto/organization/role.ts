@@ -7,6 +7,7 @@ import {
   RolePermissions,
   RoleScope,
 } from "#/common/organization";
+import { PageSize } from "#/common/pagination";
 import {
   TeamId,
   OrganizationMemberId,
@@ -26,32 +27,38 @@ export const PublicOrganizationRole = Schema.Struct({
   updatedAt: Schema.DateTimeUtcFromString,
 });
 export type PublicOrganizationRole = typeof PublicOrganizationRole.Type;
+
 export const CreateOrganizationRoleRequest = Schema.Struct({
   scopeKind: Schema.optionalKey(RoleScope),
   key: Schema.String,
   name: Schema.String,
   permissions: RolePermissions,
 });
+
 export const UpdateOrganizationRoleRequest = Schema.Struct({
   name: Schema.optionalKey(Schema.String),
   permissions: Schema.optionalKey(RolePermissions),
 });
+
 export const ListOrganizationRolesQuery = Schema.Struct({
   scopeKind: Schema.optionalKey(RoleScope),
   cursor: Schema.optionalKey(OrganizationRoleId),
-  limit: Schema.optionalKey(Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 100 }))),
+  limit: Schema.optionalKey(PageSize),
   includeArchived: Schema.optionalKey(Schema.Boolean),
 });
 export type ListOrganizationRolesQuery = typeof ListOrganizationRolesQuery.Type;
+
 export const OrganizationRoleList = Schema.Struct({
   roles: Schema.Array(PublicOrganizationRole),
   nextCursor: Schema.NullOr(OrganizationRoleId),
 });
+
 export const GrantOrganizationRoleRequest = Schema.Struct({
   teamId: Schema.optionalKey(TeamId),
   memberId: OrganizationMemberId,
   roleId: OrganizationRoleId,
 });
+
 export const PublicOrganizationRoleBinding = Schema.Struct({
   scopeKind: RoleScope,
   teamId: Schema.NullOr(TeamId),

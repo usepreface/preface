@@ -5,8 +5,7 @@ import { DisplayName } from "#/common/display-name";
 import { AuthenticationReturnPath, AuthFlowIntent, IdentityRevision } from "#/common/identity";
 import { IdentityProvider } from "#/common/oidc";
 import { IdentityConnectionKeyId, AuthFlowId, IdentityConnectionId } from "#/identifiers/identity";
-import { OrganizationInvitationId } from "#/identifiers/organization";
-import { OrganizationId } from "#/identifiers/organization";
+import { OrganizationInvitationId, OrganizationId } from "#/identifiers/organization";
 import { SessionId } from "#/identifiers/session";
 import { UserId } from "#/identifiers/user";
 export const CreateAuthFlow = Schema.Struct({

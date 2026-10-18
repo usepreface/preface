@@ -11,6 +11,12 @@ export {
   AuthenticationError,
   RequestError,
   RequestErrorCode,
+  EmailSignInError,
+  OrganizationError,
+  InvitationError,
+  TeamError,
+  ProfileError,
+  IdentityError,
 } from "#/errors/index";
 
 // Preserve existing root imports while consumers move to the explicit contract entry points.
@@ -32,15 +38,17 @@ export {
   ResendBootstrapVerificationInput,
 } from "#/input/index";
 
-export { EmailSignInError } from "#/errors/auth/email-sign-in";
-
 export {
   OrganizationId,
   OrganizationMemberId,
   OrganizationRoleId,
   OrganizationRoleBindingId,
+  OrganizationInvitationId,
+  InvitationAssignmentId,
+  OrganizationAuthRecoveryTokenId,
+  TeamId,
+  TeamMemberId,
 } from "#/identifiers/organization";
-export { OrganizationError } from "#/errors/organization/organization";
 
 export {
   createBrandedId,
@@ -65,9 +73,6 @@ export {
   OrganizationLoginMethod,
 } from "#/common/index";
 
-export { OrganizationInvitationId, InvitationAssignmentId } from "#/identifiers/organization";
-export { InvitationError } from "#/errors/organization/invitation";
-
 export {
   UserMetadataV1,
   UserMetadata,
@@ -77,11 +82,7 @@ export {
   TeamMetadata,
 } from "#/metadata/index";
 
-export { TeamId, TeamMemberId } from "#/identifiers/organization";
 export { TeamPermission, RolePermission, RolePermissions, RoleScope } from "#/common/organization";
-export { TeamError } from "#/errors/organization/team";
-
-export { ProfileError } from "#/errors/auth/profile";
 
 export { MetadataImage } from "#/common/metadata-image";
 
@@ -90,8 +91,8 @@ export {
   IdentityConnectionId,
   AccountId,
   AuthFlowId,
+  OrganizationDomainId,
 } from "#/identifiers/identity";
-export { IdentityError } from "#/errors/auth/identity";
 export {
   ConnectionStatus,
   AuthFlowIntent,
@@ -101,11 +102,8 @@ export {
   GoogleSubject,
 } from "#/common/identity";
 
-export { OrganizationAuthRecoveryTokenId } from "#/identifiers/organization";
-
 export { SsoReadinessBlocker } from "#/common/organization-authentication";
 
-export { OrganizationDomainId } from "#/identifiers/identity";
 export { DomainName, DomainNameInput } from "#/common/domain";
 
 export { AuditCursor } from "#/common/audit";

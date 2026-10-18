@@ -104,7 +104,7 @@ is bound to an existing user/address/session; it cannot be consumed as ordinary 
 The DTO entry exports safe Google configuration, connected-account summaries and method
 availability; secrets and tokens stay in redacted input/storage boundaries. `IdentityError` owns
 safe code/status metadata. Google configuration is versioned, and authentication return paths
-currently permit only `/api/docs`. Organization OIDC configuration/flow/evidence variants and policy connection models extend these
+remain relative to the configured trusted frontend origin. Organization OIDC configuration/flow/evidence variants and policy connection models extend these
 contracts. `CreateOidcConnectionInput`/`UpdateOidcConnectionInput` redact credentials; safe DTOs never
 contain stored secrets. Common external-flow exports retain Google compatibility. The schemas
 alone grant no membership or provider support; application implements optional/required OIDC and SAML SSO
