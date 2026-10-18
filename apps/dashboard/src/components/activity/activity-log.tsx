@@ -9,6 +9,7 @@ import {
   type PublicAuditEvent,
 } from "@usepreface/protocol/dto";
 import { Button } from "@usepreface/ui/components/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@usepreface/ui/components/popover";
 import {
   Table,
   TableHeader,
@@ -17,6 +18,8 @@ import {
   TableHead,
   TableCell,
 } from "@usepreface/ui/components/table";
+import { CalendarIcon } from "@usepreface/ui/icons";
+import { InlineCode } from "@usepreface/ui/preface/data-display";
 
 import { ApiClient, mutation } from "#/atoms/client";
 import { QueryKeys } from "#/atoms/query-keys";
@@ -72,7 +75,7 @@ export function ActivityLog({ organizationId }: { organizationId?: OrganizationI
   return (
     <div className="flex flex-col gap-4">
       <form
-        className="grid gap-3 rounded-xl border p-4 sm:grid-cols-2"
+        className="flex flex-wrap items-end gap-2"
         onSubmit={form.handleSubmit((values) => {
           setFilters(values);
           setCursor(undefined);
@@ -84,6 +87,7 @@ export function ActivityLog({ organizationId }: { organizationId?: OrganizationI
           control={form.control}
           name="eventType"
           label="Event type"
+          className="w-full sm:w-48"
           optional
           emptyAsUndefined
           inputProps={{ placeholder: "organization.created" }}
@@ -92,6 +96,7 @@ export function ActivityLog({ organizationId }: { organizationId?: OrganizationI
           control={form.control}
           name="actorUserId"
           label="Actor user ID"
+          className="w-full sm:w-44"
           optional
           emptyAsUndefined
         />
@@ -99,24 +104,35 @@ export function ActivityLog({ organizationId }: { organizationId?: OrganizationI
           control={form.control}
           name="targetId"
           label="Target ID"
+          className="w-full sm:w-44"
           optional
           emptyAsUndefined
         />
-        <TextField
-          control={form.control}
-          name="after"
-          label="After (ISO timestamp)"
-          optional
-          emptyAsUndefined
-          inputProps={{ placeholder: "2026-10-01T00:00:00Z" }}
-        />
-        <TextField
-          control={form.control}
-          name="before"
-          label="Before (ISO timestamp)"
-          optional
-          emptyAsUndefined
-        />
+        <Popover>
+          <PopoverTrigger render={<Button type="button" variant="outline" />}>
+            <CalendarIcon data-icon="inline-start" />
+            Date range
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-80">
+            {" "}
+            <TextField
+              control={form.control}
+              name="after"
+              label="After (ISO timestamp)"
+              optional
+              emptyAsUndefined
+              inputProps={{ placeholder: "2026-10-01T00:00:00Z" }}
+            />
+            <TextField
+              control={form.control}
+              name="before"
+              label="Before (ISO timestamp)"
+              optional
+              emptyAsUndefined
+            />
+            <p className="text-caption text-fg-tertiary">Use ISO timestamps, then apply filters.</p>
+          </PopoverContent>
+        </Popover>
         <SubmitButton>Apply filters</SubmitButton>
       </form>
       <div className="flex flex-wrap gap-3">
@@ -157,7 +173,7 @@ export function ActivityLog({ organizationId }: { organizationId?: OrganizationI
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>When</TableHead>
+                <TableHead>Time</TableHead>
                 <TableHead>Event</TableHead>
                 <TableHead>Actor</TableHead>
                 <TableHead>Target</TableHead>
@@ -168,7 +184,15 @@ export function ActivityLog({ organizationId }: { organizationId?: OrganizationI
               {query.data?.events.map((event) => (
                 <TableRow key={event.id}>
                   <TableCell>{formatDate(event.occurredAt)}</TableCell>
-                  <TableCell>{event.eventType}</TableCell>
+                  <TableCell>
+                    <button
+                      type="button"
+                      onClick={() => setSelected(event)}
+                      className="rounded-sm outline-none focus-visible:ring-3 focus-visible:ring-focus-ring"
+                    >
+                      <InlineCode>{event.eventType}</InlineCode>
+                    </button>
+                  </TableCell>
                   <TableCell className="max-w-45 truncate">
                     {event.actorUserId ?? "System"}
                   </TableCell>

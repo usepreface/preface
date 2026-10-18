@@ -12,9 +12,10 @@ export function SsoReadiness() {
   const readiness = useReadiness(organization.id);
   return (
     <PageSection
+      className="rounded-xl border bg-surface-1 p-5"
       title="SSO readiness"
       actions={
-        <Button variant="outline" onClick={readiness.refetch}>
+        <Button type="button" variant="outline" onClick={readiness.refetch}>
           Check readiness
         </Button>
       }

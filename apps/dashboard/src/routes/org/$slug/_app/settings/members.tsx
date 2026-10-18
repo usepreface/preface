@@ -4,6 +4,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { Button } from "@usepreface/ui/components/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@usepreface/ui/components/tabs";
+import { PlusIcon } from "@usepreface/ui/icons";
 
 import { Permission } from "#/components/api/permission";
 import { PageTitle } from "#/components/shell/page";
@@ -22,7 +23,7 @@ export const Route = createFileRoute("/org/$slug/_app/settings/members")({
   ),
 });
 function MembersSettings() {
-  const { access } = useOrganization();
+  const { access, organization } = useOrganization();
   const [inviting, setInviting] = useState(false);
   const canInvite =
     access.permissions.includes("members.manage") &&
@@ -32,9 +33,21 @@ function MembersSettings() {
     <SettingsFrame
       crumbs={[{ label: "Members" }]}
       width="full"
-      actions={canInvite ? <Button onClick={() => setInviting(true)}>Invite members</Button> : null}
+      actions={
+        canInvite ? (
+          <Button onClick={() => setInviting(true)}>
+            <PlusIcon data-icon="inline-start" />
+            Invite members
+          </Button>
+        ) : null
+      }
     >
-      <PageTitle title="Members" description="Manage membership, roles and invitations." />
+      <PageTitle
+        title="Members"
+        description={`Everyone in ${
+          organization.metadata.name
+        }, their organization roles and membership status.`}
+      />
       <Tabs defaultValue="members">
         <TabsList variant="line">
           <TabsTrigger value="members">Members</TabsTrigger>

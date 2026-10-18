@@ -6,6 +6,7 @@ import {
   AnalyticsIcon,
   ApiIcon,
   BotIcon,
+  BrainIcon,
   ChatIcon,
   DatabaseIcon,
   FileIcon,
@@ -71,59 +72,47 @@ export function OrgSidebar({
     },
   ];
 
-  {
-    groups.push({
-      section: "Organization",
-      items: [
-        ...(authority.permissions.includes("members.read")
-          ? [
-              {
-                label: "Members",
-                icon: UsersIcon,
-                link: { to: "/org/$slug/settings/members", params } as const,
-                active: section === "members",
-              },
-            ]
-          : []),
-        ...(authority.permissions.includes("teams.read")
-          ? [
-              {
-                label: "Teams",
-                icon: LayersIcon,
-                link: { to: "/org/$slug/settings/teams", params } as const,
-                active: section === "teams",
-              },
-            ]
-          : []),
-        ...(authority.permissions.includes("roles.read")
-          ? [
-              {
-                label: "Roles",
-                icon: KeyIcon,
-                link: { to: "/org/$slug/settings/roles", params } as const,
-                active: section === "roles",
-              },
-            ]
-          : []),
-        ...(authority.isOwner
-          ? [
-              {
-                label: "Access & SSO",
-                icon: ShieldIcon,
-                link: { to: "/org/$slug/settings/authentication", params } as const,
-                active: access.has(section ?? ""),
-              },
-            ]
-          : []),
-        {
-          label: "Settings",
-          icon: SettingsIcon,
-          link: { to: "/org/$slug/settings/general", params },
-          active: section === "general" || section === "audit",
-        },
-      ],
-    });
-  }
+  const peopleLink = authority.permissions.includes("members.read")
+    ? ("/org/$slug/settings/members" as const)
+    : authority.permissions.includes("teams.read")
+      ? ("/org/$slug/settings/teams" as const)
+      : authority.permissions.includes("roles.read")
+        ? ("/org/$slug/settings/roles" as const)
+        : undefined;
+
+  groups.push({
+    section: "Admin",
+    items: [
+      ...(peopleLink
+        ? [
+            {
+              label: "Teams & members",
+              icon: UsersIcon,
+              link: { to: peopleLink, params },
+              active: section === "members" || section === "teams" || section === "roles",
+            },
+          ]
+        : []),
+      ...(authority.isOwner
+        ? [
+            {
+              label: "Access & SSO",
+              icon: ShieldIcon,
+              link: { to: "/org/$slug/settings/authentication", params } as const,
+              active: access.has(section ?? ""),
+            },
+          ]
+        : []),
+      { label: "AI providers", icon: BrainIcon },
+      { label: "API keys", icon: KeyIcon },
+      {
+        label: "Settings",
+        icon: SettingsIcon,
+        link: { to: "/org/$slug/settings/general", params },
+        active: section === "general" || section === "audit",
+      },
+    ],
+  });
 
   return (
     <NavSidebar

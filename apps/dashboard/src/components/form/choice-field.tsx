@@ -44,12 +44,18 @@ export function ChoiceField<T extends FieldValues, N extends FieldPath<T>, O, V 
             className="grid gap-2 max-sm:grid-cols-1!"
             style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
           >
-            {options.map((option) => (
+            {options.map((option, index) => (
               <label key={option.value} className={cardClass}>
                 <input
                   type={multiple ? "checkbox" : "radio"}
                   name={control.name}
                   value={option.value}
+                  aria-label={option.label}
+                  aria-describedby={
+                    [describedBy, option.description ? `${id}-${index}-description` : undefined]
+                      .filter(Boolean)
+                      .join(" ") || undefined
+                  }
                   disabled={control.disabled || option.disabled}
                   checked={selected.includes(option.value)}
                   onBlur={control.onBlur}
@@ -66,7 +72,12 @@ export function ChoiceField<T extends FieldValues, N extends FieldPath<T>, O, V 
                 <span className="flex min-w-0 flex-col">
                   <span className="text-sm font-medium text-foreground">{option.label}</span>
                   {option.description ? (
-                    <span className="text-caption text-fg-tertiary">{option.description}</span>
+                    <span
+                      id={`${id}-${index}-description`}
+                      className="text-caption text-fg-tertiary"
+                    >
+                      {option.description}
+                    </span>
                   ) : null}
                 </span>
               </label>

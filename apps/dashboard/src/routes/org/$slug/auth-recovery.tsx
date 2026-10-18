@@ -2,12 +2,15 @@ import { createFileRoute, Link, notFound, useRouter } from "@tanstack/react-rout
 
 import { Redacted } from "effect";
 
+import { KeyIcon } from "@usepreface/ui/icons";
+
 import { organizationBySlugAtom } from "#/atoms/organizations";
 import { prefetchQuery } from "#/atoms/prefetch";
 import { QueryState } from "#/components/api/query-state";
 import { useResetAuthority } from "#/components/api/registry-provider";
-import { AuthHeading, AuthLayout } from "#/components/auth/auth-layout";
+import { AuthHeading } from "#/components/auth/auth-layout";
 import { ReauthenticationLink } from "#/components/auth/reauthentication-link";
+import { StatusPage, StatusIcon } from "#/components/auth/status-page";
 import { Notice } from "#/components/feedback/notice";
 import { SubmitButton } from "#/components/form/submit-button";
 import { TextField } from "#/components/form/text-field";
@@ -36,8 +39,9 @@ function Recovery() {
   const resetAuthority = useResetAuthority();
   const form = useSchemaForm(recoveryForm, { defaultValues: { recoveryCredential: "" } });
   return (
-    <AuthLayout>
-      <AuthHeading title={`Recover ${organization.metadata.name}`}>
+    <StatusPage width="lg">
+      <StatusIcon icon={KeyIcon} tone="warning" />
+      <AuthHeading align="center" title={`Recover ${organization.metadata.name}`}>
         An existing owner can make enterprise SSO optional using their offline credential and recent
         email proof.
       </AuthHeading>
@@ -47,7 +51,7 @@ function Recovery() {
       </Notice>
       <QueryState query={readiness}>
         <form
-          className="flex flex-col gap-5"
+          className="flex w-full flex-col gap-5 text-left"
           onSubmit={form.handleSubmit(async (values) => {
             if (!readiness.data) return;
             const response = await recover.run({
@@ -75,6 +79,6 @@ function Recovery() {
         </form>
       </QueryState>
       <Link to="/organizations">All organizations</Link>
-    </AuthLayout>
+    </StatusPage>
   );
 }

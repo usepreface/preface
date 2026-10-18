@@ -27,6 +27,11 @@ test("dashboard setup, team creation and invitation admission persist through th
   await page.getByRole("link", { name: "Open Knowledge", exact: true }).click();
   await expect(page).toHaveURL(/\/org\/knowledge\/?$/);
   await expect(page.getByRole("heading", { name: "Welcome to Knowledge, Operator" })).toBeVisible();
+  await page.getByLabel("Email to invite", { exact: true }).fill("quick@company.example.test");
+  await page.getByRole("button", { name: "Invite", exact: true }).click();
+  await expect(page.getByText("Invitation queued", { exact: true })).toBeVisible();
+  expect((await mailbox.invitation("quick@company.example.test")).invitationId).toBeTruthy();
+
   const organizations = await api.json(OrganizationList, "/organizations");
   const organization = organizations.organizations[0];
   expect(organization?.metadata.name).toBe("Knowledge");
@@ -36,7 +41,7 @@ test("dashboard setup, team creation and invitation admission persist through th
   await page.getByRole("button", { name: "Create team", exact: true }).click();
   await page.getByLabel("Team name", { exact: true }).fill("Support");
   await page.getByRole("button", { name: "Save team", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Support", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Support", exact: true })).toBeVisible();
   const teams = await api.json(TeamList, `/organizations/${organization.id}/teams`);
   expect(teams.teams.map((team) => team.metadata.name)).toEqual(["Support"]);
 
@@ -68,6 +73,11 @@ test("dashboard setup, team creation and invitation admission persist through th
       `/organizations/${organization.id}/members`,
     );
     expect(members.members.some((member) => member.metadata.name === "Alice")).toBe(true);
+    await alice.goto(`${backend.dashboard}/org/knowledge/settings/members`);
+    await expect(alice.getByRole("heading", { name: "Members", exact: true })).toBeVisible();
+    await expect(alice.getByRole("button", { name: "Actions for Alice", exact: true })).toHaveCount(
+      0,
+    );
 
     await page.goto(`${backend.dashboard}/org/knowledge/settings/roles`);
     await page.getByRole("button", { name: "Create role", exact: true }).click();
@@ -78,7 +88,8 @@ test("dashboard setup, team creation and invitation admission persist through th
     await expect(page.getByRole("heading", { name: "Audit reviewer", exact: true })).toBeVisible();
     await page.goto(`${backend.dashboard}/org/knowledge/settings/members`);
     const aliceRow = page.getByRole("row").filter({ hasText: "Alice" });
-    await aliceRow.getByRole("button", { name: "Manage roles", exact: true }).click();
+    await aliceRow.getByRole("button", { name: "Actions for Alice", exact: true }).click();
+    await page.getByRole("menuitem", { name: "Manage roles", exact: true }).click();
     await page.getByRole("checkbox", { name: "Audit reviewer", exact: true }).check();
     await page.getByRole("button", { name: "Save roles", exact: true }).click();
     await expect(aliceRow).toContainText("Audit reviewer");
@@ -87,7 +98,8 @@ test("dashboard setup, team creation and invitation admission persist through th
     if (!support) throw new Error("Missing Support team");
     await page.goto(`${backend.dashboard}/org/knowledge/settings/teams/${support.id}`);
     const teamAlice = page.getByRole("row").filter({ hasText: "Alice" });
-    await teamAlice.getByRole("button", { name: "Manage roles", exact: true }).click();
+    await teamAlice.getByRole("button", { name: "Actions for Alice", exact: true }).click();
+    await page.getByRole("menuitem", { name: "Manage roles", exact: true }).click();
     await page.getByRole("checkbox", { name: "Team administrator", exact: true }).check();
     await page.getByRole("button", { name: "Save roles", exact: true }).click();
     await expect(teamAlice).toContainText("Team administrator");
@@ -106,7 +118,8 @@ test("dashboard setup, team creation and invitation admission persist through th
       page.getByRole("heading", { name: "Invitation coordinator", exact: true }),
     ).toBeVisible();
     await page.goto(`${backend.dashboard}/org/knowledge/settings/members`);
-    await aliceRow.getByRole("button", { name: "Manage roles", exact: true }).click();
+    await aliceRow.getByRole("button", { name: "Actions for Alice", exact: true }).click();
+    await page.getByRole("menuitem", { name: "Manage roles", exact: true }).click();
     await page.getByRole("checkbox", { name: "Invitation coordinator", exact: true }).check();
     await page.getByRole("checkbox", { name: "Member", exact: true }).uncheck();
     await page.getByRole("checkbox", { name: "Audit reviewer", exact: true }).uncheck();
@@ -128,7 +141,8 @@ test("dashboard setup, team creation and invitation admission persist through th
     await expect(alice.getByRole("heading", { name: "Welcome to Knowledge, Alice" })).toBeVisible();
 
     await page.goto(`${backend.dashboard}/org/knowledge/settings/members`);
-    await aliceRow.getByRole("button", { name: "Suspend", exact: true }).click();
+    await aliceRow.getByRole("button", { name: "Actions for Alice", exact: true }).click();
+    await page.getByRole("menuitem", { name: "Suspend", exact: true }).click();
     await page.getByRole("button", { name: "Confirm change", exact: true }).click();
     await expect(aliceRow).toContainText("Suspended");
     await alice.evaluate(() => window.dispatchEvent(new Event("focus")));

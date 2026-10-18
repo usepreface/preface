@@ -6,15 +6,19 @@ import { Schema } from "effect";
 
 import { IdentityConnectionId } from "@usepreface/protocol";
 import type { PublicOrganizationIdentityConnection } from "@usepreface/protocol/dto";
+import { Badge, BadgeDot } from "@usepreface/ui/components/badge";
 import { Button } from "@usepreface/ui/components/button";
-import { TrashIcon } from "@usepreface/ui/icons";
+import { LockKeyIcon, TrashIcon } from "@usepreface/ui/icons";
 
 import { Permission } from "#/components/api/permission";
 import { QueryState } from "#/components/api/query-state";
 import { ReauthenticationLink } from "#/components/auth/reauthentication-link";
+import { IconTile } from "#/components/data-display/icon-tile";
+import { StepProgress } from "#/components/data-display/step-progress";
 import { ConfirmDialog } from "#/components/feedback/confirm-dialog";
 import { Notice } from "#/components/feedback/notice";
-import { PageTitle, PageSection } from "#/components/shell/page";
+import { PageTitle } from "#/components/shell/page";
+import { SectionCard } from "#/components/shell/section-card";
 import {
   useOrganizationIdentityConnectionsTest,
   useOrganizationIdentityConnectionsActivate,
@@ -44,6 +48,7 @@ function Connection() {
   const query = useConnection(organization.id, id);
   return (
     <SettingsFrame
+      width="full"
       crumbs={[
         {
           label: "SSO connections",
@@ -75,69 +80,112 @@ function ConnectionContent({
     <>
       <PageTitle
         title={connection.name}
-        description={`${connection.provider.toUpperCase()} · ${connection.status} · revision ${connection.revision}`}
+        leading={<IconTile icon={LockKeyIcon} size={44} />}
+        badges={
+          <>
+            <Badge variant="outline">{connection.provider.toUpperCase()}</Badge>
+            <Badge tone={connection.status === "active" ? "success" : "neutral"}>
+              <BadgeDot />
+              {connection.status}
+            </Badge>
+          </>
+        }
+        description={`Created ${formatDate(connection.createdAt)}`}
       />
       <Notice action={<ReauthenticationLink />}>
         Connection changes require a recent email confirmation. Test the saved revision before
         activation.
       </Notice>
-      <div className="flex flex-wrap gap-3">
-        <Button
-          disabled={test.pending}
-          onClick={async () => {
-            const response = await test.run({ params, payload });
-            if (response) window.location.assign(response.value.authorizationUrl);
-          }}
-        >
-          Test login
-        </Button>
-        <Button
-          variant="outline"
-          disabled={
-            activate.pending ||
-            connection.testedRevision !== connection.revision ||
-            connection.status === "active"
-          }
-          onClick={() => void activate.run({ params, payload })}
-        >
-          Activate tested revision
-        </Button>
-        <Button
-          variant="outline"
-          disabled={connection.status === "disabled"}
-          onClick={() => setDisabling(true)}
-        >
-          Disable
-        </Button>
-        {connection.provider === "oidc" ? (
-          <Button
-            variant="outline"
-            disabled={refresh.pending}
-            onClick={() => void refresh.run({ params, payload })}
-          >
-            Refresh discovery metadata
-          </Button>
-        ) : null}
+      <StepProgress
+        steps={["Configure", "Test login", "Activate", "Approve"]}
+        current={
+          connection.status === "active"
+            ? 4
+            : connection.testedRevision === connection.revision
+              ? 3
+              : 2
+        }
+      />
+      <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_19rem]">
+        <div className="flex flex-col gap-5">
+          {connection.provider === "oidc" ? (
+            <OidcSettings connection={connection} />
+          ) : (
+            <>
+              <SamlSettings connection={connection} />
+              <SamlKeys connection={connection} />
+            </>
+          )}
+          <ConnectionDomains connection={connection} />
+        </div>
+        <div className="flex flex-col gap-5">
+          <SectionCard title="Last test">
+            <p className="text-13 text-fg-secondary">
+              Last tested: {formatDate(connection.testedAt)}. Test the saved revision before
+              activation.
+            </p>
+            <div className="flex flex-col gap-2.5">
+              <Button
+                disabled={test.pending}
+                onClick={async () => {
+                  const response = await test.run({ params, payload });
+                  if (response) window.location.assign(response.value.authorizationUrl);
+                }}
+              >
+                Test login
+              </Button>
+              <Button
+                variant="outline"
+                disabled={
+                  activate.pending ||
+                  connection.testedRevision !== connection.revision ||
+                  connection.status === "active"
+                }
+                onClick={() => void activate.run({ params, payload })}
+              >
+                Activate tested revision
+              </Button>
+
+              {connection.provider === "oidc" ? (
+                <Button
+                  variant="outline"
+                  disabled={refresh.pending}
+                  onClick={() => void refresh.run({ params, payload })}
+                >
+                  Refresh discovery metadata
+                </Button>
+              ) : null}
+            </div>
+          </SectionCard>
+          <SectionCard title="Next">
+            <p className="text-13 text-fg-secondary">
+              After activation, approve this connection in the login policy so members can use it.
+            </p>
+            <Link
+              to="/org/$slug/settings/authentication"
+              params={{ slug: organization.slug }}
+              className="text-sm font-medium text-fg-accent"
+            >
+              Open login policy
+            </Link>
+          </SectionCard>
+          <SectionCard title="Health">
+            <ConnectionHealth connectionId={connection.id} />
+          </SectionCard>
+          <SectionCard title="Disable connection" danger>
+            <p className="text-13 text-fg-secondary">
+              Stops sign-ins immediately. Configuration is kept.
+            </p>
+            <Button
+              variant="destructive-outline"
+              disabled={connection.status === "disabled"}
+              onClick={() => setDisabling(true)}
+            >
+              Disable
+            </Button>
+          </SectionCard>
+        </div>
       </div>
-      <p className="text-sm text-fg-secondary">
-        Last tested: {formatDate(connection.testedAt)}. After activation, approve the connection in{" "}
-        <Link to="/org/$slug/settings/authentication" params={{ slug: organization.slug }}>
-          login policy
-        </Link>
-        .
-      </p>
-      {connection.provider === "oidc" ? (
-        <OidcSettings connection={connection} />
-      ) : (
-        <>
-          <SamlSettings connection={connection} />
-          <SamlKeys connection={connection} />
-        </>
-      )}
-      <PageSection title="Health">
-        <ConnectionHealth connectionId={connection.id} />
-      </PageSection>
-      <ConnectionDomains connection={connection} />
       <ConfirmDialog
         open={disabling}
         onOpenChange={setDisabling}

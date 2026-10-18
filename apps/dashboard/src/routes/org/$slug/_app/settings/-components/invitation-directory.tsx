@@ -4,6 +4,7 @@ import { DateTime } from "effect";
 
 import type { OrganizationInvitationId, OrganizationId } from "@usepreface/protocol";
 import type { PublicInvitation } from "@usepreface/protocol/dto";
+import { Badge, BadgeDot } from "@usepreface/ui/components/badge";
 import { Button } from "@usepreface/ui/components/button";
 import {
   Table,
@@ -14,13 +15,16 @@ import {
   TableCell,
 } from "@usepreface/ui/components/table";
 import { TrashIcon } from "@usepreface/ui/icons";
+import { InviteSentIllustration } from "@usepreface/ui/illustrations";
 
 import { ApiClient } from "#/atoms/client";
 import { QueryKeys } from "#/atoms/query-keys";
 import { Pagination } from "#/components/api/pagination";
 import { QueryState } from "#/components/api/query-state";
 import { TableCard } from "#/components/data-display/table-card";
+import { TableToolbar, matches } from "#/components/data-display/table-toolbar";
 import { ConfirmDialog } from "#/components/feedback/confirm-dialog";
+import { EmptyState } from "#/components/feedback/empty-state";
 import { Notice } from "#/components/feedback/notice";
 import {
   useInvitations,
@@ -48,87 +52,114 @@ export function InvitationDirectory() {
   const { organization, access } = useOrganization();
   const [cursor, setCursor] = useState<OrganizationInvitationId>();
   const invitations = useInvitations(organization.id, cursor);
+  const [search, setSearch] = useState("");
   const resend = useOrganizationInvitationsResend();
   const revoke = useOrganizationInvitationsRevoke();
   const [revoking, setRevoking] = useState<PublicInvitation>();
   const [delivery, setDelivery] = useState<OrganizationInvitationId>();
   return (
     <div className="flex flex-col gap-4">
+      <TableToolbar search={search} onSearch={setSearch} placeholder="Search email on this page" />
       <QueryState query={invitations}>
-        <TableCard>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Email</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Expires</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {invitations.data?.invitations.map((invitation) => {
-                const status = invitation.revokedAt
-                  ? "Revoked"
-                  : invitation.acceptedAt
-                    ? "Accepted"
-                    : DateTime.toEpochMillis(invitation.expiresAt) < Date.now()
-                      ? "Expired"
-                      : "Pending";
-                return (
-                  <TableRow key={invitation.id}>
-                    <TableCell>{invitation.email}</TableCell>
-                    <TableCell>{status}</TableCell>
-                    <TableCell>{formatDate(invitation.expiresAt)}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        {!invitation.acceptedAt && !invitation.revokedAt ? (
-                          <>
+        {invitations.data?.invitations.length === 0 ? (
+          <EmptyState
+            bordered
+            art={<InviteSentIllustration />}
+            title="No pending invitations"
+            description="Invite people by email. They can join with an email code, Google or your organization’s SSO."
+          />
+        ) : (
+          <TableCard>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Expires</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {invitations.data?.invitations
+                  .filter((invitation) => matches(search, invitation.email))
+                  .map((invitation) => {
+                    const status = invitation.revokedAt
+                      ? "Revoked"
+                      : invitation.acceptedAt
+                        ? "Accepted"
+                        : DateTime.toEpochMillis(invitation.expiresAt) < Date.now()
+                          ? "Expired"
+                          : "Pending";
+                    return (
+                      <TableRow key={invitation.id}>
+                        <TableCell>{invitation.email}</TableCell>
+                        <TableCell>
+                          <Badge
+                            tone={
+                              status === "Pending"
+                                ? "info"
+                                : status === "Accepted"
+                                  ? "success"
+                                  : status === "Expired"
+                                    ? "warning"
+                                    : "neutral"
+                            }
+                          >
+                            <BadgeDot />
+                            {status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{formatDate(invitation.expiresAt)}</TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            {!invitation.acceptedAt && !invitation.revokedAt ? (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  disabled={
+                                    resend.pending || !access.permissions.includes("roles.assign")
+                                  }
+                                  onClick={async () => {
+                                    if (
+                                      await resend.run({
+                                        params: {
+                                          organizationId: organization.id,
+                                          invitationId: invitation.id,
+                                        },
+                                        payload: {},
+                                      })
+                                    )
+                                      feedback.done("Replacement invitation queued");
+                                  }}
+                                >
+                                  Resend
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => setRevoking(invitation)}
+                                >
+                                  Revoke
+                                </Button>
+                              </>
+                            ) : null}
                             <Button
                               size="sm"
                               variant="ghost"
-                              disabled={
-                                resend.pending || !access.permissions.includes("roles.assign")
-                              }
-                              onClick={async () => {
-                                if (
-                                  await resend.run({
-                                    params: {
-                                      organizationId: organization.id,
-                                      invitationId: invitation.id,
-                                    },
-                                    payload: {},
-                                  })
-                                )
-                                  feedback.done("Replacement invitation queued");
-                              }}
+                              onClick={() => setDelivery(invitation.id)}
                             >
-                              Resend
+                              Delivery
                             </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => setRevoking(invitation)}
-                            >
-                              Revoke
-                            </Button>
-                          </>
-                        ) : null}
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => setDelivery(invitation.id)}
-                        >
-                          Delivery
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </TableCard>
-        {invitations.data?.invitations.length === 0 ? <p>No invitations yet.</p> : null}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+              </TableBody>
+            </Table>
+          </TableCard>
+        )}
       </QueryState>
       <Pagination cursor={cursor} nextCursor={invitations.data?.nextCursor} onChange={setCursor} />
       {delivery ? <Delivery organizationId={organization.id} invitationId={delivery} /> : null}

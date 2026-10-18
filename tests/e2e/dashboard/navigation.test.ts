@@ -33,7 +33,11 @@ test("navigation retains the shell while route code and page data load independe
   });
 
   try {
-    await sidebar.getByRole("link", { name: "Teams", exact: true }).click();
+    await page
+      .getByRole("navigation", { name: "Settings", exact: true })
+      .first()
+      .getByRole("link", { name: "Teams", exact: true })
+      .click();
     await codeRequested.promise;
     await page.clock.fastForward(1_500);
     await expect(sidebar).toBeVisible();
@@ -55,7 +59,7 @@ test("navigation retains the shell while route code and page data load independe
     await expect(sidebar).toHaveAttribute("data-navigation-marker", "retained");
 
     teamsReady.resolve();
-    await expect(page.getByText("No teams yet.", { exact: true })).toBeVisible();
+    await expect(page.getByText("Create your first team", { exact: true })).toBeVisible();
     await expect(page.getByRole("status", { name: "Loading content" })).toHaveCount(0);
   } finally {
     codeReady.resolve();

@@ -5,8 +5,9 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Schema } from "effect";
 
 import { TeamId, type TeamPermission } from "@usepreface/protocol";
-import { Button } from "@usepreface/ui/components/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@usepreface/ui/components/tabs";
 import { TrashIcon } from "@usepreface/ui/icons";
+import { InlineCode } from "@usepreface/ui/preface/data-display";
 
 import { QueryState } from "#/components/api/query-state";
 import { AccessDenied } from "#/components/feedback/access-denied";
@@ -17,8 +18,9 @@ import { useTeam, useTeamAccess, useTeamsArchive } from "#/hooks/membership";
 import { useOrganization } from "#/hooks/organizations";
 
 import { SettingsFrame } from "../-components/settings-frame";
-import { TeamDialog } from "./-components/team-dialog";
 import { TeamMemberDirectory } from "./-components/team-member-directory";
+import { TeamSettings } from "./-components/team-settings";
+import { TeamTile } from "./-components/team-tile";
 
 export const Route = createFileRoute("/org/$slug/_app/settings/teams/$teamId")({
   component: TeamPage,
@@ -65,7 +67,6 @@ function TeamContent({
   const query = useTeam(organization.id, teamId);
   const archive = useTeamsArchive();
   const navigate = useNavigate();
-  const [editing, setEditing] = useState(false);
   const [archiving, setArchiving] = useState(false);
   return (
     <SettingsFrame
@@ -76,32 +77,38 @@ function TeamContent({
         },
         { label: query.data?.metadata.name ?? "Team" },
       ]}
-      actions={
-        <>
-          {permissions.includes("team.update") ? (
-            <Button variant="outline" onClick={() => setEditing(true)}>
-              Edit team
-            </Button>
-          ) : null}
-          {permissions.includes("team.archive") ? (
-            <Button variant="outline" onClick={() => setArchiving(true)}>
-              Archive team
-            </Button>
-          ) : null}
-        </>
-      }
+      width="full"
     >
       <QueryState query={query}>
         <PageTitle
+          leading={<TeamTile size="lg" archived={Boolean(query.data?.archivedAt)} />}
           title={query.data?.metadata.name ?? "Team"}
+          badges={<InlineCode>{query.data?.slug}</InlineCode>}
           description={query.data?.metadata.description}
         />
-        {permissions.includes("team.members.read") ? (
-          <TeamMemberDirectory teamId={teamId} permissions={permissions} />
-        ) : null}
-        {editing && query.data ? (
-          <TeamDialog team={query.data} onClose={() => setEditing(false)} />
-        ) : null}
+        <Tabs defaultValue={permissions.includes("team.members.read") ? "members" : "settings"}>
+          <TabsList variant="line">
+            {permissions.includes("team.members.read") ? (
+              <TabsTrigger value="members">Members</TabsTrigger>
+            ) : null}
+            <TabsTrigger value="settings">Settings</TabsTrigger>
+          </TabsList>
+          {permissions.includes("team.members.read") ? (
+            <TabsContent value="members" className="pt-4">
+              <TeamMemberDirectory teamId={teamId} permissions={permissions} />
+            </TabsContent>
+          ) : null}
+          <TabsContent value="settings" className="flex flex-col gap-5 pt-4 lg:max-w-200">
+            {query.data ? (
+              <TeamSettings
+                team={query.data}
+                canUpdate={permissions.includes("team.update")}
+                canArchive={permissions.includes("team.archive")}
+                onArchive={() => setArchiving(true)}
+              />
+            ) : null}
+          </TabsContent>
+        </Tabs>
       </QueryState>
       <ConfirmDialog
         open={archiving}

@@ -6,13 +6,16 @@ import { Schema } from "effect";
 
 import { OrganizationId, OrganizationDomainId } from "@usepreface/protocol";
 import { Button } from "@usepreface/ui/components/button";
-import { TrashIcon } from "@usepreface/ui/icons";
+import { GlobeIcon, TrashIcon } from "@usepreface/ui/icons";
 
 import { operatorDomainAtom } from "#/atoms/organizations";
 import { QueryState } from "#/components/api/query-state";
+import { DetailList } from "#/components/data-display/detail-list";
+import { IconTile } from "#/components/data-display/icon-tile";
 import { ConfirmDialog } from "#/components/feedback/confirm-dialog";
 import { Notice } from "#/components/feedback/notice";
 import { PageTitle } from "#/components/shell/page";
+import { SectionCard } from "#/components/shell/section-card";
 import {
   useOrganizationDomainsApprove,
   useOrganizationDomainsWithdrawApproval,
@@ -36,26 +39,51 @@ function DomainReview() {
   const revoke = useOrganizationDomainsWithdrawApproval();
   const [action, setAction] = useState<"approve" | "revoke">();
   return (
-    <InstancePage crumbs={[{ label: "Domain review" }]}>
+    <InstancePage
+      crumbs={[{ label: "Domain review" }]}
+      actions={
+        query.data ? (
+          <>
+            <Button onClick={() => setAction("approve")}>Approve exact claim</Button>
+            <Button variant="destructive-outline" onClick={() => setAction("revoke")}>
+              Withdraw manual approval
+            </Button>
+          </>
+        ) : null
+      }
+    >
       <PageTitle
         title={query.data?.domain ?? "Review domain"}
-        description={`Organization ${params.organizationId}`}
+        leading={<IconTile icon={GlobeIcon} />}
+        description="Review the exact organization claim before granting domain authority."
       />
       <Notice>
         Confirm domain ownership independently before approval. This grants email-domain authority
         to the exact organization claim, without granting membership.
       </Notice>
       <QueryState query={query}>
-        <p className="text-sm text-fg-secondary">
-          Method: {query.data?.verificationMethod ?? "Unverified"} · Valid until{" "}
-          {formatDate(query.data?.verifiedUntil)} ·{" "}
-          {query.data?.revokedAt ? "Revoked" : "Current claim"}
-        </p>
-        <div className="flex gap-3">
-          <Button onClick={() => setAction("approve")}>Approve exact claim</Button>
-          <Button variant="outline" onClick={() => setAction("revoke")}>
-            Withdraw manual approval
-          </Button>
+        <div className="grid gap-5 lg:grid-cols-2">
+          <SectionCard title="Claim">
+            <DetailList
+              labelWidth="w-28"
+              items={[
+                { label: "Organization ID", value: params.organizationId, mono: true },
+                { label: "Domain", value: query.data?.domain, mono: true },
+                { label: "Revision", value: query.data?.revision },
+                { label: "Status", value: query.data?.revokedAt ? "Revoked" : "Current claim" },
+              ]}
+            />
+          </SectionCard>
+          <SectionCard title="Verification">
+            <DetailList
+              labelWidth="w-28"
+              items={[
+                { label: "Method", value: query.data?.verificationMethod ?? "Unverified" },
+                { label: "Verified", value: formatDate(query.data?.verifiedAt) },
+                { label: "Expires", value: formatDate(query.data?.verifiedUntil) },
+              ]}
+            />
+          </SectionCard>
         </div>
       </QueryState>
       <ConfirmDialog

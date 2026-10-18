@@ -98,6 +98,12 @@ OIDC/SAML, approve policy connections, bind verified domains, inspect connection
 health and manage staged SAML signing keys. Instance Google configuration follows
 its separate owner/test/activation boundary.
 
+Directory search and status/role controls filter the currently loaded page; cursor
+navigation remains available. Team details live under the team's Settings tab and
+save only edited metadata fields. The home invitation form grants the built-in
+Member role only when the actor may assign all of its permissions; otherwise it
+opens the full role-selection dialog. Unsupported knowledge actions stay disabled.
+
 Recovery issuance displays the credential once and clears it on close; redemption
 uses the owner's current policy revision and recent email proof independently of
 SSO. The backend consumes it and changes policy atomically. Audit pages filter,

@@ -45,7 +45,7 @@ test("OIDC is configured and activated in the dashboard, then an invitation admi
   await authenticateAtKeycloak(page, page.url(), "operator", realm.password, backend.dashboard);
   await page.goto(`${backend.dashboard}/org/company/settings/connections/${created.id}`);
   await page.getByRole("button", { name: "Activate tested revision", exact: true }).click();
-  await expect(page.getByText(/OIDC · active · revision/)).toBeVisible();
+  await expect(page.getByText("active", { exact: true })).toBeVisible();
   const activated = await api.json(PublicOidcConnection, `${connectionsPath}/${created.id}`);
   expect(activated.status).toBe("active");
   await page.getByLabel("Connection name", { exact: true }).fill("Company OIDC Updated");
@@ -146,6 +146,6 @@ test("SAML metadata and IdP settings are configured and browser-tested through t
   await authenticateAtKeycloak(page, page.url(), "operator", realm.password, backend.dashboard);
   await page.goto(`${backend.dashboard}/org/company/settings/connections/${connection.id}`);
   await page.getByRole("button", { name: "Activate tested revision", exact: true }).click();
-  await expect(page.getByText(/SAML · active · revision/)).toBeVisible();
+  await expect(page.getByText("active", { exact: true })).toBeVisible();
   expect((await api.json(PublicSamlConnection, `${base}/${connection.id}`)).status).toBe("active");
 });

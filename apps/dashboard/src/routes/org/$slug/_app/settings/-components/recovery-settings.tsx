@@ -26,6 +26,7 @@ export function RecoverySettings() {
   const [secret, setSecret] = useState<string>();
   return (
     <PageSection
+      className="rounded-xl border bg-surface-1 p-5"
       title="Offline recovery"
       description="Credentials belong to the owner who creates them. Rotation replaces your previous credential."
     >
@@ -36,11 +37,16 @@ export function RecoverySettings() {
             : "You do not have a recovery credential."}
         </p>
         <div className="flex gap-3">
-          <Button disabled={rotate.pending} onClick={() => setRotating(true)}>
+          <Button type="button" disabled={rotate.pending} onClick={() => setRotating(true)}>
             Generate replacement credential
           </Button>
           {recovery.data?.credential ? (
-            <Button variant="outline" disabled={revoke.pending} onClick={() => setRevoking(true)}>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={revoke.pending}
+              onClick={() => setRevoking(true)}
+            >
               Revoke credential
             </Button>
           ) : null}
@@ -85,7 +91,11 @@ export function RecoverySettings() {
           }}
           title="Save your recovery credential"
           description="This is the only time it is shown. Store it securely before closing."
-          footer={<Button onClick={() => setSecret(undefined)}>I have saved it</Button>}
+          footer={
+            <Button type="button" onClick={() => setSecret(undefined)}>
+              I have saved it
+            </Button>
+          }
         >
           <Notice tone="warning">
             Losing this credential requires generating a replacement while you still have access.
