@@ -111,6 +111,6 @@ own current authority and proof consumption.
 - [Delivery](../../packages/emails/src/jobs/delivery.ts) and [worker](../../packages/emails/src/jobs/worker.ts)
 - [Provider selection](../../packages/emails/src/node/provider.ts)
 - [Cipher](../../packages/emails/src/node/cipher.ts)
-- [Operational authentication renderer](../../packages/emails/src/authentication-renderer.ts)
+- [Operational authentication renderer](../../packages/emails/src/rendering/authentication.ts)
 - [Renderer boundary](../../packages/emails/src/renderer.ts)
 - [Tests](../../packages/emails/tests)

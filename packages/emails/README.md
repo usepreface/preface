@@ -32,8 +32,9 @@ export const enqueueEmail = Effect.fn("enqueueEmail")(function* (input: EnqueueE
 
 `EnqueueEmail` is a discriminated union: `type` selects the exact `variables`.
 Supported payload contracts are `instance-setup`, `sign-in`, `organization-invitation`,
-`invitation-verification` and `email-reauthentication`, exported from `@usepreface/protocol/model`.
-All five payloads are wired to application workflows and minimal operational renderers.
+`invitation-verification`, `email-reauthentication`, `identity-verification` and
+`organization-security`, exported from `@usepreface/protocol/model`. Each payload is wired
+to application workflows and a minimal operational renderer.
 
 Each request also supplies a stable business `idempotencyKey` and `expiresAt`, with
 optional `availableAt`. Expiry cannot exceed the credential deadline in the

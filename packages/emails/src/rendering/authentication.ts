@@ -1,9 +1,10 @@
 import { DateTime, Effect, Layer } from "effect";
 
-import { renderInvitationEmail } from "#/invitation-renderer";
-import { renderOrganizationSecurityEmail } from "#/organization-security-renderer";
 import { EmailRenderer } from "#/renderer";
-import { renderSetupEmail } from "#/setup-renderer";
+import { escapeHtml } from "#/rendering/html";
+import { renderInvitationEmail } from "#/rendering/invitation";
+import { renderOrganizationSecurityEmail } from "#/rendering/organization-security";
+import { renderSetupEmail } from "#/rendering/setup";
 
 export const AuthenticationEmailRenderer = {
   layer: Layer.succeed(
@@ -15,6 +16,7 @@ export const AuthenticationEmailRenderer = {
         if (payload.type === "organization-invitation")
           return yield* renderInvitationEmail(payload);
         if (payload.type === "instance-setup") return yield* renderSetupEmail(payload);
+
         const reauthentication = payload.type === "email-reauthentication";
         const invitation = payload.type === "invitation-verification";
 
@@ -31,12 +33,9 @@ export const AuthenticationEmailRenderer = {
 
         const { code, magicLinkUrl, expiresAt } = payload.variables;
         const expiry = DateTime.formatIso(expiresAt);
-        // The workflow builds this trusted URL; escape the HTML attribute separately from its text form.
-        const href = magicLinkUrl
-          ?.replaceAll("&", "&amp;")
-          .replaceAll('"', "&quot;")
-          .replaceAll("<", "&lt;")
-          .replaceAll(">", "&gt;");
+        // Application workflows supply trusted URLs; escaping only protects the HTML attribute.
+        const href = magicLinkUrl === undefined ? undefined : escapeHtml(magicLinkUrl);
+
         return {
           subject: reauthentication
             ? "Confirm your Preface account action"

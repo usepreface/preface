@@ -89,6 +89,6 @@ typed contract, cookie delivery, replay rejection and session management.
 - [Verification repository](../../packages/database/src/repositories/auth/verification.ts)
 - [Verification schema](../../packages/database/src/schema/auth/verification.ts)
 - [HTTP routes](../../apps/server/src/http/routes/auth/email-sign-in.ts)
-- [Operational renderer](../../packages/emails/src/authentication-renderer.ts)
+- [Operational renderer](../../packages/emails/src/rendering/authentication.ts)
 - [Cleanup task](../../apps/server/src/authentication-maintenance.ts)
 - [Application tests](../../packages/application/tests/integration/auth/email-sign-in.test.ts)
