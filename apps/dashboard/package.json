@@ -16,7 +16,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@hookform/resolvers": "5.9.1",
+    "@hookform/resolvers": "5.9.2",
     "@standard-schema/spec": "1.1.0",
     "@tanstack/react-router": "1.170.44",
     "@usepreface/protocol": "workspace:*",
@@ -24,7 +24,7 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "react-hook-form": "7.89.0"
+    "react-hook-form": "7.90.0"
   },
   "devDependencies": {
     "@tailwindcss/vite": "4.3.3",

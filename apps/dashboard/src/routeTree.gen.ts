@@ -8,812 +8,827 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from "./routes/__root";
-import { Route as AccountIndexRouteImport } from "./routes/account/index";
-import { Route as AccountProfileRouteImport } from "./routes/account/profile";
-import { Route as AccountRouteImport } from "./routes/account/route";
-import { Route as AccountSecurityRouteImport } from "./routes/account/security";
-import { Route as AuthEmailVerifyRouteImport } from "./routes/auth/email/verify";
-import { Route as AuthErrorRouteImport } from "./routes/auth/error";
-import { Route as AuthReauthenticateRouteImport } from "./routes/auth/reauthenticate";
-import { Route as AuthVerifyEmailRouteImport } from "./routes/auth/verify-email";
-import { Route as IndexRouteImport } from "./routes/index";
-import { Route as InstanceAuditRouteImport } from "./routes/instance/audit";
-import { Route as InstanceAuthenticationRouteImport } from "./routes/instance/authentication";
-import { Route as InstanceDomainsOrganizationIdDomainIdRouteImport } from "./routes/instance/domains/$organizationId/$domainId";
-import { Route as InstanceIndexRouteImport } from "./routes/instance/index";
-import { Route as InstanceRouteImport } from "./routes/instance/route";
-import { Route as InvitationsAcceptRouteImport } from "./routes/invitations/accept";
-import { Route as OrgSlugAppRouteImport } from "./routes/org/$slug/_app";
-import { Route as OrgSlugAppIndexRouteImport } from "./routes/org/$slug/_app/index";
-import { Route as OrgSlugAppSettingsAuditRouteImport } from "./routes/org/$slug/_app/settings/audit";
-import { Route as OrgSlugAppSettingsAuthenticationRouteImport } from "./routes/org/$slug/_app/settings/authentication";
-import { Route as OrgSlugAppSettingsConnectionsConnectionIdRouteImport } from "./routes/org/$slug/_app/settings/connections/$connectionId";
-import { Route as OrgSlugAppSettingsConnectionsIndexRouteImport } from "./routes/org/$slug/_app/settings/connections/index";
-import { Route as OrgSlugAppSettingsDomainsRouteImport } from "./routes/org/$slug/_app/settings/domains";
-import { Route as OrgSlugAppSettingsGeneralRouteImport } from "./routes/org/$slug/_app/settings/general";
-import { Route as OrgSlugAppSettingsIndexRouteImport } from "./routes/org/$slug/_app/settings/index";
-import { Route as OrgSlugAppSettingsMembersRouteImport } from "./routes/org/$slug/_app/settings/members";
-import { Route as OrgSlugAppSettingsRolesRouteImport } from "./routes/org/$slug/_app/settings/roles";
-import { Route as OrgSlugAppSettingsTeamsTeamIdRouteImport } from "./routes/org/$slug/_app/settings/teams/$teamId";
-import { Route as OrgSlugAppSettingsTeamsIndexRouteImport } from "./routes/org/$slug/_app/settings/teams/index";
-import { Route as OrgSlugAuthRecoveryRouteImport } from "./routes/org/$slug/auth-recovery";
-import { Route as OrganizationsIndexRouteImport } from "./routes/organizations/index";
-import { Route as OrganizationsNewRouteImport } from "./routes/organizations/new";
-import { Route as SetupIndexRouteImport } from "./routes/setup/index";
-import { Route as SetupOrganizationRouteImport } from "./routes/setup/organization";
-import { Route as SetupVerifyRouteImport } from "./routes/setup/verify";
-import { Route as SignInIndexRouteImport } from "./routes/sign-in/index";
-import { Route as SignInVerifyRouteImport } from "./routes/sign-in/verify";
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as AccountRouteRouteImport } from './routes/account/route'
+import { Route as InstanceRouteRouteImport } from './routes/instance/route'
+import { Route as AccountIndexRouteImport } from './routes/account/index'
+import { Route as AccountProfileRouteImport } from './routes/account/profile'
+import { Route as AccountSecurityRouteImport } from './routes/account/security'
+import { Route as AuthErrorRouteImport } from './routes/auth/error'
+import { Route as AuthReauthenticateRouteImport } from './routes/auth/reauthenticate'
+import { Route as AuthVerifyEmailRouteImport } from './routes/auth/verify-email'
+import { Route as InstanceIndexRouteImport } from './routes/instance/index'
+import { Route as InstanceAuditRouteImport } from './routes/instance/audit'
+import { Route as InstanceAuthenticationRouteImport } from './routes/instance/authentication'
+import { Route as InvitationsAcceptRouteImport } from './routes/invitations/accept'
+import { Route as OrganizationsIndexRouteImport } from './routes/organizations/index'
+import { Route as OrganizationsNewRouteImport } from './routes/organizations/new'
+import { Route as SetupIndexRouteImport } from './routes/setup/index'
+import { Route as SetupOrganizationRouteImport } from './routes/setup/organization'
+import { Route as SetupVerifyRouteImport } from './routes/setup/verify'
+import { Route as SignInIndexRouteImport } from './routes/sign-in/index'
+import { Route as SignInVerifyRouteImport } from './routes/sign-in/verify'
+import { Route as AuthEmailVerifyRouteImport } from './routes/auth/email/verify'
+import { Route as OrgSlugAppRouteImport } from './routes/org/$slug/_app'
+import { Route as OrgSlugAuthRecoveryRouteImport } from './routes/org/$slug/auth-recovery'
+import { Route as InstanceDomainsOrganizationIdDomainIdRouteImport } from './routes/instance/domains/$organizationId/$domainId'
+import { Route as OrgSlugAppIndexRouteImport } from './routes/org/$slug/_app/index'
+import { Route as OrgSlugAppSettingsIndexRouteImport } from './routes/org/$slug/_app/settings/index'
+import { Route as OrgSlugAppSettingsAuditRouteImport } from './routes/org/$slug/_app/settings/audit'
+import { Route as OrgSlugAppSettingsAuthenticationRouteImport } from './routes/org/$slug/_app/settings/authentication'
+import { Route as OrgSlugAppSettingsDomainsRouteImport } from './routes/org/$slug/_app/settings/domains'
+import { Route as OrgSlugAppSettingsGeneralRouteImport } from './routes/org/$slug/_app/settings/general'
+import { Route as OrgSlugAppSettingsMembersRouteImport } from './routes/org/$slug/_app/settings/members'
+import { Route as OrgSlugAppSettingsRolesRouteImport } from './routes/org/$slug/_app/settings/roles'
+import { Route as OrgSlugAppSettingsConnectionsIndexRouteImport } from './routes/org/$slug/_app/settings/connections/index'
+import { Route as OrgSlugAppSettingsConnectionsConnectionIdRouteImport } from './routes/org/$slug/_app/settings/connections/$connectionId'
+import { Route as OrgSlugAppSettingsTeamsIndexRouteImport } from './routes/org/$slug/_app/settings/teams/index'
+import { Route as OrgSlugAppSettingsTeamsTeamIdRouteImport } from './routes/org/$slug/_app/settings/teams/$teamId'
 
-const AccountIndexRoute = AccountIndexRouteImport.update({
-  id: "/",
-  path: "/",
-  getParentRoute: () => AccountRoute,
-} as any);
-const AccountProfileRoute = AccountProfileRouteImport.update({
-  id: "/profile",
-  path: "/profile",
-  getParentRoute: () => AccountRoute,
-} as any);
-const AccountRoute = AccountRouteImport.update({
-  id: "/account",
-  path: "/account",
-  getParentRoute: () => rootRouteImport,
-} as any);
-const AccountSecurityRoute = AccountSecurityRouteImport.update({
-  id: "/security",
-  path: "/security",
-  getParentRoute: () => AccountRoute,
-} as any);
-const AuthEmailVerifyRoute = AuthEmailVerifyRouteImport.update({
-  id: "/auth/email/verify",
-  path: "/auth/email/verify",
-  getParentRoute: () => rootRouteImport,
-} as any);
-const AuthErrorRoute = AuthErrorRouteImport.update({
-  id: "/auth/error",
-  path: "/auth/error",
-  getParentRoute: () => rootRouteImport,
-} as any);
-const AuthReauthenticateRoute = AuthReauthenticateRouteImport.update({
-  id: "/auth/reauthenticate",
-  path: "/auth/reauthenticate",
-  getParentRoute: () => rootRouteImport,
-} as any);
-const AuthVerifyEmailRoute = AuthVerifyEmailRouteImport.update({
-  id: "/auth/verify-email",
-  path: "/auth/verify-email",
-  getParentRoute: () => rootRouteImport,
-} as any);
 const IndexRoute = IndexRouteImport.update({
-  id: "/",
-  path: "/",
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
+const AccountRouteRoute = AccountRouteRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InstanceRouteRoute = InstanceRouteRouteImport.update({
+  id: '/instance',
+  path: '/instance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountIndexRoute = AccountIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AccountRouteRoute,
+} as any)
+const AccountProfileRoute = AccountProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AccountRouteRoute,
+} as any)
+const AccountSecurityRoute = AccountSecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => AccountRouteRoute,
+} as any)
+const AuthErrorRoute = AuthErrorRouteImport.update({
+  id: '/auth/error',
+  path: '/auth/error',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthReauthenticateRoute = AuthReauthenticateRouteImport.update({
+  id: '/auth/reauthenticate',
+  path: '/auth/reauthenticate',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthVerifyEmailRoute = AuthVerifyEmailRouteImport.update({
+  id: '/auth/verify-email',
+  path: '/auth/verify-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InstanceIndexRoute = InstanceIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => InstanceRouteRoute,
+} as any)
 const InstanceAuditRoute = InstanceAuditRouteImport.update({
-  id: "/audit",
-  path: "/audit",
-  getParentRoute: () => InstanceRoute,
-} as any);
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => InstanceRouteRoute,
+} as any)
 const InstanceAuthenticationRoute = InstanceAuthenticationRouteImport.update({
-  id: "/authentication",
-  path: "/authentication",
-  getParentRoute: () => InstanceRoute,
-} as any);
+  id: '/authentication',
+  path: '/authentication',
+  getParentRoute: () => InstanceRouteRoute,
+} as any)
+const InvitationsAcceptRoute = InvitationsAcceptRouteImport.update({
+  id: '/invitations/accept',
+  path: '/invitations/accept',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrganizationsIndexRoute = OrganizationsIndexRouteImport.update({
+  id: '/organizations/',
+  path: '/organizations/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrganizationsNewRoute = OrganizationsNewRouteImport.update({
+  id: '/organizations/new',
+  path: '/organizations/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SetupIndexRoute = SetupIndexRouteImport.update({
+  id: '/setup/',
+  path: '/setup/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SetupOrganizationRoute = SetupOrganizationRouteImport.update({
+  id: '/setup/organization',
+  path: '/setup/organization',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SetupVerifyRoute = SetupVerifyRouteImport.update({
+  id: '/setup/verify',
+  path: '/setup/verify',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignInIndexRoute = SignInIndexRouteImport.update({
+  id: '/sign-in/',
+  path: '/sign-in/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignInVerifyRoute = SignInVerifyRouteImport.update({
+  id: '/sign-in/verify',
+  path: '/sign-in/verify',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthEmailVerifyRoute = AuthEmailVerifyRouteImport.update({
+  id: '/auth/email/verify',
+  path: '/auth/email/verify',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrgSlugAppRoute = OrgSlugAppRouteImport.update({
+  id: '/org/$slug/_app',
+  path: '/org/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrgSlugAuthRecoveryRoute = OrgSlugAuthRecoveryRouteImport.update({
+  id: '/org/$slug/auth-recovery',
+  path: '/org/$slug/auth-recovery',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InstanceDomainsOrganizationIdDomainIdRoute =
   InstanceDomainsOrganizationIdDomainIdRouteImport.update({
-    id: "/domains/$organizationId/$domainId",
-    path: "/domains/$organizationId/$domainId",
-    getParentRoute: () => InstanceRoute,
-  } as any);
-const InstanceIndexRoute = InstanceIndexRouteImport.update({
-  id: "/",
-  path: "/",
-  getParentRoute: () => InstanceRoute,
-} as any);
-const InstanceRoute = InstanceRouteImport.update({
-  id: "/instance",
-  path: "/instance",
-  getParentRoute: () => rootRouteImport,
-} as any);
-const InvitationsAcceptRoute = InvitationsAcceptRouteImport.update({
-  id: "/invitations/accept",
-  path: "/invitations/accept",
-  getParentRoute: () => rootRouteImport,
-} as any);
-const OrgSlugAppRoute = OrgSlugAppRouteImport.update({
-  id: "/org/$slug/_app",
-  path: "/org/$slug",
-  getParentRoute: () => rootRouteImport,
-} as any);
+    id: '/domains/$organizationId/$domainId',
+    path: '/domains/$organizationId/$domainId',
+    getParentRoute: () => InstanceRouteRoute,
+  } as any)
 const OrgSlugAppIndexRoute = OrgSlugAppIndexRouteImport.update({
-  id: "/",
-  path: "/",
+  id: '/',
+  path: '/',
   getParentRoute: () => OrgSlugAppRoute,
-} as any);
+} as any)
+const OrgSlugAppSettingsIndexRoute = OrgSlugAppSettingsIndexRouteImport.update({
+  id: '/settings/',
+  path: '/settings/',
+  getParentRoute: () => OrgSlugAppRoute,
+} as any)
 const OrgSlugAppSettingsAuditRoute = OrgSlugAppSettingsAuditRouteImport.update({
-  id: "/settings/audit",
-  path: "/settings/audit",
+  id: '/settings/audit',
+  path: '/settings/audit',
   getParentRoute: () => OrgSlugAppRoute,
-} as any);
-const OrgSlugAppSettingsAuthenticationRoute = OrgSlugAppSettingsAuthenticationRouteImport.update({
-  id: "/settings/authentication",
-  path: "/settings/authentication",
-  getParentRoute: () => OrgSlugAppRoute,
-} as any);
-const OrgSlugAppSettingsConnectionsConnectionIdRoute =
-  OrgSlugAppSettingsConnectionsConnectionIdRouteImport.update({
-    id: "/settings/connections/$connectionId",
-    path: "/settings/connections/$connectionId",
+} as any)
+const OrgSlugAppSettingsAuthenticationRoute =
+  OrgSlugAppSettingsAuthenticationRouteImport.update({
+    id: '/settings/authentication',
+    path: '/settings/authentication',
     getParentRoute: () => OrgSlugAppRoute,
-  } as any);
+  } as any)
+const OrgSlugAppSettingsDomainsRoute =
+  OrgSlugAppSettingsDomainsRouteImport.update({
+    id: '/settings/domains',
+    path: '/settings/domains',
+    getParentRoute: () => OrgSlugAppRoute,
+  } as any)
+const OrgSlugAppSettingsGeneralRoute =
+  OrgSlugAppSettingsGeneralRouteImport.update({
+    id: '/settings/general',
+    path: '/settings/general',
+    getParentRoute: () => OrgSlugAppRoute,
+  } as any)
+const OrgSlugAppSettingsMembersRoute =
+  OrgSlugAppSettingsMembersRouteImport.update({
+    id: '/settings/members',
+    path: '/settings/members',
+    getParentRoute: () => OrgSlugAppRoute,
+  } as any)
+const OrgSlugAppSettingsRolesRoute = OrgSlugAppSettingsRolesRouteImport.update({
+  id: '/settings/roles',
+  path: '/settings/roles',
+  getParentRoute: () => OrgSlugAppRoute,
+} as any)
 const OrgSlugAppSettingsConnectionsIndexRoute =
   OrgSlugAppSettingsConnectionsIndexRouteImport.update({
-    id: "/settings/connections/",
-    path: "/settings/connections/",
+    id: '/settings/connections/',
+    path: '/settings/connections/',
     getParentRoute: () => OrgSlugAppRoute,
-  } as any);
-const OrgSlugAppSettingsDomainsRoute = OrgSlugAppSettingsDomainsRouteImport.update({
-  id: "/settings/domains",
-  path: "/settings/domains",
-  getParentRoute: () => OrgSlugAppRoute,
-} as any);
-const OrgSlugAppSettingsGeneralRoute = OrgSlugAppSettingsGeneralRouteImport.update({
-  id: "/settings/general",
-  path: "/settings/general",
-  getParentRoute: () => OrgSlugAppRoute,
-} as any);
-const OrgSlugAppSettingsIndexRoute = OrgSlugAppSettingsIndexRouteImport.update({
-  id: "/settings/",
-  path: "/settings/",
-  getParentRoute: () => OrgSlugAppRoute,
-} as any);
-const OrgSlugAppSettingsMembersRoute = OrgSlugAppSettingsMembersRouteImport.update({
-  id: "/settings/members",
-  path: "/settings/members",
-  getParentRoute: () => OrgSlugAppRoute,
-} as any);
-const OrgSlugAppSettingsRolesRoute = OrgSlugAppSettingsRolesRouteImport.update({
-  id: "/settings/roles",
-  path: "/settings/roles",
-  getParentRoute: () => OrgSlugAppRoute,
-} as any);
-const OrgSlugAppSettingsTeamsTeamIdRoute = OrgSlugAppSettingsTeamsTeamIdRouteImport.update({
-  id: "/settings/teams/$teamId",
-  path: "/settings/teams/$teamId",
-  getParentRoute: () => OrgSlugAppRoute,
-} as any);
-const OrgSlugAppSettingsTeamsIndexRoute = OrgSlugAppSettingsTeamsIndexRouteImport.update({
-  id: "/settings/teams/",
-  path: "/settings/teams/",
-  getParentRoute: () => OrgSlugAppRoute,
-} as any);
-const OrgSlugAuthRecoveryRoute = OrgSlugAuthRecoveryRouteImport.update({
-  id: "/org/$slug/auth-recovery",
-  path: "/org/$slug/auth-recovery",
-  getParentRoute: () => rootRouteImport,
-} as any);
-const OrganizationsIndexRoute = OrganizationsIndexRouteImport.update({
-  id: "/organizations/",
-  path: "/organizations/",
-  getParentRoute: () => rootRouteImport,
-} as any);
-const OrganizationsNewRoute = OrganizationsNewRouteImport.update({
-  id: "/organizations/new",
-  path: "/organizations/new",
-  getParentRoute: () => rootRouteImport,
-} as any);
-const SetupIndexRoute = SetupIndexRouteImport.update({
-  id: "/setup/",
-  path: "/setup/",
-  getParentRoute: () => rootRouteImport,
-} as any);
-const SetupOrganizationRoute = SetupOrganizationRouteImport.update({
-  id: "/setup/organization",
-  path: "/setup/organization",
-  getParentRoute: () => rootRouteImport,
-} as any);
-const SetupVerifyRoute = SetupVerifyRouteImport.update({
-  id: "/setup/verify",
-  path: "/setup/verify",
-  getParentRoute: () => rootRouteImport,
-} as any);
-const SignInIndexRoute = SignInIndexRouteImport.update({
-  id: "/sign-in/",
-  path: "/sign-in/",
-  getParentRoute: () => rootRouteImport,
-} as any);
-const SignInVerifyRoute = SignInVerifyRouteImport.update({
-  id: "/sign-in/verify",
-  path: "/sign-in/verify",
-  getParentRoute: () => rootRouteImport,
-} as any);
+  } as any)
+const OrgSlugAppSettingsConnectionsConnectionIdRoute =
+  OrgSlugAppSettingsConnectionsConnectionIdRouteImport.update({
+    id: '/settings/connections/$connectionId',
+    path: '/settings/connections/$connectionId',
+    getParentRoute: () => OrgSlugAppRoute,
+  } as any)
+const OrgSlugAppSettingsTeamsIndexRoute =
+  OrgSlugAppSettingsTeamsIndexRouteImport.update({
+    id: '/settings/teams/',
+    path: '/settings/teams/',
+    getParentRoute: () => OrgSlugAppRoute,
+  } as any)
+const OrgSlugAppSettingsTeamsTeamIdRoute =
+  OrgSlugAppSettingsTeamsTeamIdRouteImport.update({
+    id: '/settings/teams/$teamId',
+    path: '/settings/teams/$teamId',
+    getParentRoute: () => OrgSlugAppRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
-  "/account/": typeof AccountIndexRoute;
-  "/account/profile": typeof AccountProfileRoute;
-  "/account": typeof AccountRouteWithChildren;
-  "/account/security": typeof AccountSecurityRoute;
-  "/auth/email/verify": typeof AuthEmailVerifyRoute;
-  "/auth/error": typeof AuthErrorRoute;
-  "/auth/reauthenticate": typeof AuthReauthenticateRoute;
-  "/auth/verify-email": typeof AuthVerifyEmailRoute;
-  "/": typeof IndexRoute;
-  "/instance/audit": typeof InstanceAuditRoute;
-  "/instance/authentication": typeof InstanceAuthenticationRoute;
-  "/instance/domains/$organizationId/$domainId": typeof InstanceDomainsOrganizationIdDomainIdRoute;
-  "/instance/": typeof InstanceIndexRoute;
-  "/instance": typeof InstanceRouteWithChildren;
-  "/invitations/accept": typeof InvitationsAcceptRoute;
-  "/org/$slug": typeof OrgSlugAppRouteWithChildren;
-  "/org/$slug/": typeof OrgSlugAppIndexRoute;
-  "/org/$slug/settings/audit": typeof OrgSlugAppSettingsAuditRoute;
-  "/org/$slug/settings/authentication": typeof OrgSlugAppSettingsAuthenticationRoute;
-  "/org/$slug/settings/connections/$connectionId": typeof OrgSlugAppSettingsConnectionsConnectionIdRoute;
-  "/org/$slug/settings/connections/": typeof OrgSlugAppSettingsConnectionsIndexRoute;
-  "/org/$slug/settings/domains": typeof OrgSlugAppSettingsDomainsRoute;
-  "/org/$slug/settings/general": typeof OrgSlugAppSettingsGeneralRoute;
-  "/org/$slug/settings/": typeof OrgSlugAppSettingsIndexRoute;
-  "/org/$slug/settings/members": typeof OrgSlugAppSettingsMembersRoute;
-  "/org/$slug/settings/roles": typeof OrgSlugAppSettingsRolesRoute;
-  "/org/$slug/settings/teams/$teamId": typeof OrgSlugAppSettingsTeamsTeamIdRoute;
-  "/org/$slug/settings/teams/": typeof OrgSlugAppSettingsTeamsIndexRoute;
-  "/org/$slug/auth-recovery": typeof OrgSlugAuthRecoveryRoute;
-  "/organizations/": typeof OrganizationsIndexRoute;
-  "/organizations/new": typeof OrganizationsNewRoute;
-  "/setup/": typeof SetupIndexRoute;
-  "/setup/organization": typeof SetupOrganizationRoute;
-  "/setup/verify": typeof SetupVerifyRoute;
-  "/sign-in/": typeof SignInIndexRoute;
-  "/sign-in/verify": typeof SignInVerifyRoute;
+  '/': typeof IndexRoute
+  '/account': typeof AccountRouteRouteWithChildren
+  '/instance': typeof InstanceRouteRouteWithChildren
+  '/account/profile': typeof AccountProfileRoute
+  '/account/security': typeof AccountSecurityRoute
+  '/auth/error': typeof AuthErrorRoute
+  '/auth/reauthenticate': typeof AuthReauthenticateRoute
+  '/auth/verify-email': typeof AuthVerifyEmailRoute
+  '/instance/audit': typeof InstanceAuditRoute
+  '/instance/authentication': typeof InstanceAuthenticationRoute
+  '/invitations/accept': typeof InvitationsAcceptRoute
+  '/organizations/new': typeof OrganizationsNewRoute
+  '/setup/organization': typeof SetupOrganizationRoute
+  '/setup/verify': typeof SetupVerifyRoute
+  '/sign-in/verify': typeof SignInVerifyRoute
+  '/account/': typeof AccountIndexRoute
+  '/instance/': typeof InstanceIndexRoute
+  '/organizations/': typeof OrganizationsIndexRoute
+  '/setup/': typeof SetupIndexRoute
+  '/sign-in/': typeof SignInIndexRoute
+  '/auth/email/verify': typeof AuthEmailVerifyRoute
+  '/org/$slug': typeof OrgSlugAppRouteWithChildren
+  '/org/$slug/auth-recovery': typeof OrgSlugAuthRecoveryRoute
+  '/instance/domains/$organizationId/$domainId': typeof InstanceDomainsOrganizationIdDomainIdRoute
+  '/org/$slug/': typeof OrgSlugAppIndexRoute
+  '/org/$slug/settings/audit': typeof OrgSlugAppSettingsAuditRoute
+  '/org/$slug/settings/authentication': typeof OrgSlugAppSettingsAuthenticationRoute
+  '/org/$slug/settings/domains': typeof OrgSlugAppSettingsDomainsRoute
+  '/org/$slug/settings/general': typeof OrgSlugAppSettingsGeneralRoute
+  '/org/$slug/settings/members': typeof OrgSlugAppSettingsMembersRoute
+  '/org/$slug/settings/roles': typeof OrgSlugAppSettingsRolesRoute
+  '/org/$slug/settings/': typeof OrgSlugAppSettingsIndexRoute
+  '/org/$slug/settings/connections/$connectionId': typeof OrgSlugAppSettingsConnectionsConnectionIdRoute
+  '/org/$slug/settings/teams/$teamId': typeof OrgSlugAppSettingsTeamsTeamIdRoute
+  '/org/$slug/settings/connections/': typeof OrgSlugAppSettingsConnectionsIndexRoute
+  '/org/$slug/settings/teams/': typeof OrgSlugAppSettingsTeamsIndexRoute
 }
 export interface FileRoutesByTo {
-  "/account": typeof AccountIndexRoute;
-  "/account/profile": typeof AccountProfileRoute;
-  "/account/security": typeof AccountSecurityRoute;
-  "/auth/email/verify": typeof AuthEmailVerifyRoute;
-  "/auth/error": typeof AuthErrorRoute;
-  "/auth/reauthenticate": typeof AuthReauthenticateRoute;
-  "/auth/verify-email": typeof AuthVerifyEmailRoute;
-  "/": typeof IndexRoute;
-  "/instance/audit": typeof InstanceAuditRoute;
-  "/instance/authentication": typeof InstanceAuthenticationRoute;
-  "/instance/domains/$organizationId/$domainId": typeof InstanceDomainsOrganizationIdDomainIdRoute;
-  "/instance": typeof InstanceIndexRoute;
-  "/invitations/accept": typeof InvitationsAcceptRoute;
-  "/org/$slug": typeof OrgSlugAppIndexRoute;
-  "/org/$slug/settings/audit": typeof OrgSlugAppSettingsAuditRoute;
-  "/org/$slug/settings/authentication": typeof OrgSlugAppSettingsAuthenticationRoute;
-  "/org/$slug/settings/connections/$connectionId": typeof OrgSlugAppSettingsConnectionsConnectionIdRoute;
-  "/org/$slug/settings/connections": typeof OrgSlugAppSettingsConnectionsIndexRoute;
-  "/org/$slug/settings/domains": typeof OrgSlugAppSettingsDomainsRoute;
-  "/org/$slug/settings/general": typeof OrgSlugAppSettingsGeneralRoute;
-  "/org/$slug/settings": typeof OrgSlugAppSettingsIndexRoute;
-  "/org/$slug/settings/members": typeof OrgSlugAppSettingsMembersRoute;
-  "/org/$slug/settings/roles": typeof OrgSlugAppSettingsRolesRoute;
-  "/org/$slug/settings/teams/$teamId": typeof OrgSlugAppSettingsTeamsTeamIdRoute;
-  "/org/$slug/settings/teams": typeof OrgSlugAppSettingsTeamsIndexRoute;
-  "/org/$slug/auth-recovery": typeof OrgSlugAuthRecoveryRoute;
-  "/organizations": typeof OrganizationsIndexRoute;
-  "/organizations/new": typeof OrganizationsNewRoute;
-  "/setup": typeof SetupIndexRoute;
-  "/setup/organization": typeof SetupOrganizationRoute;
-  "/setup/verify": typeof SetupVerifyRoute;
-  "/sign-in": typeof SignInIndexRoute;
-  "/sign-in/verify": typeof SignInVerifyRoute;
+  '/': typeof IndexRoute
+  '/account/profile': typeof AccountProfileRoute
+  '/account/security': typeof AccountSecurityRoute
+  '/auth/error': typeof AuthErrorRoute
+  '/auth/reauthenticate': typeof AuthReauthenticateRoute
+  '/auth/verify-email': typeof AuthVerifyEmailRoute
+  '/instance/audit': typeof InstanceAuditRoute
+  '/instance/authentication': typeof InstanceAuthenticationRoute
+  '/invitations/accept': typeof InvitationsAcceptRoute
+  '/organizations/new': typeof OrganizationsNewRoute
+  '/setup/organization': typeof SetupOrganizationRoute
+  '/setup/verify': typeof SetupVerifyRoute
+  '/sign-in/verify': typeof SignInVerifyRoute
+  '/account': typeof AccountIndexRoute
+  '/instance': typeof InstanceIndexRoute
+  '/organizations': typeof OrganizationsIndexRoute
+  '/setup': typeof SetupIndexRoute
+  '/sign-in': typeof SignInIndexRoute
+  '/auth/email/verify': typeof AuthEmailVerifyRoute
+  '/org/$slug/auth-recovery': typeof OrgSlugAuthRecoveryRoute
+  '/instance/domains/$organizationId/$domainId': typeof InstanceDomainsOrganizationIdDomainIdRoute
+  '/org/$slug': typeof OrgSlugAppIndexRoute
+  '/org/$slug/settings/audit': typeof OrgSlugAppSettingsAuditRoute
+  '/org/$slug/settings/authentication': typeof OrgSlugAppSettingsAuthenticationRoute
+  '/org/$slug/settings/domains': typeof OrgSlugAppSettingsDomainsRoute
+  '/org/$slug/settings/general': typeof OrgSlugAppSettingsGeneralRoute
+  '/org/$slug/settings/members': typeof OrgSlugAppSettingsMembersRoute
+  '/org/$slug/settings/roles': typeof OrgSlugAppSettingsRolesRoute
+  '/org/$slug/settings': typeof OrgSlugAppSettingsIndexRoute
+  '/org/$slug/settings/connections/$connectionId': typeof OrgSlugAppSettingsConnectionsConnectionIdRoute
+  '/org/$slug/settings/teams/$teamId': typeof OrgSlugAppSettingsTeamsTeamIdRoute
+  '/org/$slug/settings/connections': typeof OrgSlugAppSettingsConnectionsIndexRoute
+  '/org/$slug/settings/teams': typeof OrgSlugAppSettingsTeamsIndexRoute
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport;
-  "/account/": typeof AccountIndexRoute;
-  "/account/profile": typeof AccountProfileRoute;
-  "/account": typeof AccountRouteWithChildren;
-  "/account/security": typeof AccountSecurityRoute;
-  "/auth/email/verify": typeof AuthEmailVerifyRoute;
-  "/auth/error": typeof AuthErrorRoute;
-  "/auth/reauthenticate": typeof AuthReauthenticateRoute;
-  "/auth/verify-email": typeof AuthVerifyEmailRoute;
-  "/": typeof IndexRoute;
-  "/instance/audit": typeof InstanceAuditRoute;
-  "/instance/authentication": typeof InstanceAuthenticationRoute;
-  "/instance/domains/$organizationId/$domainId": typeof InstanceDomainsOrganizationIdDomainIdRoute;
-  "/instance/": typeof InstanceIndexRoute;
-  "/instance": typeof InstanceRouteWithChildren;
-  "/invitations/accept": typeof InvitationsAcceptRoute;
-  "/org/$slug/_app": typeof OrgSlugAppRouteWithChildren;
-  "/org/$slug/_app/": typeof OrgSlugAppIndexRoute;
-  "/org/$slug/_app/settings/audit": typeof OrgSlugAppSettingsAuditRoute;
-  "/org/$slug/_app/settings/authentication": typeof OrgSlugAppSettingsAuthenticationRoute;
-  "/org/$slug/_app/settings/connections/$connectionId": typeof OrgSlugAppSettingsConnectionsConnectionIdRoute;
-  "/org/$slug/_app/settings/connections/": typeof OrgSlugAppSettingsConnectionsIndexRoute;
-  "/org/$slug/_app/settings/domains": typeof OrgSlugAppSettingsDomainsRoute;
-  "/org/$slug/_app/settings/general": typeof OrgSlugAppSettingsGeneralRoute;
-  "/org/$slug/_app/settings/": typeof OrgSlugAppSettingsIndexRoute;
-  "/org/$slug/_app/settings/members": typeof OrgSlugAppSettingsMembersRoute;
-  "/org/$slug/_app/settings/roles": typeof OrgSlugAppSettingsRolesRoute;
-  "/org/$slug/_app/settings/teams/$teamId": typeof OrgSlugAppSettingsTeamsTeamIdRoute;
-  "/org/$slug/_app/settings/teams/": typeof OrgSlugAppSettingsTeamsIndexRoute;
-  "/org/$slug/auth-recovery": typeof OrgSlugAuthRecoveryRoute;
-  "/organizations/": typeof OrganizationsIndexRoute;
-  "/organizations/new": typeof OrganizationsNewRoute;
-  "/setup/": typeof SetupIndexRoute;
-  "/setup/organization": typeof SetupOrganizationRoute;
-  "/setup/verify": typeof SetupVerifyRoute;
-  "/sign-in/": typeof SignInIndexRoute;
-  "/sign-in/verify": typeof SignInVerifyRoute;
+  __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/account': typeof AccountRouteRouteWithChildren
+  '/instance': typeof InstanceRouteRouteWithChildren
+  '/account/profile': typeof AccountProfileRoute
+  '/account/security': typeof AccountSecurityRoute
+  '/auth/error': typeof AuthErrorRoute
+  '/auth/reauthenticate': typeof AuthReauthenticateRoute
+  '/auth/verify-email': typeof AuthVerifyEmailRoute
+  '/instance/audit': typeof InstanceAuditRoute
+  '/instance/authentication': typeof InstanceAuthenticationRoute
+  '/invitations/accept': typeof InvitationsAcceptRoute
+  '/organizations/new': typeof OrganizationsNewRoute
+  '/setup/organization': typeof SetupOrganizationRoute
+  '/setup/verify': typeof SetupVerifyRoute
+  '/sign-in/verify': typeof SignInVerifyRoute
+  '/account/': typeof AccountIndexRoute
+  '/instance/': typeof InstanceIndexRoute
+  '/organizations/': typeof OrganizationsIndexRoute
+  '/setup/': typeof SetupIndexRoute
+  '/sign-in/': typeof SignInIndexRoute
+  '/auth/email/verify': typeof AuthEmailVerifyRoute
+  '/org/$slug/_app': typeof OrgSlugAppRouteWithChildren
+  '/org/$slug/auth-recovery': typeof OrgSlugAuthRecoveryRoute
+  '/instance/domains/$organizationId/$domainId': typeof InstanceDomainsOrganizationIdDomainIdRoute
+  '/org/$slug/_app/': typeof OrgSlugAppIndexRoute
+  '/org/$slug/_app/settings/audit': typeof OrgSlugAppSettingsAuditRoute
+  '/org/$slug/_app/settings/authentication': typeof OrgSlugAppSettingsAuthenticationRoute
+  '/org/$slug/_app/settings/domains': typeof OrgSlugAppSettingsDomainsRoute
+  '/org/$slug/_app/settings/general': typeof OrgSlugAppSettingsGeneralRoute
+  '/org/$slug/_app/settings/members': typeof OrgSlugAppSettingsMembersRoute
+  '/org/$slug/_app/settings/roles': typeof OrgSlugAppSettingsRolesRoute
+  '/org/$slug/_app/settings/': typeof OrgSlugAppSettingsIndexRoute
+  '/org/$slug/_app/settings/connections/$connectionId': typeof OrgSlugAppSettingsConnectionsConnectionIdRoute
+  '/org/$slug/_app/settings/teams/$teamId': typeof OrgSlugAppSettingsTeamsTeamIdRoute
+  '/org/$slug/_app/settings/connections/': typeof OrgSlugAppSettingsConnectionsIndexRoute
+  '/org/$slug/_app/settings/teams/': typeof OrgSlugAppSettingsTeamsIndexRoute
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath;
+  fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | "/account/"
-    | "/account/profile"
-    | "/account"
-    | "/account/security"
-    | "/auth/email/verify"
-    | "/auth/error"
-    | "/auth/reauthenticate"
-    | "/auth/verify-email"
-    | "/"
-    | "/instance/audit"
-    | "/instance/authentication"
-    | "/instance/domains/$organizationId/$domainId"
-    | "/instance/"
-    | "/instance"
-    | "/invitations/accept"
-    | "/org/$slug"
-    | "/org/$slug/"
-    | "/org/$slug/settings/audit"
-    | "/org/$slug/settings/authentication"
-    | "/org/$slug/settings/connections/$connectionId"
-    | "/org/$slug/settings/connections/"
-    | "/org/$slug/settings/domains"
-    | "/org/$slug/settings/general"
-    | "/org/$slug/settings/"
-    | "/org/$slug/settings/members"
-    | "/org/$slug/settings/roles"
-    | "/org/$slug/settings/teams/$teamId"
-    | "/org/$slug/settings/teams/"
-    | "/org/$slug/auth-recovery"
-    | "/organizations/"
-    | "/organizations/new"
-    | "/setup/"
-    | "/setup/organization"
-    | "/setup/verify"
-    | "/sign-in/"
-    | "/sign-in/verify";
-  fileRoutesByTo: FileRoutesByTo;
+    | '/'
+    | '/account'
+    | '/instance'
+    | '/account/profile'
+    | '/account/security'
+    | '/auth/error'
+    | '/auth/reauthenticate'
+    | '/auth/verify-email'
+    | '/instance/audit'
+    | '/instance/authentication'
+    | '/invitations/accept'
+    | '/organizations/new'
+    | '/setup/organization'
+    | '/setup/verify'
+    | '/sign-in/verify'
+    | '/account/'
+    | '/instance/'
+    | '/organizations/'
+    | '/setup/'
+    | '/sign-in/'
+    | '/auth/email/verify'
+    | '/org/$slug'
+    | '/org/$slug/auth-recovery'
+    | '/instance/domains/$organizationId/$domainId'
+    | '/org/$slug/'
+    | '/org/$slug/settings/audit'
+    | '/org/$slug/settings/authentication'
+    | '/org/$slug/settings/domains'
+    | '/org/$slug/settings/general'
+    | '/org/$slug/settings/members'
+    | '/org/$slug/settings/roles'
+    | '/org/$slug/settings/'
+    | '/org/$slug/settings/connections/$connectionId'
+    | '/org/$slug/settings/teams/$teamId'
+    | '/org/$slug/settings/connections/'
+    | '/org/$slug/settings/teams/'
+  fileRoutesByTo: FileRoutesByTo
   to:
-    | "/account"
-    | "/account/profile"
-    | "/account/security"
-    | "/auth/email/verify"
-    | "/auth/error"
-    | "/auth/reauthenticate"
-    | "/auth/verify-email"
-    | "/"
-    | "/instance/audit"
-    | "/instance/authentication"
-    | "/instance/domains/$organizationId/$domainId"
-    | "/instance"
-    | "/invitations/accept"
-    | "/org/$slug"
-    | "/org/$slug/settings/audit"
-    | "/org/$slug/settings/authentication"
-    | "/org/$slug/settings/connections/$connectionId"
-    | "/org/$slug/settings/connections"
-    | "/org/$slug/settings/domains"
-    | "/org/$slug/settings/general"
-    | "/org/$slug/settings"
-    | "/org/$slug/settings/members"
-    | "/org/$slug/settings/roles"
-    | "/org/$slug/settings/teams/$teamId"
-    | "/org/$slug/settings/teams"
-    | "/org/$slug/auth-recovery"
-    | "/organizations"
-    | "/organizations/new"
-    | "/setup"
-    | "/setup/organization"
-    | "/setup/verify"
-    | "/sign-in"
-    | "/sign-in/verify";
+    | '/'
+    | '/account/profile'
+    | '/account/security'
+    | '/auth/error'
+    | '/auth/reauthenticate'
+    | '/auth/verify-email'
+    | '/instance/audit'
+    | '/instance/authentication'
+    | '/invitations/accept'
+    | '/organizations/new'
+    | '/setup/organization'
+    | '/setup/verify'
+    | '/sign-in/verify'
+    | '/account'
+    | '/instance'
+    | '/organizations'
+    | '/setup'
+    | '/sign-in'
+    | '/auth/email/verify'
+    | '/org/$slug/auth-recovery'
+    | '/instance/domains/$organizationId/$domainId'
+    | '/org/$slug'
+    | '/org/$slug/settings/audit'
+    | '/org/$slug/settings/authentication'
+    | '/org/$slug/settings/domains'
+    | '/org/$slug/settings/general'
+    | '/org/$slug/settings/members'
+    | '/org/$slug/settings/roles'
+    | '/org/$slug/settings'
+    | '/org/$slug/settings/connections/$connectionId'
+    | '/org/$slug/settings/teams/$teamId'
+    | '/org/$slug/settings/connections'
+    | '/org/$slug/settings/teams'
   id:
-    | "__root__"
-    | "/account/"
-    | "/account/profile"
-    | "/account"
-    | "/account/security"
-    | "/auth/email/verify"
-    | "/auth/error"
-    | "/auth/reauthenticate"
-    | "/auth/verify-email"
-    | "/"
-    | "/instance/audit"
-    | "/instance/authentication"
-    | "/instance/domains/$organizationId/$domainId"
-    | "/instance/"
-    | "/instance"
-    | "/invitations/accept"
-    | "/org/$slug/_app"
-    | "/org/$slug/_app/"
-    | "/org/$slug/_app/settings/audit"
-    | "/org/$slug/_app/settings/authentication"
-    | "/org/$slug/_app/settings/connections/$connectionId"
-    | "/org/$slug/_app/settings/connections/"
-    | "/org/$slug/_app/settings/domains"
-    | "/org/$slug/_app/settings/general"
-    | "/org/$slug/_app/settings/"
-    | "/org/$slug/_app/settings/members"
-    | "/org/$slug/_app/settings/roles"
-    | "/org/$slug/_app/settings/teams/$teamId"
-    | "/org/$slug/_app/settings/teams/"
-    | "/org/$slug/auth-recovery"
-    | "/organizations/"
-    | "/organizations/new"
-    | "/setup/"
-    | "/setup/organization"
-    | "/setup/verify"
-    | "/sign-in/"
-    | "/sign-in/verify";
-  fileRoutesById: FileRoutesById;
+    | '__root__'
+    | '/'
+    | '/account'
+    | '/instance'
+    | '/account/profile'
+    | '/account/security'
+    | '/auth/error'
+    | '/auth/reauthenticate'
+    | '/auth/verify-email'
+    | '/instance/audit'
+    | '/instance/authentication'
+    | '/invitations/accept'
+    | '/organizations/new'
+    | '/setup/organization'
+    | '/setup/verify'
+    | '/sign-in/verify'
+    | '/account/'
+    | '/instance/'
+    | '/organizations/'
+    | '/setup/'
+    | '/sign-in/'
+    | '/auth/email/verify'
+    | '/org/$slug/_app'
+    | '/org/$slug/auth-recovery'
+    | '/instance/domains/$organizationId/$domainId'
+    | '/org/$slug/_app/'
+    | '/org/$slug/_app/settings/audit'
+    | '/org/$slug/_app/settings/authentication'
+    | '/org/$slug/_app/settings/domains'
+    | '/org/$slug/_app/settings/general'
+    | '/org/$slug/_app/settings/members'
+    | '/org/$slug/_app/settings/roles'
+    | '/org/$slug/_app/settings/'
+    | '/org/$slug/_app/settings/connections/$connectionId'
+    | '/org/$slug/_app/settings/teams/$teamId'
+    | '/org/$slug/_app/settings/connections/'
+    | '/org/$slug/_app/settings/teams/'
+  fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute;
-  AccountRoute: typeof AccountRouteWithChildren;
-  AuthEmailVerifyRoute: typeof AuthEmailVerifyRoute;
-  AuthErrorRoute: typeof AuthErrorRoute;
-  AuthReauthenticateRoute: typeof AuthReauthenticateRoute;
-  AuthVerifyEmailRoute: typeof AuthVerifyEmailRoute;
-  InstanceRoute: typeof InstanceRouteWithChildren;
-  InvitationsAcceptRoute: typeof InvitationsAcceptRoute;
-  OrgSlugAppRoute: typeof OrgSlugAppRouteWithChildren;
-  OrgSlugAuthRecoveryRoute: typeof OrgSlugAuthRecoveryRoute;
-  OrganizationsIndexRoute: typeof OrganizationsIndexRoute;
-  OrganizationsNewRoute: typeof OrganizationsNewRoute;
-  SetupIndexRoute: typeof SetupIndexRoute;
-  SetupOrganizationRoute: typeof SetupOrganizationRoute;
-  SetupVerifyRoute: typeof SetupVerifyRoute;
-  SignInIndexRoute: typeof SignInIndexRoute;
-  SignInVerifyRoute: typeof SignInVerifyRoute;
+  IndexRoute: typeof IndexRoute
+  AccountRouteRoute: typeof AccountRouteRouteWithChildren
+  InstanceRouteRoute: typeof InstanceRouteRouteWithChildren
+  AuthErrorRoute: typeof AuthErrorRoute
+  AuthReauthenticateRoute: typeof AuthReauthenticateRoute
+  AuthVerifyEmailRoute: typeof AuthVerifyEmailRoute
+  InvitationsAcceptRoute: typeof InvitationsAcceptRoute
+  OrganizationsNewRoute: typeof OrganizationsNewRoute
+  SetupOrganizationRoute: typeof SetupOrganizationRoute
+  SetupVerifyRoute: typeof SetupVerifyRoute
+  SignInVerifyRoute: typeof SignInVerifyRoute
+  OrganizationsIndexRoute: typeof OrganizationsIndexRoute
+  SetupIndexRoute: typeof SetupIndexRoute
+  SignInIndexRoute: typeof SignInIndexRoute
+  AuthEmailVerifyRoute: typeof AuthEmailVerifyRoute
+  OrgSlugAppRoute: typeof OrgSlugAppRouteWithChildren
+  OrgSlugAuthRecoveryRoute: typeof OrgSlugAuthRecoveryRoute
 }
 
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    "/account/": {
-      id: "/account/";
-      path: "/";
-      fullPath: "/account/";
-      preLoaderRoute: typeof AccountIndexRouteImport;
-      parentRoute: typeof AccountRoute;
-    };
-    "/account/profile": {
-      id: "/account/profile";
-      path: "/profile";
-      fullPath: "/account/profile";
-      preLoaderRoute: typeof AccountProfileRouteImport;
-      parentRoute: typeof AccountRoute;
-    };
-    "/account": {
-      id: "/account";
-      path: "/account";
-      fullPath: "/account";
-      preLoaderRoute: typeof AccountRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/account/security": {
-      id: "/account/security";
-      path: "/security";
-      fullPath: "/account/security";
-      preLoaderRoute: typeof AccountSecurityRouteImport;
-      parentRoute: typeof AccountRoute;
-    };
-    "/auth/email/verify": {
-      id: "/auth/email/verify";
-      path: "/auth/email/verify";
-      fullPath: "/auth/email/verify";
-      preLoaderRoute: typeof AuthEmailVerifyRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/auth/error": {
-      id: "/auth/error";
-      path: "/auth/error";
-      fullPath: "/auth/error";
-      preLoaderRoute: typeof AuthErrorRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/auth/reauthenticate": {
-      id: "/auth/reauthenticate";
-      path: "/auth/reauthenticate";
-      fullPath: "/auth/reauthenticate";
-      preLoaderRoute: typeof AuthReauthenticateRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/auth/verify-email": {
-      id: "/auth/verify-email";
-      path: "/auth/verify-email";
-      fullPath: "/auth/verify-email";
-      preLoaderRoute: typeof AuthVerifyEmailRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/": {
-      id: "/";
-      path: "/";
-      fullPath: "/";
-      preLoaderRoute: typeof IndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/instance/audit": {
-      id: "/instance/audit";
-      path: "/audit";
-      fullPath: "/instance/audit";
-      preLoaderRoute: typeof InstanceAuditRouteImport;
-      parentRoute: typeof InstanceRoute;
-    };
-    "/instance/authentication": {
-      id: "/instance/authentication";
-      path: "/authentication";
-      fullPath: "/instance/authentication";
-      preLoaderRoute: typeof InstanceAuthenticationRouteImport;
-      parentRoute: typeof InstanceRoute;
-    };
-    "/instance/domains/$organizationId/$domainId": {
-      id: "/instance/domains/$organizationId/$domainId";
-      path: "/domains/$organizationId/$domainId";
-      fullPath: "/instance/domains/$organizationId/$domainId";
-      preLoaderRoute: typeof InstanceDomainsOrganizationIdDomainIdRouteImport;
-      parentRoute: typeof InstanceRoute;
-    };
-    "/instance/": {
-      id: "/instance/";
-      path: "/";
-      fullPath: "/instance/";
-      preLoaderRoute: typeof InstanceIndexRouteImport;
-      parentRoute: typeof InstanceRoute;
-    };
-    "/instance": {
-      id: "/instance";
-      path: "/instance";
-      fullPath: "/instance";
-      preLoaderRoute: typeof InstanceRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/invitations/accept": {
-      id: "/invitations/accept";
-      path: "/invitations/accept";
-      fullPath: "/invitations/accept";
-      preLoaderRoute: typeof InvitationsAcceptRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/org/$slug/_app": {
-      id: "/org/$slug/_app";
-      path: "/org/$slug";
-      fullPath: "/org/$slug";
-      preLoaderRoute: typeof OrgSlugAppRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/org/$slug/_app/": {
-      id: "/org/$slug/_app/";
-      path: "/";
-      fullPath: "/org/$slug/";
-      preLoaderRoute: typeof OrgSlugAppIndexRouteImport;
-      parentRoute: typeof OrgSlugAppRoute;
-    };
-    "/org/$slug/_app/settings/audit": {
-      id: "/org/$slug/_app/settings/audit";
-      path: "/settings/audit";
-      fullPath: "/org/$slug/settings/audit";
-      preLoaderRoute: typeof OrgSlugAppSettingsAuditRouteImport;
-      parentRoute: typeof OrgSlugAppRoute;
-    };
-    "/org/$slug/_app/settings/authentication": {
-      id: "/org/$slug/_app/settings/authentication";
-      path: "/settings/authentication";
-      fullPath: "/org/$slug/settings/authentication";
-      preLoaderRoute: typeof OrgSlugAppSettingsAuthenticationRouteImport;
-      parentRoute: typeof OrgSlugAppRoute;
-    };
-    "/org/$slug/_app/settings/connections/$connectionId": {
-      id: "/org/$slug/_app/settings/connections/$connectionId";
-      path: "/settings/connections/$connectionId";
-      fullPath: "/org/$slug/settings/connections/$connectionId";
-      preLoaderRoute: typeof OrgSlugAppSettingsConnectionsConnectionIdRouteImport;
-      parentRoute: typeof OrgSlugAppRoute;
-    };
-    "/org/$slug/_app/settings/connections/": {
-      id: "/org/$slug/_app/settings/connections/";
-      path: "/settings/connections";
-      fullPath: "/org/$slug/settings/connections/";
-      preLoaderRoute: typeof OrgSlugAppSettingsConnectionsIndexRouteImport;
-      parentRoute: typeof OrgSlugAppRoute;
-    };
-    "/org/$slug/_app/settings/domains": {
-      id: "/org/$slug/_app/settings/domains";
-      path: "/settings/domains";
-      fullPath: "/org/$slug/settings/domains";
-      preLoaderRoute: typeof OrgSlugAppSettingsDomainsRouteImport;
-      parentRoute: typeof OrgSlugAppRoute;
-    };
-    "/org/$slug/_app/settings/general": {
-      id: "/org/$slug/_app/settings/general";
-      path: "/settings/general";
-      fullPath: "/org/$slug/settings/general";
-      preLoaderRoute: typeof OrgSlugAppSettingsGeneralRouteImport;
-      parentRoute: typeof OrgSlugAppRoute;
-    };
-    "/org/$slug/_app/settings/": {
-      id: "/org/$slug/_app/settings/";
-      path: "/settings";
-      fullPath: "/org/$slug/settings/";
-      preLoaderRoute: typeof OrgSlugAppSettingsIndexRouteImport;
-      parentRoute: typeof OrgSlugAppRoute;
-    };
-    "/org/$slug/_app/settings/members": {
-      id: "/org/$slug/_app/settings/members";
-      path: "/settings/members";
-      fullPath: "/org/$slug/settings/members";
-      preLoaderRoute: typeof OrgSlugAppSettingsMembersRouteImport;
-      parentRoute: typeof OrgSlugAppRoute;
-    };
-    "/org/$slug/_app/settings/roles": {
-      id: "/org/$slug/_app/settings/roles";
-      path: "/settings/roles";
-      fullPath: "/org/$slug/settings/roles";
-      preLoaderRoute: typeof OrgSlugAppSettingsRolesRouteImport;
-      parentRoute: typeof OrgSlugAppRoute;
-    };
-    "/org/$slug/_app/settings/teams/$teamId": {
-      id: "/org/$slug/_app/settings/teams/$teamId";
-      path: "/settings/teams/$teamId";
-      fullPath: "/org/$slug/settings/teams/$teamId";
-      preLoaderRoute: typeof OrgSlugAppSettingsTeamsTeamIdRouteImport;
-      parentRoute: typeof OrgSlugAppRoute;
-    };
-    "/org/$slug/_app/settings/teams/": {
-      id: "/org/$slug/_app/settings/teams/";
-      path: "/settings/teams";
-      fullPath: "/org/$slug/settings/teams/";
-      preLoaderRoute: typeof OrgSlugAppSettingsTeamsIndexRouteImport;
-      parentRoute: typeof OrgSlugAppRoute;
-    };
-    "/org/$slug/auth-recovery": {
-      id: "/org/$slug/auth-recovery";
-      path: "/org/$slug/auth-recovery";
-      fullPath: "/org/$slug/auth-recovery";
-      preLoaderRoute: typeof OrgSlugAuthRecoveryRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/organizations/": {
-      id: "/organizations/";
-      path: "/organizations";
-      fullPath: "/organizations/";
-      preLoaderRoute: typeof OrganizationsIndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/organizations/new": {
-      id: "/organizations/new";
-      path: "/organizations/new";
-      fullPath: "/organizations/new";
-      preLoaderRoute: typeof OrganizationsNewRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/setup/": {
-      id: "/setup/";
-      path: "/setup";
-      fullPath: "/setup/";
-      preLoaderRoute: typeof SetupIndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/setup/organization": {
-      id: "/setup/organization";
-      path: "/setup/organization";
-      fullPath: "/setup/organization";
-      preLoaderRoute: typeof SetupOrganizationRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/setup/verify": {
-      id: "/setup/verify";
-      path: "/setup/verify";
-      fullPath: "/setup/verify";
-      preLoaderRoute: typeof SetupVerifyRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/sign-in/": {
-      id: "/sign-in/";
-      path: "/sign-in";
-      fullPath: "/sign-in/";
-      preLoaderRoute: typeof SignInIndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/sign-in/verify": {
-      id: "/sign-in/verify";
-      path: "/sign-in/verify";
-      fullPath: "/sign-in/verify";
-      preLoaderRoute: typeof SignInVerifyRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account': {
+      id: '/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/instance': {
+      id: '/instance'
+      path: '/instance'
+      fullPath: '/instance'
+      preLoaderRoute: typeof InstanceRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account/': {
+      id: '/account/'
+      path: '/'
+      fullPath: '/account/'
+      preLoaderRoute: typeof AccountIndexRouteImport
+      parentRoute: typeof AccountRouteRoute
+    }
+    '/account/profile': {
+      id: '/account/profile'
+      path: '/profile'
+      fullPath: '/account/profile'
+      preLoaderRoute: typeof AccountProfileRouteImport
+      parentRoute: typeof AccountRouteRoute
+    }
+    '/account/security': {
+      id: '/account/security'
+      path: '/security'
+      fullPath: '/account/security'
+      preLoaderRoute: typeof AccountSecurityRouteImport
+      parentRoute: typeof AccountRouteRoute
+    }
+    '/auth/error': {
+      id: '/auth/error'
+      path: '/auth/error'
+      fullPath: '/auth/error'
+      preLoaderRoute: typeof AuthErrorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/reauthenticate': {
+      id: '/auth/reauthenticate'
+      path: '/auth/reauthenticate'
+      fullPath: '/auth/reauthenticate'
+      preLoaderRoute: typeof AuthReauthenticateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/verify-email': {
+      id: '/auth/verify-email'
+      path: '/auth/verify-email'
+      fullPath: '/auth/verify-email'
+      preLoaderRoute: typeof AuthVerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/instance/': {
+      id: '/instance/'
+      path: '/'
+      fullPath: '/instance/'
+      preLoaderRoute: typeof InstanceIndexRouteImport
+      parentRoute: typeof InstanceRouteRoute
+    }
+    '/instance/audit': {
+      id: '/instance/audit'
+      path: '/audit'
+      fullPath: '/instance/audit'
+      preLoaderRoute: typeof InstanceAuditRouteImport
+      parentRoute: typeof InstanceRouteRoute
+    }
+    '/instance/authentication': {
+      id: '/instance/authentication'
+      path: '/authentication'
+      fullPath: '/instance/authentication'
+      preLoaderRoute: typeof InstanceAuthenticationRouteImport
+      parentRoute: typeof InstanceRouteRoute
+    }
+    '/invitations/accept': {
+      id: '/invitations/accept'
+      path: '/invitations/accept'
+      fullPath: '/invitations/accept'
+      preLoaderRoute: typeof InvitationsAcceptRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/organizations/': {
+      id: '/organizations/'
+      path: '/organizations'
+      fullPath: '/organizations/'
+      preLoaderRoute: typeof OrganizationsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/organizations/new': {
+      id: '/organizations/new'
+      path: '/organizations/new'
+      fullPath: '/organizations/new'
+      preLoaderRoute: typeof OrganizationsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/setup/': {
+      id: '/setup/'
+      path: '/setup'
+      fullPath: '/setup/'
+      preLoaderRoute: typeof SetupIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/setup/organization': {
+      id: '/setup/organization'
+      path: '/setup/organization'
+      fullPath: '/setup/organization'
+      preLoaderRoute: typeof SetupOrganizationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/setup/verify': {
+      id: '/setup/verify'
+      path: '/setup/verify'
+      fullPath: '/setup/verify'
+      preLoaderRoute: typeof SetupVerifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sign-in/': {
+      id: '/sign-in/'
+      path: '/sign-in'
+      fullPath: '/sign-in/'
+      preLoaderRoute: typeof SignInIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sign-in/verify': {
+      id: '/sign-in/verify'
+      path: '/sign-in/verify'
+      fullPath: '/sign-in/verify'
+      preLoaderRoute: typeof SignInVerifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/email/verify': {
+      id: '/auth/email/verify'
+      path: '/auth/email/verify'
+      fullPath: '/auth/email/verify'
+      preLoaderRoute: typeof AuthEmailVerifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/org/$slug/_app': {
+      id: '/org/$slug/_app'
+      path: '/org/$slug'
+      fullPath: '/org/$slug'
+      preLoaderRoute: typeof OrgSlugAppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/org/$slug/auth-recovery': {
+      id: '/org/$slug/auth-recovery'
+      path: '/org/$slug/auth-recovery'
+      fullPath: '/org/$slug/auth-recovery'
+      preLoaderRoute: typeof OrgSlugAuthRecoveryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/instance/domains/$organizationId/$domainId': {
+      id: '/instance/domains/$organizationId/$domainId'
+      path: '/domains/$organizationId/$domainId'
+      fullPath: '/instance/domains/$organizationId/$domainId'
+      preLoaderRoute: typeof InstanceDomainsOrganizationIdDomainIdRouteImport
+      parentRoute: typeof InstanceRouteRoute
+    }
+    '/org/$slug/_app/': {
+      id: '/org/$slug/_app/'
+      path: '/'
+      fullPath: '/org/$slug/'
+      preLoaderRoute: typeof OrgSlugAppIndexRouteImport
+      parentRoute: typeof OrgSlugAppRoute
+    }
+    '/org/$slug/_app/settings/': {
+      id: '/org/$slug/_app/settings/'
+      path: '/settings'
+      fullPath: '/org/$slug/settings/'
+      preLoaderRoute: typeof OrgSlugAppSettingsIndexRouteImport
+      parentRoute: typeof OrgSlugAppRoute
+    }
+    '/org/$slug/_app/settings/audit': {
+      id: '/org/$slug/_app/settings/audit'
+      path: '/settings/audit'
+      fullPath: '/org/$slug/settings/audit'
+      preLoaderRoute: typeof OrgSlugAppSettingsAuditRouteImport
+      parentRoute: typeof OrgSlugAppRoute
+    }
+    '/org/$slug/_app/settings/authentication': {
+      id: '/org/$slug/_app/settings/authentication'
+      path: '/settings/authentication'
+      fullPath: '/org/$slug/settings/authentication'
+      preLoaderRoute: typeof OrgSlugAppSettingsAuthenticationRouteImport
+      parentRoute: typeof OrgSlugAppRoute
+    }
+    '/org/$slug/_app/settings/domains': {
+      id: '/org/$slug/_app/settings/domains'
+      path: '/settings/domains'
+      fullPath: '/org/$slug/settings/domains'
+      preLoaderRoute: typeof OrgSlugAppSettingsDomainsRouteImport
+      parentRoute: typeof OrgSlugAppRoute
+    }
+    '/org/$slug/_app/settings/general': {
+      id: '/org/$slug/_app/settings/general'
+      path: '/settings/general'
+      fullPath: '/org/$slug/settings/general'
+      preLoaderRoute: typeof OrgSlugAppSettingsGeneralRouteImport
+      parentRoute: typeof OrgSlugAppRoute
+    }
+    '/org/$slug/_app/settings/members': {
+      id: '/org/$slug/_app/settings/members'
+      path: '/settings/members'
+      fullPath: '/org/$slug/settings/members'
+      preLoaderRoute: typeof OrgSlugAppSettingsMembersRouteImport
+      parentRoute: typeof OrgSlugAppRoute
+    }
+    '/org/$slug/_app/settings/roles': {
+      id: '/org/$slug/_app/settings/roles'
+      path: '/settings/roles'
+      fullPath: '/org/$slug/settings/roles'
+      preLoaderRoute: typeof OrgSlugAppSettingsRolesRouteImport
+      parentRoute: typeof OrgSlugAppRoute
+    }
+    '/org/$slug/_app/settings/connections/': {
+      id: '/org/$slug/_app/settings/connections/'
+      path: '/settings/connections'
+      fullPath: '/org/$slug/settings/connections/'
+      preLoaderRoute: typeof OrgSlugAppSettingsConnectionsIndexRouteImport
+      parentRoute: typeof OrgSlugAppRoute
+    }
+    '/org/$slug/_app/settings/connections/$connectionId': {
+      id: '/org/$slug/_app/settings/connections/$connectionId'
+      path: '/settings/connections/$connectionId'
+      fullPath: '/org/$slug/settings/connections/$connectionId'
+      preLoaderRoute: typeof OrgSlugAppSettingsConnectionsConnectionIdRouteImport
+      parentRoute: typeof OrgSlugAppRoute
+    }
+    '/org/$slug/_app/settings/teams/': {
+      id: '/org/$slug/_app/settings/teams/'
+      path: '/settings/teams'
+      fullPath: '/org/$slug/settings/teams/'
+      preLoaderRoute: typeof OrgSlugAppSettingsTeamsIndexRouteImport
+      parentRoute: typeof OrgSlugAppRoute
+    }
+    '/org/$slug/_app/settings/teams/$teamId': {
+      id: '/org/$slug/_app/settings/teams/$teamId'
+      path: '/settings/teams/$teamId'
+      fullPath: '/org/$slug/settings/teams/$teamId'
+      preLoaderRoute: typeof OrgSlugAppSettingsTeamsTeamIdRouteImport
+      parentRoute: typeof OrgSlugAppRoute
+    }
   }
 }
 
+interface AccountRouteRouteChildren {
+  AccountProfileRoute: typeof AccountProfileRoute
+  AccountSecurityRoute: typeof AccountSecurityRoute
+  AccountIndexRoute: typeof AccountIndexRoute
+}
+
+const AccountRouteRouteChildren: AccountRouteRouteChildren = {
+  AccountProfileRoute: AccountProfileRoute,
+  AccountSecurityRoute: AccountSecurityRoute,
+  AccountIndexRoute: AccountIndexRoute,
+}
+
+const AccountRouteRouteWithChildren = AccountRouteRoute._addFileChildren(
+  AccountRouteRouteChildren,
+)
+
+interface InstanceRouteRouteChildren {
+  InstanceAuditRoute: typeof InstanceAuditRoute
+  InstanceAuthenticationRoute: typeof InstanceAuthenticationRoute
+  InstanceIndexRoute: typeof InstanceIndexRoute
+  InstanceDomainsOrganizationIdDomainIdRoute: typeof InstanceDomainsOrganizationIdDomainIdRoute
+}
+
+const InstanceRouteRouteChildren: InstanceRouteRouteChildren = {
+  InstanceAuditRoute: InstanceAuditRoute,
+  InstanceAuthenticationRoute: InstanceAuthenticationRoute,
+  InstanceIndexRoute: InstanceIndexRoute,
+  InstanceDomainsOrganizationIdDomainIdRoute:
+    InstanceDomainsOrganizationIdDomainIdRoute,
+}
+
+const InstanceRouteRouteWithChildren = InstanceRouteRoute._addFileChildren(
+  InstanceRouteRouteChildren,
+)
+
 interface OrgSlugAppRouteChildren {
-  OrgSlugAppIndexRoute: typeof OrgSlugAppIndexRoute;
-  OrgSlugAppSettingsIndexRoute: typeof OrgSlugAppSettingsIndexRoute;
-  OrgSlugAppSettingsAuditRoute: typeof OrgSlugAppSettingsAuditRoute;
-  OrgSlugAppSettingsAuthenticationRoute: typeof OrgSlugAppSettingsAuthenticationRoute;
-  OrgSlugAppSettingsConnectionsIndexRoute: typeof OrgSlugAppSettingsConnectionsIndexRoute;
-  OrgSlugAppSettingsConnectionsConnectionIdRoute: typeof OrgSlugAppSettingsConnectionsConnectionIdRoute;
-  OrgSlugAppSettingsDomainsRoute: typeof OrgSlugAppSettingsDomainsRoute;
-  OrgSlugAppSettingsGeneralRoute: typeof OrgSlugAppSettingsGeneralRoute;
-  OrgSlugAppSettingsMembersRoute: typeof OrgSlugAppSettingsMembersRoute;
-  OrgSlugAppSettingsRolesRoute: typeof OrgSlugAppSettingsRolesRoute;
-  OrgSlugAppSettingsTeamsIndexRoute: typeof OrgSlugAppSettingsTeamsIndexRoute;
-  OrgSlugAppSettingsTeamsTeamIdRoute: typeof OrgSlugAppSettingsTeamsTeamIdRoute;
+  OrgSlugAppIndexRoute: typeof OrgSlugAppIndexRoute
+  OrgSlugAppSettingsAuditRoute: typeof OrgSlugAppSettingsAuditRoute
+  OrgSlugAppSettingsAuthenticationRoute: typeof OrgSlugAppSettingsAuthenticationRoute
+  OrgSlugAppSettingsDomainsRoute: typeof OrgSlugAppSettingsDomainsRoute
+  OrgSlugAppSettingsGeneralRoute: typeof OrgSlugAppSettingsGeneralRoute
+  OrgSlugAppSettingsMembersRoute: typeof OrgSlugAppSettingsMembersRoute
+  OrgSlugAppSettingsRolesRoute: typeof OrgSlugAppSettingsRolesRoute
+  OrgSlugAppSettingsIndexRoute: typeof OrgSlugAppSettingsIndexRoute
+  OrgSlugAppSettingsConnectionsConnectionIdRoute: typeof OrgSlugAppSettingsConnectionsConnectionIdRoute
+  OrgSlugAppSettingsTeamsTeamIdRoute: typeof OrgSlugAppSettingsTeamsTeamIdRoute
+  OrgSlugAppSettingsConnectionsIndexRoute: typeof OrgSlugAppSettingsConnectionsIndexRoute
+  OrgSlugAppSettingsTeamsIndexRoute: typeof OrgSlugAppSettingsTeamsIndexRoute
 }
 
 const OrgSlugAppRouteChildren: OrgSlugAppRouteChildren = {
   OrgSlugAppIndexRoute: OrgSlugAppIndexRoute,
-  OrgSlugAppSettingsIndexRoute: OrgSlugAppSettingsIndexRoute,
   OrgSlugAppSettingsAuditRoute: OrgSlugAppSettingsAuditRoute,
   OrgSlugAppSettingsAuthenticationRoute: OrgSlugAppSettingsAuthenticationRoute,
-  OrgSlugAppSettingsConnectionsIndexRoute: OrgSlugAppSettingsConnectionsIndexRoute,
-  OrgSlugAppSettingsConnectionsConnectionIdRoute: OrgSlugAppSettingsConnectionsConnectionIdRoute,
   OrgSlugAppSettingsDomainsRoute: OrgSlugAppSettingsDomainsRoute,
   OrgSlugAppSettingsGeneralRoute: OrgSlugAppSettingsGeneralRoute,
   OrgSlugAppSettingsMembersRoute: OrgSlugAppSettingsMembersRoute,
   OrgSlugAppSettingsRolesRoute: OrgSlugAppSettingsRolesRoute,
-  OrgSlugAppSettingsTeamsIndexRoute: OrgSlugAppSettingsTeamsIndexRoute,
+  OrgSlugAppSettingsIndexRoute: OrgSlugAppSettingsIndexRoute,
+  OrgSlugAppSettingsConnectionsConnectionIdRoute:
+    OrgSlugAppSettingsConnectionsConnectionIdRoute,
   OrgSlugAppSettingsTeamsTeamIdRoute: OrgSlugAppSettingsTeamsTeamIdRoute,
-};
-
-const OrgSlugAppRouteWithChildren = OrgSlugAppRoute._addFileChildren(OrgSlugAppRouteChildren);
-
-interface AccountRouteChildren {
-  AccountIndexRoute: typeof AccountIndexRoute;
-  AccountProfileRoute: typeof AccountProfileRoute;
-  AccountSecurityRoute: typeof AccountSecurityRoute;
+  OrgSlugAppSettingsConnectionsIndexRoute:
+    OrgSlugAppSettingsConnectionsIndexRoute,
+  OrgSlugAppSettingsTeamsIndexRoute: OrgSlugAppSettingsTeamsIndexRoute,
 }
 
-const AccountRouteChildren: AccountRouteChildren = {
-  AccountIndexRoute: AccountIndexRoute,
-  AccountProfileRoute: AccountProfileRoute,
-  AccountSecurityRoute: AccountSecurityRoute,
-};
-
-const AccountRouteWithChildren = AccountRoute._addFileChildren(AccountRouteChildren);
-
-interface InstanceRouteChildren {
-  InstanceIndexRoute: typeof InstanceIndexRoute;
-  InstanceAuditRoute: typeof InstanceAuditRoute;
-  InstanceAuthenticationRoute: typeof InstanceAuthenticationRoute;
-  InstanceDomainsOrganizationIdDomainIdRoute: typeof InstanceDomainsOrganizationIdDomainIdRoute;
-}
-
-const InstanceRouteChildren: InstanceRouteChildren = {
-  InstanceIndexRoute: InstanceIndexRoute,
-  InstanceAuditRoute: InstanceAuditRoute,
-  InstanceAuthenticationRoute: InstanceAuthenticationRoute,
-  InstanceDomainsOrganizationIdDomainIdRoute: InstanceDomainsOrganizationIdDomainIdRoute,
-};
-
-const InstanceRouteWithChildren = InstanceRoute._addFileChildren(InstanceRouteChildren);
+const OrgSlugAppRouteWithChildren = OrgSlugAppRoute._addFileChildren(
+  OrgSlugAppRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AccountRoute: AccountRouteWithChildren,
-  AuthEmailVerifyRoute: AuthEmailVerifyRoute,
+  AccountRouteRoute: AccountRouteRouteWithChildren,
+  InstanceRouteRoute: InstanceRouteRouteWithChildren,
   AuthErrorRoute: AuthErrorRoute,
   AuthReauthenticateRoute: AuthReauthenticateRoute,
   AuthVerifyEmailRoute: AuthVerifyEmailRoute,
-  InstanceRoute: InstanceRouteWithChildren,
   InvitationsAcceptRoute: InvitationsAcceptRoute,
-  OrgSlugAppRoute: OrgSlugAppRouteWithChildren,
-  OrgSlugAuthRecoveryRoute: OrgSlugAuthRecoveryRoute,
-  OrganizationsIndexRoute: OrganizationsIndexRoute,
   OrganizationsNewRoute: OrganizationsNewRoute,
-  SetupIndexRoute: SetupIndexRoute,
   SetupOrganizationRoute: SetupOrganizationRoute,
   SetupVerifyRoute: SetupVerifyRoute,
-  SignInIndexRoute: SignInIndexRoute,
   SignInVerifyRoute: SignInVerifyRoute,
-};
+  OrganizationsIndexRoute: OrganizationsIndexRoute,
+  SetupIndexRoute: SetupIndexRoute,
+  SignInIndexRoute: SignInIndexRoute,
+  AuthEmailVerifyRoute: AuthEmailVerifyRoute,
+  OrgSlugAppRoute: OrgSlugAppRouteWithChildren,
+  OrgSlugAuthRecoveryRoute: OrgSlugAuthRecoveryRoute,
+}
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>();
+  ._addFileTypes<FileRouteTypes>()
