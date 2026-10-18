@@ -337,14 +337,20 @@ function DateRangePicker({
 }
 
 function timeSlots(step: number, min = "00:00", max = "23:59") {
+  if (!Number.isInteger(step) || step <= 0) {
+    throw new RangeError("TimeField step must be a positive integer number of minutes.");
+  }
+
   const [minHour = 0, minMinute = 0] = min.split(":").map(Number);
   const [maxHour = 0, maxMinute = 0] = max.split(":").map(Number);
   const minMinutes = minHour * 60 + minMinute;
   const maxMinutes = maxHour * 60 + maxMinute;
   const out: string[] = [];
+
   for (let t = minMinutes; t <= maxMinutes; t += step) {
     out.push(`${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`);
   }
+
   return out;
 }
 
@@ -365,6 +371,7 @@ function TimeField({
   value?: string;
   defaultValue?: string;
   onValueChange?: (time: string) => void;
+  /** Positive integer interval in minutes. Defaults to 15. */
   step?: number;
   min?: string;
   max?: string;

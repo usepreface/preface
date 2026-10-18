@@ -21,7 +21,9 @@ export function useHighlightedCode(value: string, language: string) {
         }
         return next;
       })
-      .catch(() => {});
+      .catch(() => {
+        // Keep readable plain text when an optional grammar chunk cannot load.
+      });
 
     return () => {
       cancelled = true;

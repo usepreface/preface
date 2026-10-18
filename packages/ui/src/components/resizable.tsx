@@ -48,6 +48,9 @@ function ResizablePanelGroup({
   const ref = React.useRef<HTMLDivElement>(null);
   const panels = React.useRef<PanelMeta[]>([]);
   const [sizes, setSizes] = React.useState<number[]>([]);
+  const dragCleanup = React.useRef<(() => void) | null>(null);
+
+  React.useEffect(() => () => dragCleanup.current?.(), []);
 
   // Panels register in render order. Once all are known, unset sizes share what is left.
   React.useLayoutEffect(() => {
@@ -112,28 +115,42 @@ function ResizablePanelGroup({
       if (!el || e.button !== 0) {
         return;
       }
+
+      dragCleanup.current?.();
       e.preventDefault();
       const rect = el.getBoundingClientRect();
       const length = direction === "horizontal" ? rect.width : rect.height;
       const origin = direction === "horizontal" ? e.clientX : e.clientY;
       const base = sizes;
       let latest = base;
+      const previousCursor = document.body.style.cursor;
+      const previousUserSelect = document.body.style.userSelect;
+
       const move = (ev: PointerEvent) => {
         const pos = direction === "horizontal" ? ev.clientX : ev.clientY;
         latest = apply(handleIndex, ((pos - origin) / length) * 100, base);
         setSizes(latest);
       };
-      const up = () => {
+      const cleanup = () => {
         window.removeEventListener("pointermove", move);
         window.removeEventListener("pointerup", up);
-        document.body.style.removeProperty("cursor");
-        document.body.style.removeProperty("user-select");
+        window.removeEventListener("pointercancel", up);
+        document.body.style.cursor = previousCursor;
+        document.body.style.userSelect = previousUserSelect;
+        dragCleanup.current = null;
+      };
+      const up = () => {
+        cleanup();
         onLayout?.(latest);
       };
+
+      // Navigation can unmount the group before the pointer is released.
+      dragCleanup.current = cleanup;
       document.body.style.cursor = direction === "horizontal" ? "col-resize" : "row-resize";
       document.body.style.userSelect = "none";
       window.addEventListener("pointermove", move);
       window.addEventListener("pointerup", up);
+      window.addEventListener("pointercancel", up);
     },
     [apply, direction, onLayout, sizes],
   );

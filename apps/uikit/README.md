@@ -43,6 +43,15 @@ Run the focused build-output regression tests with:
 pnpm --filter @usepreface/uikit test
 ```
 
+Run the shared component keyboard and pointer regressions from the repository root:
+
+```sh
+pnpm exec playwright install chromium
+pnpm test:uikit
+```
+
+This starts a dedicated gallery server on loopback port 5175 and shuts it down afterward.
+
 ## Pages
 
 - **Foundations**: colour tokens with resolved values (click to copy hex, variable or class), the

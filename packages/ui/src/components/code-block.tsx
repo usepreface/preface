@@ -6,6 +6,7 @@ import { Copy01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { cva, type VariantProps } from "class-variance-authority";
 
+import { useCopyToClipboard } from "../hooks/use-copy-to-clipboard";
 import { cn } from "../lib/utils";
 import { Button } from "./button";
 
@@ -90,16 +91,7 @@ function CodeBlockCopyButton({
   onClick,
   ...props
 }: React.ComponentProps<typeof Button> & { value: string }) {
-  const [copied, setCopied] = React.useState(false);
-
-  React.useEffect(() => {
-    if (!copied) {
-      return;
-    }
-
-    const timeout = setTimeout(() => setCopied(false), 2000);
-    return () => clearTimeout(timeout);
-  }, [copied]);
+  const { copied, copy } = useCopyToClipboard();
 
   return (
     <>
@@ -112,10 +104,7 @@ function CodeBlockCopyButton({
         className={cn(className)}
         onClick={(event) => {
           onClick?.(event);
-          navigator.clipboard
-            .writeText(value)
-            .then(() => setCopied(true))
-            .catch(() => {});
+          void copy(value);
         }}
         {...props}
       >

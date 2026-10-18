@@ -16,6 +16,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json && pnpm typecheck:tests && turbo run typecheck",
     "test:postgres": "node tooling/testing/run-postgres.ts",
     "test:auth": "turbo run build --filter=@usepreface/server && playwright test",
+    "test:uikit": "playwright test --config apps/uikit/playwright.config.ts",
     "typecheck:tests": "tsc --noEmit -p tsconfig.test.json"
   },
   "devDependencies": {
