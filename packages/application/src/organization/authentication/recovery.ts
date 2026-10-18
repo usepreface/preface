@@ -140,6 +140,13 @@ export const makeOrganizationAuthRecovery = Effect.gen(function* () {
         const ids = approved.map((entry) => entry.identityConnectionId);
         const connections =
           yield* repository.auth.identityConnection.listByOrganization(organizationId);
+        const oidcConnectionIds = ids.filter((id) =>
+          connections.some((connection) => connection.id === id && connection.provider === "oidc"),
+        );
+        const samlConnectionIds = ids.filter((id) =>
+          connections.some((connection) => connection.id === id && connection.provider === "saml"),
+        );
+
         yield* repository.audit.event.append({
           actorKind: "user",
           actorUserId: actor.user.id,
@@ -150,34 +157,14 @@ export const makeOrganizationAuthRecovery = Effect.gen(function* () {
           metadata: {
             revision: updated.revision,
             googleEnabled: policy.allowedMethods.includes("google"),
-            oidcConnectionIds: ids.filter((id) =>
-              connections.some(
-                (connection) => connection.id === id && connection.provider === "oidc",
-              ),
-            ),
-            samlConnectionIds: ids.filter((id) =>
-              connections.some(
-                (connection) => connection.id === id && connection.provider === "saml",
-              ),
-            ),
+            oidcConnectionIds,
+            samlConnectionIds,
             ssoMode: updated.ssoMode,
             ssoMaxAgeSeconds: updated.ssoMaxAgeSeconds,
           },
         });
         yield* notify(organization, "sso-recovered", `policy-${updated.revision}`);
-        return organizationAuthPolicyView(
-          updated,
-          ids.filter((id) =>
-            connections.some(
-              (connection) => connection.id === id && connection.provider === "oidc",
-            ),
-          ),
-          ids.filter((id) =>
-            connections.some(
-              (connection) => connection.id === id && connection.provider === "saml",
-            ),
-          ),
-        );
+        return organizationAuthPolicyView(updated, oidcConnectionIds, samlConnectionIds);
       }),
     );
   });

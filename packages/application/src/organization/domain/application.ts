@@ -106,12 +106,10 @@ export const makeDomainApplication = Effect.gen(function* () {
       Effect.gen(function* () {
         yield* access.requireOwner(actor, organizationId, { lock: true });
         yield* identityAccess.requireRecentEmail(actor);
-        const existing = (yield* repository.organization.domain.list(organizationId)).find(
-          (entry) => entry.domain === decoded.domain,
-        );
+        const domains = yield* repository.organization.domain.list(organizationId);
+        const existing = domains.find((entry) => entry.domain === decoded.domain);
         if (existing !== undefined) return publicDomain(existing);
-        if ((yield* repository.organization.domain.list(organizationId)).length >= 50)
-          return yield* new IdentityError({ code: "INVALID_INPUT" });
+        if (domains.length >= 50) return yield* new IdentityError({ code: "INVALID_INPUT" });
         const now = yield* DateTime.now;
         const domain = yield* repository.organization.domain.create({
           id: Schema.decodeSync(OrganizationDomainId)(generateUuid7()),
