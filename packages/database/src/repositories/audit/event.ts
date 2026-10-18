@@ -1,7 +1,11 @@
 import { Context, DateTime, Effect, Layer, Schema } from "effect";
 
-import type { IdentityConnectionId } from "@usepreface/protocol";
-import type { AuditEventId, OrganizationId, UserId } from "@usepreface/protocol";
+import type {
+  AuditEventId,
+  IdentityConnectionId,
+  OrganizationId,
+  UserId,
+} from "@usepreface/protocol";
 import { AuditEvent, RecordAuditEvent } from "@usepreface/protocol/model";
 import { and, desc, eq, gte, inArray, isNull, like, lt, lte, or, sql } from "drizzle-orm";
 

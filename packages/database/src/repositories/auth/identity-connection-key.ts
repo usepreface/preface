@@ -11,6 +11,7 @@ import { identityConnectionKey as table } from "#/schema/auth/identity-connectio
 const makeRepository = Effect.gen(function* () {
   const database = yield* Database;
   const decode = Schema.decodeUnknownSync(IdentityConnectionKey);
+
   const list = Effect.fn("IdentityConnectionKeyRepository.list")(function* (
     id: IdentityConnectionId,
   ) {
@@ -22,6 +23,7 @@ const makeRepository = Effect.gen(function* () {
       .limit(50);
     return rows.map((row) => decode(row));
   }, mapToDatabaseError);
+
   const find = Effect.fn("IdentityConnectionKeyRepository.find")(function* (
     id: IdentityConnectionKeyId,
     lock = false,
@@ -30,6 +32,7 @@ const makeRepository = Effect.gen(function* () {
     const [row] = yield* lock ? query.for("update") : query;
     return row === undefined ? undefined : decode(row);
   }, mapToDatabaseError);
+
   const create = Effect.fn("IdentityConnectionKeyRepository.create")(function* (
     input: IdentityConnectionKey,
   ) {
@@ -46,6 +49,7 @@ const makeRepository = Effect.gen(function* () {
       return yield* Effect.die(new Error("Connection key insert returned no row"));
     return decode(row);
   }, mapToDatabaseError);
+
   const update = Effect.fn("IdentityConnectionKeyRepository.update")(function* (
     input: IdentityConnectionKey,
   ) {
@@ -63,16 +67,29 @@ const makeRepository = Effect.gen(function* () {
       return yield* Effect.die(new Error("Connection key update returned no row"));
     return decode(row);
   }, mapToDatabaseError);
+
   const expirePending = Effect.fn("IdentityConnectionKeyRepository.expirePending")(function* () {
     const now = DateTime.toDateUtc(yield* DateTime.now);
     const cutoff = DateTime.toDateUtc(DateTime.subtractDuration(yield* DateTime.now, "7 days"));
     // Bounded work and row locks keep concurrent maintenance workers from sharing a batch.
-    const rows =
-      yield* database.$client`update auth.identity_connection_key set status = 'retired', retired_at = ${now}, private_key_ciphertext = null where id in (select k.id from auth.identity_connection_key k join auth.identity_connection c on c.id = k.identity_connection_id where k.status = 'pending' and (k.expires_at <= ${now} or k.created_at <= ${cutoff} or k.connection_revision <> c.revision) limit 100 for update of k skip locked) returning id`;
+    const rows = yield* database.$client`
+      update auth.identity_connection_key
+      set status = 'retired', retired_at = ${now}, private_key_ciphertext = null
+      where id in (
+        select k.id from auth.identity_connection_key k
+        join auth.identity_connection c on c.id = k.identity_connection_id
+        where k.status = 'pending'
+          and (k.expires_at <= ${now} or k.created_at <= ${cutoff} or k.connection_revision <> c.revision)
+        limit 100 for update of k skip locked
+      )
+      returning id
+    `;
     return rows.length;
   }, mapToDatabaseError);
+
   return { list, find, create, update, expirePending };
 });
+
 export class IdentityConnectionKeyRepository extends Context.Service<
   IdentityConnectionKeyRepository,
   Effect.Success<typeof makeRepository>

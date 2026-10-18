@@ -7,13 +7,16 @@ import { and, eq, isNull } from "drizzle-orm";
 import { mapToDatabaseError } from "#/core/errors";
 import { Database } from "#/core/layer";
 import { account as table } from "#/schema/auth/account";
+
 const makeRepository = Effect.gen(function* () {
   const database = yield* Database;
   const decode = Schema.decodeUnknownSync(Account);
+
   const findById = Effect.fn("AccountRepository.findById")(function* (id: AccountId) {
     const [row] = yield* database.select().from(table).where(eq(table.id, id));
     return row === undefined ? undefined : decode(row);
   }, mapToDatabaseError);
+
   const findByIdentity = Effect.fn("AccountRepository.findByIdentity")(function* (
     connectionId: IdentityConnectionId,
     subject: string,
@@ -31,10 +34,12 @@ const makeRepository = Effect.gen(function* () {
       );
     return row === undefined ? undefined : decode(row);
   }, mapToDatabaseError);
+
   const listByUserId = Effect.fn("AccountRepository.listByUserId")(function* (userId: UserId) {
     const rows = yield* database.select().from(table).where(eq(table.userId, userId));
     return rows.map((row) => decode(row));
   }, mapToDatabaseError);
+
   const create = Effect.fn("AccountRepository.create")(function* (input: Account) {
     const [row] = yield* database
       .insert(table)
@@ -48,6 +53,7 @@ const makeRepository = Effect.gen(function* () {
     if (row === undefined) return yield* Effect.die(new Error("Account insert returned no row"));
     return decode(row);
   }, mapToDatabaseError);
+
   const updateUsage = Effect.fn("AccountRepository.recordUsage")(function* (
     id: AccountId,
     providerEmail: string | null,
@@ -69,6 +75,7 @@ const makeRepository = Effect.gen(function* () {
     if (row === undefined) return yield* Effect.die(new Error("Account update returned no row"));
     return decode(row);
   }, mapToDatabaseError);
+
   const unlink = Effect.fn("AccountRepository.unlink")(function* (id: AccountId, userId: UserId) {
     const now = DateTime.toDateUtc(yield* DateTime.now);
     const [row] = yield* database
@@ -78,8 +85,10 @@ const makeRepository = Effect.gen(function* () {
       .returning();
     return row === undefined ? undefined : decode(row);
   }, mapToDatabaseError);
+
   return { findById, findByIdentity, listByUserId, create, recordUsage: updateUsage, unlink };
 });
+
 export class AccountRepository extends Context.Service<
   AccountRepository,
   Effect.Success<typeof makeRepository>
