@@ -1,6 +1,6 @@
 import { cn } from "@usepreface/ui/lib/utils";
 
-import { toneOf } from "#/lib/identity";
+import { initialsOf, toneOf } from "#/lib/identity";
 
 const sizes = {
   sm: "size-6 rounded-[6px] text-xs",
@@ -9,7 +9,7 @@ const sizes = {
   xl: "size-16 rounded-2xl text-2xl",
 } as const;
 
-/** An organization's first letter on its colour. Organizations don't have images in this phase. */
+/** Initials and a deterministic color until organization image support is available. */
 export function OrgAvatar({
   name,
   size = "md",
@@ -31,7 +31,7 @@ export function OrgAvatar({
         className,
       )}
     >
-      {name.trim().charAt(0).toUpperCase() || "?"}
+      {initialsOf(name)}
     </span>
   );
 }

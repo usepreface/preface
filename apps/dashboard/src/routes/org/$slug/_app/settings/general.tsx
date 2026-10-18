@@ -3,23 +3,19 @@ import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { Button } from "@usepreface/ui/components/button";
-import { TrashIcon } from "@usepreface/ui/icons";
+import { LogoutIcon, PackageIcon } from "@usepreface/ui/icons";
+import { SettingsCard } from "@usepreface/ui/preface/cards";
 
 import { Permission } from "#/components/api/permission";
 import { ConfirmDialog } from "#/components/feedback/confirm-dialog";
-import { SubmitButton } from "#/components/form/submit-button";
-import { TextField, TextareaField } from "#/components/form/text-field";
-import { PageTitle, PageSection } from "#/components/shell/page";
-import { updateOrganizationForm } from "#/forms/organization";
+import { PageTitle } from "#/components/shell/page";
 import {
   useOrganization,
-  useUpdateOrganization,
   useArchiveOrganization,
   useLeaveOrganization,
 } from "#/hooks/organizations";
-import { feedback } from "#/lib/feedback";
-import { useSchemaForm } from "#/lib/forms/use-schema-form";
 
+import { OrganizationDetails } from "./-components/organization-details";
 import { SettingsFrame } from "./-components/settings-frame";
 
 export const Route = createFileRoute("/org/$slug/_app/settings/general")({
@@ -29,111 +25,62 @@ export const Route = createFileRoute("/org/$slug/_app/settings/general")({
     </Permission>
   ),
 });
+
 function General() {
   const { organization, access } = useOrganization();
-  const update = useUpdateOrganization();
   const archive = useArchiveOrganization();
   const leave = useLeaveOrganization();
   const navigate = useNavigate();
   const [action, setAction] = useState<"archive" | "leave">();
-  const form = useSchemaForm(updateOrganizationForm, {
-    defaultValues: {
-      slug: organization.slug,
-      metadata: {
-        name: organization.metadata.name,
-        description: organization.metadata.description ?? "",
-      },
-    },
-  });
+  const pending = archive.pending || leave.pending;
+
   return (
     <SettingsFrame crumbs={[{ label: "General" }]}>
-      <PageTitle title="General" description="Organization identity and lifecycle." />
-      <form
-        className="flex flex-col gap-5 rounded-xl border p-5"
-        onSubmit={form.handleSubmit(async (payload) => {
-          const response = await update.run({
-            params: { organizationId: organization.id },
-            payload: {
-              ...(form.formState.dirtyFields.slug ? { slug: payload.slug } : {}),
-              metadata: {
-                ...(form.formState.dirtyFields.metadata?.name
-                  ? { name: payload.metadata?.name }
-                  : {}),
-                ...(form.formState.dirtyFields.metadata?.description
-                  ? { description: payload.metadata?.description || null }
-                  : {}),
-              },
-            },
-          });
-          if (response) {
-            feedback.saved("Organization");
-            form.reset({
-              slug: response.value.slug,
-              metadata: {
-                name: response.value.metadata.name,
-                description: response.value.metadata.description ?? "",
-              },
-            });
-            if (response.value.slug !== organization.slug)
-              await navigate({
-                to: "/org/$slug/settings/general",
-                params: { slug: response.value.slug },
-              });
-          }
-        })}
-      >
-        <TextField
-          control={form.control}
-          name="metadata.name"
-          label="Organization name"
-          inputProps={{ disabled: !access.permissions.includes("organization.update") }}
-        />
-        <TextField
-          control={form.control}
-          name="slug"
-          label="URL slug"
-          inputProps={{ disabled: !access.permissions.includes("organization.update") }}
-        />
-        <TextareaField
-          control={form.control}
-          name="metadata.description"
-          label="Description"
-          optional
-          textareaProps={{ disabled: !access.permissions.includes("organization.update") }}
-        />
-        {access.permissions.includes("organization.update") ? (
-          <SubmitButton pending={update.pending} disabled={!form.formState.isDirty}>
-            Save organization
-          </SubmitButton>
-        ) : null}
-      </form>
-      <PageSection title="Organization access">
-        <div className="flex gap-3">
-          {access.permissions.includes("organization.archive") ? (
-            <Button variant="outline" onClick={() => setAction("archive")}>
-              Archive organization
-            </Button>
-          ) : null}
+      <PageTitle title="General" description="Your organization’s name, URL and description." />
+      <OrganizationDetails />
+      <SettingsCard
+        title="Leave organization"
+        description={`You’ll lose access to ${organization.metadata.name} and its teams. The last owner must add another owner before leaving.`}
+        action={
           <Button variant="outline" onClick={() => setAction("leave")}>
+            <LogoutIcon data-icon="inline-start" />
             Leave organization
           </Button>
-        </div>
-      </PageSection>
+        }
+      />
+      {access.permissions.includes("organization.archive") ? (
+        <SettingsCard
+          danger
+          title="Archive organization"
+          description={`Block access to ${organization.metadata.name} while keeping its data. An owner can restore it from the organization picker.`}
+          action={
+            <Button variant="destructive-outline" onClick={() => setAction("archive")}>
+              <PackageIcon data-icon="inline-start" />
+              Archive organization
+            </Button>
+          }
+        />
+      ) : null}
       <ConfirmDialog
         open={Boolean(action)}
         onOpenChange={(open) => {
-          if (!open) setAction(undefined);
+          if (!open && !pending) setAction(undefined);
         }}
-        pending={archive.pending || leave.pending}
-        icon={TrashIcon}
-        title={action === "archive" ? "Archive organization?" : "Leave organization?"}
+        pending={pending}
+        icon={action === "archive" ? PackageIcon : LogoutIcon}
+        tone={action === "archive" ? "danger" : "warning"}
+        title={
+          action === "archive"
+            ? `Archive ${organization.metadata.name}?`
+            : `Leave ${organization.metadata.name}?`
+        }
         description={
           action === "archive"
-            ? "Organization access is blocked until an owner restores it."
-            : "You lose your membership and team access. Rejoining requires an invitation."
+            ? "Organization access is blocked until an owner restores it. Nothing is deleted."
+            : "You lose your membership and team access immediately. Rejoining requires an invitation."
         }
-        confirmText={organization.slug}
-        confirmLabel="Confirm"
+        confirmText={action === "archive" ? organization.slug : undefined}
+        confirmLabel={action === "archive" ? "Archive organization" : "Leave organization"}
         onConfirm={async () => {
           const input = { params: { organizationId: organization.id }, payload: {} };
           const response = action === "archive" ? await archive.run(input) : await leave.run(input);
