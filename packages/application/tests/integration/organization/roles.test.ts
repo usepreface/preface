@@ -43,6 +43,17 @@ layer(ApplicationTestLayer)("organization roles and delegation", (it) => {
           { memberId: member.id, roleId: role.id },
         )).id,
       ).toBe(binding.id);
+      const assignments = yield* application.organization.roleBinding.list(
+        fixture.owner.actor,
+        fixture.organization.id,
+        { memberId: member.id },
+      );
+      expect(assignments.bindings.map((assignment) => assignment.id)).toEqual([binding.id]);
+      expect(
+        yield* application.organization.roleBinding
+          .list(editor.actor, fixture.organization.id, { memberId: member.id })
+          .pipe(Effect.flip),
+      ).toMatchObject({ code: "FORBIDDEN" });
       yield* application.organization.organization.update(editor.actor, fixture.organization.id, {
         metadata: { name: "Edited" },
       });

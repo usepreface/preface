@@ -13,6 +13,11 @@ export const OrganizationRoleBindingsRoutes = HttpApiBuilder.group(
     Effect.gen(function* () {
       const workflow = (yield* Application).organization.roleBinding;
       return handlers.handleAll({
+        list: Effect.fn("http.organizationRoleBindings.list")(function* ({ params, query }) {
+          return yield* workflow
+            .list(yield* CurrentActor, params.organizationId, query)
+            .pipe(mapInfrastructureError);
+        }),
         grant: Effect.fn("http.organizationRoleBindings.grant")(function* ({ params, payload }) {
           return yield* workflow
             .grant(yield* CurrentActor, params.organizationId, payload)

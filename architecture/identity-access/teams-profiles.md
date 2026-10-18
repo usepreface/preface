@@ -92,3 +92,8 @@ Organization authentication, including [required SSO](required-sso.md), applies 
 - [Profile workflow](../../packages/application/src/profile/user.ts)
 - [HTTP contracts](../../packages/api/src/groups/organization/teams.ts)
 - [Team tests](../../packages/application/tests/integration/organization/teams.test.ts)
+
+Role assignment reads take an organization member and optional team identity. They return
+only active grants at that exact scope, after organization `roles.read` or team
+`team.roles.read` authorization. The dashboard uses those grant identities for explicit
+revocation; an organization owner does not implicitly gain access to other organizations.

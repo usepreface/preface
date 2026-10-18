@@ -165,7 +165,7 @@ explicit owner grant and default local-email auth policy with required audit.
 - `organization`: `create`, `listMine`, `get`, `getAccess`, `update`, `archive`, `restore`.
 - `member`: `list`, `suspend`, `reinstate`, `remove`, `leave`.
 - `role`: `list`, `create`, `update`, `archive` for custom definitions.
-- `roleBinding`: `grant`, `revoke` for direct member assignments.
+- `roleBinding`: `list`, `grant`, `revoke` for direct member assignments.
 - `ownership`: protected `grant`, `revoke`, `transfer` workflows.
 - `authPolicy.get`: read the currently enforced policy.
 - `team`: `create`, `list`, `get`, `getAccess`, `update`, `archive`, `listRoles`, plus `member.add/list/remove`.

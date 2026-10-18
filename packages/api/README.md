@@ -439,3 +439,9 @@ for safe current-job status and retry diagnostics.
 For an IdP application tile, use `GET /api/v1/organizations/:organizationId/identity-connections/:connectionId/saml/login`
 with an optional relative `returnPath`. It redirects into a fresh SP-bound login, or forced
 reauthentication for an authenticated current member. It does not accept unsolicited assertions.
+
+`organizationRoleBindings.list({ params: { organizationId }, query: { memberId, teamId? } })`
+reads active assignment identities at GET `/organizations/:organizationId/role-bindings`.
+Organization assignments require `roles.read`; supplying `teamId` requires that team's
+`team.roles.read`. The response is `{ bindings }`, scoped to that member and exact scope,
+so editors can revoke an existing grant without guessing its identity.

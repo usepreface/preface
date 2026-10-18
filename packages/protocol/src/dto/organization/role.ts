@@ -70,3 +70,11 @@ export const PublicOrganizationRoleBinding = Schema.Struct({
   revokedAt: Schema.NullOr(Schema.DateTimeUtcFromString),
 });
 export type PublicOrganizationRoleBinding = typeof PublicOrganizationRoleBinding.Type;
+
+export const ListRoleBindingsQuery = Schema.Struct({
+  memberId: OrganizationMemberId,
+  teamId: Schema.optionalKey(TeamId),
+});
+export const OrganizationRoleBindingList = Schema.Struct({
+  bindings: Schema.Array(PublicOrganizationRoleBinding),
+});

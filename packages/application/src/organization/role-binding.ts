@@ -23,6 +23,26 @@ export const makeOrganizationRoleBindingApplication = Effect.gen(function* () {
   const access = yield* OrganizationAccess;
   const teams = yield* TeamAccess;
   const recordBindingEvent = yield* makeBindingAudit;
+  const list = Effect.fn("Application.organization.roleBinding.list")(function* (
+    actor: SessionActor,
+    organizationId: OrganizationId,
+    input: { readonly memberId: OrganizationMemberId; readonly teamId?: TeamId },
+  ) {
+    if (input.teamId !== undefined) {
+      yield* teams.requirePermissions(actor, organizationId, input.teamId, ["team.roles.read"]);
+    } else {
+      yield* access.requirePermissions(actor, organizationId, ["roles.read"]);
+    }
+    const member = yield* repository.organization.member.findById(organizationId, input.memberId);
+    if (member === undefined) return yield* new OrganizationError({ code: "MEMBER_NOT_FOUND" });
+    const assignments = yield* repository.organization.roleBinding.listActiveByMemberId(
+      organizationId,
+      member.id,
+      input.teamId ?? null,
+    );
+    return { bindings: assignments.map((assignment) => publicBinding(assignment.binding)) };
+  });
+
   const grant = Effect.fn("Application.organization.roleBinding.grant")(function* (
     actor: SessionActor,
     organizationId: OrganizationId,
@@ -176,5 +196,5 @@ export const makeOrganizationRoleBindingApplication = Effect.gen(function* () {
       }),
     );
   });
-  return { grant, revoke } as const;
+  return { list, grant, revoke } as const;
 });

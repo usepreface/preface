@@ -43,6 +43,8 @@ export {
   UpdateOrganizationRoleRequest,
   ListOrganizationRolesQuery,
   OrganizationRoleList,
+  ListRoleBindingsQuery,
+  OrganizationRoleBindingList,
   GrantOrganizationRoleRequest,
   PublicOrganizationRoleBinding,
 } from "#/dto/organization/role";

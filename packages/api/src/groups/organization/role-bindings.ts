@@ -2,6 +2,8 @@ import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema, OpenApi } from "effect/ht
 
 import { OrganizationId, OrganizationRoleBindingId } from "@usepreface/protocol";
 import {
+  ListRoleBindingsQuery,
+  OrganizationRoleBindingList,
   GrantOrganizationRoleRequest,
   PublicOrganizationRoleBinding,
 } from "@usepreface/protocol/dto";
@@ -11,6 +13,12 @@ import { SessionAuthentication } from "#/middleware/session-authentication";
 
 export class OrganizationRoleBindingsApi extends HttpApiGroup.make("organizationRoleBindings")
   .add(
+    HttpApiEndpoint.get("list", "/:organizationId/role-bindings", {
+      params: { organizationId: OrganizationId },
+      query: ListRoleBindingsQuery,
+      success: OrganizationRoleBindingList,
+      error: [...teamErrors, ...organizationErrors, ...requestErrors],
+    }),
     HttpApiEndpoint.post("grant", "/:organizationId/role-bindings", {
       params: { organizationId: OrganizationId },
       payload: GrantOrganizationRoleRequest,
