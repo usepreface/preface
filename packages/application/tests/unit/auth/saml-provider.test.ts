@@ -1,5 +1,6 @@
 import { DateTime, Effect, Layer, Redacted } from "effect";
 
+import { CertificateCrypto } from "@usepreface/crypto";
 import { NodeCertificateCrypto } from "@usepreface/crypto/node";
 import { describe, expect, it } from "vitest";
 
@@ -44,6 +45,48 @@ describe("SAML SDK adapter", () => {
           }),
         );
         expect(url.searchParams.get("Signature")).toBeTruthy();
+      }).pipe(Effect.provide(providers)),
+    );
+  });
+
+  it("extracts one configured signed email and publishes overlapping SP certificates", async () => {
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const issuer = yield* makeSamlIssuer;
+        const provider = yield* SamlIdentity;
+        if (issuer.configuration.idp === null) throw new Error("Expected IdP");
+        const client = {
+          ...issuer,
+          configuration: {
+            ...issuer.configuration,
+            idp: { ...issuer.configuration.idp, emailAttribute: "email" },
+          },
+        };
+        const requestId = "_email-request";
+        const verified = yield* provider.validateResponse({
+          ...client,
+          requestId,
+          response: issuer.response(requestId, { emailValues: ["alice@company.example"] }),
+        });
+        expect(verified.email).toBe("alice@company.example");
+        expect(
+          yield* provider
+            .validateResponse({
+              ...client,
+              requestId,
+              response: issuer.response(requestId, {
+                emailValues: ["alice@company.example", "other@company.example"],
+              }),
+            })
+            .pipe(Effect.flip),
+        ).toMatchObject({ code: "INVALID_FLOW" });
+        const replacement = yield* (yield* CertificateCrypto).generateSigningCertificate();
+        const metadata = yield* provider.metadata({
+          ...client,
+          additionalSigningCertificates: [replacement.certificate],
+        });
+        expect((metadata.match(/<ds:X509Certificate>/g) ?? []).length).toBe(2);
+        expect(metadata).not.toContain("PRIVATE KEY");
       }).pipe(Effect.provide(providers)),
     );
   });

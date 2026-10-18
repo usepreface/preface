@@ -1,7 +1,7 @@
 # Organization SAML
 
 Organization owners can configure SAML 2.0 alongside [OIDC](oidc.md). Both use the same global
-users, explicit account links, organization approvals, source-backed sessions and [required SSO
+users, proof-authorized account links, organization approvals, source-backed sessions and [required SSO
 and owner recovery](required-sso.md). An IdP assertion grants neither membership nor instance
 authority. Provider email and attributes never merge users or assign roles.
 
@@ -31,7 +31,7 @@ its evidence. All mutations and audit rows share a transaction and preserve the 
 For rollover, add a currently valid IdP certificate alongside the old one, test and activate the new
 revision, then remove the retiring certificate before it expires. Expired certificates are rejected,
 including an expired certificate remaining in a configured set. SP certificates need deliberate
-rotation before their one-year expiry; no automatic certificate renewal or key ring is implemented.
+rotation before their one-year expiry. [Staged rollover](connection-operations.md) publishes overlapping SP certificates and preserves identity trust; automatic renewal is not implemented.
 
 ## Browser transaction
 

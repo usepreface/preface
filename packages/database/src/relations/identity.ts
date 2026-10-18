@@ -2,6 +2,13 @@ import { defineRelationsPart } from "drizzle-orm";
 
 import * as schema from "#/schema/index";
 export const identityRelations = defineRelationsPart(schema, (r) => ({
+  identityConnectionKey: {
+    connection: r.one.identityConnection({
+      from: [r.identityConnectionKey.identityConnectionId, r.identityConnectionKey.organizationId],
+      to: [r.identityConnection.id, r.identityConnection.organizationId],
+      optional: false,
+    }),
+  },
   organizationDomain: {
     organization: r.one.organization({
       from: r.organizationDomain.organizationId,

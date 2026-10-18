@@ -4,13 +4,14 @@ import { CredentialDigest } from "#/common/credential-digest";
 import { DisplayName } from "#/common/display-name";
 import { AuthenticationReturnPath, AuthFlowIntent, IdentityRevision } from "#/common/identity";
 import { IdentityProvider } from "#/common/oidc";
-import { AuthFlowId, IdentityConnectionId } from "#/identifiers/identity";
+import { IdentityConnectionKeyId, AuthFlowId, IdentityConnectionId } from "#/identifiers/identity";
 import { OrganizationInvitationId } from "#/identifiers/organization";
 import { OrganizationId } from "#/identifiers/organization";
 import { SessionId } from "#/identifiers/session";
 import { UserId } from "#/identifiers/user";
 export const CreateAuthFlow = Schema.Struct({
   id: AuthFlowId,
+  signingKeyId: Schema.optionalKey(Schema.NullOr(IdentityConnectionKeyId)),
   provider: Schema.optionalKey(IdentityProvider),
   identityConnectionId: IdentityConnectionId,
   connectionRevision: IdentityRevision,
@@ -33,6 +34,7 @@ export const CreateAuthFlow = Schema.Struct({
 export type CreateAuthFlow = typeof CreateAuthFlow.Type;
 export const AuthFlow = Schema.Struct({
   ...CreateAuthFlow.fields,
+  signingKeyId: Schema.NullOr(IdentityConnectionKeyId),
   provider: IdentityProvider,
   requestedMaxAgeSeconds: Schema.NullOr(Schema.Natural),
   pkceVerifierCiphertext: Schema.NullOr(Schema.NonEmptyString),

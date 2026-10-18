@@ -9,6 +9,7 @@ import {
 import { AuditEventId } from "#/identifiers/audit";
 import { VerificationId, UserEmailId } from "#/identifiers/auth";
 import { BootstrapChallengeId } from "#/identifiers/bootstrap";
+import { IdentityConnectionKeyId } from "#/identifiers/identity";
 import { OrganizationDomainId } from "#/identifiers/identity";
 import { IdentityConnectionId, AccountId, AuthFlowId } from "#/identifiers/identity";
 import { InstallationId, InstanceOwnerId } from "#/identifiers/instance";
@@ -234,6 +235,27 @@ const connectionFields = {
   targetId: IdentityConnectionId,
   metadata: Schema.Struct({ revision: Schema.Int }),
 };
+const connectionKeyFields = {
+  ...organizationActor,
+  eventType: Schema.Literals([
+    "auth.connection_key_prepared",
+    "auth.connection_key_tested",
+    "auth.connection_key_activated",
+    "auth.connection_key_retired",
+  ]),
+  targetType: Schema.Literal("identity_connection_key"),
+  targetId: IdentityConnectionKeyId,
+  metadata: Schema.Struct({ connectionId: IdentityConnectionId, revision: Schema.Int }),
+};
+const certificateWarningFields = {
+  actorKind: Schema.Literal("system"),
+  actorUserId: Schema.Null,
+  organizationId: OrganizationId,
+  eventType: Schema.Literal("auth.connection_certificate_expiring"),
+  targetType: Schema.Literal("identity_connection"),
+  targetId: IdentityConnectionId,
+  metadata: Schema.Struct({ revision: Schema.Int, fingerprint: Schema.String }),
+};
 const accountFields = {
   organizationId: Schema.optionalKey(OrganizationId),
   actorKind: Schema.Literal("user"),
@@ -357,6 +379,8 @@ export const RecordAuditEvent = Schema.Union([
   Schema.Struct(domainFields),
   Schema.Struct(connectionDomainFields),
   Schema.Struct(recoveryFields),
+  Schema.Struct(connectionKeyFields),
+  Schema.Struct(certificateWarningFields),
   Schema.Struct(connectionFields),
   Schema.Struct(accountFields),
   Schema.Struct(flowFields),
@@ -400,6 +424,8 @@ export const AuditEvent = Schema.Union([
   Schema.Struct({ ...domainFields, ...organizationStoredFields }),
   Schema.Struct({ ...connectionDomainFields, ...organizationStoredFields }),
   Schema.Struct({ ...recoveryFields, ...organizationStoredFields }),
+  Schema.Struct({ ...connectionKeyFields, ...organizationStoredFields }),
+  Schema.Struct({ ...certificateWarningFields, ...organizationStoredFields }),
   Schema.Struct({ ...connectionFields, ...identityStoredFields }),
   Schema.Struct({ ...accountFields, ...identityStoredFields }),
   Schema.Struct({ ...flowFields, ...identityStoredFields }),

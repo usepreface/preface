@@ -12,6 +12,7 @@ import { makeGoogleEvidence } from "#/auth/google/evidence";
 import { makeIdentityAccess } from "#/auth/identity-access";
 import { makeOrganizationIdentityAccess } from "#/auth/organization-identity/access";
 import { makeOrganizationIdentityEvidence } from "#/auth/organization-identity/evidence";
+import { isPendingKeyUsable } from "#/auth/saml/keys";
 import { OrganizationAccess } from "#/organization/access";
 import { makeInvitationAdmission } from "#/organization/invitation/admission";
 import { sessionLifetime } from "#/security/policy";
@@ -93,27 +94,51 @@ export const makeExternalCompletion = Effect.gen(function* () {
               yield* actors.requireOwner(actor, connection.organizationId);
               yield* access.requireRecentEmail(actor);
             }
-            yield* repository.auth.identityConnection.update(
-              {
-                ...connection,
-                status: connection.status === "active" ? "active" : "tested",
-                testedRevision: connection.revision,
-                testedAt: now,
-                updatedAt: now,
-              },
-              connection.revision,
-            );
+            if (flow.signingKeyId !== null) {
+              const key = yield* repository.auth.identityConnectionKey.find(
+                flow.signingKeyId,
+                true,
+              );
+              if (
+                connection.provider !== "saml" ||
+                key?.identityConnectionId !== connection.id ||
+                !isPendingKeyUsable(key, connection.revision, now)
+              )
+                return yield* new IdentityError({ code: "KEY_UNAVAILABLE" });
+              yield* repository.auth.identityConnectionKey.update({ ...key, testedAt: now });
+              yield* repository.audit.event.append({
+                actorKind: "user",
+                actorUserId: actor.user.id,
+                organizationId: connection.organizationId,
+                eventType: "auth.connection_key_tested",
+                targetType: "identity_connection_key",
+                targetId: key.id,
+                metadata: { connectionId: connection.id, revision: connection.revision },
+              });
+            } else {
+              yield* repository.auth.identityConnection.update(
+                {
+                  ...connection,
+                  status: connection.status === "active" ? "active" : "tested",
+                  testedRevision: connection.revision,
+                  testedAt: now,
+                  updatedAt: now,
+                },
+                connection.revision,
+              );
+            }
             if ((yield* repository.auth.authFlow.consume(flow.id)) === undefined)
               return yield* new IdentityError({ code: "INVALID_FLOW" });
-            yield* repository.audit.event.append({
-              actorKind: "user",
-              actorUserId: actor.user.id,
-              ...(connection.organizationId ? { organizationId: connection.organizationId } : {}),
-              eventType: "auth.connection_tested",
-              targetType: "identity_connection",
-              targetId: connection.id,
-              metadata: { revision: connection.revision },
-            });
+            if (flow.signingKeyId === null)
+              yield* repository.audit.event.append({
+                actorKind: "user",
+                actorUserId: actor.user.id,
+                ...(connection.organizationId ? { organizationId: connection.organizationId } : {}),
+                eventType: "auth.connection_tested",
+                targetType: "identity_connection",
+                targetId: connection.id,
+                metadata: { revision: connection.revision },
+              });
             return {
               intent: flow.intent,
               nextAction: "continue" as const,

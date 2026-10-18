@@ -7,6 +7,8 @@ import { TestDatabase } from "@usepreface/database/testing";
 import { Application } from "../../../src/index.js";
 import { ApplicationTestLayer } from "../../fixtures/application.js";
 import { readEmailJob } from "../../fixtures/email-job.js";
+import { TestGoogle } from "../../fixtures/google-provider.js";
+import { configureTestGoogle, googleCallbackInput } from "../../fixtures/google.js";
 import { createTestInvitation } from "../../fixtures/invitation.js";
 import { TestOidc } from "../../fixtures/oidc-provider.js";
 import { configureTestOidc, oidcCallbackInput } from "../../fixtures/oidc.js";
@@ -15,6 +17,62 @@ import { TestSaml } from "../../fixtures/saml-provider.js";
 import { completeTestSaml, configureTestSaml } from "../../fixtures/saml.js";
 
 layer(ApplicationTestLayer)("External identity enrollment", (it) => {
+  it.effect(
+    "admits an invited Google Workspace identity, then keeps its stable account after an email claim changes",
+    () =>
+      Effect.gen(function* () {
+        yield* (yield* TestDatabase).reset;
+        const application = yield* Application;
+        const repository = yield* DatabaseRepository;
+        const { owner, organization } = yield* createTestOrganization;
+        const google = yield* configureTestGoogle(owner.actor);
+        if (google.id === null) throw new Error("Expected Google connection");
+        const policy = yield* application.organization.authPolicy.get(owner.actor, organization.id);
+        yield* application.organization.authPolicy.update(owner.actor, organization.id, {
+          expectedRevision: policy.revision,
+          googleEnabled: true,
+        });
+        const invitation = yield* createTestInvitation(
+          owner.actor,
+          organization.id,
+          "alice@company.example.test",
+        );
+        const provider = yield* TestGoogle;
+        yield* Ref.set(provider.identity, {
+          subject: "workspace-alice",
+          email: "alice@company.example.test",
+          emailVerified: true,
+          hostedDomain: "company.example.test",
+        });
+        const started = yield* application.auth.external.invitation.start({
+          ...invitation.input,
+          connectionId: google.id,
+          displayName: "Alice",
+        });
+        const result = yield* application.auth.google.callback(yield* googleCallbackInput(started));
+        if (result.sessionToken === undefined) throw new Error("Expected new Google session");
+        const actor = yield* application.auth.session.resolve(result.sessionToken);
+        expect(actor.user.email).toBe("alice@company.example.test");
+        expect(
+          yield* repository.organization.member.findByUserId(organization.id, actor.user.id),
+        ).toMatchObject({ suspendedAt: null, removedAt: null });
+        yield* Ref.set(provider.identity, {
+          subject: "workspace-alice",
+          email: "changed@company.example.test",
+          emailVerified: true,
+          hostedDomain: "company.example.test",
+        });
+        const returning = yield* application.auth.google.start();
+        const completed = yield* application.auth.google.callback(
+          yield* googleCallbackInput(returning),
+        );
+        if (completed.sessionToken === undefined) throw new Error("Expected returning session");
+        const same = yield* application.auth.session.resolve(completed.sessionToken);
+        expect(same.user.id).toBe(actor.user.id);
+        expect(same.user.email).toBe("alice@company.example.test");
+      }),
+  );
+
   it.effect("admits a new invited OIDC user directly through exact trusted-domain authority", () =>
     Effect.gen(function* () {
       yield* (yield* TestDatabase).reset;

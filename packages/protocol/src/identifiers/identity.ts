@@ -1,6 +1,8 @@
 import { createBrandedId } from "#/common/branded-id";
 export const IdentityConnectionId = createBrandedId("IdentityConnectionId");
 export type IdentityConnectionId = typeof IdentityConnectionId.Type;
+export const IdentityConnectionKeyId = createBrandedId("IdentityConnectionKeyId");
+export type IdentityConnectionKeyId = typeof IdentityConnectionKeyId.Type;
 export const AccountId = createBrandedId("AccountId");
 export type AccountId = typeof AccountId.Type;
 export const AuthFlowId = createBrandedId("AuthFlowId");

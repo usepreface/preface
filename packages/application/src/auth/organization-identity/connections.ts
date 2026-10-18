@@ -3,6 +3,7 @@ import { Effect } from "effect";
 import { DatabaseRepository } from "@usepreface/database";
 import {
   IdentityError,
+  type IdentityConnectionKeyId,
   type AuthFlowIntent,
   type IdentityConnectionId,
   type OrganizationId,
@@ -13,7 +14,9 @@ import type { ExternalIdentityStartInput } from "@usepreface/protocol/input";
 import { AuthenticationLinks } from "#/auth/links";
 import { makeOidcConnectionApplication, publicOidcConnection } from "#/auth/oidc/connection";
 import { makeOidcFlowStart } from "#/auth/oidc/start";
+import { makeConnectionHealth } from "#/auth/organization-identity/health";
 import { makeSamlConnectionApplication, publicSamlConnection } from "#/auth/saml/connection";
+import { makeSigningKeys } from "#/auth/saml/keys";
 import { makeSamlFlowStart } from "#/auth/saml/start";
 import { OrganizationAccess } from "#/organization/access";
 
@@ -93,6 +96,17 @@ export const makeOrganizationIdentityConnections = Effect.gen(function* () {
     );
   });
   return {
+    health: yield* makeConnectionHealth,
+    keys: {
+      ...(yield* makeSigningKeys),
+      test: (
+        actor: SessionActor,
+        organizationId: OrganizationId,
+        id: IdentityConnectionId,
+        keyId: IdentityConnectionKeyId,
+        revision: number,
+      ) => startSaml("test", organizationId, id, {}, actor, revision, undefined, keyId),
+    },
     list,
     get,
     createOidc: oidc.createOidc,

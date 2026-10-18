@@ -1,4 +1,5 @@
 import type {
+  IdentityConnectionKeyId,
   AuthFlowId,
   IdentityConnectionId,
   SessionId,
@@ -20,6 +21,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { identityConnection } from "#/schema/auth/identity-connection";
+import { identityConnectionKey } from "#/schema/auth/identity-connection-key";
 import { authSchema } from "#/schema/auth/schema";
 import { session } from "#/schema/auth/session";
 import { user } from "#/schema/auth/user";
@@ -34,6 +36,7 @@ export const authFlow = authSchema.table(
       .$type<IdentityConnectionId>()
       .notNull()
       .references(() => identityConnection.id, { onDelete: "restrict" }),
+    signingKeyId: uuid("signing_key_id").$type<IdentityConnectionKeyId>(),
     connectionRevision: integer("connection_revision").notNull(),
     requestedMaxAgeSeconds: integer("requested_max_age_seconds"),
     intent: text("intent").$type<AuthFlow["intent"]>().notNull(),
@@ -64,6 +67,14 @@ export const authFlow = authSchema.table(
     revokedAt: timestamp("revoked_at", { withTimezone: true }),
   },
   (t) => [
+    foreignKey({
+      columns: [t.signingKeyId, t.identityConnectionId],
+      foreignColumns: [identityConnectionKey.id, identityConnectionKey.identityConnectionId],
+    }),
+    check(
+      "auth_flow_signing_key_check",
+      sql`${t.signingKeyId} is null or (${t.provider} = 'saml' and ${t.intent} = 'test')`,
+    ),
     foreignKey({
       columns: [t.initiatingSessionId, t.expectedUserId],
       foreignColumns: [session.id, session.userId],

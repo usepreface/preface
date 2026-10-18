@@ -72,3 +72,8 @@ creates certificates because Node's built-in crypto can parse but cannot issue t
 
 SAML adds separate purposes for RelayState/browser digests, hashed stable subjects, replay IDs
 and encrypted staged flow proofs. Never expose signing private keys or decrypted assertions.
+
+`CertificateCrypto.inspectSigningCertificate` returns a public SHA-256 fingerprint and validity dates,
+including for expired certificates. It does not assert that the certificate is currently usable.
+Signing validation remains a separate operation. Pending connection keys use a separate encryption
+purpose and are bound to their connection/revision by the application envelope.

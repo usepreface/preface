@@ -11,3 +11,5 @@ export { AccountRepository } from "#/repositories/auth/account";
 export { AuthFlowRepository } from "#/repositories/auth/auth-flow";
 
 export { SsoReplayRepository } from "#/repositories/auth/sso-replay";
+
+export { IdentityConnectionKeyRepository } from "#/repositories/auth/identity-connection-key";

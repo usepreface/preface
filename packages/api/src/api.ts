@@ -7,6 +7,7 @@ import {
   OrganizationSelectionApi,
 } from "#/groups/authentication-discovery";
 import { AuthenticationPolicyApi } from "#/groups/authentication-policy";
+import { ConnectionOperationsApi } from "#/groups/connection-operations";
 import { EmailSignInApi } from "#/groups/email-sign-in";
 import { ExternalAuthenticationApi } from "#/groups/external-authentication";
 import { GoogleApi } from "#/groups/google";
@@ -33,6 +34,7 @@ import { TeamsApi } from "#/groups/teams";
 
 export class PrefaceApi extends HttpApi.make("PrefaceApi")
   .add(
+    ConnectionOperationsApi,
     AuditApi,
     AuthenticationDiscoveryApi,
     OrganizationSelectionApi,

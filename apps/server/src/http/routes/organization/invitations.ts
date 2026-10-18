@@ -15,6 +15,11 @@ export const OrganizationInvitationsRoutes = HttpApiBuilder.group(
     Effect.gen(function* () {
       const invitations = (yield* Application).organization.invitation;
       return handlers.handleAll({
+        delivery: Effect.fn("http.organizationInvitations.delivery")(function* ({ params }) {
+          return yield* invitations
+            .delivery(yield* CurrentActor, params.organizationId, params.invitationId)
+            .pipe(mapInfrastructureError);
+        }),
         create: Effect.fn("http.organizationInvitations.create")(function* ({ params, payload }) {
           const input = yield* Schema.decodeUnknownEffect(CreateInvitationInput)(payload).pipe(
             Effect.mapError(() => new RequestError({ code: "INVALID_INPUT" })),

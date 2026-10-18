@@ -88,7 +88,10 @@ export const NodeSamlIdentity = {
                 issuer: client.configuration.entityId,
                 callbackUrl: client.configuration.callbackUrl,
                 privateKey: Redacted.value(client.privateKey),
-                publicCerts: [client.configuration.signingCertificate],
+                publicCerts: [
+                  client.configuration.signingCertificate,
+                  ...(client.additionalSigningCertificates ?? []),
+                ],
                 identifierFormat:
                   client.configuration.idp?.nameIdFormat ??
                   "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent",
@@ -120,9 +123,30 @@ export const NodeSamlIdentity = {
           const now = yield* DateTime.now;
           if (input.configuration.idp === null)
             return yield* new IdentityError({ code: "INVALID_CONFIGURATION" });
+          const usableCertificates: string[] = [];
+          for (const pem of input.configuration.idp.signingCertificates) {
+            const details = yield* certificates
+              .inspectSigningCertificate(pem)
+              .pipe(Effect.catchTag("CryptoError", () => Effect.succeed(undefined)));
+            if (
+              details !== undefined &&
+              DateTime.toEpochMillis(details.notBefore) <= DateTime.toEpochMillis(now) &&
+              DateTime.toEpochMillis(details.expiresAt) > DateTime.toEpochMillis(now)
+            )
+              usableCertificates.push(pem);
+          }
+          if (usableCertificates.length === 0)
+            return yield* new IdentityError({ code: "CONNECTION_UNAVAILABLE" });
           yield* certificates
-            .validateSigningCertificates(input.configuration.idp.signingCertificates)
+            .validateSigningCertificates(usableCertificates)
             .pipe(Effect.mapError(() => new IdentityError({ code: "CONNECTION_UNAVAILABLE" })));
+          const client = {
+            ...input,
+            configuration: {
+              ...input.configuration,
+              idp: { ...input.configuration.idp, signingCertificates: usableCertificates },
+            },
+          };
           const result = yield* Effect.tryPromise({
             try: async () => {
               const raw = Redacted.value(input.response);
@@ -143,7 +167,7 @@ export const NodeSamlIdentity = {
                 idp.entityId,
               );
               const { profile, loggedOut } = await configuration(
-                input,
+                client,
                 input.requestId,
                 DateTime.formatIso(input.requestedAt),
               ).validatePostResponseAsync({ SAMLResponse: raw });

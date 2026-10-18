@@ -427,3 +427,10 @@ page of at most 1,000 events. Continue with `nextCursor` when present; exports r
 Instance owners review a domain before manual approval with
 `GET /api/v1/instance/organizations/:organizationId/domains/:domainId` and can withdraw manual
 approval with its `/revoke` POST and `{ expectedRevision }`. This grants no organization membership.
+
+Organization connection owners can read `GET /api/v1/organizations/:organizationId/identity-connections/:connectionId/health`.
+Staged SAML rollover uses `/saml/keys` to list/prepare, then `/:keyId/test`, `/:keyId/activate` and
+`/:keyId/retire` with `expectedRevision`. Import the overlapping metadata at the IdP before testing.
+All mutations require recent email authentication. Key responses contain no private keys.
+Invitation managers can inspect `GET /api/v1/organizations/:organizationId/invitations/:invitationId/delivery`
+for safe current-job status and retry diagnostics.

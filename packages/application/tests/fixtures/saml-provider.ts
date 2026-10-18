@@ -29,7 +29,9 @@ export const SamlTestProvider = Layer.effect(
     return SamlIdentity.of({
       validateConfiguration: (idp) => Effect.succeed(idp),
       metadata: (input) =>
-        Effect.succeed(`<EntityDescriptor entityID="${input.configuration.entityId}" />`),
+        Effect.succeed(
+          `<EntityDescriptor entityID="${input.configuration.entityId}">${[input.configuration.signingCertificate, ...(input.additionalSigningCertificates ?? [])].join("\n")}</EntityDescriptor>`,
+        ),
       authorizationUrl: Effect.fnUntraced(function* (input) {
         yield* Effect.void;
         if (input.configuration.idp === null)

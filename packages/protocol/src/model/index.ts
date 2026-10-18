@@ -83,3 +83,5 @@ export { SamlConnection, OrganizationIdentityConnection } from "#/model/auth/ide
 export { SamlConfiguration } from "#/common/saml";
 
 export { OrganizationDomain } from "#/model/organization/domain";
+
+export { IdentityConnectionKey } from "#/model/auth/identity-connection-key";

@@ -85,7 +85,12 @@ export { ProfileError } from "#/errors/auth/profile";
 
 export { MetadataImage } from "#/common/metadata-image";
 
-export { IdentityConnectionId, AccountId, AuthFlowId } from "#/identifiers/identity";
+export {
+  IdentityConnectionKeyId,
+  IdentityConnectionId,
+  AccountId,
+  AuthFlowId,
+} from "#/identifiers/identity";
 export { IdentityError } from "#/errors/auth/identity";
 export {
   ConnectionStatus,

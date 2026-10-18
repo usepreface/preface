@@ -8,7 +8,7 @@ import {
   SamlConnection,
   OrganizationIdentityConnection,
 } from "@usepreface/protocol/model";
-import { and, eq } from "drizzle-orm";
+import { and, eq, gt, asc } from "drizzle-orm";
 
 import { mapToDatabaseError } from "#/core/errors";
 import { Database } from "#/core/layer";
@@ -116,7 +116,19 @@ const makeRepository = Effect.gen(function* () {
       return yield* Effect.die(new Error("SAML connection insert returned no row"));
     return Schema.decodeUnknownSync(SamlConnection)(row);
   }, mapToDatabaseError);
+  const scanSaml = Effect.fn("IdentityConnectionRepository.scanSaml")(function* (
+    after: IdentityConnectionId | undefined,
+  ) {
+    const rows = yield* database
+      .select()
+      .from(table)
+      .where(and(eq(table.provider, "saml"), after === undefined ? undefined : gt(table.id, after)))
+      .orderBy(asc(table.id))
+      .limit(100);
+    return rows.map((row) => Schema.decodeUnknownSync(SamlConnection)(row));
+  }, mapToDatabaseError);
   return {
+    scanSaml,
     createSaml,
     findGoogle,
     findById,

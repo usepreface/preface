@@ -271,7 +271,20 @@ export const makeSamlConnectionApplication = Effect.gen(function* () {
     connectionId: IdentityConnectionId,
   ) {
     const connection = yield* requireConnection(organizationId, connectionId);
+    const now = DateTime.toEpochMillis(yield* DateTime.now);
+    const keys = yield* repository.auth.identityConnectionKey.list(connectionId);
     return yield* provider.metadata({
+      additionalSigningCertificates: keys
+        .filter(
+          (key) =>
+            key.certificate !== connection.configuration.signingCertificate &&
+            DateTime.toEpochMillis(key.expiresAt) > now &&
+            (key.status === "retiring" ||
+              (key.status === "pending" &&
+                key.connectionRevision === connection.revision &&
+                DateTime.toEpochMillis(key.createdAt) > now - 7 * 86400000)),
+        )
+        .map((key) => key.certificate),
       configuration: connection.configuration,
       privateKey: yield* secrets.decryptConnection(connection),
     });

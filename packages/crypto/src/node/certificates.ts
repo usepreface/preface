@@ -12,6 +12,20 @@ export const NodeCertificateCrypto = {
   layer: Layer.succeed(
     CertificateCrypto,
     CertificateCrypto.of({
+      inspectSigningCertificate: Effect.fn("CertificateCrypto.inspectSigningCertificate")(
+        (pem: string) =>
+          Effect.try({
+            try: () => {
+              const certificate = new X509Certificate(pem);
+              return {
+                fingerprint: certificate.fingerprint256,
+                notBefore: DateTime.fromDateUnsafe(certificate.validFromDate),
+                expiresAt: DateTime.fromDateUnsafe(certificate.validToDate),
+              };
+            },
+            catch: () => new CryptoError({ operation: "certificate" }),
+          }),
+      ),
       generateSigningCertificate: Effect.fn("CertificateCrypto.generateSigningCertificate")(
         function* () {
           const now = yield* DateTime.now;

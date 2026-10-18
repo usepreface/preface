@@ -49,6 +49,9 @@ Executable schemas, migrations, source and tests settle disagreements with prose
 - [Development and verification](engineering/development.md): workspace builds,
   source resolution, test lanes and extending the implemented foundation.
 
+- [Connection operations](identity-access/connection-operations.md): health, staged SAML rollover and expiry notices.
+- [Provider compatibility](identity-access/providers.md): verified profiles and protocol limits.
+
 ## Writing and maintenance
 
 After a major feature or an architectural change, update the owning pages in the

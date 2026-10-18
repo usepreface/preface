@@ -5,6 +5,14 @@ import type { CryptoError } from "#/errors";
 export class CertificateCrypto extends Context.Service<
   CertificateCrypto,
   {
+    readonly inspectSigningCertificate: (certificate: string) => Effect.Effect<
+      {
+        readonly fingerprint: string;
+        readonly notBefore: DateTime.Utc;
+        readonly expiresAt: DateTime.Utc;
+      },
+      CryptoError
+    >;
     readonly generateSigningCertificate: () => Effect.Effect<
       {
         readonly privateKey: Redacted.Redacted<string>;

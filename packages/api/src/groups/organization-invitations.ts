@@ -3,6 +3,7 @@ import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema, OpenApi } from "effect/ht
 
 import { OrganizationId, OrganizationInvitationId } from "@usepreface/protocol";
 import {
+  InvitationDelivery,
   CreateInvitationRequest,
   PublicInvitation,
   ListInvitationsQuery,
@@ -14,6 +15,11 @@ import { SessionAuthentication } from "#/middleware/session-authentication";
 
 export class OrganizationInvitationsApi extends HttpApiGroup.make("organizationInvitations")
   .add(
+    HttpApiEndpoint.get("delivery", "/:organizationId/invitations/:invitationId/delivery", {
+      params: { organizationId: OrganizationId, invitationId: OrganizationInvitationId },
+      success: InvitationDelivery,
+      error: [...invitationErrors, ...organizationErrors, ...requestErrors],
+    }),
     HttpApiEndpoint.post("create", "/:organizationId/invitations", {
       params: { organizationId: OrganizationId },
       payload: CreateInvitationRequest,

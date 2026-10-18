@@ -32,6 +32,7 @@ import { IdentityConnectionsRoutes } from "#/http/routes/instance/identity-conne
 import { InstanceSetupRoutes } from "#/http/routes/instance/setup";
 import { OrganizationAuthRecoveryRoutes } from "#/http/routes/organization/auth-recovery";
 import { AuthenticationPolicyRoutes } from "#/http/routes/organization/authentication-policy";
+import { ConnectionOperationsRoutes } from "#/http/routes/organization/connection-operations";
 import { OrganizationDomainsRoutes } from "#/http/routes/organization/domains";
 import { OrganizationIdentityConnectionsRoutes } from "#/http/routes/organization/identity-connections";
 import { OrganizationInvitationsRoutes } from "#/http/routes/organization/invitations";
@@ -49,6 +50,7 @@ import { ProfileRoutes } from "#/http/routes/user/profile";
 const ProductRoutes = HttpApiBuilder.layer(PrefaceApi, { openapiPath: "/api/openapi.json" }).pipe(
   Layer.provide(
     Layer.mergeAll(
+      ConnectionOperationsRoutes,
       AuditRoutes,
       AuthenticationDiscoveryRoutes,
       OrganizationSelectionRoutes,

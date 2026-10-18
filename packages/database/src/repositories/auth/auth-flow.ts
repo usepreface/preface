@@ -16,6 +16,7 @@ const makeRepository = Effect.gen(function* () {
       .values({
         ...Schema.encodeSync(CreateAuthFlow)(input),
         provider: input.provider ?? "google",
+        signingKeyId: input.signingKeyId ?? null,
         connectionOrganizationId:
           input.provider === "oidc" || input.provider === "saml"
             ? input.targetOrganizationId

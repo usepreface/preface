@@ -1,4 +1,5 @@
 export const cryptoPurpose = {
+  connectionSigningKey: "preface/identity/signing-key/v1",
   externalIdentityProof: "preface/external-identity/proof/v1",
   externalEmailCode: "preface/external-identity/email-code/v1",
   externalEmailSubject: "preface/external-identity/email-subject/v1",
@@ -54,6 +55,7 @@ export type TokenPurpose =
   | typeof cryptoPurpose.emailSignInLink
   | typeof cryptoPurpose.emailSignInBrowser;
 export type EncryptionPurpose =
+  | typeof cryptoPurpose.connectionSigningKey
   | typeof cryptoPurpose.externalIdentityProof
   | typeof cryptoPurpose.samlFlow
   | typeof cryptoPurpose.emailOutbox

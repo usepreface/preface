@@ -1,6 +1,9 @@
 import { Record, Schema } from "effect";
 const statuses = {
   INVALID_INPUT: 400,
+  KEY_NOT_FOUND: 404,
+  KEY_NOT_TESTED: 409,
+  KEY_UNAVAILABLE: 409,
   RECIPIENT_MISMATCH: 409,
   ADMISSION_REQUIRED: 403,
   DOMAIN_NOT_FOUND: 404,

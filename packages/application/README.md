@@ -420,3 +420,11 @@ instance-administration scope. Organization scope requires current `audit.read`;
 requires instance ownership and recent local email. See [audit architecture](../../architecture/identity-access/audit.md).
 `organization.domain.inspectForOperator` permits reviewing a claim before manual approval;
 `revoke(..., true)` withdraws operator approval without granting organization content access.
+
+`organization.identityConnection.health` reports configured trust and certificate expiry.
+`organization.identityConnection.keys` supports `list`, `prepare`, browser-bound `test`, `activate`
+and `retire` for staged SAML SP rollover. The candidate is usable for seven days; activation needs a
+successful test within 15 minutes. Activation preserves the IdP trust revision and current evidence.
+`auth.connectionMaintenance(cursor?)` scans up to 100 connections, queues deduplicated certificate
+expiry notices transactionally and returns the next cursor. Runtime maintenance also scrubs expired
+pending keys. `organization.invitation.delivery` exposes safe delivery diagnostics to invitation managers.

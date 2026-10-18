@@ -1,5 +1,6 @@
 import { Context, DateTime, Effect, Layer, Schema } from "effect";
 
+import type { IdentityConnectionId } from "@usepreface/protocol";
 import type { AuditEventId, OrganizationId, UserId } from "@usepreface/protocol";
 import { AuditEvent, RecordAuditEvent } from "@usepreface/protocol/model";
 import { and, desc, eq, gte, inArray, isNull, like, lt, lte, or, sql } from "drizzle-orm";
@@ -104,7 +105,24 @@ const makeAuditEventRepository = Effect.gen(function* () {
       .limit(input.limit);
     return rows.map((row) => decode(row));
   }, mapToDatabaseError);
-  return { append, list } as const;
+  const hasCertificateWarning = Effect.fn("AuditEventRepository.hasCertificateWarning")(function* (
+    id: IdentityConnectionId,
+    fingerprint: string,
+  ) {
+    const rows = yield* database
+      .select({ id: auditEvent.id })
+      .from(auditEvent)
+      .where(
+        and(
+          eq(auditEvent.targetId, id),
+          eq(auditEvent.eventType, "auth.connection_certificate_expiring"),
+          sql`${auditEvent.metadata}->>'fingerprint' = ${fingerprint}`,
+        ),
+      )
+      .limit(1);
+    return rows.length > 0;
+  }, mapToDatabaseError);
+  return { append, list, hasCertificateWarning } as const;
 });
 
 export class AuditEventRepository extends Context.Service<

@@ -36,8 +36,11 @@ export type OrganizationInvitationEmailVariables = typeof OrganizationInvitation
 
 // Storage contracts only: rendering and subject selection belong to the email package.
 export const OrganizationSecurityEmailVariables = Schema.Struct({
+  connectionName: Schema.optionalKey(Schema.String),
+  certificateExpiresAt: Schema.optionalKey(Schema.DateTimeUtcFromString),
   organizationName: Schema.NonEmptyString,
   action: Schema.Literals([
+    "sso-certificate-expiring",
     "sso-required",
     "sso-optional",
     "sso-policy-updated",

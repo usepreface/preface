@@ -51,6 +51,12 @@ layer(HttpTestLayer, { excludeTestServices: true })("invitation HTTP boundary", 
           invitation.id,
         );
         if (stored === undefined) throw new Error("Expected invitation");
+        const delivery = yield* ownerApi.organizationInvitations.delivery({
+          params: { ...params, invitationId: invitation.id },
+        });
+        expect(delivery).toMatchObject({ status: "pending", attempts: 0, lastErrorCode: null });
+        expect(delivery).not.toHaveProperty("encryptedPayload");
+        expect(delivery).not.toHaveProperty("providerMessageId");
         const email = yield* readEmailJob(stored.emailJobId);
         if (email.type !== "organization-invitation") throw new Error("Expected invitation email");
         const token = new URLSearchParams(new URL(email.variables.invitationUrl).hash.slice(1)).get(

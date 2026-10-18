@@ -1,14 +1,27 @@
 import { Effect, Layer } from "effect";
 
+import { Application } from "@usepreface/application";
 import { DatabaseRepository } from "@usepreface/database";
+import type { IdentityConnectionId } from "@usepreface/protocol";
 
 // Ephemeral proofs retain a short recovery/debug window; audit history lives independently.
 export const AuthenticationMaintenanceLayer = Layer.effectDiscard(
   Effect.gen(function* () {
+    const maintainConnections = (yield* Application).auth.connectionMaintenance;
     const auth = (yield* DatabaseRepository).auth;
     const repository = auth.verification;
     yield* Effect.gen(function* () {
+      let cursor: IdentityConnectionId | undefined;
       while (true) {
+        const scanned = yield* maintainConnections(cursor).pipe(
+          Effect.map((next) => ({ ok: true as const, next })),
+          Effect.catch(() =>
+            Effect.logError("auth.connection_maintenance.failed").pipe(
+              Effect.as({ ok: false as const, next: cursor }),
+            ),
+          ),
+        );
+        cursor = scanned.next;
         const removed = yield* repository
           .deleteExpiredBatch()
           .pipe(
@@ -23,6 +36,9 @@ export const AuthenticationMaintenanceLayer = Layer.effectDiscard(
               Effect.logError("auth.flow_cleanup.failed").pipe(Effect.as(0)),
             ),
           );
+        yield* auth.identityConnectionKey
+          .expirePending()
+          .pipe(Effect.catchTag("DatabaseError", () => Effect.logError("auth.key_cleanup.failed")));
         const replays = yield* auth.ssoReplay
           .deleteExpiredBatch()
           .pipe(

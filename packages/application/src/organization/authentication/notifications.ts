@@ -11,6 +11,10 @@ export const makeOrganizationSecurityNotifications = Effect.gen(function* () {
     organization: Organization,
     action: OrganizationSecurityEmailVariables["action"],
     transitionId: string,
+    details: Pick<
+      OrganizationSecurityEmailVariables,
+      "connectionName" | "certificateExpiresAt"
+    > = {},
   ) {
     const owners = yield* repository.organization.roleBinding.listUsableOwners(organization.id);
     const now = yield* DateTime.now;
@@ -26,7 +30,12 @@ export const makeOrganizationSecurityNotifications = Effect.gen(function* () {
       yield* emails.enqueue({
         type: "organization-security",
         to: address.email,
-        variables: { organizationName: organization.metadata.name, action, occurredAt: now },
+        variables: {
+          organizationName: organization.metadata.name,
+          action,
+          occurredAt: now,
+          ...details,
+        },
         idempotencyKey: `org-security:${organization.id}:${action}:${transitionId}:${owner.id}`,
         expiresAt: DateTime.addDuration(now, "7 days"),
       });

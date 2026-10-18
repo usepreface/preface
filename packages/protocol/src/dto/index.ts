@@ -93,3 +93,12 @@ export * from "#/dto/auth/external";
 export * from "#/dto/auth/discovery";
 
 export * from "#/dto/audit/event";
+
+export {
+  PublicConnectionKey,
+  ConnectionKeyList,
+  ConnectionHealth,
+  CertificateHealth,
+} from "#/dto/auth/connection-operations";
+
+export { InvitationDelivery } from "#/dto/organization/invitation-delivery";

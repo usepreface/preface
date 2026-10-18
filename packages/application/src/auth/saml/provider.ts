@@ -16,6 +16,7 @@ export const SamlIdentityClaims = Schema.Struct({
 export type SamlIdentityClaims = typeof SamlIdentityClaims.Type;
 export interface SamlClient {
   readonly configuration: SamlConfiguration;
+  readonly additionalSigningCertificates?: readonly string[];
   readonly privateKey: Redacted.Redacted<string>;
 }
 export class SamlIdentity extends Context.Service<

@@ -18,6 +18,7 @@ import { makeGoogleFlowStart } from "#/auth/google/start";
 import { makeOidcFlowCallback } from "#/auth/oidc/callback";
 import { makeOidcFlowStart } from "#/auth/oidc/start";
 import { makeOrganizationIdentityConnections } from "#/auth/organization-identity/connections";
+import { makeConnectionMaintenance } from "#/auth/organization-identity/maintenance";
 import { makeSamlFlowCallback } from "#/auth/saml/callback";
 import { makeSamlConnectionApplication } from "#/auth/saml/connection";
 import { makeSamlFlowStart } from "#/auth/saml/start";
@@ -57,6 +58,7 @@ const makeApplication = Effect.gen(function* () {
       },
     },
     auth: {
+      connectionMaintenance: yield* makeConnectionMaintenance,
       discover: yield* makeAuthenticationDiscovery,
       external: {
         ...(yield* makeExternalContinuation),

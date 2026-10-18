@@ -2,6 +2,7 @@ import { Context, Effect, Layer } from "effect";
 
 import { AuditEventRepository } from "#/repositories/audit/index";
 import {
+  IdentityConnectionKeyRepository,
   SsoReplayRepository,
   SessionRepository,
   IdentityConnectionRepository,
@@ -37,6 +38,7 @@ const makeDatabaseRepository = Effect.gen(function* () {
       verification,
       sessionAuthentication,
       identityConnection: yield* IdentityConnectionRepository,
+      identityConnectionKey: yield* IdentityConnectionKeyRepository,
       account: yield* AccountRepository,
       authFlow: yield* AuthFlowRepository,
       ssoReplay: yield* SsoReplayRepository,
@@ -54,6 +56,7 @@ export class DatabaseRepository extends Context.Service<
     Layer.provide(
       Layer.mergeAll(
         IdentityConnectionRepository.layer,
+        IdentityConnectionKeyRepository.layer,
         AccountRepository.layer,
         AuthFlowRepository.layer,
         SsoReplayRepository.layer,

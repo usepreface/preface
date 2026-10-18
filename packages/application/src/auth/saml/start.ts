@@ -4,6 +4,7 @@ import { TokenCrypto, cryptoPurpose } from "@usepreface/crypto";
 import { DatabaseRepository, TransactionService, generateUuid7 } from "@usepreface/database";
 import {
   AuthFlowId,
+  type IdentityConnectionKeyId,
   IdentityError,
   type AuthFlowIntent,
   type IdentityConnectionId,
@@ -18,6 +19,8 @@ import { makeIdentityAccess } from "#/auth/identity-access";
 import { AuthenticationLinks } from "#/auth/links";
 import { makeOrganizationIdentityAccess } from "#/auth/organization-identity/access";
 import { makeSamlConnectionApplication } from "#/auth/saml/connection";
+import { makeSigningKeySecrets } from "#/auth/saml/key-secrets";
+import { isPendingKeyUsable } from "#/auth/saml/keys";
 import { SamlIdentity } from "#/auth/saml/provider";
 import { OrganizationAccess } from "#/organization/access";
 
@@ -32,6 +35,7 @@ export const makeSamlFlowStart = Effect.gen(function* () {
   const connections = yield* makeSamlConnectionApplication;
   const provider = yield* SamlIdentity;
   const links = yield* AuthenticationLinks;
+  const keySecrets = yield* makeSigningKeySecrets;
   return Effect.fn("Application.auth.saml.start")(function* (
     intent: AuthFlowIntent,
     organizationId: OrganizationId,
@@ -40,6 +44,7 @@ export const makeSamlFlowStart = Effect.gen(function* () {
     actor?: SessionActor,
     expectedRevision?: number,
     enrollment?: InvitationEnrollment,
+    signingKeyId?: IdentityConnectionKeyId,
   ) {
     const decoded = yield* Schema.decodeUnknownEffect(ExternalIdentityStartInput)(input).pipe(
       Effect.mapError(() => new IdentityError({ code: "INVALID_INPUT" })),
@@ -93,9 +98,27 @@ export const makeSamlFlowStart = Effect.gen(function* () {
             : policy.ssoMode === "required"
               ? policy.ssoMaxAgeSeconds
               : null;
+        const key =
+          signingKeyId === undefined
+            ? undefined
+            : yield* repository.auth.identityConnectionKey.find(signingKeyId, true);
+        if (
+          signingKeyId !== undefined &&
+          (intent !== "test" ||
+            key === undefined ||
+            key.identityConnectionId !== connectionId ||
+            !isPendingKeyUsable(key, connection.revision, yield* DateTime.now))
+        )
+          return yield* new IdentityError({ code: "KEY_UNAVAILABLE" });
         const authorizationUrl = yield* provider.authorizationUrl({
-          configuration: connection.configuration,
-          privateKey: yield* secrets.decryptConnection(connection),
+          configuration:
+            key === undefined
+              ? connection.configuration
+              : { ...connection.configuration, signingCertificate: key.certificate },
+          privateKey:
+            key === undefined
+              ? yield* secrets.decryptConnection(connection)
+              : yield* keySecrets.decrypt(key),
           requestId,
           relayState,
           forceAuthentication: intent === "reauthenticate" || policy.ssoMode === "required",
@@ -103,6 +126,7 @@ export const makeSamlFlowStart = Effect.gen(function* () {
         const expiresAt = DateTime.addDuration(yield* DateTime.now, "10 minutes");
         yield* repository.auth.authFlow.create({
           id,
+          signingKeyId: signingKeyId ?? null,
           provider: "saml",
           identityConnectionId: connectionId,
           connectionRevision: connection.revision,
