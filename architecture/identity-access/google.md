@@ -151,7 +151,7 @@ revoke an already issued Preface session. Local disable/unlink and normal sessio
 - [Email reauthentication](../../packages/application/src/auth/email-reauthentication.ts)
 - [Google adapter](../../packages/application/src/node/google.ts)
 - [HTTP contracts](../../packages/api/src/groups/google.ts)
-- [HTTP handlers](../../apps/server/src/http/routes/google.ts)
+- [HTTP handlers](../../apps/server/src/http/routes/auth/google.ts)
 - [Workflow tests](../../packages/application/tests/integration/auth/google.test.ts)
 - [Provider validation tests](../../packages/application/tests/unit/auth/google-provider.test.ts)
 

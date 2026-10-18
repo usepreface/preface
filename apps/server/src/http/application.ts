@@ -12,29 +12,32 @@ import { RequestLimits } from "#/http/middleware/limits";
 import { makeRequestPolicy } from "#/http/middleware/request-policy";
 import { SessionAuthenticationLive } from "#/http/middleware/session-authentication";
 import { SetupProtectionLive } from "#/http/middleware/setup-protection";
-import { AccountsRoutes } from "#/http/routes/accounts";
-import { AuthenticationPolicyRoutes } from "#/http/routes/authentication-policy";
-import { EmailSignInRoutes } from "#/http/routes/email-sign-in";
-import { GoogleRoutes } from "#/http/routes/google";
+import { AccountsRoutes } from "#/http/routes/auth/accounts";
+import { EmailSignInRoutes } from "#/http/routes/auth/email-sign-in";
+import { GoogleRoutes } from "#/http/routes/auth/google";
+import { InvitationsRoutes } from "#/http/routes/auth/invitations";
+import { OidcRoutes } from "#/http/routes/auth/oidc";
+import { ReauthenticationRoutes } from "#/http/routes/auth/reauthentication";
+import { SamlRoutes } from "#/http/routes/auth/saml";
+import { SessionRoutes } from "#/http/routes/auth/session";
+import { SessionsRoutes } from "#/http/routes/auth/sessions";
 import { HealthRoutes } from "#/http/routes/health";
-import { IdentityConnectionsRoutes } from "#/http/routes/identity-connections";
-import { InstanceSetupRoutes } from "#/http/routes/instance-setup";
-import { InvitationsRoutes } from "#/http/routes/invitations";
-import { OidcRoutes } from "#/http/routes/oidc";
-import { OrganizationAuthRecoveryRoutes } from "#/http/routes/organization-auth-recovery";
-import { OrganizationIdentityConnectionsRoutes } from "#/http/routes/organization-identity-connections";
-import { OrganizationInvitationsRoutes } from "#/http/routes/organization-invitations";
-import { OrganizationMembersRoutes } from "#/http/routes/organization-members";
-import { OrganizationOwnershipRoutes } from "#/http/routes/organization-ownership";
-import { OrganizationRoleBindingsRoutes } from "#/http/routes/organization-role-bindings";
-import { OrganizationRolesRoutes } from "#/http/routes/organization-roles";
-import { OrganizationsRoutes, InstanceCapabilitiesRoutes } from "#/http/routes/organizations";
-import { ProfileRoutes } from "#/http/routes/profile";
-import { ReauthenticationRoutes } from "#/http/routes/reauthentication";
-import { SamlRoutes } from "#/http/routes/saml";
-import { SessionRoutes } from "#/http/routes/session";
-import { SessionsRoutes } from "#/http/routes/sessions";
-import { TeamsRoutes } from "#/http/routes/teams";
+import { IdentityConnectionsRoutes } from "#/http/routes/instance/identity-connections";
+import { InstanceSetupRoutes } from "#/http/routes/instance/setup";
+import { OrganizationAuthRecoveryRoutes } from "#/http/routes/organization/auth-recovery";
+import { AuthenticationPolicyRoutes } from "#/http/routes/organization/authentication-policy";
+import { OrganizationIdentityConnectionsRoutes } from "#/http/routes/organization/identity-connections";
+import { OrganizationInvitationsRoutes } from "#/http/routes/organization/invitations";
+import { OrganizationMembersRoutes } from "#/http/routes/organization/members";
+import {
+  OrganizationsRoutes,
+  InstanceCapabilitiesRoutes,
+} from "#/http/routes/organization/organizations";
+import { OrganizationOwnershipRoutes } from "#/http/routes/organization/ownership";
+import { OrganizationRoleBindingsRoutes } from "#/http/routes/organization/role-bindings";
+import { OrganizationRolesRoutes } from "#/http/routes/organization/roles";
+import { TeamsRoutes } from "#/http/routes/organization/teams";
+import { ProfileRoutes } from "#/http/routes/user/profile";
 
 const ProductRoutes = HttpApiBuilder.layer(PrefaceApi, { openapiPath: "/api/openapi.json" }).pipe(
   Layer.provide(

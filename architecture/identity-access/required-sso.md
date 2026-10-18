@@ -141,6 +141,6 @@ disabled at the provider; explicit Preface membership/session revocation remains
 - [Policy workflows](../../packages/application/src/organization/authentication-policy.ts)
 - [Recovery workflows](../../packages/application/src/organization/authentication/recovery.ts)
 - [Owner paths](../../packages/application/src/organization/authentication/owner-paths.ts)
-- [HTTP recovery](../../apps/server/src/http/routes/organization-auth-recovery.ts)
+- [HTTP recovery](../../apps/server/src/http/routes/organization/auth-recovery.ts)
 - [Enforcement tests](../../packages/application/tests/integration/organization/required-sso.test.ts)
 - [Recovery tests](../../packages/application/tests/integration/organization/sso-recovery.test.ts)

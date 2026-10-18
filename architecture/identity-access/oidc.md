@@ -156,6 +156,6 @@ actual provider using the built-in browser test before activation.
 - [Outbound transport](../../packages/application/src/node/oidc/http.ts)
 - [Organization access](../../packages/application/src/organization/access.ts)
 - [HTTP contracts](../../packages/api/src/groups/organization-identity-connections.ts)
-- [HTTP sign-in/callback](../../apps/server/src/http/routes/oidc.ts)
+- [HTTP sign-in/callback](../../apps/server/src/http/routes/auth/oidc.ts)
 - [Workflow tests](../../packages/application/tests/integration/auth/oidc.test.ts)
 - [HTTP tests](../../apps/server/tests/integration/http/oidc.test.ts)

@@ -140,7 +140,7 @@ escaping of untrusted names.
 - [Repository](../../packages/database/src/repositories/organization/invitation.ts)
 - [Application](../../packages/application/src/organization/invitation)
 - [Management contract](../../packages/api/src/groups/organization-invitations.ts)
-- [Acceptance handlers](../../apps/server/src/http/routes/invitations.ts)
+- [Acceptance handlers](../../apps/server/src/http/routes/auth/invitations.ts)
 - [Application tests](../../packages/application/tests/integration/organization/invitations.test.ts)
 
 For [required SSO](required-sso.md), acceptance returns `nextAction: "authenticate_with_sso"`.

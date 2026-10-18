@@ -10,7 +10,7 @@ import { ExternalIdentityCallbackInput } from "@usepreface/protocol/input";
 import { oidcFlowCookie, samlFlowCookie } from "#/http/cookies/browser-proof";
 import { setSessionCookie } from "#/http/cookies/session";
 import { mapInfrastructureError } from "#/http/errors";
-import { optionalSessionActor } from "#/http/routes/optional-actor";
+import { optionalSessionActor } from "#/http/routes/auth/optional-actor";
 
 export const OidcRoutes = HttpApiBuilder.group(PrefaceApi, "oidc", (handlers) =>
   Effect.gen(function* () {

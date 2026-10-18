@@ -88,6 +88,6 @@ operator replacement, restart, real worker output and verification before cookie
 - [Challenge repository](../../packages/database/src/repositories/instance/bootstrap-challenge.ts)
 - [Email delivery](../integrations/email.md)
 - [Startup](../../apps/server/src/startup.ts)
-- [HTTP handlers](../../apps/server/src/http/routes/instance-setup.ts)
+- [HTTP handlers](../../apps/server/src/http/routes/instance/setup.ts)
 - [Application regressions](../../packages/application/tests/integration/instance)
 - [Built process tests](../../apps/server/tests/smoke/built.test.mjs)

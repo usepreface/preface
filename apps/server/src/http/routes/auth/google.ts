@@ -10,7 +10,7 @@ import { GoogleCallbackInput } from "@usepreface/protocol/input";
 import { googleFlowCookie } from "#/http/cookies/browser-proof";
 import { setSessionCookie } from "#/http/cookies/session";
 import { mapInfrastructureError } from "#/http/errors";
-import { optionalSessionActor } from "#/http/routes/optional-actor";
+import { optionalSessionActor } from "#/http/routes/auth/optional-actor";
 
 export const GoogleRoutes = HttpApiBuilder.group(PrefaceApi, "google", (handlers) =>
   Effect.gen(function* () {
