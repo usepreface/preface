@@ -1,158 +1,191 @@
+/* oxlint-disable no-await-in-loop -- Preserve successful partial changes and stop after the first rejected mutation. */
+import type { PublicOrganizationRole, PublicTeam } from "@usepreface/protocol/dto";
 import { Button } from "@usepreface/ui/components/button";
-import { Label } from "@usepreface/ui/components/label";
-import { CloseIcon, MailIcon, PlusIcon, ShieldIcon } from "@usepreface/ui/icons";
 import { useFieldArray } from "react-hook-form";
 
+import { QueryState } from "#/components/api/query-state";
 import { FormDialog } from "#/components/feedback/form-dialog";
 import { ChoiceField } from "#/components/form/choice-field";
 import { EmailListField } from "#/components/form/email-list-field";
 import { SelectField } from "#/components/form/select-field";
 import { SubmitButton } from "#/components/form/submit-button";
 import { inviteMembersForm } from "#/forms/invitation";
+import { useAllRoles, useAllTeams, useOrganizationInvitationsCreate } from "#/hooks/membership";
+import { useOrganization } from "#/hooks/organizations";
 import { feedback } from "#/lib/feedback";
 import { useSchemaForm } from "#/lib/forms/use-schema-form";
-import { teamOptions } from "#/lib/placeholder";
-import { organizationRoles, roleIds, teamRoles } from "#/lib/roles";
 
-const roleChoices = organizationRoles
-  .filter((role) => role.key !== "owner")
-  .map((role) => ({ value: role.id, label: role.name, description: role.description }));
-const teamChoices = teamOptions.map((team) => ({ value: team.id, label: team.name }));
-const teamRoleChoices = teamRoles.map((role) => ({ value: role.id, label: role.name }));
-
-/*
- * Invite one or more people with the same organization roles and, optionally, teams. Owner is
- * not offered: ownership is transferred, not invited.
- */
 export function InviteMembersDialog({
   open,
   onOpenChange,
-  preview,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Prefills the form the way the design shows it. */
-  preview?: boolean;
 }) {
+  return open ? <InviteChoices onClose={() => onOpenChange(false)} /> : null;
+}
+function InviteChoices({ onClose }: { onClose: () => void }) {
+  const { organization, access } = useOrganization();
+  const roles = useAllRoles(organization.id);
+  return (
+    <QueryState query={roles}>
+      {roles.data ? (
+        access.permissions.includes("teams.read") ? (
+          <InviteTeamChoices roles={roles.data} onClose={onClose} />
+        ) : (
+          <InviteForm roles={roles.data} teams={[]} onClose={onClose} />
+        )
+      ) : null}
+    </QueryState>
+  );
+}
+function InviteTeamChoices({
+  roles,
+  onClose,
+}: {
+  roles: readonly PublicOrganizationRole[];
+  onClose: () => void;
+}) {
+  const { organization } = useOrganization();
+  const teams = useAllTeams(organization.id);
+  return (
+    <QueryState query={teams}>
+      {teams.data ? <InviteForm roles={roles} teams={teams.data} onClose={onClose} /> : null}
+    </QueryState>
+  );
+}
+function InviteForm({
+  roles,
+  teams: choices,
+  onClose,
+}: {
+  roles: readonly PublicOrganizationRole[];
+  teams: readonly PublicTeam[];
+  onClose: () => void;
+}) {
+  const { organization, access } = useOrganization();
+  const create = useOrganizationInvitationsCreate();
+  const assignable = roles.filter(
+    (role) =>
+      role.key !== "owner" &&
+      role.permissions.every(
+        (permission) => access.isOwner || new Set<string>(access.permissions).has(permission),
+      ),
+  );
   const form = useSchemaForm(inviteMembersForm, {
-    defaultValues: preview
-      ? {
-          emails: ["tomas@acme.dev", "nina@acme.dev"],
-          roleIds: roleIds(["Member"]),
-          teams: [
-            { teamId: teamOptions[1].id, roleIds: roleIds(["Team member"]) },
-            { teamId: teamOptions[2].id, roleIds: roleIds(["Team lead"]) },
-          ],
-        }
-      : { emails: [], roleIds: roleIds(["Member"]), teams: [] },
+    defaultValues: {
+      emails: [],
+      roleIds: assignable
+        .filter(
+          (role) =>
+            role.scopeKind === "organization" && role.key === "member" && role.kind === "builtin",
+        )
+        .map((role) => role.id),
+      teams: [],
+    },
   });
   const teams = useFieldArray({ control: form.control, name: "teams" });
-  const count = form.watch("emails").length;
 
   return (
     <FormDialog
-      open={open}
-      onOpenChange={onOpenChange}
+      open
+      onOpenChange={(open) => {
+        if (!open && !create.pending) onClose();
+      }}
       title="Invite members"
-      description="They’ll get an email invitation that expires in 7 days."
-      note={
-        <span className="flex items-center gap-1.5">
-          <ShieldIcon className="size-3.5 shrink-0" />
-          Signup is invitation-only. Invites go only to these addresses.
-        </span>
+      description="Invitations expire in seven days. Roles and team assignments are checked again when accepted."
+      footer={
+        <>
+          <Button type="button" variant="ghost" disabled={create.pending} onClick={onClose}>
+            Cancel
+          </Button>
+          <SubmitButton pending={create.pending || form.formState.isSubmitting}>
+            Send invitations
+          </SubmitButton>
+        </>
       }
       as={(content) => (
         <form
           noValidate
           className="contents"
-          onSubmit={form.handleSubmit(({ emails }) => {
-            feedback.sent(
-              emails.length === 1 ? "Invitation sent" : `${emails.length} invitations sent`,
-              emails.join(", "),
+          onSubmit={form.handleSubmit(async ({ emails, ...assignment }) => {
+            const remaining = [...emails];
+            for (const email of emails) {
+              const response = await create.run({
+                params: { organizationId: organization.id },
+                payload: { ...assignment, email },
+              });
+              if (!response) {
+                form.setValue("emails", remaining);
+                return;
+              }
+              remaining.shift();
+            }
+            feedback.done(
+              "Invitations queued",
+              `${emails.length} invitation${emails.length === 1 ? "" : "s"} will be delivered by email.`,
             );
-            onOpenChange(false);
-            form.reset();
+            onClose();
           })}
         >
           {content}
         </form>
       )}
-      footer={
-        <>
-          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <SubmitButton>
-            <MailIcon data-icon="inline-start" />
-            {count > 1 ? `Send ${count} invitations` : "Send invitation"}
-          </SubmitButton>
-        </>
-      }
     >
-      <EmailListField
-        control={form.control}
-        name="emails"
-        label="Email addresses"
-        description="Separate with commas or press Enter. People with acme.dev addresses can join through Okta."
-      />
+      <EmailListField control={form.control} name="emails" label="Email addresses" />
       <ChoiceField
         control={form.control}
         name="roleIds"
         label="Organization roles"
-        options={roleChoices.slice(0, 3)}
         multiple
+        columns={2}
+        options={assignable
+          .filter((role) => role.scopeKind === "organization")
+          .map((role) => ({ value: role.id, label: role.name }))}
       />
-      <div className="flex flex-col gap-2">
-        <Label>
-          Teams <span className="font-normal text-fg-tertiary">Optional</span>
-        </Label>
-        {teams.fields.map((team, index) => (
-          <div key={team.id} className="flex items-start gap-2">
-            <SelectField
-              control={form.control}
-              name={`teams.${index}.teamId`}
-              label={<span className="sr-only">Team</span>}
-              options={teamChoices}
-              className="min-w-0 flex-1 gap-0"
-            />
-            <SelectField
-              control={form.control}
-              name={`teams.${index}.roleIds.0`}
-              label={<span className="sr-only">Team role</span>}
-              options={teamRoleChoices}
-              className="w-44 gap-0"
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              aria-label="Remove team"
-              onClick={() => teams.remove(index)}
-            >
-              <CloseIcon />
-            </Button>
-          </div>
-        ))}
+      {teams.fields.map((team, index) => (
+        <div key={team.id} className="flex flex-col gap-2 rounded-lg border p-3">
+          <SelectField
+            control={form.control}
+            name={`teams.${index}.teamId`}
+            label="Team"
+            options={choices.map((choice) => ({ value: choice.id, label: choice.metadata.name }))}
+          />
+          <ChoiceField
+            control={form.control}
+            name={`teams.${index}.roleIds`}
+            label="Team roles"
+            multiple
+            columns={2}
+            options={roles
+              .filter((role) => role.scopeKind === "team")
+              .map((role) => ({ value: role.id, label: role.name }))}
+          />
+          <Button type="button" variant="ghost" onClick={() => teams.remove(index)}>
+            Remove team
+          </Button>
+        </div>
+      ))}
+      {choices.length ? (
         <Button
           type="button"
-          variant="ghost"
-          size="sm"
-          className="self-start text-fg-accent"
-          disabled={teams.fields.length >= teamChoices.length}
-          onClick={() =>
-            teams.append({
-              teamId:
-                teamChoices.find(
-                  (team) => !form.getValues("teams")?.some((t) => t.teamId === team.value),
-                )?.value ?? teamOptions[0].id,
-              roleIds: roleIds(["Team member"]),
-            })
-          }
+          variant="outline"
+          onClick={() => {
+            const firstTeam = choices[0];
+            const memberRole = roles.find(
+              (role) =>
+                role.scopeKind === "team" && role.kind === "builtin" && role.key === "member",
+            );
+            if (firstTeam)
+              teams.append({
+                teamId: firstTeam.id,
+                ...(memberRole ? { roleIds: [memberRole.id] } : {}),
+              });
+          }}
         >
-          <PlusIcon data-icon="inline-start" />
-          {teams.fields.length ? "Add to another team" : "Add to a team"}
+          Assign a team
         </Button>
-      </div>
+      ) : null}
     </FormDialog>
   );
 }

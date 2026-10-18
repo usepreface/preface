@@ -1,174 +1,154 @@
-import { Badge } from "@usepreface/ui/components/badge";
+import type { PublicSamlConnection } from "@usepreface/protocol/dto";
 import { Button } from "@usepreface/ui/components/button";
-import { DownloadIcon, FileIcon, PlusIcon, TrashIcon } from "@usepreface/ui/icons";
-import { cn } from "@usepreface/ui/lib/utils";
 
 import { CopyField } from "#/components/data-display/copy-field";
-import { FormField } from "#/components/form/form-field";
-import { SaveBar } from "#/components/form/save-bar";
 import { SelectField } from "#/components/form/select-field";
-import { TextField } from "#/components/form/text-field";
-import { SectionCard } from "#/components/shell/section-card";
-import type { samlConnectionForm } from "#/forms/connections";
+import { SubmitButton } from "#/components/form/submit-button";
+import { TextField, TextareaField } from "#/components/form/text-field";
+import { samlConnectionForm } from "#/forms/connections";
+import { useOrganizationIdentityConnectionsUpdateSaml } from "#/hooks/identity";
 import { feedback } from "#/lib/feedback";
-import type { SchemaForm } from "#/lib/forms/use-schema-form";
-import { connectionDetails } from "#/lib/placeholder";
-import { instanceUrl } from "#/lib/urls";
+import { useRevisionForm } from "#/lib/forms/use-revision-form";
+import { useSchemaForm } from "#/lib/forms/use-schema-form";
 
-const nameIdFormats = [
-  {
-    value: "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified",
-    label: "Unspecified (SAML 1.1)",
-  },
-  { value: "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent", label: "Persistent (SAML 2.0)" },
-] as const;
-
-/** The IdP side of a SAML connection: entity ID, sign-on URL, NameID format and certificates. */
-export function SamlIdentityProvider({
-  form,
-  provider,
-  onAddCertificate,
-}: {
-  form: SchemaForm<typeof samlConnectionForm>;
-  provider: string;
-  onAddCertificate: () => void;
-}) {
-  const known = connectionDetails.saml.certificates;
+export function SamlSettings({ connection }: { connection: typeof PublicSamlConnection.Type }) {
+  const update = useOrganizationIdentityConnectionsUpdateSaml();
+  const idp = connection.configuration.idp;
+  const savedValues = {
+    name: connection.name,
+    idp: {
+      entityId: idp?.entityId ?? "",
+      signOnUrl: idp?.signOnUrl ?? "",
+      signingCertificates: [...(idp?.signingCertificates ?? [""])],
+      nameIdFormat: idp?.nameIdFormat ?? "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent",
+      emailAttribute: idp?.emailAttribute,
+    },
+  };
+  const form = useSchemaForm(samlConnectionForm, {
+    defaultValues: savedValues,
+  });
+  const version = useRevisionForm(form, connection.revision, savedValues);
+  const certificates = form.watch("idp.signingCertificates");
   return (
-    <SectionCard title="Identity provider" description={`From the ${provider} app’s SAML setup.`}>
+    <div className="flex flex-col gap-5">
+      <section className="flex flex-col gap-3 rounded-xl border p-5">
+        <h2 className="text-base font-semibold">Service provider</h2>
+        <p className="text-sm text-fg-secondary">
+          Import this metadata into your IdP. Require signed Response and Assertion.
+        </p>
+        <CopyField label="SP entity ID" value={connection.configuration.entityId} />
+        <CopyField label="ACS URL" value={connection.configuration.callbackUrl} />
+        <CopyField label="SP metadata URL" value={connection.metadataUrl} />
+        <a
+          className="text-sm text-fg-accent"
+          href={connection.metadataUrl}
+          target="_blank"
+          rel="noreferrer"
+        >
+          Open SP metadata
+        </a>
+        <details>
+          <summary className="cursor-pointer text-sm">Current signing certificate</summary>
+          <pre className="overflow-x-auto whitespace-pre-wrap text-xs">
+            {connection.configuration.signingCertificate}
+          </pre>
+        </details>
+      </section>
       <form
-        noValidate
-        className="flex flex-col gap-4"
-        onSubmit={form.handleSubmit(() => {
-          feedback.saved("Connection");
-          form.reset(form.getValues());
+        className="flex flex-col gap-5 rounded-xl border p-5"
+        onSubmit={form.handleSubmit(async (values) => {
+          const response = await update.run({
+            params: { organizationId: connection.organizationId, connectionId: connection.id },
+            payload: {
+              expectedRevision: version.revision,
+              ...(form.formState.dirtyFields.name ? { name: values.name } : {}),
+              ...(Object.keys(form.formState.dirtyFields.idp ?? {}).length > 0
+                ? { idp: values.idp }
+                : {}),
+            },
+          });
+          if (response) {
+            version.accept(response.value.revision, form.getValues());
+            feedback.saved("SAML connection");
+          }
         })}
       >
+        <h2 className="text-base font-semibold">Identity provider</h2>
+        <TextField control={form.control} name="name" label="Connection name" />
         <TextField
           control={form.control}
           name="idp.entityId"
           label="IdP entity ID"
-          inputProps={{ className: "font-mono text-mono-sm" }}
+          inputProps={{ disabled: Boolean(connection.activatedAt) }}
         />
-        <TextField
-          control={form.control}
-          name="idp.signOnUrl"
-          label="Sign-on URL"
-          inputProps={{ className: "font-mono text-mono-sm" }}
-        />
+        <TextField control={form.control} name="idp.signOnUrl" label="Sign-on URL" />
         <SelectField
           control={form.control}
           name="idp.nameIdFormat"
           label="NameID format"
-          options={nameIdFormats}
+          disabled={Boolean(connection.activatedAt)}
+          options={[
+            { value: "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent", label: "Persistent" },
+            {
+              value: "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified",
+              label: "Unspecified (stable value required)",
+            },
+          ]}
         />
-        <FormField
+        <TextField
           control={form.control}
-          name="idp.signingCertificates"
-          label="Signing certificates"
-        >
-          {({ field, describedBy }) => {
-            const certificates: readonly string[] = field.value ?? [];
-            return (
-              <div className="flex flex-col gap-2" aria-describedby={describedBy}>
-                {certificates.map((pem, index) => {
-                  const info = known[index] ?? {
-                    name: `certificate-${index + 1}.pem`,
-                    fingerprint: "SHA-256 B2:7E:04:…:19:AF",
-                    expires: "Expires Oct 2029",
-                    expiring: false,
-                  };
-                  return (
-                    <div
-                      key={pem.slice(-48) + index}
-                      className={cn(
-                        "flex items-center gap-3 rounded-lg border px-3 py-2.5",
-                        info.expiring ? "border-warning/60 bg-warning-bg" : null,
-                      )}
-                    >
-                      <FileIcon className="size-4.5 shrink-0 text-icon-secondary" />
-                      <div className="flex min-w-0 flex-1 flex-col">
-                        <span className="flex items-center gap-1.5 text-sm font-medium text-foreground">
-                          {info.name}
-                          {index === 0 ? (
-                            <Badge variant="outline">Primary</Badge>
-                          ) : (
-                            <Badge tone="info">New</Badge>
-                          )}
-                        </span>
-                        <span className="truncate font-mono text-2xs text-fg-tertiary">
-                          {info.fingerprint}
-                        </span>
-                      </div>
-                      <span
-                        className={cn(
-                          "text-caption font-medium",
-                          info.expiring ? "text-warning-fg" : "text-fg-secondary",
-                        )}
-                      >
-                        {info.expires}
-                      </span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        aria-label={`Remove ${info.name}`}
-                        disabled={certificates.length === 1}
-                        onClick={() => field.onChange(certificates.filter((_, i) => i !== index))}
-                      >
-                        <TrashIcon />
-                      </Button>
-                    </div>
-                  );
-                })}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="self-start text-fg-accent"
-                  onClick={onAddCertificate}
-                  disabled={certificates.length >= 5}
-                >
-                  <PlusIcon data-icon="inline-start" />
-                  Add certificate
-                </Button>
-              </div>
-            );
-          }}
-        </FormField>
-        <SaveBar
-          dirty={form.formState.isDirty}
-          pending={form.formState.isSubmitting}
-          onReset={() => form.reset()}
+          name="idp.emailAttribute"
+          label="Email attribute"
+          optional
+          emptyAsUndefined
+          description="Optional assertion attribute used for first-time verified enrollment."
         />
-      </form>
-    </SectionCard>
-  );
-}
-
-/** Preface's side of a SAML connection, to paste into the IdP. */
-export function SamlServiceProvider({ provider }: { provider: string }) {
-  const { sp } = connectionDetails.saml;
-  const fields = [
-    ["Entity ID", instanceUrl(sp.entityPath)],
-    ["ACS URL", instanceUrl(sp.acsPath)],
-    ["Metadata URL", instanceUrl(sp.metadataPath)],
-  ] as const;
-  return (
-    <SectionCard title="Preface (service provider)" description={`Give these to ${provider}.`}>
-      {fields.map(([label, value]) => (
-        <div key={label} className="flex flex-col gap-1.5">
-          <span className="text-13 text-fg-secondary">{label}</span>
-          <CopyField value={value} label={label} />
-        </div>
-      ))}
-      <div className="flex items-center gap-2 border-t pt-3">
-        <span className="flex-1 text-13 text-fg-secondary">SP certificate · valid until 2028</span>
-        <Button variant="ghost" size="sm" onClick={feedback.notConnected}>
-          <DownloadIcon data-icon="inline-start" />
-          Download
+        {certificates.map((certificate, index) => (
+          <div key={index} className="flex flex-col gap-2">
+            <TextareaField
+              control={form.control}
+              name={`idp.signingCertificates.${index}`}
+              label={`IdP signing certificate ${index + 1}`}
+              textareaProps={{ rows: 5, spellCheck: false }}
+            />
+            {certificates.length > 1 ? (
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() =>
+                  form.setValue(
+                    "idp.signingCertificates",
+                    certificates.filter((candidate, position) => position !== index),
+                    { shouldDirty: true },
+                  )
+                }
+              >
+                Remove certificate
+              </Button>
+            ) : null}
+          </div>
+        ))}
+        {certificates.length < 5 ? (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() =>
+              form.setValue("idp.signingCertificates", [...certificates, ""], { shouldDirty: true })
+            }
+          >
+            Add signing certificate
+          </Button>
+        ) : null}
+        <Button type="button" variant="outline" onClick={version.reload}>
+          Reload saved settings
         </Button>
-      </div>
-    </SectionCard>
+        {version.conflicted ? (
+          <p role="alert" className="text-sm text-warning-fg">
+            Saved settings changed. Reload them before saving your edits.
+          </p>
+        ) : null}
+        <SubmitButton pending={update.pending}>Save identity provider</SubmitButton>
+      </form>
+    </div>
   );
 }

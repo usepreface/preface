@@ -1,90 +1,68 @@
-import * as React from "react";
+import { useState } from "react";
 
 import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { Button, buttonVariants } from "@usepreface/ui/components/button";
-import { ArrowRightIcon, BookIcon, PlusIcon } from "@usepreface/ui/icons";
-import { SSOConnectedIllustration } from "@usepreface/ui/illustrations";
 
-import { EmptyState } from "#/components/feedback/empty-state";
-import { Notice } from "#/components/feedback/notice";
+import { Permission } from "#/components/api/permission";
+import { QueryState } from "#/components/api/query-state";
 import { PageTitle } from "#/components/shell/page";
-import { feedback } from "#/lib/feedback";
-import { previewSearch, previewState } from "#/lib/preview";
+import { useOrganization, useConnections } from "#/hooks/organizations";
 
 import { SettingsFrame } from "../-components/settings-frame";
 import { AddConnectionDialog } from "./-components/add-connection-dialog";
-import { ConnectionsTable } from "./-components/connections-table";
+
 export const Route = createFileRoute("/org/$slug/_app/settings/connections/")({
-  head: () => ({ meta: [{ title: "SSO connections · Settings · Preface" }] }),
-  validateSearch: previewSearch,
-  component: Connections,
+  component: () => (
+    <Permission owner>
+      <Connections />
+    </Permission>
+  ),
 });
-
-/** `?state=add` opens Add connection; `?state=empty` shows an organization without SSO. */
 function Connections() {
-  const { slug } = Route.useParams();
-  const state = previewState(["add", "empty"], Route.useSearch().state);
-  const [adding, setAdding] = React.useState(state === "add");
-  const empty = state === "empty";
-
+  const { organization } = useOrganization();
+  const query = useConnections(organization.id);
+  const [adding, setAdding] = useState(false);
   return (
     <SettingsFrame
       crumbs={[{ label: "SSO connections" }]}
-      width="full"
-      actions={
-        empty ? null : (
-          <Button onClick={() => setAdding(true)}>
-            <PlusIcon data-icon="inline-start" />
-            Add connection
-          </Button>
-        )
-      }
+      actions={<Button onClick={() => setAdding(true)}>Add connection</Button>}
     >
       <PageTitle
         title="SSO connections"
-        description="Connect your identity provider with OIDC or SAML. Test it, activate it, then approve it in the login policy."
+        description="Configure, test and activate organization-owned OIDC and SAML providers."
       />
-      {empty ? (
-        <EmptyState
-          bordered
-          art={<SSOConnectedIllustration />}
-          title="No SSO connections yet"
-          description="Add Okta, Microsoft Entra ID, Google Workspace or any OIDC or SAML provider. Members keep signing in with email codes until you require SSO."
-          actions={
-            <>
-              <Button onClick={() => setAdding(true)}>
-                <PlusIcon data-icon="inline-start" />
-                Add connection
-              </Button>
-              <Button variant="outline" onClick={feedback.notConnected}>
-                <BookIcon data-icon="inline-start" />
-                Read the SSO guide
-              </Button>
-            </>
-          }
-        />
-      ) : (
-        <>
-          <ConnectionsTable slug={slug} />
-          <Notice
-            tone="neutral"
-            action={
+      <QueryState query={query}>
+        <div className="flex flex-col gap-3">
+          {query.data?.connections.map((connection) => (
+            <article
+              key={connection.id}
+              className="flex flex-wrap items-center gap-3 rounded-xl border p-4"
+            >
+              <div className="flex-1">
+                <h2 className="text-sm font-semibold">{connection.name}</h2>
+                <p className="text-xs text-fg-tertiary">
+                  {connection.provider.toUpperCase()} · {connection.status} · Revision{" "}
+                  {connection.revision}
+                </p>
+              </div>
               <Link
-                to="/org/$slug/settings/authentication"
-                params={{ slug }}
-                className={buttonVariants({ variant: "ghost", size: "sm" })}
+                to="/org/$slug/settings/connections/$connectionId"
+                params={{ slug: organization.slug, connectionId: connection.id }}
+                className={buttonVariants({ variant: "outline", size: "sm" })}
               >
-                Open login policy
-                <ArrowRightIcon data-icon="inline-end" />
+                Configure
               </Link>
-            }
-          >
-            Members can only use a connection after it’s active and approved in the login policy.
-          </Notice>
-        </>
-      )}
-      <AddConnectionDialog open={adding} onOpenChange={setAdding} preview={state === "add"} />
+            </article>
+          ))}
+          {query.data?.connections.length === 0 ? (
+            <p className="text-sm text-fg-secondary">
+              No connections yet. Add your identity provider to begin.
+            </p>
+          ) : null}
+        </div>
+      </QueryState>
+      {adding ? <AddConnectionDialog onClose={() => setAdding(false)} /> : null}
     </SettingsFrame>
   );
 }

@@ -17,7 +17,8 @@
     "test:postgres": "node tooling/testing/run-postgres.ts",
     "test:auth": "turbo run build --filter=@usepreface/server && playwright test",
     "test:uikit": "playwright test --config apps/uikit/playwright.config.ts",
-    "typecheck:tests": "tsc --noEmit -p tsconfig.test.json"
+    "typecheck:tests": "tsc --noEmit -p tsconfig.test.json",
+    "test:dashboard": "turbo run build --filter=@usepreface/server && pnpm --filter @usepreface/dashboard build:test && playwright test --config playwright.dashboard.config.ts"
   },
   "devDependencies": {
     "@commitlint/cli": "21.2.3",

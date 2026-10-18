@@ -82,7 +82,7 @@ backend provider callback/ACS/metadata origin. Empty/unset dashboard configurati
 backend-only `/api/docs` completion. Return paths must be bounded local paths without authority,
 backslashes or control characters. Session credentials stay in HttpOnly API-host cookies.
 Deploy dashboard/API on the same site with HTTPS; arbitrary third-party-site cookie deployments
-are not supported by the current SameSite=Lax design. Product dashboard wiring remains separate.
+are not supported by the current SameSite=Lax design. The [dashboard](../interfaces/dashboard.md) implements these browser continuation and enrollment pages.
 
 ## Verification and limits
 

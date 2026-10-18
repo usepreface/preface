@@ -23,13 +23,19 @@ function sourceImports(): Plugin {
   };
 }
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+  envDir: mode === "test" ? false : fileURLToPath(new URL(".", import.meta.url)),
+  envPrefix: mode === "test" ? [] : "VITE_",
   resolve: {
     dedupe: ["react", "react-dom"],
     // Workspace packages are compiled from source, as in tsconfig's customConditions.
     conditions: ["preface-source", ...defaultClientConditions],
   },
-  server: { port: 3000, strictPort: true },
+  server: {
+    port: 3000,
+    strictPort: true,
+    proxy: { "/api": { target: "http://localhost:8080", changeOrigin: false } },
+  },
   preview: { port: 3000, strictPort: true },
   plugins: [
     sourceImports(),
@@ -38,4 +44,4 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
-});
+}));

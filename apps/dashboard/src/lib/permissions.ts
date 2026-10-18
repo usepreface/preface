@@ -74,8 +74,3 @@ export function permissionGroupsFor(
 ): readonly PermissionGroup<string>[] {
   return scope === "team" ? teamPermissionGroups : organizationPermissionGroups;
 }
-
-/** How many permissions a role of this scope can grant. */
-export function permissionCount(scope: "organization" | "team"): number {
-  return permissionGroupsFor(scope).reduce((total, group) => total + group.permissions.length, 0);
-}

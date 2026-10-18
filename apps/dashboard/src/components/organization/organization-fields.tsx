@@ -1,11 +1,8 @@
-import { Button } from "@usepreface/ui/components/button";
-
 import { SlugField } from "#/components/form/slug-field";
 import { TextareaField, TextField } from "#/components/form/text-field";
 import type { createOrganizationForm } from "#/forms/organization";
 import { useDerivedSlug } from "#/lib/forms/use-derived-slug";
 import type { SchemaForm } from "#/lib/forms/use-schema-form";
-import { slugSuggestions, useSlugStatus } from "#/lib/forms/use-slug-status";
 import { organizationUrlPrefix } from "#/lib/urls";
 
 /*
@@ -20,9 +17,6 @@ export function OrganizationFields({
   disabled?: boolean;
 }) {
   useDerivedSlug(form, "metadata.name", "slug");
-  const slug = form.watch("slug");
-  const status = useSlugStatus(slug);
-  const taken = status === "taken";
 
   return (
     <>
@@ -40,35 +34,9 @@ export function OrganizationFields({
           name="slug"
           label="URL"
           prefix={organizationUrlPrefix}
-          status={status}
           disabled={disabled}
-          description={
-            taken
-              ? `${slug} is already used on this instance.`
-              : status === "available"
-                ? `${slug} is available.`
-                : "Lowercase letters, numbers and dashes. Suggested from the name."
-          }
+          description="Lowercase letters, numbers and dashes. Availability is checked when you create the organization."
         />
-        {taken ? (
-          <div className="flex flex-wrap items-center gap-2 text-caption text-fg-tertiary">
-            Try
-            {slugSuggestions(slug).map((suggestion) => (
-              <Button
-                key={suggestion}
-                type="button"
-                variant="outline"
-                size="xs"
-                className="font-mono"
-                onClick={() =>
-                  form.setValue("slug", suggestion, { shouldDirty: true, shouldValidate: true })
-                }
-              >
-                {suggestion}
-              </Button>
-            ))}
-          </div>
-        ) : null}
       </div>
       <TextareaField
         control={form.control}

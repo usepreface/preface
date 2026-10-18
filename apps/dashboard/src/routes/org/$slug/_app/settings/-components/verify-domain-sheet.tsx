@@ -1,80 +1,93 @@
+import { useState } from "react";
+
+import type { PublicOrganizationDomain, DomainChallenge } from "@usepreface/protocol/dto";
 import { Button } from "@usepreface/ui/components/button";
-import { Label } from "@usepreface/ui/components/label";
-import { Select, SelectTrigger, SelectValue } from "@usepreface/ui/components/select";
-import { ClockIcon, GlobeIcon, RefreshIcon } from "@usepreface/ui/icons";
 
 import { CopyField } from "#/components/data-display/copy-field";
-import { IconTile } from "#/components/data-display/icon-tile";
 import { FormSheet } from "#/components/feedback/form-dialog";
 import { Notice } from "#/components/feedback/notice";
+import { useOrganizationDomainsRequest, useOrganizationDomainsVerify } from "#/hooks/identity";
+import { useOrganization } from "#/hooks/organizations";
+import { formatDate } from "#/lib/dates";
 import { feedback } from "#/lib/feedback";
-import { domainChallenge } from "#/lib/placeholder";
 
-/** The DNS record that proves ownership of a pending domain, and its last check. */
 export function VerifyDomainSheet({
   domain,
-  open,
-  onOpenChange,
+  onClose,
 }: {
-  domain: string;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  domain: typeof PublicOrganizationDomain.Type;
+  onClose: () => void;
 }) {
-  const challenge = {
-    ...domainChallenge,
-    name: domainChallenge.name.replace(domainChallenge.domain, domain),
-  };
+  const { organization } = useOrganization();
+  const request = useOrganizationDomainsRequest();
+  const verify = useOrganizationDomainsVerify();
+  const [challenge, setChallenge] = useState<typeof DomainChallenge.Type>();
+  const params = { organizationId: organization.id, domainId: domain.id };
   return (
     <FormSheet
-      open={open}
-      onOpenChange={onOpenChange}
-      media={<IconTile icon={GlobeIcon} />}
-      title={`Verify ${domain}`}
-      description="Pending · started Oct 18 by Aisha Khan"
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+      title={`Verify ${domain.domain}`}
+      description="Publish the exact TXT record, then confirm after DNS propagation."
       footer={
-        <>
-          <Button variant="ghost" onClick={() => feedback.done(`${domain} removed`)}>
-            Remove domain
-          </Button>
-          <Button
-            onClick={() => feedback.done("Checking DNS", "We’ll update the status in a moment.")}
-          >
-            <RefreshIcon data-icon="inline-start" />
-            Check verification
-          </Button>
-        </>
+        <Button variant="outline" onClick={onClose}>
+          Close
+        </Button>
       }
     >
-      <p className="text-sm text-fg-secondary">
-        Add this TXT record at your DNS provider, then check verification. Changes can take up to 48
-        hours to appear.
-      </p>
-      {(
-        [
-          ["Type", challenge.type],
-          ["Name", challenge.name],
-          ["Value", challenge.value],
-        ] as const
-      ).map(([label, value]) => (
-        <div key={label} className="flex flex-col gap-1.5">
-          <span className="text-13 font-medium text-foreground">{label}</span>
-          <CopyField value={value} label={`Record ${label.toLowerCase()}`} />
-        </div>
-      ))}
-      <Notice tone="warning" icon={ClockIcon} title="Record not found yet">
-        {challenge.lastCheck}
-      </Notice>
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="domain-connection">Link to SSO connection</Label>
-        <Select disabled>
-          <SelectTrigger id="domain-connection" className="w-full">
-            <SelectValue placeholder="Available after verification" />
-          </SelectTrigger>
-        </Select>
-        <p className="text-caption text-fg-tertiary">
-          Then emails at {domain} go to that connection once an instance owner approves.
-        </p>
-      </div>
+      {challenge ? (
+        <>
+          <Notice>Challenge expires {formatDate(challenge.expiresAt)}.</Notice>
+          <p className="text-sm font-medium">TXT record name</p>
+          <CopyField value={challenge.recordName} label="TXT record name" />
+          <p className="text-sm font-medium">TXT record value</p>
+          <CopyField value={challenge.recordValue} label="TXT record value" />
+          <Button
+            disabled={verify.pending}
+            onClick={async () => {
+              if (
+                await verify.run({
+                  params,
+                  payload: { expectedRevision: challenge.domain.revision },
+                })
+              ) {
+                feedback.done("Domain verified");
+                onClose();
+              }
+            }}
+          >
+            Check DNS and verify
+          </Button>
+          <Button
+            variant="outline"
+            disabled={request.pending}
+            onClick={async () => {
+              const response = await request.run({
+                params,
+                payload: { expectedRevision: challenge.domain.revision },
+              });
+              if (response) setChallenge(response.value);
+            }}
+          >
+            Replace challenge
+          </Button>
+        </>
+      ) : (
+        <Button
+          disabled={request.pending}
+          onClick={async () => {
+            const response = await request.run({
+              params,
+              payload: { expectedRevision: domain.revision },
+            });
+            if (response) setChallenge(response.value);
+          }}
+        >
+          Generate DNS challenge
+        </Button>
+      )}
     </FormSheet>
   );
 }

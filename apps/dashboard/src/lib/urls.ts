@@ -1,14 +1,7 @@
-import { placeholder } from "#/lib/placeholder";
-
-/** Where an organization lives, as shown in the UI (no scheme). */
 export function organizationUrl(slug: string): string {
-  return `${placeholder.instance.host}/org/${slug}`;
+  return `${window.location.host}/org/${slug}`;
 }
-
-/** The prefix drawn before slug inputs. */
-export const organizationUrlPrefix = `${placeholder.instance.host}/org/`;
-
-/** A full https URL on this instance, for values people paste into an identity provider. */
+export const organizationUrlPrefix = `${window.location.host}/org/`;
 export function instanceUrl(path: string): string {
-  return `https://${placeholder.instance.host}${path}`;
+  return new URL(path, import.meta.env.VITE_API_URL || window.location.origin).href;
 }

@@ -16,6 +16,7 @@ import { cn } from "@usepreface/ui/lib/utils";
 
 import { NavList, type NavGroup } from "#/components/shell/nav-sidebar";
 import { PageBar, PageContent, type Crumb } from "#/components/shell/page";
+import { useOrganization } from "#/hooks/organizations";
 
 function settingsNav(slug: string): NavGroup[] {
   const params = { slug };
@@ -74,7 +75,30 @@ export function SettingsFrame({
   children: React.ReactNode;
 }) {
   const { slug } = useParams({ from: "/org/$slug/_app" });
-  const groups = settingsNav(slug);
+  const { access } = useOrganization();
+  const permissions = {
+    General: "organization.read",
+    Members: "members.read",
+    Teams: "teams.read",
+    Roles: "roles.read",
+    Activity: "audit.read",
+  } as const;
+  const groups = settingsNav(slug)
+    .map((group) => ({
+      section: group.section,
+      collapsible: group.collapsible,
+      items: group.items.filter((item) => {
+        if (
+          item.label === "Login policy" ||
+          item.label === "SSO connections" ||
+          item.label === "Domains"
+        )
+          return access.isOwner;
+        const permission = permissions[item.label as keyof typeof permissions];
+        return permission !== undefined && access.permissions.includes(permission);
+      }),
+    }))
+    .filter((group) => group.items.length > 0);
 
   return (
     <>

@@ -31,6 +31,7 @@ export function ConfirmDialog({
   confirmText,
   destructive = true,
   onConfirm,
+  pending = false,
   children,
 }: {
   open: boolean;
@@ -42,7 +43,8 @@ export function ConfirmDialog({
   confirmLabel: string;
   confirmText?: string;
   destructive?: boolean;
-  onConfirm?: () => void;
+  onConfirm?: () => unknown;
+  pending?: boolean;
   children?: React.ReactNode;
 }) {
   const [typed, setTyped] = React.useState("");
@@ -54,7 +56,12 @@ export function ConfirmDialog({
   }, [open]);
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!pending) onOpenChange(next);
+      }}
+    >
       <AlertDialogContent className="gap-5 p-6 sm:max-w-110">
         <AlertDialogHeader className="items-start gap-3 text-left">
           <StatusIcon icon={icon} tone={tone} size="sm" />
@@ -78,13 +85,15 @@ export function ConfirmDialog({
           </div>
         ) : null}
         <AlertDialogFooter>
-          <AlertDialogCancel variant="ghost">Cancel</AlertDialogCancel>
+          <AlertDialogCancel variant="ghost" disabled={pending}>
+            Cancel
+          </AlertDialogCancel>
           <AlertDialogAction
             variant={destructive ? "destructive" : "default"}
-            disabled={locked}
-            onClick={() => {
-              onConfirm?.();
-              onOpenChange(false);
+            disabled={locked || pending}
+            onClick={(event) => {
+              event.preventDefault();
+              void onConfirm?.();
             }}
           >
             {confirmLabel}
@@ -92,31 +101,5 @@ export function ConfirmDialog({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  );
-}
-
-/** What happens when the action goes through, one point per consequence. */
-export function ConsequenceList({
-  items,
-}: {
-  items: readonly { title: string; detail?: string }[];
-}) {
-  return (
-    <ul className="flex flex-col gap-2.5 rounded-lg border bg-surface-2 px-3.5 py-3 text-left">
-      {items.map((item) => (
-        <li key={item.title} className="flex gap-2.5">
-          <span
-            className="mt-1.75 size-1.5 shrink-0 rounded-full bg-fg-tertiary"
-            aria-hidden="true"
-          />
-          <span className="flex flex-col gap-0.5">
-            <span className="text-sm font-medium text-foreground">{item.title}</span>
-            {item.detail ? (
-              <span className="text-caption text-fg-secondary">{item.detail}</span>
-            ) : null}
-          </span>
-        </li>
-      ))}
-    </ul>
   );
 }

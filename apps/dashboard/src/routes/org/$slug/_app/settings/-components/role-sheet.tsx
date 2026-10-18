@@ -1,6 +1,6 @@
-import * as React from "react";
+import { useEffect } from "react";
 
-import { Badge } from "@usepreface/ui/components/badge";
+import type { PublicOrganizationRole } from "@usepreface/protocol/dto";
 import { Button } from "@usepreface/ui/components/button";
 
 import { FormSheet } from "#/components/feedback/form-dialog";
@@ -8,121 +8,116 @@ import { ChoiceField } from "#/components/form/choice-field";
 import { SubmitButton } from "#/components/form/submit-button";
 import { TextField } from "#/components/form/text-field";
 import { roleForm } from "#/forms/roles";
+import { useOrganizationRolesCreate, useOrganizationRolesUpdate } from "#/hooks/membership";
+import { useOrganization } from "#/hooks/organizations";
 import { feedback } from "#/lib/feedback";
-import { useDerivedSlug } from "#/lib/forms/use-derived-slug";
 import { useSchemaForm } from "#/lib/forms/use-schema-form";
-import { permissionCount, permissionGroupsFor } from "#/lib/permissions";
-import { roles, type Role } from "#/lib/placeholder";
+import { permissionGroupsFor } from "#/lib/permissions";
 
 import { PermissionsField } from "./permissions-field";
 
-const scopes = [
-  { value: "organization", label: "Organization", description: "Across the organization" },
-  { value: "team", label: "Team", description: "Inside one team" },
-] as const;
-
-const keys: ReadonlySet<string> = new Set(roles.map((role) => role.key));
-
-/*
- * Create a custom role, edit one, or read a built-in role. Built-in roles open read-only:
- * their permissions are part of Preface.
- */
 export function RoleSheet({
   role,
-  open,
-  onOpenChange,
+  onClose,
 }: {
-  role?: Role;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  role?: PublicOrganizationRole;
+  onClose: () => void;
 }) {
-  const builtin = role?.kind === "builtin";
+  const { organization, access } = useOrganization();
+  const readonly =
+    role?.kind === "builtin" ||
+    Boolean(role?.archivedAt) ||
+    !access.permissions.includes("roles.manage") ||
+    (role?.scopeKind === "team" && !access.permissions.includes("teams.manage")) ||
+    (role?.scopeKind === "organization" &&
+      !role.permissions.every((permission) => new Set<string>(access.permissions).has(permission)));
+  const create = useOrganizationRolesCreate();
+  const update = useOrganizationRolesUpdate();
   const form = useSchemaForm(roleForm, {
     defaultValues: role
       ? {
-          scopeKind: role.scope,
+          scopeKind: role.scopeKind,
           name: role.name,
           key: role.key,
           permissions: [...role.permissions],
         }
       : { scopeKind: "organization", name: "", key: "", permissions: [] },
-    disabled: builtin,
+    disabled: readonly,
   });
-  useDerivedSlug(form, "name", "key");
   const scope = form.watch("scopeKind") ?? "organization";
-  const key = form.watch("key");
-  const total = permissionCount(scope);
-  const count = form.watch("permissions").length;
-  const keyTaken = !role && keys.has(key);
+  const previousScope = role?.scopeKind;
   const { resetField } = form;
-
-  React.useEffect(() => {
-    if (!role) resetField("permissions", { defaultValue: [] });
-  }, [scope, role, resetField]);
-
+  useEffect(() => {
+    if (!previousScope) resetField("permissions", { defaultValue: [] });
+  }, [scope, previousScope, resetField]);
   return (
     <FormSheet
-      open={open}
-      onOpenChange={onOpenChange}
-      title={role ? role.name : "Create role"}
+      open
+      onOpenChange={(open) => {
+        if (!open && !form.formState.isSubmitting) onClose();
+      }}
+      title={role?.name ?? "Create role"}
       description={
-        builtin
-          ? "Built-in roles can’t be changed. Create a custom role to grant something different."
-          : role
-            ? "Changes apply to everyone with this role right away."
-            : "Custom roles can be edited or archived any time."
+        readonly ? "This role is read-only." : "Changes apply to current assignments immediately."
+      }
+      footer={
+        readonly ? (
+          <Button type="button" onClick={onClose}>
+            Close
+          </Button>
+        ) : (
+          <SubmitButton pending={form.formState.isSubmitting}>Save role</SubmitButton>
+        )
       }
       as={(content) => (
         <form
           noValidate
           className="flex min-h-0 flex-1 flex-col"
-          onSubmit={form.handleSubmit(({ name }) => {
-            feedback.saved(`Role ${name}`);
-            onOpenChange(false);
+          onSubmit={form.handleSubmit(async (payload) => {
+            const response = role
+              ? await update.run({
+                  params: { organizationId: organization.id, roleId: role.id },
+                  payload: { name: payload.name, permissions: payload.permissions },
+                })
+              : await create.run({ params: { organizationId: organization.id }, payload });
+            if (response) {
+              feedback.saved("Role");
+              onClose();
+            }
           })}
         >
           {content}
         </form>
       )}
-      footer={
-        builtin ? (
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Close
-          </Button>
-        ) : (
-          <>
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <SubmitButton disabled={keyTaken}>{role ? "Save role" : "Create role"}</SubmitButton>
-          </>
-        )
-      }
     >
-      <div className="grid gap-4 sm:grid-cols-2">
-        <TextField control={form.control} name="name" label="Name" />
-        <TextField
+      <TextField control={form.control} name="name" label="Name" />
+      <TextField
+        control={form.control}
+        name="key"
+        label="Key"
+        inputProps={{ disabled: Boolean(role) || readonly }}
+      />
+      {!role ? (
+        <ChoiceField
           control={form.control}
-          name="key"
-          label="Key"
-          inputProps={{ className: "font-mono", disabled: Boolean(role) }}
-          description={
-            role
-              ? "Keys can’t change."
-              : keyTaken
-                ? `${key} is already a role key.`
-                : "Used in the API. Unique in the organization."
-          }
+          name="scopeKind"
+          label="Scope"
+          options={[
+            { value: "organization", label: "Organization" },
+            {
+              value: "team",
+              label: "Team",
+              disabled: !access.permissions.includes("teams.manage"),
+            },
+          ]}
         />
-      </div>
-      <ChoiceField control={form.control} name="scopeKind" label="Scope" options={scopes} />
+      ) : null}
       <PermissionsField
         control={form.control}
         name="permissions"
-        label={`Permissions · ${count} of ${total}`}
-        labelExtra={builtin ? <Badge variant="outline">Read-only</Badge> : null}
+        label="Permissions"
         groups={permissionGroupsFor(scope)}
-        disabled={builtin}
+        disabled={readonly}
       />
     </FormSheet>
   );

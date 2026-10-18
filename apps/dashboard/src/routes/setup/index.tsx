@@ -1,42 +1,29 @@
-import * as React from "react";
-
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
+import { useAtom } from "@effect/atom-react";
+
+import { instanceSetupRequestVerificationMutation } from "#/atoms/auth";
+import { setupAtom } from "#/atoms/transient";
 import { AuthHeading, AuthLayout } from "#/components/auth/auth-layout";
 import { Notice } from "#/components/feedback/notice";
 import { SubmitButton } from "#/components/form/submit-button";
 import { TextField } from "#/components/form/text-field";
 import { instanceSetupForm } from "#/forms/setup";
+import { toMutation } from "#/hooks/mutation";
 import { useSchemaForm } from "#/lib/forms/use-schema-form";
-import { placeholder } from "#/lib/placeholder";
-import { previewSearch, previewState } from "#/lib/preview";
 
 import { InstanceAside, setupSteps } from "./-components/setup-asides";
 
-export const Route = createFileRoute("/setup/")({
-  head: () => ({ meta: [{ title: "Set up your instance · Preface" }] }),
-  validateSearch: previewSearch,
-  component: InstanceSetup,
-});
-
-/** Step 1: name the instance and add its owner. `?state=invalid` shows the validation state. */
+export const Route = createFileRoute("/setup/")({ component: InstanceSetup });
+const useRequest = toMutation(instanceSetupRequestVerificationMutation);
 function InstanceSetup() {
+  const [setup, setSetup] = useAtom(setupAtom);
   const navigate = useNavigate();
-  const invalid = previewState(["invalid"], Route.useSearch().state) === "invalid";
+  const request = useRequest();
+  const { instance } = Route.useRouteContext();
   const form = useSchemaForm(instanceSetupForm, {
-    defaultValues: invalid
-      ? {
-          instanceName: placeholder.instance.name,
-          ownerName: placeholder.owner.name,
-          email: "aisha@acme",
-        }
-      : { instanceName: "", ownerName: "", email: "" },
+    defaultValues: { instanceName: "", ownerName: "", email: setup.email },
   });
-
-  React.useEffect(() => {
-    if (invalid) void form.trigger();
-  }, [invalid, form]);
-
   return (
     <AuthLayout
       steps={{ labels: setupSteps, current: 1 }}
@@ -44,55 +31,47 @@ function InstanceSetup() {
       aside={<InstanceAside />}
     >
       <AuthHeading title="Set up your instance">
-        Name this Preface instance and add its owner. We’ll email the owner a code to confirm it’s
-        really them.
+        Name this instance and verify its owner’s email.
       </AuthHeading>
-      <form
-        className="flex flex-col gap-5"
-        noValidate
-        onSubmit={form.handleSubmit(() => navigate({ to: "/setup/verify" }))}
-      >
-        <TextField
-          control={form.control}
-          name="instanceName"
-          label="Instance name"
-          description="Shown on the sign-in page and in every email Preface sends."
-          size="lg"
-          inputProps={{ placeholder: "Acme Knowledge", autoFocus: true }}
-        />
-        <div className="grid gap-5 sm:grid-cols-2">
+      {instance.state === "ready" ? (
+        <Notice>
+          This instance is set up. <a href="/sign-in">Sign in</a> to continue.
+        </Notice>
+      ) : !setup.token ? (
+        <Notice tone="warning" title="Open your operator setup link">
+          Use the link printed in the server logs. Reopen it if this page was refreshed.
+        </Notice>
+      ) : (
+        <form
+          className="flex flex-col gap-5"
+          noValidate
+          onSubmit={form.handleSubmit(async (values) => {
+            const response = await request.run({ payload: { ...values, token: setup.token } });
+            if (!response) return;
+            setSetup({ token: setup.token, email: values.email, challenge: response.value });
+            await navigate({ to: "/setup/verify" });
+          })}
+        >
+          <TextField control={form.control} name="instanceName" label="Instance name" size="lg" />
           <TextField
             control={form.control}
             name="ownerName"
             label="Owner display name"
             size="lg"
-            inputProps={{ placeholder: "Aisha Khan", autoComplete: "name" }}
+            inputProps={{ autoComplete: "name" }}
           />
           <TextField
             control={form.control}
             name="email"
             label="Owner email"
             size="lg"
-            inputProps={{ type: "email", placeholder: "name@acme.dev", autoComplete: "email" }}
+            inputProps={{ type: "email", autoComplete: "email" }}
           />
-        </div>
-        <Notice tone="neutral">
-          The owner can’t be removed later, only transferred. Use an address you’ll keep.
-        </Notice>
-        <SubmitButton
-          size="lg"
-          wide
-          arrow
-          pending={form.formState.isSubmitting}
-          pendingLabel="Sending code…"
-        >
-          Send verification code
-        </SubmitButton>
-      </form>
-      <p className="text-caption text-fg-tertiary">
-        No password needed. The owner signs in with email codes, Google or SSO once an organization
-        adds it.
-      </p>
+          <SubmitButton wide size="lg" pending={request.pending}>
+            Send verification code
+          </SubmitButton>
+        </form>
+      )}
     </AuthLayout>
   );
 }

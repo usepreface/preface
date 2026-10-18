@@ -1,80 +1,87 @@
 # @usepreface/dashboard
 
-The Preface dashboard: a Vite single-page app on TanStack Router (file-based routes). It has every
-auth, organization and instance screen from the Figma "Dashboard" pages, in light and dark. It is
-UI only: nothing talks to the server yet. Forms validate in the browser with the protocol's Effect
-schemas, and submitting moves to the next screen or shows a toast.
+Preface's browser dashboard for instance setup, email and enterprise authentication,
+organization administration, teams and account management. Requires Node.js 24,
+pnpm 12.14.0 and the Preface backend.
+
+## Run locally
+
+Install workspace dependencies with `pnpm install`. Configure the backend's
+`PUBLIC_URL=http://localhost:8080` and `DASHBOARD_URL=http://localhost:3000`.
+Configure PostgreSQL and an email provider as described in the
+[server README](../server/README.md), then run both apps:
 
 ```sh
-pnpm --filter @usepreface/dashboard dev       # http://localhost:3000
-pnpm --filter @usepreface/dashboard build
-pnpm --filter @usepreface/dashboard preview   # serves the build on port 3000
+pnpm --filter @usepreface/server dev
+pnpm --filter @usepreface/dashboard dev
 ```
 
-## Routes
+Open the operator link printed by the backend to initialize an empty instance.
+Development runs on port 3000 and proxies `/api` to localhost:8080. The browser
+sends HttpOnly cookies; it never reads or stores session credentials.
 
-| Area                  | Routes                                                                                                                                                           |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Setup                 | `/setup`, `/setup/verify`, `/setup/organization`, `/organizations/new`                                                                                           |
-| Sign-in               | `/sign-in`, `/sign-in/verify`, `/auth/email/verify`, `/auth/verify-email`, `/auth/reauthenticate`, `/auth/error?reason=`                                         |
-| Invitations           | `/invitations/accept`                                                                                                                                            |
-| Account               | `/organizations`, `/account/profile`, `/account/security`                                                                                                        |
-| Organization          | `/org/:slug`, `/org/:slug/auth-recovery`                                                                                                                         |
-| Organization settings | `/org/:slug/settings/` `general`, `members`, `teams`, `teams/:teamId`, `roles`, `authentication`, `connections`, `connections/:connectionId`, `domains`, `audit` |
-| Instance              | `/instance`, `/instance/authentication`, `/instance/domains/:organizationId/:domainId`, `/instance/audit`                                                        |
+The default client uses the dashboard origin. Set optional `VITE_API_URL` to the
+backend **origin**, without `/api/v1`, when the browser must call it directly.
+That public build-time value must contain no credentials. Configure the backend
+with the exact dashboard origin and deploy both on the same site for SameSite
+cookies. Email links and provider callbacks use `DASHBOARD_URL`; provider callback,
+ACS and metadata URLs still come from the backend's `PUBLIC_URL`.
 
-`/` opens the organization picker. Signup is invitation-only, and only instance owners see
-"New organization".
+## Build and host
 
-### Previewing states
+```sh
+pnpm --filter @usepreface/dashboard build
+pnpm --filter @usepreface/dashboard preview
+```
 
-Until the API is wired, screens read the state to show from `?state=` so every design state can be
-opened directly. Each route's comment lists its states, for example:
+Serve `dist/` with a static host and an `index.html` fallback for application routes.
+For the default same-origin client, reverse proxy `/api` to the backend. Preserve
+HTTPS and the original Origin header. The dashboard is a separate app; the backend
+image does not serve its assets. `vite preview` is for checking a build locally.
 
-- `/setup/verify?state=incorrect`, `?state=expired`
-- `/sign-in?state=sso`, `?state=slug`, `?state=checking`
-- `/invitations/accept?state=sso`, `signed-in`, `mismatch`, `expired`, `revoked`
-- `/organizations?state=sso`, `empty`, `loading`
-- `/org/acme?state=member`
-- `/org/acme/settings/members?state=invite`, `roles`, `suspend`, `read-only`, `loading`, `invitations`, `no-invitations`
-- `/org/acme/settings/authentication?state=readiness`, `recovery`, `required`
-- `/org/acme/settings/connections/<id>?state=test-passed`, `test-failed`, `rotate`
-- `/org/acme/settings/roles?state=create`, `assignments`, `no-access`
+Setup, invitation and email proofs are read from URL fragments and immediately
+removed from browser history. They remain only in document memory. Reopening the
+original email/operator link recovers a page after reload; a code request can be
+restarted if its transient challenge screen was refreshed. No one-time proofs or
+recovery credentials are written to local/session storage.
 
-Without `?state=` a screen shows its default and moves between states as you use it.
+## Available workflows
 
-## Structure
+- `/setup`, `/setup/verify`, `/setup/organization`: owner email verification and
+  first organization. Setup can be completed before an organization is created.
+- `/sign-in`, `/sign-in/verify`: email discovery, codes and available Google/OIDC/SAML
+  methods. `/auth/email/verify` handles browser-bound email links.
+- `/invitations/accept`: review an invitation, verify by code/link, or enroll directly
+  through an approved provider. `/auth/verify-email` completes provider flows that
+  need additional mailbox proof.
+- `/organizations`, `/organizations/new`: membership-scoped organization selection,
+  owner-only creation and restoration of archived organizations.
+- `/org/:slug/settings`: organization details, members/invitations, scoped roles,
+  teams, login policy, OIDC/SAML connections, domains and audit history/CSV export.
+- `/org/:slug/auth-recovery`: owner-bound offline recovery without provider access.
+- `/account/profile`, `/account/security`: profile patches, linked identities,
+  provider confirmation and current/other/all-session revocation.
+- `/instance`: owner-only overview, Google configuration, exact domain-claim review
+  links and separate instance audit history.
+- `/auth/reauthenticate`, `/auth/email/reauthenticate`: fresh local-email evidence
+  for sensitive operations. Provider starts return through backend callbacks.
 
-- `src/main.tsx`: router, theme, tooltip and toast providers.
-- `src/routes/`: file routes. Route-only parts live in `-components/` beside the route; the `-`
-  prefix keeps them out of the route tree.
-  - `org/$slug/_app.tsx`: the organization shell. Settings pages render `SettingsFrame` from
-    `settings/-components/` for the breadcrumb and settings navigation.
-  - `account/route.tsx` and `instance/route.tsx`: the account and instance shells.
-- `src/components/`: UI shared by unrelated routes.
-  - `auth/`: the split auth layout, the centred status card, the aside, and the 8-digit code form.
-  - `shell/`: the app frame (`ShellLayout`), top bar, account menu, sidebars, page bar and cards.
-  - `form/`: react-hook-form fields (`TextField`, `SlugField`, `CodeField`, `SelectField`,
-    `ChoiceField`, `SwitchField`, `EmailListField`), `SubmitButton` and `SaveBar`.
-  - `feedback/`: `ConfirmDialog`, `FormDialog`, `FormSheet`, `EmptyState`, `Notice`, `AccessDenied`.
-  - `data-display/`: status badges, people, copy fields, detail lists, checklists and tables.
-  - `activity/`: the audit log shared by an organization and the instance.
-- `src/forms/`: form schemas. Each one is derived from an `@usepreface/protocol` input schema and
-  turned into a Standard Schema with `toFormSchema`, which also maps validation issues to the
-  sentences shown under fields.
-- `src/lib/`: helpers: `forms/` (`useSchemaForm`, `useDerivedSlug`, `useSlugStatus`), `feedback`
-  (all toast copy), `status` (status labels and tones), `roles`, `permissions`, `urls`, `preview`
-  and `identity`.
-- `src/lib/placeholder/`: the sample instance, people, roles, connections, domains and activity
-  every screen reads until the API is wired. Replace module by module.
-- `src/routeTree.gen.ts`: generated by the router plugin on `dev` and `build`; don't edit it.
+Image uploads, knowledge ingestion, AI features, global organization administration
+and an instance-domain review queue are not provided by the current backend. Their
+former sample records/actions are absent or disabled. Instance ownership never
+supplies organization membership. The API remains authoritative for every action.
 
-## Forms
+## Verification
 
-Forms use react-hook-form with `standardSchemaResolver`. Never write validation by hand: derive the
-schema from the protocol input in `src/forms/` (`mapFields`, `Struct.pick`, `Struct.omit`) so the
-browser checks exactly what the API will. `useSchemaForm(schema, options)` validates once a field
-has been touched.
+```sh
+pnpm --filter @usepreface/dashboard lint
+pnpm --filter @usepreface/dashboard typecheck
+pnpm test:dashboard
+```
 
-`#/…` imports point at `src/`, like the `#/*` imports in the workspace packages. Workspace packages
-are compiled from source through the `preface-source` condition.
+The root browser lane builds the real SPA with local environment-file loading
+**disabled**, ignores shell `VITE_*` overrides and runs it against disposable PostgreSQL, Mailpit and Keycloak. It
+requires Docker, OpenSSL and Chromium (`pnpm exec playwright install chromium`).
+It does not use deployment databases, provider credentials or live inboxes.
+See the [dashboard architecture](../../architecture/interfaces/dashboard.md) for
+state ownership, cache resets, form encoding and verification boundaries.

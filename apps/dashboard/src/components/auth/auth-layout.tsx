@@ -5,7 +5,7 @@ import { DotGrid } from "@usepreface/ui/patterns";
 import { SetupSteps } from "@usepreface/ui/preface/account-fields";
 
 import { ThemeSwitch } from "#/components/theme-switch";
-import { placeholder } from "#/lib/placeholder";
+import { Route as RootRoute } from "#/routes/__root";
 
 /*
  * The split layout from the onboarding designs, shared by setup, sign-in, invitations and SSO
@@ -19,7 +19,7 @@ export function AuthLayout({
 }: {
   steps?: { labels: string[]; current: number };
   topRight?: React.ReactNode;
-  aside: React.ReactNode;
+  aside?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
@@ -48,17 +48,17 @@ export function AuthLayout({
 }
 
 export function AuthFooter({ className }: { className?: string }) {
-  const { instance, links } = placeholder;
+  const { instance } = RootRoute.useRouteContext();
   return (
     <footer className={className ?? "flex flex-wrap items-center justify-between gap-4 text-xs"}>
       <span className="text-fg-tertiary">
-        {instance.name} · Preface {instance.version} · self-hosted at {instance.host}
+        {instance.instanceName} · self-hosted at {window.location.host}
       </span>
       <span className="flex items-center gap-4 font-medium text-fg-secondary">
-        <a href={links.docs} className="hover:text-foreground">
+        <a href={"https://github.com/usepreface/preface#readme"} className="hover:text-foreground">
           Help
         </a>
-        <a href={links.github} className="hover:text-foreground">
+        <a href={"https://github.com/usepreface/preface"} className="hover:text-foreground">
           GitHub
         </a>
         <ThemeSwitch />

@@ -1,78 +1,120 @@
-import { useNavigate, useParams } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
+
+import { Redacted } from "effect";
 
 import { Button } from "@usepreface/ui/components/button";
 
 import { FormDialog } from "#/components/feedback/form-dialog";
 import { ChoiceField } from "#/components/form/choice-field";
+import { SelectField } from "#/components/form/select-field";
 import { SubmitButton } from "#/components/form/submit-button";
 import { TextField } from "#/components/form/text-field";
-import { addConnectionForm } from "#/forms/connections";
+import { createConnectionForm } from "#/forms/connections";
+import {
+  useOrganizationIdentityConnectionsCreate,
+  useOrganizationIdentityConnectionsCreateSaml,
+} from "#/hooks/identity";
+import { useOrganization } from "#/hooks/organizations";
 import { useSchemaForm } from "#/lib/forms/use-schema-form";
-import { connections } from "#/lib/placeholder";
 
-const protocols = [
-  { value: "oidc", label: "OpenID Connect", description: "Okta, Entra ID, Auth0" },
-  { value: "saml", label: "SAML 2.0", description: "ADFS, Ping, OneLogin" },
-] as const;
-
-/** Pick the protocol and a name. The new draft opens on its own page to finish configuring. */
-export function AddConnectionDialog({
-  open,
-  onOpenChange,
-  preview,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  preview?: boolean;
-}) {
+export function AddConnectionDialog({ onClose }: { onClose: () => void }) {
+  const { organization } = useOrganization();
+  const oidc = useOrganizationIdentityConnectionsCreate();
+  const saml = useOrganizationIdentityConnectionsCreateSaml();
   const navigate = useNavigate();
-  const { slug } = useParams({ from: "/org/$slug/_app" });
-  const form = useSchemaForm(addConnectionForm, {
-    defaultValues: { protocol: "oidc", name: preview ? "Microsoft Entra ID" : "" },
+  const form = useSchemaForm(createConnectionForm, {
+    defaultValues: {
+      protocol: "oidc",
+      name: "",
+      issuer: "",
+      clientId: "",
+      clientSecret: "",
+      clientAuthenticationMethod: "client_secret_basic",
+    },
   });
-
   return (
     <FormDialog
-      open={open}
-      onOpenChange={onOpenChange}
+      open
+      onOpenChange={(open) => {
+        if (!open && !form.formState.isSubmitting) onClose();
+      }}
       title="Add SSO connection"
-      description="Choose the protocol your identity provider uses."
-      note="You’ll get a callback URL to paste into your IdP next."
+      description="Create a draft, complete a provider test, then activate and approve it."
+      footer={
+        <>
+          <Button type="button" variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+          <SubmitButton pending={form.formState.isSubmitting}>Create connection</SubmitButton>
+        </>
+      }
       as={(content) => (
         <form
-          noValidate
           className="contents"
-          onSubmit={form.handleSubmit(({ protocol }) => {
-            // Until the API creates drafts, open the matching sample connection.
-            const draft =
-              connections.find((connection) => connection.protocol === protocol) ?? connections[0];
-            if (draft)
-              void navigate({
+          onSubmit={form.handleSubmit(async (values) => {
+            const params = { organizationId: organization.id };
+            const response =
+              values.protocol === "saml"
+                ? await saml.run({ params, payload: { name: values.name } })
+                : await oidc.run({
+                    params,
+                    payload: {
+                      name: values.name,
+                      issuer: values.issuer,
+                      clientId: values.clientId,
+                      clientSecret: Redacted.value(values.clientSecret),
+                      clientAuthenticationMethod: values.clientAuthenticationMethod,
+                    },
+                  });
+            if (response) {
+              onClose();
+              await navigate({
                 to: "/org/$slug/settings/connections/$connectionId",
-                params: { slug, connectionId: draft.id },
+                params: { slug: organization.slug, connectionId: response.value.id },
               });
+            }
           })}
         >
           {content}
         </form>
       )}
-      footer={
-        <>
-          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <SubmitButton arrow>Continue</SubmitButton>
-        </>
-      }
     >
-      <ChoiceField control={form.control} name="protocol" label="Protocol" options={protocols} />
-      <TextField
+      <ChoiceField
         control={form.control}
-        name="name"
-        label="Connection name"
-        description="Shown to members on the sign-in page."
-        inputProps={{ autoFocus: true, placeholder: "Okta" }}
+        name="protocol"
+        label="Protocol"
+        options={[
+          { value: "oidc", label: "OpenID Connect" },
+          { value: "saml", label: "SAML 2.0" },
+        ]}
       />
+      <TextField control={form.control} name="name" label="Connection name" />
+      {form.watch("protocol") === "oidc" ? (
+        <>
+          <TextField
+            control={form.control}
+            name="issuer"
+            label="Issuer URL"
+            inputProps={{ type: "url" }}
+          />
+          <TextField control={form.control} name="clientId" label="Client ID" />
+          <TextField
+            control={form.control}
+            name="clientSecret"
+            label="Client secret"
+            inputProps={{ type: "password", autoComplete: "new-password" }}
+          />
+          <SelectField
+            control={form.control}
+            name="clientAuthenticationMethod"
+            label="Client authentication"
+            options={[
+              { value: "client_secret_basic", label: "Client secret basic" },
+              { value: "client_secret_post", label: "Client secret post" },
+            ]}
+          />
+        </>
+      ) : null}
     </FormDialog>
   );
 }

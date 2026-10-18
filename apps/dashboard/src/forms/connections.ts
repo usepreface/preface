@@ -1,6 +1,7 @@
 import { Schema, Struct } from "effect";
 
 import {
+  CreateOidcConnectionInput,
   CreateSamlConnectionInput,
   UpdateOidcConnectionInput,
   UpdateSamlConnectionInput,
@@ -9,15 +10,6 @@ import {
 import { toFormSchema } from "#/lib/forms/schema";
 
 const idp = UpdateSamlConnectionInput.fields.idp.schema;
-
-/** SSO connections → Add: the protocol and a name; the rest is configured on the next page. */
-export const addConnectionForm = toFormSchema(
-  CreateSamlConnectionInput.mapFields((fields) => ({
-    protocol: Schema.Literals(["oidc", "saml"]),
-    ...fields,
-  })),
-  { required: { name: "Name the connection." } },
-);
 
 /**
  * An OIDC connection's settings. Leaving the secret empty keeps the saved one; the revision
@@ -52,8 +44,15 @@ export const samlConnectionForm = toFormSchema(
   },
 );
 
-/** SAML → Add signing certificate: one PEM certificate. */
-export const samlCertificateForm = toFormSchema(
-  Schema.Struct({ certificate: idp.fields.signingCertificates.value }),
-  { required: { certificate: "Paste the certificate, including the BEGIN and END lines." } },
+export const createConnectionForm = toFormSchema(
+  Schema.Union([
+    CreateOidcConnectionInput.mapFields((fields) => ({
+      protocol: Schema.Literal("oidc"),
+      ...fields,
+    })),
+    CreateSamlConnectionInput.mapFields((fields) => ({
+      protocol: Schema.Literal("saml"),
+      ...fields,
+    })),
+  ]),
 );

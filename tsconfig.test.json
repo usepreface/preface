@@ -4,5 +4,10 @@
     "lib": ["ESNext", "DOM"],
     "allowImportingTsExtensions": true
   },
-  "include": ["tooling/testing/**/*.ts", "tests/e2e/**/*.ts", "playwright.config.ts"]
+  "include": [
+    "tooling/testing/**/*.ts",
+    "tests/e2e/**/*.ts",
+    "playwright.config.ts",
+    "playwright.dashboard.config.ts"
+  ]
 }

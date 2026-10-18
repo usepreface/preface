@@ -15,7 +15,7 @@ This repository contains monorepo tooling and these workspace packages and appli
 - [template](packages/template/README.md): reusable starter for internal packages.
 - [ui](packages/ui/README.md): the design system - Base UI components in the shadcn/ui structure, Preface tokens,
   icons, company logos and brand marks.
-- [dashboard](apps/dashboard/README.md): the Preface dashboard on TanStack Router; onboarding and the empty organization home, UI only for now.
+- [dashboard](apps/dashboard/README.md): the authenticated dashboard for setup, email/enterprise sign-in and organization administration.
 - [landing](apps/landing/README.md): preface.run, the landing page, on TanStack Start for Vercel.
 - [uikit](apps/uikit/README.md): Preface UI Kit, the living reference for every component, icon, logo and piece of art in light and dark.
 
@@ -25,7 +25,7 @@ schemas. Protocol provides storage models, public bootstrap/session contracts an
 Application implements first-owner setup, browser-bound email code/link sign-in, sessions and
 organization creation, membership, roles and ownership. The server wires
 startup preparation, operator links, HTTP handlers, always-available Scalar/OpenAPI and Compose
-on port 8080. The dashboard defaults to port 3000 and the landing page to port 4000. Backend-connected onboarding/sign-in and organization-management UI remain subsequent features.
+on port 8080. The dashboard defaults to port 3000 and the landing page to port 4000. The dashboard connects setup, sign-in, organizations, teams, roles, invitations and enterprise authentication.
 
 Start with the [architecture index](architecture/README.md) for system boundaries, contracts,
 identity flows, storage, runtime and frontend ownership. The [server README](apps/server/README.md)
@@ -63,6 +63,7 @@ source-first development with the `preface-source` condition.
 | `pnpm test`            | Run workspace tests through Turborepo                                                                      |
 | `pnpm test:postgres`   | Run sequential integration and built smoke suites in disposable PostgreSQL                                 |
 | `pnpm test:auth`       | Build the backend and run Chromium journeys with PostgreSQL, Keycloak and Mailpit                          |
+| `pnpm test:dashboard`  | Build the SPA and run browser workflows against disposable PostgreSQL, Keycloak and Mailpit                |
 | `pnpm test:uikit`      | Run Chromium keyboard and pointer regressions against shared components in the UI Kit                      |
 | `pnpm typecheck:tests` | Typecheck root infrastructure and browser fixtures                                                         |
 | `pnpm dev`             | Run workspace development tasks through Turborepo                                                          |
@@ -82,7 +83,8 @@ alongside Klarity's workspace lint, typecheck and test tasks. GitHub Actions ins
 lockfile under the pinned Node version. Separate jobs run `pnpm check`/`pnpm test`,
 `pnpm test:postgres` and `pnpm test:auth`. The latter two require a local Docker-compatible runtime;
 auth journeys also need `openssl` and `pnpm exec playwright install chromium`.
-That browser job also runs `pnpm test:uikit` against its dedicated local UI Kit server.
+That browser job also runs `pnpm test:dashboard` against the built SPA and
+`pnpm test:uikit` against its dedicated local UI Kit server.
 
 ## VS Code
 

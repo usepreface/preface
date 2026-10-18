@@ -29,6 +29,7 @@ import { Route as SetupOrganizationRouteImport } from './routes/setup/organizati
 import { Route as SetupVerifyRouteImport } from './routes/setup/verify'
 import { Route as SignInIndexRouteImport } from './routes/sign-in/index'
 import { Route as SignInVerifyRouteImport } from './routes/sign-in/verify'
+import { Route as AuthEmailReauthenticateRouteImport } from './routes/auth/email/reauthenticate'
 import { Route as AuthEmailVerifyRouteImport } from './routes/auth/email/verify'
 import { Route as OrgSlugAppRouteImport } from './routes/org/$slug/_app'
 import { Route as OrgSlugAuthRecoveryRouteImport } from './routes/org/$slug/auth-recovery'
@@ -146,6 +147,11 @@ const SignInVerifyRoute = SignInVerifyRouteImport.update({
   path: '/sign-in/verify',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthEmailReauthenticateRoute = AuthEmailReauthenticateRouteImport.update({
+  id: '/auth/email/reauthenticate',
+  path: '/auth/email/reauthenticate',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthEmailVerifyRoute = AuthEmailVerifyRouteImport.update({
   id: '/auth/email/verify',
   path: '/auth/email/verify',
@@ -257,6 +263,7 @@ export interface FileRoutesByFullPath {
   '/organizations/': typeof OrganizationsIndexRoute
   '/setup/': typeof SetupIndexRoute
   '/sign-in/': typeof SignInIndexRoute
+  '/auth/email/reauthenticate': typeof AuthEmailReauthenticateRoute
   '/auth/email/verify': typeof AuthEmailVerifyRoute
   '/org/$slug': typeof OrgSlugAppRouteWithChildren
   '/org/$slug/auth-recovery': typeof OrgSlugAuthRecoveryRoute
@@ -293,6 +300,7 @@ export interface FileRoutesByTo {
   '/organizations': typeof OrganizationsIndexRoute
   '/setup': typeof SetupIndexRoute
   '/sign-in': typeof SignInIndexRoute
+  '/auth/email/reauthenticate': typeof AuthEmailReauthenticateRoute
   '/auth/email/verify': typeof AuthEmailVerifyRoute
   '/org/$slug/auth-recovery': typeof OrgSlugAuthRecoveryRoute
   '/instance/domains/$organizationId/$domainId': typeof InstanceDomainsOrganizationIdDomainIdRoute
@@ -331,6 +339,7 @@ export interface FileRoutesById {
   '/organizations/': typeof OrganizationsIndexRoute
   '/setup/': typeof SetupIndexRoute
   '/sign-in/': typeof SignInIndexRoute
+  '/auth/email/reauthenticate': typeof AuthEmailReauthenticateRoute
   '/auth/email/verify': typeof AuthEmailVerifyRoute
   '/org/$slug/_app': typeof OrgSlugAppRouteWithChildren
   '/org/$slug/auth-recovery': typeof OrgSlugAuthRecoveryRoute
@@ -371,6 +380,7 @@ export interface FileRouteTypes {
     | '/organizations/'
     | '/setup/'
     | '/sign-in/'
+    | '/auth/email/reauthenticate'
     | '/auth/email/verify'
     | '/org/$slug'
     | '/org/$slug/auth-recovery'
@@ -407,6 +417,7 @@ export interface FileRouteTypes {
     | '/organizations'
     | '/setup'
     | '/sign-in'
+    | '/auth/email/reauthenticate'
     | '/auth/email/verify'
     | '/org/$slug/auth-recovery'
     | '/instance/domains/$organizationId/$domainId'
@@ -444,6 +455,7 @@ export interface FileRouteTypes {
     | '/organizations/'
     | '/setup/'
     | '/sign-in/'
+    | '/auth/email/reauthenticate'
     | '/auth/email/verify'
     | '/org/$slug/_app'
     | '/org/$slug/auth-recovery'
@@ -477,6 +489,7 @@ export interface RootRouteChildren {
   OrganizationsIndexRoute: typeof OrganizationsIndexRoute
   SetupIndexRoute: typeof SetupIndexRoute
   SignInIndexRoute: typeof SignInIndexRoute
+  AuthEmailReauthenticateRoute: typeof AuthEmailReauthenticateRoute
   AuthEmailVerifyRoute: typeof AuthEmailVerifyRoute
   OrgSlugAppRoute: typeof OrgSlugAppRouteWithChildren
   OrgSlugAuthRecoveryRoute: typeof OrgSlugAuthRecoveryRoute
@@ -622,6 +635,13 @@ declare module '@tanstack/react-router' {
       path: '/sign-in/verify'
       fullPath: '/sign-in/verify'
       preLoaderRoute: typeof SignInVerifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/email/reauthenticate': {
+      id: '/auth/email/reauthenticate'
+      path: '/auth/email/reauthenticate'
+      fullPath: '/auth/email/reauthenticate'
+      preLoaderRoute: typeof AuthEmailReauthenticateRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/email/verify': {
@@ -825,6 +845,7 @@ const rootRouteChildren: RootRouteChildren = {
   OrganizationsIndexRoute: OrganizationsIndexRoute,
   SetupIndexRoute: SetupIndexRoute,
   SignInIndexRoute: SignInIndexRoute,
+  AuthEmailReauthenticateRoute: AuthEmailReauthenticateRoute,
   AuthEmailVerifyRoute: AuthEmailVerifyRoute,
   OrgSlugAppRoute: OrgSlugAppRouteWithChildren,
   OrgSlugAuthRecoveryRoute: OrgSlugAuthRecoveryRoute,

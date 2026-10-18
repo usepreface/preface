@@ -44,6 +44,7 @@ Executable schemas, migrations, source and tests settle disagreements with prose
   migration locking and durable audit.
 - [Server](runtime/server.md): runtime composition, startup gates, request policy,
   operational routes, deployment configuration and shutdown.
+- [Dashboard](interfaces/dashboard.md): typed API atoms, browser authority, onboarding and administration.
 - [Landing](interfaces/landing.md): page composition, reusable presentation,
   browser interactions, prerendering and deployment boundaries.
 - [Development and verification](engineering/development.md): workspace builds,

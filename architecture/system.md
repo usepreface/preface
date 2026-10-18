@@ -6,23 +6,24 @@ supports installation preparation, first-owner setup, email code/link sign-in,
 session resolution, session management, organization creation, membership lifecycle,
 roles, ownership management, verified organization invitations, direct teams, versioned profiles, Google account linking/sign-in, organization-owned OIDC and SAML, domain authority, direct invitation SSO enrollment, verified implicit account linking, resumable proofs, discovery and optional/required organization authentication and owner-bound offline SSO recovery.
 Setup verifies mailbox ownership through an encrypted email outbox, minimal renderer
-and scoped worker. Image uploads and knowledge ingestion are not implemented. The landing page illustrates the product independently of
+and scoped worker. Image uploads and knowledge ingestion are not implemented. The dashboard connects those authentication and administration workflows. The landing page illustrates the product independently of
 those backend capabilities.
 
 ## Ownership
 
-| Boundary       | Owns                                                                              | Does not own                                            |
-| -------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| `protocol`     | Runtime schemas, IDs, reusable values, models, DTOs, inputs and expected errors   | I/O, business workflows or authority decisions          |
-| `api`          | HTTP methods, paths, middleware declarations, status-specific schemas and OpenAPI | Handlers, repositories or runtime configuration         |
-| `database`     | PostgreSQL schema, migrations, queries, transaction context and storage failures  | HTTP policy, password hashing or business authorization |
-| `application`  | Business invariants, security capabilities, transactions and required audit       | Cookies, listener configuration or browser state        |
-| `crypto`       | Credential primitives, purpose separation and authenticated encryption            | Business authority, persistence or HTTP                 |
-| `emails`       | Typed email intent, encrypted payloads, delivery worker and provider adapters     | Credentials, recipients, business authority or HTTP     |
-| `apps/server`  | Node implementations, configuration, startup, HTTP enforcement and operator CLI   | Query implementations or frontend rendering             |
-| `ui`           | Shared presentation, controls, tokens, icons and artwork                          | Backend authority or application API calls              |
-| `apps/landing` | Marketing page, metadata, demonstrations and browser interactions                 | Authenticated product workflows or persistence          |
-| `apps/uikit`   | Interactive design-system reference                                               | Product state or backend behavior                       |
+| Boundary         | Owns                                                                              | Does not own                                            |
+| ---------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| `protocol`       | Runtime schemas, IDs, reusable values, models, DTOs, inputs and expected errors   | I/O, business workflows or authority decisions          |
+| `api`            | HTTP methods, paths, middleware declarations, status-specific schemas and OpenAPI | Handlers, repositories or runtime configuration         |
+| `database`       | PostgreSQL schema, migrations, queries, transaction context and storage failures  | HTTP policy, password hashing or business authorization |
+| `application`    | Business invariants, security capabilities, transactions and required audit       | Cookies, listener configuration or browser state        |
+| `crypto`         | Credential primitives, purpose separation and authenticated encryption            | Business authority, persistence or HTTP                 |
+| `emails`         | Typed email intent, encrypted payloads, delivery worker and provider adapters     | Credentials, recipients, business authority or HTTP     |
+| `apps/server`    | Node implementations, configuration, startup, HTTP enforcement and operator CLI   | Query implementations or frontend rendering             |
+| `ui`             | Shared presentation, controls, tokens, icons and artwork                          | Backend authority or application API calls              |
+| `apps/landing`   | Marketing page, metadata, demonstrations and browser interactions                 | Authenticated product workflows or persistence          |
+| `apps/dashboard` | Browser workflows, typed HTTP state, router authority, forms and administration   | Server-side authority or persistence                    |
+| `apps/uikit`     | Interactive design-system reference                                               | Product state or backend behavior                       |
 
 The dependency direction is `api → protocol`, `database → protocol`, and
 `application → database + protocol + crypto + emails`. The server composes these packages and Node

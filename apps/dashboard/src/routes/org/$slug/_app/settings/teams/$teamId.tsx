@@ -1,87 +1,126 @@
-import * as React from "react";
+import { useEffect, useState } from "react";
 
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
-import { Counter } from "@usepreface/ui/components/badge";
+import { Schema } from "effect";
+
+import { TeamId, type TeamPermission } from "@usepreface/protocol";
 import { Button } from "@usepreface/ui/components/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@usepreface/ui/components/tabs";
-import { PlusIcon } from "@usepreface/ui/icons";
-import { InlineCode } from "@usepreface/ui/preface/data-display";
+import { TrashIcon } from "@usepreface/ui/icons";
 
-import { teamMembers, teams } from "#/lib/placeholder";
-import { previewSearch, previewState } from "#/lib/preview";
+import { QueryState } from "#/components/api/query-state";
+import { AccessDenied } from "#/components/feedback/access-denied";
+import { ConfirmDialog } from "#/components/feedback/confirm-dialog";
+import { PageTitle } from "#/components/shell/page";
+import { useAuthorityReset } from "#/hooks/authority";
+import { useTeam, useTeamAccess, useTeamsArchive } from "#/hooks/membership";
+import { useOrganization } from "#/hooks/organizations";
 
 import { SettingsFrame } from "../-components/settings-frame";
-import { AddTeamMembersDialog } from "./-components/add-members-dialog";
-import { TeamMembersTable } from "./-components/team-members-table";
-import { TeamSettings } from "./-components/team-settings";
-import { TeamTile } from "./-components/team-tile";
+import { TeamDialog } from "./-components/team-dialog";
+import { TeamMemberDirectory } from "./-components/team-member-directory";
+
 export const Route = createFileRoute("/org/$slug/_app/settings/teams/$teamId")({
-  head: () => ({ meta: [{ title: "Team · Settings · Preface" }] }),
-  validateSearch: previewSearch,
-  loader: ({ params }) => {
-    const team = teams.find((candidate) => candidate.slug === params.teamId);
-    if (!team) throw notFound();
-    return team;
-  },
-  component: TeamDetail,
+  component: TeamPage,
 });
-
-/** One team. `?state=add` opens Add members, `?state=settings` and `?state=archive` the settings tab. */
-function TeamDetail() {
-  const { slug } = Route.useParams();
-  const team = Route.useLoaderData();
-  const state = previewState(["add", "settings", "archive"], Route.useSearch().state);
-  const [adding, setAdding] = React.useState(state === "add");
-  const [tab, setTab] = React.useState(
-    state === "settings" || state === "archive" ? "settings" : "members",
+function TeamPage() {
+  const teamId = Schema.decodeUnknownSync(TeamId)(Route.useParams().teamId);
+  const { organization } = useOrganization();
+  const access = useTeamAccess(organization.id, teamId);
+  const blocked = useAuthorityReset(
+    access.data
+      ? `${teamId}:${access.data.isMember}:${access.data.permissions.toSorted().join(",")}`
+      : undefined,
   );
-
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === "visible") access.refetch();
+    }, 30_000);
+    return () => window.clearInterval(interval);
+  }, [access.refetch]);
+  if (blocked)
+    return (
+      <p role="status" className="p-6">
+        Checking team access…
+      </p>
+    );
+  return (
+    <QueryState query={access}>
+      {access.data?.permissions.includes("team.read") ? (
+        <TeamContent teamId={teamId} permissions={access.data.permissions} />
+      ) : (
+        <AccessDenied description="Your team role does not grant access." />
+      )}
+    </QueryState>
+  );
+}
+function TeamContent({
+  teamId,
+  permissions,
+}: {
+  teamId: TeamId;
+  permissions: readonly TeamPermission[];
+}) {
+  const { organization } = useOrganization();
+  const query = useTeam(organization.id, teamId);
+  const archive = useTeamsArchive();
+  const navigate = useNavigate();
+  const [editing, setEditing] = useState(false);
+  const [archiving, setArchiving] = useState(false);
   return (
     <SettingsFrame
       crumbs={[
-        { label: "Teams", link: { to: "/org/$slug/settings/teams", params: { slug } } },
-        { label: team.name },
+        {
+          label: "Teams",
+          link: { to: "/org/$slug/settings/teams", params: { slug: organization.slug } },
+        },
+        { label: query.data?.metadata.name ?? "Team" },
       ]}
-      width="full"
       actions={
-        tab === "members" ? (
-          <Button onClick={() => setAdding(true)}>
-            <PlusIcon data-icon="inline-start" />
-            Add members
-          </Button>
-        ) : null
+        <>
+          {permissions.includes("team.update") ? (
+            <Button variant="outline" onClick={() => setEditing(true)}>
+              Edit team
+            </Button>
+          ) : null}
+          {permissions.includes("team.archive") ? (
+            <Button variant="outline" onClick={() => setArchiving(true)}>
+              Archive team
+            </Button>
+          ) : null}
+        </>
       }
     >
-      <div className="flex items-center gap-3.5">
-        <TeamTile size="lg" archived={team.archived} />
-        <div className="flex min-w-0 flex-col gap-0.5">
-          <div className="flex items-center gap-2">
-            <h1 className="text-heading-2 text-foreground">{team.name}</h1>
-            <InlineCode>{team.slug}</InlineCode>
-          </div>
-          <p className="text-sm text-fg-secondary">{team.description}</p>
-        </div>
-      </div>
-      <Tabs value={tab} onValueChange={(value) => setTab(String(value))}>
-        <TabsList variant="line">
-          <TabsTrigger value="members">
-            Members <Counter>{teamMembers.length}</Counter>
-          </TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
-        </TabsList>
-        <TabsContent value="members" className="pt-4">
-          <TeamMembersTable />
-        </TabsContent>
-        <TabsContent value="settings" className="flex flex-col gap-5 pt-4 lg:max-w-200">
-          <TeamSettings team={team} archiving={state === "archive"} />
-        </TabsContent>
-      </Tabs>
-      <AddTeamMembersDialog
-        team={team}
-        open={adding}
-        onOpenChange={setAdding}
-        preview={state === "add"}
+      <QueryState query={query}>
+        <PageTitle
+          title={query.data?.metadata.name ?? "Team"}
+          description={query.data?.metadata.description}
+        />
+        {permissions.includes("team.members.read") ? (
+          <TeamMemberDirectory teamId={teamId} permissions={permissions} />
+        ) : null}
+        {editing && query.data ? (
+          <TeamDialog team={query.data} onClose={() => setEditing(false)} />
+        ) : null}
+      </QueryState>
+      <ConfirmDialog
+        open={archiving}
+        onOpenChange={setArchiving}
+        pending={archive.pending}
+        icon={TrashIcon}
+        title="Archive this team?"
+        description="Members lose team access. There is no restore operation."
+        confirmLabel="Archive team"
+        confirmText={query.data?.slug}
+        onConfirm={async () => {
+          if (
+            await archive.run({ params: { organizationId: organization.id, teamId }, payload: {} })
+          )
+            await navigate({
+              to: "/org/$slug/settings/teams",
+              params: { slug: organization.slug },
+            });
+        }}
       />
     </SettingsFrame>
   );

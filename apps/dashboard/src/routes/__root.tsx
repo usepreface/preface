@@ -1,9 +1,35 @@
-import { HeadContent, Link, Outlet, createRootRoute } from "@tanstack/react-router";
+import {
+  HeadContent,
+  Link,
+  Outlet,
+  createRootRouteWithContext,
+  redirect,
+} from "@tanstack/react-router";
+
+import type { AtomRegistry } from "effect/reactivity";
 
 import { PrefaceLogo } from "@usepreface/ui/brand";
 import { buttonVariants } from "@usepreface/ui/components/button";
 
-export const Route = createRootRoute({
+import { prefetchQuery } from "#/atoms/prefetch";
+import { sessionAtom, statusAtom } from "#/atoms/session";
+import { AuthorityBoundary } from "#/components/api/authority-boundary";
+import { RouteFailure } from "#/components/api/route-failure";
+
+export const Route = createRootRouteWithContext<{ atomRegistry: AtomRegistry.AtomRegistry }>()({
+  beforeLoad: async ({ context, location, abortController, preload }) => {
+    const status = await prefetchQuery(context.atomRegistry, statusAtom, abortController.signal);
+    const publicPath = /^\/(setup(?:\/|$)|sign-in(?:\/|$)|auth(?:\/|$)|invitations(?:\/|$))/.test(
+      location.pathname,
+    );
+    if (status.state === "setup_required" && !location.pathname.startsWith("/setup"))
+      throw redirect({ to: "/setup" });
+    if (!preload) context.atomRegistry.refresh(sessionAtom);
+    const actor = await prefetchQuery(context.atomRegistry, sessionAtom, abortController.signal);
+    if (!publicPath && actor === null) throw redirect({ to: "/sign-in" });
+    return { actor, instance: status };
+  },
+  errorComponent: RouteFailure,
   head: () => ({ meta: [{ title: "Preface" }] }),
   component: Root,
   notFoundComponent: NotFound,
@@ -13,7 +39,9 @@ function Root() {
   return (
     <>
       <HeadContent />
-      <Outlet />
+      <AuthorityBoundary>
+        <Outlet />
+      </AuthorityBoundary>
     </>
   );
 }

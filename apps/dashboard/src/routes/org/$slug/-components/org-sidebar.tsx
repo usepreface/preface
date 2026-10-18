@@ -6,7 +6,6 @@ import {
   AnalyticsIcon,
   ApiIcon,
   BotIcon,
-  BrainIcon,
   ChatIcon,
   DatabaseIcon,
   FileIcon,
@@ -22,21 +21,20 @@ import {
 
 import { NavSidebar, SidebarCard, type NavGroup } from "#/components/shell/nav-sidebar";
 import type { SidebarRender } from "#/components/shell/shell-layout";
-import { placeholder } from "#/lib/placeholder";
+import { useOrganization } from "#/hooks/organizations";
 
-const people: ReadonlySet<string> = new Set(["members", "teams", "roles"]);
 const access: ReadonlySet<string> = new Set(["authentication", "connections", "domains"]);
 
 /*
  * The organization sidebar. Home and the admin entries are routes; the knowledge and channel
- * entries are placeholders until their pages exist. Admin entries are hidden from members.
+ * entries stay disabled until implemented. Settings links follow current organization permissions.
  */
 export function OrgSidebar({
   slug,
   name,
-  admin,
   ...props
-}: Parameters<SidebarRender>[0] & { slug: string; name: string; admin: boolean }) {
+}: Parameters<SidebarRender>[0] & { slug: string; name: string }) {
+  const { access: authority } = useOrganization();
   const section = useRouterState({
     select: (state) => state.location.pathname.split("/settings/")[1]?.split("/")[0],
   });
@@ -73,24 +71,50 @@ export function OrgSidebar({
     },
   ];
 
-  if (admin) {
+  {
     groups.push({
-      section: "Admin",
+      section: "Organization",
       items: [
-        {
-          label: "Teams & members",
-          icon: UsersIcon,
-          link: { to: "/org/$slug/settings/members", params },
-          active: people.has(section ?? ""),
-        },
-        {
-          label: "Access & SSO",
-          icon: ShieldIcon,
-          link: { to: "/org/$slug/settings/authentication", params },
-          active: access.has(section ?? ""),
-        },
-        { label: "AI providers", icon: BrainIcon },
-        { label: "API keys", icon: KeyIcon },
+        ...(authority.permissions.includes("members.read")
+          ? [
+              {
+                label: "Members",
+                icon: UsersIcon,
+                link: { to: "/org/$slug/settings/members", params } as const,
+                active: section === "members",
+              },
+            ]
+          : []),
+        ...(authority.permissions.includes("teams.read")
+          ? [
+              {
+                label: "Teams",
+                icon: LayersIcon,
+                link: { to: "/org/$slug/settings/teams", params } as const,
+                active: section === "teams",
+              },
+            ]
+          : []),
+        ...(authority.permissions.includes("roles.read")
+          ? [
+              {
+                label: "Roles",
+                icon: KeyIcon,
+                link: { to: "/org/$slug/settings/roles", params } as const,
+                active: section === "roles",
+              },
+            ]
+          : []),
+        ...(authority.isOwner
+          ? [
+              {
+                label: "Access & SSO",
+                icon: ShieldIcon,
+                link: { to: "/org/$slug/settings/authentication", params } as const,
+                active: access.has(section ?? ""),
+              },
+            ]
+          : []),
         {
           label: "Settings",
           icon: SettingsIcon,
@@ -106,18 +130,13 @@ export function OrgSidebar({
       {...props}
       title={name}
       action={
-        <Button variant="outline" className="mb-2 w-full justify-start">
+        <Button disabled variant="outline" className="mb-2 w-full justify-start">
           <PlusIcon data-icon="inline-start" />
           New conversation
         </Button>
       }
       groups={groups}
-      footer={
-        <SidebarCard
-          title={`Self-hosted · ${placeholder.instance.version}`}
-          detail={`${placeholder.instance.host} · 1 worker · idle`}
-        />
-      }
+      footer={<SidebarCard title="Self-hosted Preface" detail={window.location.host} />}
     />
   );
 }

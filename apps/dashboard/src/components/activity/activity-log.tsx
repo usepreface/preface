@@ -1,337 +1,220 @@
-import * as React from "react";
+import { useState } from "react";
 
-import { Button } from "@usepreface/ui/components/button";
-import { Input } from "@usepreface/ui/components/input";
+import { Struct } from "effect";
+
+import type { OrganizationId } from "@usepreface/protocol";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@usepreface/ui/components/select";
+  AuditExportQuery,
+  type ListAuditEventsQuery,
+  type PublicAuditEvent,
+} from "@usepreface/protocol/dto";
+import { Button } from "@usepreface/ui/components/button";
 import {
   Table,
-  TableBody,
-  TableCell,
-  TableHead,
   TableHeader,
+  TableBody,
   TableRow,
+  TableHead,
+  TableCell,
 } from "@usepreface/ui/components/table";
-import {
-  CalendarIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  CopyIcon,
-  SearchIcon,
-  ServerIcon,
-  UsersIcon,
-} from "@usepreface/ui/icons";
-import { FiltersTooNarrowIllustration } from "@usepreface/ui/illustrations";
-import { InlineCode } from "@usepreface/ui/preface/data-display";
 
-import { DetailList } from "#/components/data-display/detail-list";
-import { IconTile } from "#/components/data-display/icon-tile";
-import { Person, PersonAvatar } from "#/components/data-display/identity";
+import { ApiClient, mutation } from "#/atoms/client";
+import { QueryKeys } from "#/atoms/query-keys";
+import { Pagination } from "#/components/api/pagination";
+import { QueryState } from "#/components/api/query-state";
 import { TableCard } from "#/components/data-display/table-card";
-import { matches } from "#/components/data-display/table-toolbar";
-import { EmptyState } from "#/components/feedback/empty-state";
 import { FormSheet } from "#/components/feedback/form-dialog";
-import { feedback } from "#/lib/feedback";
-import { eventDetail, type ActivityEvent } from "#/lib/placeholder";
+import { Notice } from "#/components/feedback/notice";
+import { SubmitButton } from "#/components/form/submit-button";
+import { TextField } from "#/components/form/text-field";
+import { toMutation } from "#/hooks/mutation";
+import { toQuery } from "#/hooks/query";
+import { formatDate } from "#/lib/dates";
+import { toFormSchema } from "#/lib/forms/schema";
+import { useSchemaForm } from "#/lib/forms/use-schema-form";
+import { requestFields } from "#/lib/request-fields";
 
-const ANY = "all";
+const useEvents = toQuery(
+  (organizationId: OrganizationId | undefined, query: ListAuditEventsQuery) =>
+    organizationId
+      ? ApiClient.query(
+          "audit",
+          "organization",
+          requestFields({
+            params: { organizationId },
+            query,
+            reactivityKeys: [QueryKeys.authority, QueryKeys.organization(organizationId)],
+          }),
+        )
+      : ApiClient.query(
+          "audit",
+          "instance",
+          requestFields({
+            query,
+            reactivityKeys: [QueryKeys.authority, QueryKeys.instance],
+          }),
+        ),
+);
+const useExportOrganization = toMutation(mutation((c) => c.audit.exportOrganization));
+const useExportInstance = toMutation(mutation((c) => c.audit.exportInstance));
+const filtersForm = toFormSchema(AuditExportQuery.mapFields(Struct.omit(["cursor"])));
 
-/*
- * The audit log shared by an organization's Activity page and the instance's. Filters work on
- * the loaded rows until the API pages and filters on the server. `narrow` previews filters that
- * match nothing; `selected` opens one event's details.
- */
-export function ActivityLog({
-  events,
-  total,
-  typeLabel = "All events",
-  narrow,
-  selected,
-}: {
-  events: readonly ActivityEvent[];
-  total: number;
-  typeLabel?: string;
-  narrow?: boolean;
-  selected?: string;
-}) {
-  const [type, setType] = React.useState(narrow ? "domain" : ANY);
-  const [actor, setActor] = React.useState(narrow ? "Kenji Ito" : ANY);
-  const [target, setTarget] = React.useState("");
-  const [open, setOpen] = React.useState<ActivityEvent | undefined>(() =>
-    events.find((event) => event.action === selected),
-  );
-
-  const types = [
-    ANY,
-    ...new Set(events.map((event) => event.action.split(".")[0] ?? event.action)),
-  ];
-  const actors = [
-    ANY,
-    ...new Set([...events.map((event) => event.actor), ...(narrow ? ["Kenji Ito"] : [])]),
-  ];
-  const rows = events.filter(
-    (event) =>
-      (type === ANY || event.action.startsWith(`${type}.`)) &&
-      (actor === ANY || event.actor === actor) &&
-      matches(target, event.target),
-  );
-  const filtered = type !== ANY || actor !== ANY || target !== "";
-  const clear = () => {
-    setType(ANY);
-    setActor(ANY);
-    setTarget("");
-  };
-
+export function ActivityLog({ organizationId }: { organizationId?: OrganizationId }) {
+  const [filters, setFilters] = useState<typeof AuditExportQuery.Type>({});
+  const [cursor, setCursor] = useState<string>();
+  const [exportCursor, setExportCursor] = useState<string>();
+  const [exportStarted, setExportStarted] = useState(false);
+  const [selected, setSelected] = useState<typeof PublicAuditEvent.Type>();
+  const query = useEvents(organizationId, { ...filters, cursor, limit: 25 });
+  const exportOrganization = useExportOrganization();
+  const exportInstance = useExportInstance();
+  const form = useSchemaForm(filtersForm, { defaultValues: {} });
   return (
-    <>
-      <div className="flex flex-wrap items-center gap-2">
-        <FilterSelect
+    <div className="flex flex-col gap-4">
+      <form
+        className="grid gap-3 rounded-xl border p-4 sm:grid-cols-2"
+        onSubmit={form.handleSubmit((values) => {
+          setFilters(values);
+          setCursor(undefined);
+          setExportCursor(undefined);
+          setExportStarted(false);
+        })}
+      >
+        <TextField
+          control={form.control}
+          name="eventType"
           label="Event type"
-          value={type}
-          onChange={setType}
-          options={types.map((value) => ({
-            value,
-            label: value === ANY ? typeLabel : `${value}.*`,
-          }))}
+          optional
+          emptyAsUndefined
+          inputProps={{ placeholder: "organization.created" }}
         />
-        <FilterSelect
-          label="Actor"
-          value={actor}
-          onChange={setActor}
-          options={actors.map((value) => ({ value, label: value === ANY ? "Anyone" : value }))}
+        <TextField
+          control={form.control}
+          name="actorUserId"
+          label="Actor user ID"
+          optional
+          emptyAsUndefined
         />
-        <div className="relative w-full sm:w-44">
-          <SearchIcon className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-icon-secondary" />
-          <Input
-            value={target}
-            onChange={(event) => setTarget(event.target.value)}
-            placeholder="Target"
-            aria-label="Target"
-            className="pl-8"
-          />
-        </div>
-        <Button variant="outline" onClick={feedback.notConnected}>
-          <CalendarIcon data-icon="inline-start" />
-          {narrow ? "Oct 1 – Oct 18" : "Oct 11 – Oct 18"}
+        <TextField
+          control={form.control}
+          name="targetId"
+          label="Target ID"
+          optional
+          emptyAsUndefined
+        />
+        <TextField
+          control={form.control}
+          name="after"
+          label="After (ISO timestamp)"
+          optional
+          emptyAsUndefined
+          inputProps={{ placeholder: "2026-10-01T00:00:00Z" }}
+        />
+        <TextField
+          control={form.control}
+          name="before"
+          label="Before (ISO timestamp)"
+          optional
+          emptyAsUndefined
+        />
+        <SubmitButton>Apply filters</SubmitButton>
+      </form>
+      <div className="flex flex-wrap gap-3">
+        <Button variant="outline" onClick={query.refetch}>
+          Refresh activity
         </Button>
-        {filtered ? (
-          <Button variant="ghost" onClick={clear}>
-            Clear
-          </Button>
-        ) : null}
+        <Button
+          variant="outline"
+          disabled={exportOrganization.pending || exportInstance.pending}
+          onClick={async () => {
+            const exportQuery = { ...filters, cursor: exportStarted ? exportCursor : undefined };
+            const response = organizationId
+              ? await exportOrganization.run({ params: { organizationId }, query: exportQuery })
+              : await exportInstance.run({ query: exportQuery });
+            if (!response) return;
+            const file = URL.createObjectURL(
+              new Blob([response.value.content], { type: response.value.contentType }),
+            );
+            const link = document.createElement("a");
+            link.href = file;
+            link.download = response.value.filename;
+            link.click();
+            window.setTimeout(() => URL.revokeObjectURL(file), 1000);
+            setExportStarted(true);
+            setExportCursor(response.value.nextCursor ?? undefined);
+          }}
+        >
+          {exportStarted && exportCursor ? "Export next CSV page" : "Export CSV"}
+        </Button>
       </div>
-      {rows.length ? (
-        <>
-          <TableCard>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-30">Time</TableHead>
-                  <TableHead>Actor</TableHead>
-                  <TableHead>Action</TableHead>
-                  <TableHead className="max-md:hidden">Target</TableHead>
-                  <TableHead className="max-lg:hidden">Details</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rows.map((event) => (
-                  <TableRow
-                    key={`${event.time}-${event.action}`}
-                    data-state={open === event ? "selected" : undefined}
-                    className="cursor-pointer"
-                    onClick={() => setOpen(event)}
-                  >
-                    <TableCell className="font-mono text-mono-sm text-fg-secondary">
-                      {event.time}
-                    </TableCell>
-                    <TableCell>
-                      <Actor name={event.actor} />
-                    </TableCell>
-                    <TableCell>
-                      <button
-                        type="button"
-                        className="rounded-sm outline-none focus-visible:ring-3 focus-visible:ring-focus-ring"
-                        onClick={() => setOpen(event)}
-                      >
-                        <InlineCode>{event.action}</InlineCode>
-                      </button>
-                    </TableCell>
-                    <TableCell className="text-foreground max-md:hidden">{event.target}</TableCell>
-                    <TableCell className="text-fg-secondary max-lg:hidden">
-                      {event.detail}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableCard>
-          <div className="flex items-center gap-2">
-            <span className="flex-1 text-caption text-fg-tertiary">
-              Showing 1–{rows.length} of {filtered ? rows.length : total.toLocaleString("en-US")}{" "}
-              events
-            </span>
-            <Button variant="outline" size="sm" disabled>
-              <ChevronLeftIcon data-icon="inline-start" />
-              Previous
-            </Button>
-            <Button variant="outline" size="sm" disabled={filtered} onClick={feedback.notConnected}>
-              Next
-              <ChevronRightIcon data-icon="inline-end" />
-            </Button>
-          </div>
-        </>
-      ) : (
-        <EmptyState
-          bordered
-          art={<FiltersTooNarrowIllustration />}
-          title="No events match these filters"
-          description={
-            actor !== ANY
-              ? `${actor} made no ${type === ANY ? "" : `${type} `}changes in this date range. Try a wider date range or another person.`
-              : "Try a wider date range or fewer filters."
-          }
-          actions={
-            <Button variant="outline" onClick={clear}>
-              Clear filters
-            </Button>
-          }
-        />
-      )}
-      {open ? <EventSheet event={open} onClose={() => setOpen(undefined)} /> : null}
-    </>
-  );
-}
-
-function FilterSelect({
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  options: readonly { value: string; label: string }[];
-}) {
-  return (
-    <Select items={options} value={value} onValueChange={(next) => onChange(String(next))}>
-      <SelectTrigger aria-label={label} className="w-40">
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        {options.map((option) => (
-          <SelectItem key={option.value} value={option.value}>
-            {option.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  );
-}
-
-function Actor({ name }: { name: string }) {
-  if (name === "System") {
-    return (
-      <span className="flex items-center gap-2 text-sm font-medium text-foreground">
-        <span className="flex size-6 items-center justify-center rounded-full bg-surface-3">
-          <ServerIcon className="size-3 text-icon-secondary" />
-        </span>
-        System
-      </span>
-    );
-  }
-  return (
-    <span className="flex items-center gap-2 text-sm font-medium text-foreground">
-      <PersonAvatar name={name} size="sm" />
-      {name}
-    </span>
-  );
-}
-
-/** One event: who, what, from where, and the change itself. */
-function EventSheet({ event, onClose }: { event: ActivityEvent; onClose: () => void }) {
-  // Only member.role_changed has full sample details; other events show what the row has.
-  const full = event.action === eventDetail.action;
-  return (
-    <FormSheet
-      open
-      onOpenChange={onClose}
-      media={<IconTile icon={UsersIcon} />}
-      title={event.action}
-      description={full ? eventDetail.at : event.time}
-      footer={
-        <>
-          <Button variant="outline" onClick={() => feedback.copied("Event")}>
-            <CopyIcon data-icon="inline-start" />
-            Copy as JSON
-          </Button>
-          <Button variant="ghost" onClick={feedback.notConnected}>
-            View {event.target.split(" ")[0]}’s activity
-          </Button>
-        </>
-      }
-    >
-      <DetailList
-        labelWidth="w-30"
-        items={
-          full
-            ? [
-                {
-                  label: "Actor",
-                  value: (
-                    <Person
-                      name={eventDetail.actor.name}
-                      detail={eventDetail.actor.detail}
-                      size="sm"
-                    />
-                  ),
-                },
-                {
-                  label: "Target",
-                  value: (
-                    <Person
-                      name={eventDetail.target.name}
-                      detail={eventDetail.target.detail}
-                      size="sm"
-                    />
-                  ),
-                },
-                { label: "Organization", value: eventDetail.organization },
-                { label: "Signed in with", value: eventDetail.session },
-                { label: "IP address", value: eventDetail.ip, mono: true },
-                { label: "Request ID", value: eventDetail.requestId, mono: true },
-              ]
-            : [
-                { label: "Actor", value: event.actor },
-                { label: "Target", value: event.target },
-                { label: "Details", value: event.detail },
-              ]
-        }
-      />
-      {full ? (
-        <div className="flex flex-col gap-2">
-          <h3 className="text-sm font-medium text-foreground">Change</h3>
-          <div className="overflow-hidden rounded-lg border font-mono text-mono-sm">
-            <div className="flex gap-2.5 bg-danger-bg px-3 py-2">
-              <span className="text-danger-fg" aria-label="Before">
-                −
-              </span>
-              <span className="text-foreground">{eventDetail.before}</span>
-            </div>
-            <div className="flex gap-2.5 bg-success-bg px-3 py-2">
-              <span className="text-success-fg" aria-label="After">
-                +
-              </span>
-              <span className="text-foreground">{eventDetail.after}</span>
-            </div>
-          </div>
-        </div>
+      {exportStarted && exportCursor ? (
+        <Notice>
+          More events are available. Download the next CSV page to continue this export.
+        </Notice>
       ) : null}
-    </FormSheet>
+      <QueryState query={query}>
+        <TableCard>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>When</TableHead>
+                <TableHead>Event</TableHead>
+                <TableHead>Actor</TableHead>
+                <TableHead>Target</TableHead>
+                <TableHead>Details</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {query.data?.events.map((event) => (
+                <TableRow key={event.id}>
+                  <TableCell>{formatDate(event.occurredAt)}</TableCell>
+                  <TableCell>{event.eventType}</TableCell>
+                  <TableCell className="max-w-45 truncate">
+                    {event.actorUserId ?? "System"}
+                  </TableCell>
+                  <TableCell className="max-w-45 truncate">
+                    {event.targetType} · {event.targetId}
+                  </TableCell>
+                  <TableCell>
+                    <Button size="sm" variant="ghost" onClick={() => setSelected(event)}>
+                      View details
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableCard>
+        {query.data?.events.length === 0 ? (
+          <p className="text-sm text-fg-secondary">No activity matches these filters.</p>
+        ) : null}
+      </QueryState>
+      <Pagination cursor={cursor} nextCursor={query.data?.nextCursor} onChange={setCursor} />
+      {selected ? (
+        <FormSheet
+          open
+          onOpenChange={(open) => {
+            if (!open) setSelected(undefined);
+          }}
+          title={selected.eventType}
+          description={formatDate(selected.occurredAt)}
+          footer={<Button onClick={() => setSelected(undefined)}>Close</Button>}
+        >
+          <dl className="flex flex-col gap-3 text-sm">
+            <dt>Event ID</dt>
+            <dd className="break-all">{selected.id}</dd>
+            <dt>Actor</dt>
+            <dd className="break-all">{selected.actorUserId ?? "System"}</dd>
+            <dt>Target</dt>
+            <dd className="break-all">
+              {selected.targetType} · {selected.targetId}
+            </dd>
+          </dl>
+          <pre className="whitespace-pre-wrap break-all text-xs">
+            {JSON.stringify(selected.metadata, null, 2)}
+          </pre>
+        </FormSheet>
+      ) : null}
+    </div>
   );
 }

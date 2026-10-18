@@ -78,6 +78,15 @@ export async function authenticateAtKeycloak(
   dashboard: string,
 ) {
   await page.goto(authorizationUrl);
+  await completeKeycloakAuthentication(page, username, password, dashboard);
+}
+
+export async function completeKeycloakAuthentication(
+  page: Page,
+  username: string,
+  password: string,
+  dashboard: string,
+) {
   await expect
     .poll(
       async () =>

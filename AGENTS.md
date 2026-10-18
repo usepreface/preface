@@ -74,6 +74,8 @@ Git history as a side effect of a refactor.
   Templates are supplied separately; workflows enqueue inside their transaction.
 - [`apps/server`](apps/server/README.md) — Node runtime composition, HTTP handlers,
   request policy, startup preparation, health/reference routes and operator CLI.
+- [`apps/dashboard`](apps/dashboard/README.md) — authenticated browser workflows,
+  typed API atoms, router-owned registry, forms and organization/instance administration.
 - [`apps/landing`](apps/landing/README.md) — public marketing page and prerendering.
   Page sections/components stay beside their route; shared site layout and motion
   hooks live at the app boundary. Development defaults to port 4000.
@@ -363,8 +365,8 @@ important behavior over a large matrix of obvious assertions.
   locks and concurrency. Run PostgreSQL files sequentially and use the explicit
   test configuration; never fall back to a developer or deployment database.
 - Root-owned cross-package auth journeys live in `tests/e2e/`; infrastructure fixtures live in
-  `tests/e2e/fixtures/` and the PostgreSQL runner in `tooling/testing/`. Use `pnpm test:postgres`
-  and `pnpm test:auth` with local Docker. Keep generated TLS, browser state and reports ignored.
+  `tests/e2e/fixtures/` and the PostgreSQL runner in `tooling/testing/`. Use `pnpm test:postgres`,
+  `pnpm test:auth` and `pnpm test:dashboard` with local Docker. Keep generated TLS, browser state and reports ignored.
   Use Mailpit for SMTP delivery and a fresh database/realm/context per browser test; never live inboxes.
 - Keep compile-only API assertions in the test typecheck lane. Do not remove
   distinct authorization, concurrency, or recovery regressions solely to reach

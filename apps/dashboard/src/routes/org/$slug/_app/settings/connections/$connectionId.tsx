@@ -1,164 +1,155 @@
-import * as React from "react";
+import { useState } from "react";
 
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
-import { Badge } from "@usepreface/ui/components/badge";
-import { Button, buttonVariants } from "@usepreface/ui/components/button";
-import { ArrowRightIcon, LockKeyIcon, PlayIcon, XCircleIcon } from "@usepreface/ui/icons";
-import { LogoTile } from "@usepreface/ui/preface/data-display";
+import { Schema } from "effect";
 
-import { IconTile } from "#/components/data-display/icon-tile";
-import { StatusBadge } from "#/components/data-display/status-badge";
-import { StepProgress } from "#/components/data-display/step-progress";
+import { IdentityConnectionId } from "@usepreface/protocol";
+import type { PublicOrganizationIdentityConnection } from "@usepreface/protocol/dto";
+import { Button } from "@usepreface/ui/components/button";
+import { TrashIcon } from "@usepreface/ui/icons";
+
+import { Permission } from "#/components/api/permission";
+import { QueryState } from "#/components/api/query-state";
+import { ReauthenticationLink } from "#/components/auth/reauthentication-link";
 import { ConfirmDialog } from "#/components/feedback/confirm-dialog";
-import { PageTitle } from "#/components/shell/page";
-import { SectionCard } from "#/components/shell/section-card";
-import { feedback } from "#/lib/feedback";
-import { connectionById, connectionDetails } from "#/lib/placeholder";
-import { previewSearch, previewState } from "#/lib/preview";
-import { connectionStatus } from "#/lib/status";
+import { Notice } from "#/components/feedback/notice";
+import { PageTitle, PageSection } from "#/components/shell/page";
+import {
+  useOrganizationIdentityConnectionsTest,
+  useOrganizationIdentityConnectionsActivate,
+  useOrganizationIdentityConnectionsDisable,
+  useOrganizationIdentityConnectionsRefreshMetadata,
+} from "#/hooks/identity";
+import { useOrganization, useConnection } from "#/hooks/organizations";
+import { formatDate } from "#/lib/dates";
 
 import { SettingsFrame } from "../-components/settings-frame";
-import { LastTest } from "./-components/last-test";
+import { ConnectionDomains } from "./-components/connection-domains";
+import { ConnectionHealth } from "./-components/connection-health";
 import { OidcSettings } from "./-components/oidc-settings";
-import { SamlBody } from "./-components/saml-connection";
-import { TestResultSheet } from "./-components/test-result-sheet";
+import { SamlKeys } from "./-components/saml-keys";
+import { SamlSettings } from "./-components/saml-settings";
+
 export const Route = createFileRoute("/org/$slug/_app/settings/connections/$connectionId")({
-  head: () => ({ meta: [{ title: "SSO connection · Settings · Preface" }] }),
-  validateSearch: previewSearch,
-  loader: ({ params }) => {
-    const connection = connectionById(params.connectionId);
-    if (!connection) throw notFound();
-    return connection;
-  },
-  component: ConnectionDetail,
+  component: () => (
+    <Permission owner>
+      <Connection />
+    </Permission>
+  ),
 });
-
-const steps = ["Configure", "Test login", "Activate", "Approve in login policy"];
-
-const stepFor = { draft: 1, tested: 3, active: 4, disabled: 1 } as const;
-
-/*
- * One connection, from configuring to approval. `?state=test-passed` and `?state=test-failed`
- * open a test result; on a SAML connection `?state=rotate` opens Add certificate.
- */
-function ConnectionDetail() {
-  const { slug } = Route.useParams();
-  const connection = Route.useLoaderData();
-  const state = previewState(["test-passed", "test-failed", "rotate"], Route.useSearch().state);
-  const [test, setTest] = React.useState<"passed" | "failed" | null>(
-    state === "test-passed" ? "passed" : state === "test-failed" ? "failed" : null,
-  );
-  const [disabling, setDisabling] = React.useState(false);
-  const saml = connection.protocol === "saml";
-  const step =
-    connection.status === "active" && connection.approved ? 5 : stepFor[connection.status];
-
+function Connection() {
+  const { organization } = useOrganization();
+  const id = Schema.decodeUnknownSync(IdentityConnectionId)(Route.useParams().connectionId);
+  const query = useConnection(organization.id, id);
   return (
     <SettingsFrame
       crumbs={[
         {
           label: "SSO connections",
-          link: { to: "/org/$slug/settings/connections", params: { slug } },
+          link: { to: "/org/$slug/settings/connections", params: { slug: organization.slug } },
         },
-        { label: connection.name },
+        { label: query.data?.name ?? "Connection" },
       ]}
-      width="full"
-      actions={
-        <>
+    >
+      <QueryState query={query}>
+        {query.data ? <ConnectionContent connection={query.data} /> : null}
+      </QueryState>
+    </SettingsFrame>
+  );
+}
+function ConnectionContent({
+  connection,
+}: {
+  connection: typeof PublicOrganizationIdentityConnection.Type;
+}) {
+  const { organization } = useOrganization();
+  const test = useOrganizationIdentityConnectionsTest();
+  const activate = useOrganizationIdentityConnectionsActivate();
+  const disable = useOrganizationIdentityConnectionsDisable();
+  const refresh = useOrganizationIdentityConnectionsRefreshMetadata();
+  const [disabling, setDisabling] = useState(false);
+  const params = { organizationId: organization.id, connectionId: connection.id };
+  const payload = { expectedRevision: connection.revision };
+  return (
+    <>
+      <PageTitle
+        title={connection.name}
+        description={`${connection.provider.toUpperCase()} · ${connection.status} · revision ${connection.revision}`}
+      />
+      <Notice action={<ReauthenticationLink />}>
+        Connection changes require a recent email confirmation. Test the saved revision before
+        activation.
+      </Notice>
+      <div className="flex flex-wrap gap-3">
+        <Button
+          disabled={test.pending}
+          onClick={async () => {
+            const response = await test.run({ params, payload });
+            if (response) window.location.assign(response.value.authorizationUrl);
+          }}
+        >
+          Test login
+        </Button>
+        <Button
+          variant="outline"
+          disabled={
+            activate.pending ||
+            connection.testedRevision !== connection.revision ||
+            connection.status === "active"
+          }
+          onClick={() => void activate.run({ params, payload })}
+        >
+          Activate tested revision
+        </Button>
+        <Button
+          variant="outline"
+          disabled={connection.status === "disabled"}
+          onClick={() => setDisabling(true)}
+        >
+          Disable
+        </Button>
+        {connection.provider === "oidc" ? (
           <Button
             variant="outline"
-            onClick={() => setTest(connection.status === "draft" ? "failed" : "passed")}
+            disabled={refresh.pending}
+            onClick={() => void refresh.run({ params, payload })}
           >
-            <PlayIcon data-icon="inline-start" />
-            Test login
+            Refresh discovery metadata
           </Button>
-          {connection.status === "tested" ? (
-            <Button onClick={feedback.notConnected}>Activate</Button>
-          ) : null}
-        </>
-      }
-    >
-      <PageTitle
-        leading={
-          connection.brand ? (
-            <LogoTile brand={connection.brand} size={44} />
-          ) : (
-            <IconTile icon={LockKeyIcon} size={44} />
-          )
-        }
-        title={connection.name}
-        badges={
-          <>
-            <Badge variant="outline">{connection.protocol.toUpperCase()}</Badge>
-            <StatusBadge status={connectionStatus[connection.status]} />
-          </>
-        }
-        description={connectionDetails.createdBy[connection.protocol]}
-      />
-      <StepProgress steps={steps} current={step} />
-      {saml ? (
-        <SamlBody connection={connection} rotating={state === "rotate"} />
+        ) : null}
+      </div>
+      <p className="text-sm text-fg-secondary">
+        Last tested: {formatDate(connection.testedAt)}. After activation, approve the connection in{" "}
+        <Link to="/org/$slug/settings/authentication" params={{ slug: organization.slug }}>
+          login policy
+        </Link>
+        .
+      </p>
+      {connection.provider === "oidc" ? (
+        <OidcSettings connection={connection} />
       ) : (
-        <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_19rem]">
-          <div className="flex flex-col gap-5">
-            <OidcSettings connection={connection} />
-          </div>
-          <div className="flex flex-col gap-5">
-            <LastTest
-              connection={connection}
-              onOpen={() => setTest(connection.status === "draft" ? "failed" : "passed")}
-            />
-            <SectionCard title="Next">
-              <p className="text-13 text-fg-secondary">
-                {connection.status === "active"
-                  ? "Approve this connection in the login policy so members can use it."
-                  : "Activate to make this connection available, then approve it in the login policy."}
-              </p>
-              <Link
-                to="/org/$slug/settings/authentication"
-                params={{ slug }}
-                className={buttonVariants({
-                  variant: "ghost",
-                  size: "sm",
-                  className: "self-start",
-                })}
-              >
-                Open login policy
-                <ArrowRightIcon data-icon="inline-end" />
-              </Link>
-            </SectionCard>
-            <SectionCard title="Disable connection" danger>
-              <p className="text-13 text-fg-secondary">
-                Stops sign-ins right away. Configuration is kept.
-              </p>
-              <Button
-                variant="destructive-outline"
-                size="sm"
-                className="self-start"
-                onClick={() => setDisabling(true)}
-              >
-                Disable
-              </Button>
-            </SectionCard>
-          </div>
-        </div>
+        <>
+          <SamlSettings connection={connection} />
+          <SamlKeys connection={connection} />
+        </>
       )}
-      <TestResultSheet
-        connection={connection}
-        passed={test !== "failed"}
-        open={test !== null}
-        onOpenChange={() => setTest(null)}
-      />
+      <PageSection title="Health">
+        <ConnectionHealth connectionId={connection.id} />
+      </PageSection>
+      <ConnectionDomains connection={connection} />
       <ConfirmDialog
         open={disabling}
         onOpenChange={setDisabling}
-        icon={XCircleIcon}
-        title={`Disable ${connection.name}?`}
-        description="People signing in with it are stopped right away. Its configuration is kept, so you can turn it back on."
+        pending={disable.pending}
+        icon={TrashIcon}
+        title="Disable connection?"
+        description="Authentication evidence from this connection becomes unusable."
         confirmLabel="Disable connection"
-        onConfirm={feedback.notConnected}
+        onConfirm={async () => {
+          if (await disable.run({ params, payload })) setDisabling(false);
+        }}
       />
-    </SettingsFrame>
+    </>
   );
 }

@@ -27,3 +27,7 @@ export const reauthenticationIntervals = [
   { value: 86400, label: "Every day" },
   { value: 604800, label: "Every week" },
 ] as const;
+
+export const updateLoginPolicyForm = toFormSchema(
+  UpdateOrganizationAuthPolicyInput.mapFields(Struct.omit(["expectedRevision"])),
+);

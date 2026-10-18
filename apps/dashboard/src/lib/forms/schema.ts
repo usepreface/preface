@@ -1,6 +1,8 @@
 import { Schema, SchemaIssue } from "effect";
 import type { StandardSchemaV1 } from "effect/StandardSchema";
 
+import { requestFields } from "#/lib/request-fields";
+
 /*
  * Turns a protocol Effect schema into a Standard Schema for react-hook-form. Effect's default
  * messages describe the check ("Expected a value with a length of at least 1"); forms need short
@@ -88,7 +90,7 @@ export function toFormSchema<S extends Schema.Top & Schema.ConstraintDecoder<unk
       version: 1,
       vendor: "preface",
       validate: (value) => {
-        const result = standard["~standard"].validate(value);
+        const result = standard["~standard"].validate(requestFields(value));
         return result instanceof Promise ? result.then(finish) : finish(result);
       },
     },

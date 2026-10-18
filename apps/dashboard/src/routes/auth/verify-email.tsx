@@ -1,87 +1,98 @@
-import * as React from "react";
+import { useState } from "react";
 
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 
-import { PrefaceMark } from "@usepreface/ui/brand";
-import { Button, buttonVariants } from "@usepreface/ui/components/button";
-import { ArrowRightIcon, MailIcon } from "@usepreface/ui/icons";
-import { LogoTile } from "@usepreface/ui/preface/data-display";
+import { Schema } from "effect";
 
-import { AuthHeading } from "#/components/auth/auth-layout";
-import { StatusPage } from "#/components/auth/status-page";
+import { AuthFlowId } from "@usepreface/protocol";
+import type { EmailSignInChallenge } from "@usepreface/protocol/dto";
+import { Button } from "@usepreface/ui/components/button";
+
+import {
+  externalAuthenticationRequestEmailMutation,
+  externalAuthenticationVerifyEmailMutation,
+  externalAuthenticationResumeMutation,
+} from "#/atoms/auth";
+import { ApiClient } from "#/atoms/client";
+import { QueryState } from "#/components/api/query-state";
+import { useResetAuthority } from "#/components/api/registry-provider";
+import { AuthHeading, AuthLayout } from "#/components/auth/auth-layout";
 import { VerifyCodeForm } from "#/components/auth/verify-code-form";
-import { DetailList } from "#/components/data-display/detail-list";
-import { feedback } from "#/lib/feedback";
-import { placeholder } from "#/lib/placeholder";
-import { previewSearch, previewState } from "#/lib/preview";
+import { toMutation } from "#/hooks/mutation";
+import { toQuery } from "#/hooks/query";
+import { safeReturnPath } from "#/lib/navigation";
+import { requestFields } from "#/lib/request-fields";
 
 export const Route = createFileRoute("/auth/verify-email")({
-  head: () => ({ meta: [{ title: `Confirm your email · ${placeholder.instance.name}` }] }),
-  validateSearch: previewSearch,
-  component: VerifyExternalEmail,
+  validateSearch: Schema.decodeUnknownSync(Schema.Struct({ flowId: AuthFlowId })),
+  component: ExternalEmail,
 });
-
-const maskedEmail = "m•••@acme.dev";
-
-/*
- * After Google or SSO, the first time an external account is linked to an invitation, the person
- * confirms the email once. `?state=code` previews the code step.
- */
-function VerifyExternalEmail() {
-  const navigate = useNavigate();
-  const [sent, setSent] = React.useState(
-    previewState(["code"], Route.useSearch().state) === "code",
-  );
-
+const useFlow = toQuery((flowId: AuthFlowId) =>
+  ApiClient.query("externalAuthentication", "status", requestFields({ params: { flowId } })),
+);
+const useRequest = toMutation(externalAuthenticationRequestEmailMutation);
+const useVerify = toMutation(externalAuthenticationVerifyEmailMutation);
+const useResume = toMutation(externalAuthenticationResumeMutation);
+function ExternalEmail() {
+  const { flowId } = Route.useSearch();
+  const flow = useFlow(flowId);
+  const request = useRequest();
+  const verify = useVerify();
+  const resume = useResume();
+  const [challenge, setChallenge] = useState<EmailSignInChallenge>();
+  const resetAuthority = useResetAuthority();
+  async function finish(redirectTo: string) {
+    resetAuthority();
+    // Completion destinations are trusted backend output, still constrained to this dashboard.
+    window.location.assign(safeReturnPath(redirectTo));
+  }
   return (
-    <StatusPage topRight={placeholder.instance.name}>
-      <div className="flex items-center gap-2.5" aria-hidden="true">
-        <LogoTile brand="google" size={44} />
-        <ArrowRightIcon className="size-4 text-icon-secondary" />
-        <LogoTile size={44}>
-          <PrefaceMark size={24} />
-        </LogoTile>
-      </div>
-      <AuthHeading title="Confirm your email" align="center">
-        You signed in with Google as{" "}
-        <span className="font-medium text-foreground">{maskedEmail}</span>. Confirm it once so
-        Preface can link Google to your Acme invitation.
+    <AuthLayout>
+      <AuthHeading title="Verify your email">
+        Confirm mailbox ownership to finish linking your identity.
       </AuthHeading>
-      <DetailList
-        className="w-full rounded-xl border px-3.5"
-        labelWidth="w-24"
-        items={[
-          { label: "Provider", value: "Google" },
-          { label: "Account", value: "Marco Rossi" },
-          { label: "Email", value: maskedEmail },
-        ]}
-      />
-      {sent ? (
-        <div className="w-full text-left">
-          <VerifyCodeForm
-            label="Code from the email"
-            submitLabel="Continue"
-            resendIn="0:51"
-            onVerified={() =>
-              navigate({ to: "/org/$slug", params: { slug: placeholder.organization.slug } })
-            }
-            onResend={() => feedback.sent("Code sent", `Check ${maskedEmail}.`)}
-          />
-        </div>
-      ) : (
-        <div className="flex w-full flex-col gap-2">
-          <Button size="lg" onClick={() => setSent(true)}>
-            <MailIcon data-icon="inline-start" />
-            Send code to {maskedEmail}
+      <QueryState query={flow}>
+        <p className="text-sm text-fg-secondary">{flow.data?.maskedEmail}</p>
+        {flow.data?.nextAction === "continue" ? (
+          <Button
+            disabled={resume.pending}
+            onClick={async () => {
+              const response = await resume.run({ params: { flowId }, payload: {} });
+              if (response) await finish(response.value.redirectTo);
+            }}
+          >
+            Finish sign-in
           </Button>
-          <Link to="/sign-in" className={buttonVariants({ variant: "ghost" })}>
-            Use a different Google account
-          </Link>
-        </div>
-      )}
-      <p className="text-caption text-fg-tertiary">
-        We only ask once. Next time Google signs you straight in.
-      </p>
-    </StatusPage>
+        ) : challenge ? (
+          <VerifyCodeForm
+            expiresAt={challenge?.expiresAt}
+            key={challenge?.challengeId}
+            submitLabel="Verify and continue"
+            pending={verify.pending}
+            onVerified={async (code) => {
+              const response = await verify.run({
+                params: { flowId },
+                payload: { challengeId: challenge.challengeId, code },
+              });
+              if (response) await finish(response.value.redirectTo);
+            }}
+            onResend={async () => {
+              const response = await request.run({ params: { flowId }, payload: {} });
+              if (response) setChallenge(response.value);
+            }}
+          />
+        ) : (
+          <Button
+            disabled={request.pending}
+            onClick={async () => {
+              const response = await request.run({ params: { flowId }, payload: {} });
+              if (response) setChallenge(response.value);
+            }}
+          >
+            Email me a code
+          </Button>
+        )}
+      </QueryState>
+    </AuthLayout>
   );
 }

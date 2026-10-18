@@ -9,6 +9,7 @@ import {
 
 import { AuthApi } from "../fixtures/api.js";
 import { approveConnection, configureOidc, inviteMember } from "../fixtures/connections.js";
+import { ageInvitationDelivery } from "../fixtures/invitation-delivery.js";
 import {
   authenticateAtKeycloak,
   createOrganization,
@@ -38,15 +39,7 @@ test("untrusted external email requires a browser-bound fresh code before admiss
     "contractor@outside.example.test",
   );
   // Model an invitation read days later: the invitation is valid, its delivery is no longer fresh proof.
-  const aged = await infrastructure.postgres.exec([
-    "psql",
-    "-U",
-    "preface_test",
-    "-d",
-    database,
-    "-c",
-    `UPDATE jobs.email SET sent_at = now() - interval '11 minutes' WHERE id = (SELECT email_job_id FROM organization.invitation WHERE id = '${invitation.invitationId}')`,
-  ]);
+  const aged = await ageInvitationDelivery(infrastructure, database, invitation.invitationId);
   expect(aged.exitCode, aged.output).toBe(0);
   const memberContext = await browser.newContext({ ignoreHTTPSErrors: true });
   const strangerContext = await browser.newContext({ ignoreHTTPSErrors: true });

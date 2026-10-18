@@ -14,6 +14,7 @@ import { BuildingIcon, LogoutIcon, ServerIcon, ShieldIcon, UserIcon } from "@use
 import { cn } from "@usepreface/ui/lib/utils";
 
 import { ThemeSwitch } from "#/components/theme-switch";
+import { useSignOut } from "#/hooks/session";
 import { initialsOf, toneOf } from "#/lib/identity";
 
 export type Person = { name: string; email: string };
@@ -26,6 +27,7 @@ export function AccountMenu({
   person: Person;
   instanceOwner?: boolean;
 }) {
+  const signOut = useSignOut();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -70,7 +72,7 @@ export function AccountMenu({
           <ThemeSwitch />
         </div>
         <DropdownMenuSeparator />
-        <DropdownMenuItem render={<Link to="/sign-in" />}>
+        <DropdownMenuItem disabled={signOut.pending} onClick={() => void signOut.run()}>
           <LogoutIcon />
           Sign out
         </DropdownMenuItem>

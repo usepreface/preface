@@ -9,6 +9,7 @@ import { createRealm, type Realm } from "./keycloak.js";
 import { Mailbox } from "./mailbox.js";
 
 interface AuthFixtures {
+  dashboardUI: boolean;
   backend: Backend;
   api: AuthApi;
   realm: Realm;
@@ -16,6 +17,7 @@ interface AuthFixtures {
   database: string;
 }
 export const test = base.extend<AuthFixtures, { infrastructure: Infrastructure }>({
+  dashboardUI: [false, { option: true }],
   infrastructure: [
     // Playwright requires a destructured fixture parameter, even without dependencies.
     // oxlint-disable-next-line no-empty-pattern
@@ -56,8 +58,8 @@ export const test = base.extend<AuthFixtures, { infrastructure: Infrastructure }
       expect(dropped.exitCode, dropped.output).toBe(0);
     }
   },
-  backend: async ({ infrastructure, database }, use, testInfo) => {
-    const backend = await startBackend(infrastructure, database);
+  backend: async ({ infrastructure, database, dashboardUI }, use, testInfo) => {
+    const backend = await startBackend(infrastructure, database, dashboardUI);
     try {
       await use(backend);
     } finally {

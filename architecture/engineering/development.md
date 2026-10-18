@@ -88,6 +88,13 @@ CI; they contain only synthetic fixture identities but may include usable test-s
 Do not upload them to public issues without inspection. Root test tooling has a dedicated TypeScript
 lane included in `pnpm check`.
 
+`pnpm test:dashboard` builds and serves the real dashboard at the fixture HTTPS origin,
+proxies its `/api` requests to the same built backend, and uses the shared disposable
+infrastructure with fresh databases/contexts. Its Vite test build disables local environment
+files. This separately covers rendered forms, atom loader/hook reuse, successful invalidation,
+OIDC/SAML configuration, invitation admission and operational-error versus session-revocation
+behavior. See the [dashboard boundary](../interfaces/dashboard.md).
+
 ## Extending the foundation
 
 Add the contracts required by a workflow, then persistence, application coordination,

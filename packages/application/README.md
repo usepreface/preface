@@ -111,7 +111,7 @@ Success returns `{ actor, sessionToken }` for cookie delivery only.
 
 `EmailSignInError` codes are `INVALID_INPUT`, `INVALID_PROOF`, `INSTANCE_NOT_READY` and
 `ALREADY_AUTHENTICATED` (the server rejects sign-in from a valid authenticated browser).
-Storage and crypto failures remain operational failures. The future frontend must consume the
+Storage and crypto failures remain operational failures. The dashboard consumes the
 fragment at `/auth/email/verify`; the backend does not render that page.
 
 ## Sessions
@@ -293,7 +293,7 @@ and session lifecycle. The explicit PostgreSQL lane uses disposable test configu
 and sequential files; never target a deployment database. Built tests exercise packaged
 migrations and the verification/session lifecycle.
 
-Backend-connected onboarding/sign-in UI, image uploads, global account recovery
+The dashboard connects these workflows. Image uploads and global account recovery
 are not implemented. See the [instance setup architecture](../../architecture/identity-access/instance-setup.md)
 and [server README](../../apps/server/README.md) for current transport and deployment.
 

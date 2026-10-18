@@ -32,17 +32,16 @@ Replacement invalidates the previous proof and refuses an already completed inst
 Treat the printed link as a credential. Its proof is in the URL fragment, outside HTTP request
 paths and queries. Routine logs never contain request bodies, cookies or setup credentials.
 
-**This phase implements the backend only.** The printed `/setup#token=…` URL reserves the future
-onboarding page; this server does not render `/setup` or a dashboard. Until that UI exists, use
-the same-origin Scalar reference at `/api/docs`. Inspect the fragment's proof, request
-verification with instance name, owner name and email, then submit the emailed eight-digit
-code with the returned challenge ID. Only verified completion creates the owner/session cookie.
-It creates no organization. Email code/link sign-in and session management are available
-through the API, together with organization creation and administration.
-Invitations provide verified email admission. Direct teams, scoped roles and profile editing are available. Backend-connected UI and image uploads remain pending. Google identity, organization OIDC, required SSO and owner recovery are available through the API.
-Invitation links reserve `/invitations/accept` for the future client; codes work on internal hosts.
-Magic links reserve `/auth/email/verify` for the future client. For local/internal hosts,
-enter the emailed code in the browser that requested it.
+The backend serves the API and reference, while the [dashboard](../dashboard/README.md)
+serves onboarding and administration. Run or host the dashboard separately and set
+`DASHBOARD_URL` to its exact origin. The printed `/setup#token=…` link then opens its
+instance-name/owner-name/email form, followed by code verification and organization
+creation. A returning owner can sign in later even without an organization.
+
+The backend image does not serve dashboard assets. With no dashboard configured,
+use the same-origin Scalar reference at `/api/docs` for API operations. Invitation
+and email links require the dashboard pages; codes work on internal hosts in the
+browser that requested them. Image uploads and knowledge ingestion remain unavailable.
 
 ## Develop locally
 
@@ -293,8 +292,7 @@ normal session delivery occurs only at completion. Maintenance also expires repl
 Certificates are pinned and must remain valid. Rotate the generated one-year SP signing certificate
 before expiry, update the IdP metadata and retest. Trust changes revoke flows/evidence, preserving
 required-SSO owner safeguards. [SAML architecture](../../architecture/identity-access/saml.md) documents
-IdP rollover, explicit account linking and the constrained supported profile. Dashboard UI, SLO,
-encrypted assertions and provider-driven provisioning are separate from this backend.
+IdP rollover, explicit account linking and the constrained supported profile. SLO, encrypted assertions and provider-driven provisioning are separate from this backend.
 
 ## External enrollment and frontend destinations
 
@@ -311,4 +309,4 @@ admission. Pending provider proof uses the shared encrypted flow and a separate
 and [enrollment architecture](../../architecture/identity-access/enrollment.md). An uninvited
 IdP login cannot create membership. Authentication routes are grouped under `http/routes/auth`,
 organization administration under `http/routes/organization`, and instance/profile routes under
-their owning folders. Product dashboard integration remains separate.
+their owning folders. Browser workflows are implemented in the separate [dashboard](../dashboard/README.md) app.

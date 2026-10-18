@@ -10,7 +10,11 @@ import { toFormSchema } from "#/lib/forms/schema";
  */
 export const inviteMembersForm = toFormSchema(
   CreateInvitationInput.mapFields(({ email, ...rest }) => ({
-    emails: Schema.Array(email).check(Schema.isMinLength(1), Schema.isMaxLength(20)),
+    emails: Schema.Array(email).check(
+      Schema.isMinLength(1),
+      Schema.isMaxLength(20),
+      Schema.isUnique(),
+    ),
     ...rest,
   })),
   {

@@ -67,14 +67,14 @@ bodies where applicable. Node clients must supply the Origin header explicitly.
 
 Logout resolves a cookie if present and succeeds for absent/invalid sessions. It does not promise
 successful revocation after a storage failure. Bootstrap proofs and sessions are separate authorities.
-There is no HTTP reissue endpoint, bearer-token API or dashboard in this slice.
+There is no HTTP reissue endpoint or bearer-token API. Dashboard assets are served separately.
 
 Email request accepts `{ email }`; resend accepts `{ challengeId }` with the temporary
 `preface_sign_in` cookie. Verification accepts `{ challengeId, method: "code", code }`
 or `{ challengeId, method: "magic_link", token }` with that same cookie. The response
 contains only challenge identity/expiry. Unknown or unavailable recipients receive the
 same public shape and no email; this is not signup. Existing authenticated browsers
-cannot start or complete ordinary sign-in. The link fragment belongs to the future UI.
+cannot start or complete ordinary sign-in. The dashboard consumes the link fragment without exposing it to HTTP paths.
 
 Session listing accepts optional `cursor` and `limit` (1–100, default 25) and returns
 `{ sessions, nextCursor }`. Each session exposes `id`, `createdAt`, `lastSeenAt`,

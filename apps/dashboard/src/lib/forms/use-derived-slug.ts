@@ -13,14 +13,20 @@ export function useDerivedSlug<T extends FieldValues, O>(
   slug: FieldPath<T>,
 ) {
   const value = form.watch(name) as unknown;
+  const {
+    getValues,
+    getFieldState,
+    setValue,
+    formState: { isSubmitted },
+  } = form;
   const loaded = React.useRef<boolean | null>(null);
 
   React.useEffect(() => {
-    loaded.current ??= Boolean(form.getValues(slug));
-    if (loaded.current || form.getFieldState(slug).isDirty) return;
+    loaded.current ??= Boolean(getValues(slug));
+    if (loaded.current || getFieldState(slug).isDirty) return;
     const next = slugify(typeof value === "string" ? value : "");
-    form.setValue(slug, next as PathValue<T, typeof slug>, {
-      shouldValidate: form.formState.isSubmitted,
+    setValue(slug, next as PathValue<T, typeof slug>, {
+      shouldValidate: isSubmitted,
     });
-  }, [form, slug, value]);
+  }, [getValues, getFieldState, setValue, isSubmitted, slug, value]);
 }

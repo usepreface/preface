@@ -1,49 +1,27 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { Button } from "@usepreface/ui/components/button";
-import { DownloadIcon } from "@usepreface/ui/icons";
-
 import { ActivityLog } from "#/components/activity/activity-log";
+import { Permission } from "#/components/api/permission";
 import { PageTitle } from "#/components/shell/page";
-import { feedback } from "#/lib/feedback";
-import { organizationActivity, organizationBySlug } from "#/lib/placeholder";
-import { previewSearch, previewState } from "#/lib/preview";
+import { useOrganization } from "#/hooks/organizations";
 
 import { SettingsFrame } from "./-components/settings-frame";
-
 export const Route = createFileRoute("/org/$slug/_app/settings/audit")({
-  head: () => ({ meta: [{ title: "Activity · Settings · Preface" }] }),
-  validateSearch: previewSearch,
-  component: Activity,
+  component: () => (
+    <Permission permission="audit.read">
+      <Activity />
+    </Permission>
+  ),
 });
-
-/** `?state=detail` opens an event; `?state=no-results` shows filters that match nothing. */
 function Activity() {
-  const { slug } = Route.useParams();
-  const state = previewState(["detail", "no-results"], Route.useSearch().state);
-  const organization = organizationBySlug(slug);
-
+  const { organization } = useOrganization();
   return (
-    <SettingsFrame
-      crumbs={[{ label: "Activity" }]}
-      width="full"
-      actions={
-        <Button variant="outline" onClick={feedback.notConnected}>
-          <DownloadIcon data-icon="inline-start" />
-          Export CSV
-        </Button>
-      }
-    >
+    <SettingsFrame crumbs={[{ label: "Activity" }]} width="full">
       <PageTitle
         title="Activity"
-        description={`Every sign-in, permission and policy change in ${organization.name}. Kept for 400 days.`}
+        description="Organization administration, membership and authentication events."
       />
-      <ActivityLog
-        events={organizationActivity}
-        total={1284}
-        narrow={state === "no-results"}
-        selected={state === "detail" ? "member.role_changed" : undefined}
-      />
+      <ActivityLog organizationId={organization.id} />
     </SettingsFrame>
   );
 }

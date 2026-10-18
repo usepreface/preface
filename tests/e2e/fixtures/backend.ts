@@ -6,6 +6,7 @@ import { createServer, type Server } from "node:https";
 import { createServer as createReservation } from "node:net";
 import { setTimeout } from "node:timers/promises";
 
+import { dashboardHandler } from "./dashboard.js";
 import type { Infrastructure } from "./infrastructure.js";
 
 async function listen(server: Server) {
@@ -24,7 +25,7 @@ async function closeServer(server: Server) {
   await closed;
 }
 
-export async function startBackend(infra: Infrastructure, database: string) {
+export async function startBackend(infra: Infrastructure, database: string, dashboardUI = false) {
   const resources = new AsyncDisposableStack();
   try {
     const reservation = createReservation();
@@ -58,12 +59,17 @@ export async function startBackend(infra: Infrastructure, database: string) {
     const origin = await listen(api);
     resources.defer(() => closeServer(api));
     // Test destination only. Browser fetches use the real API, CORS and HttpOnly cookies.
-    const frontend = createServer(infra.tls, (_incoming, outgoing) => {
-      outgoing.writeHead(200, { "content-type": "text/html", "cache-control": "no-store" });
-      outgoing.end(
-        "<!doctype html><title>Preface auth fixture</title><h1>Authentication destination</h1>",
-      );
-    });
+    const frontend = createServer(
+      infra.tls,
+      dashboardUI
+        ? dashboardHandler(port)
+        : (_incoming, outgoing) => {
+            outgoing.writeHead(200, { "content-type": "text/html", "cache-control": "no-store" });
+            outgoing.end(
+              "<!doctype html><title>Preface auth fixture</title><h1>Authentication destination</h1>",
+            );
+          },
+    );
     const dashboard = await listen(frontend);
     resources.defer(() => closeServer(frontend));
     const child = spawn(process.execPath, ["dist/main.js", "serve", "--log-level", "info"], {

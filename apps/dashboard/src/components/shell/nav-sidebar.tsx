@@ -49,7 +49,13 @@ function NavRow({ item, onNavigate }: { item: NavItem; onNavigate?: () => void }
     );
   }
   return (
-    <button type="button" className={itemClass} data-status={item.active ? "active" : undefined}>
+    <button
+      disabled
+      title="Not available yet"
+      type="button"
+      className={cn(itemClass, "cursor-not-allowed opacity-50")}
+      data-status={item.active ? "active" : undefined}
+    >
       {content}
     </button>
   );

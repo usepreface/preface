@@ -37,6 +37,7 @@ export function CopyField({
           mono ? "font-mono text-mono-sm" : "text-sm",
         )}
         title={value}
+        aria-label={label}
       >
         {value}
       </span>

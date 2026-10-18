@@ -17,7 +17,7 @@ import {
 import { TopBar } from "@usepreface/ui/preface/layout";
 
 import { OrgAvatar } from "#/components/organization/org-avatar";
-import { placeholder } from "#/lib/placeholder";
+import { Route as RootRoute } from "#/routes/__root";
 
 import { AccountMenu, type Person } from "./account-menu";
 
@@ -43,6 +43,7 @@ export function AppTopBar({
   onOpenMenu?: () => void;
   onExpandSidebar?: () => void;
 }) {
+  const { instance } = RootRoute.useRouteContext();
   return (
     <TopBar>
       {onOpenMenu ? (
@@ -79,7 +80,7 @@ export function AppTopBar({
           </span>
         )}
         <span className="text-sm font-medium text-foreground">
-          {workspace ?? placeholder.instance.name}
+          {workspace ?? instance.instanceName}
         </span>
         <ChevronDownIcon size={14} className="text-icon-secondary" />
       </Link>
@@ -89,8 +90,13 @@ export function AppTopBar({
           <SearchIcon />
         </Button>
       ) : null}
-      <IconTip label="Inbox" icon={<InboxIcon />} />
-      <IconTip label="Help & docs" icon={<HelpIcon />} className="max-sm:hidden" />
+      <IconTip label="Inbox (not available yet)" icon={<InboxIcon />} disabled />
+      <IconTip
+        label="Help & docs"
+        icon={<HelpIcon />}
+        className="max-sm:hidden"
+        href="https://github.com/usepreface/preface#readme"
+      />
       <AccountMenu person={person} instanceOwner={instanceOwner} />
     </TopBar>
   );
@@ -113,7 +119,11 @@ function IconTip({
   label,
   icon,
   className,
+  href,
+  disabled,
 }: {
+  href?: string;
+  disabled?: boolean;
   label: string;
   icon: React.ReactNode;
   className?: string;
@@ -121,7 +131,16 @@ function IconTip({
   return (
     <Tooltip>
       <TooltipTrigger
-        render={<Button variant="ghost" size="icon" aria-label={label} className={className} />}
+        render={
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={label}
+            className={className}
+            disabled={disabled}
+            render={href ? <a href={href} target="_blank" rel="noreferrer" /> : undefined}
+          />
+        }
       >
         {icon}
       </TooltipTrigger>
