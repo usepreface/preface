@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 
+import { Toaster } from "@usepreface/ui/components/sonner";
 import { ThemeProvider } from "@usepreface/ui/components/theme-provider";
 import { TooltipProvider } from "@usepreface/ui/components/tooltip";
 
@@ -28,6 +29,7 @@ createRoot(root).render(
     <ThemeProvider>
       <TooltipProvider delay={300}>
         <RouterProvider router={router} />
+        <Toaster position="bottom-right" />
       </TooltipProvider>
     </ThemeProvider>
   </StrictMode>,

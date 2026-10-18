@@ -4,7 +4,8 @@
   "compilerOptions": {
     "customConditions": ["preface-source"],
     // @usepreface/ui is compiled from source here, and its shadcn-derived code assumes this is off.
-    "exactOptionalPropertyTypes": false
+    "exactOptionalPropertyTypes": false,
+    "paths": { "#/*": ["./src/*"] }
   },
   "include": ["src", "vite.config.ts"]
 }

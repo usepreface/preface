@@ -2,214 +2,97 @@ import * as React from "react";
 
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
-import { Button } from "@usepreface/ui/components/button";
-import { Input } from "@usepreface/ui/components/input";
-import { ArrowRightIcon, BrainIcon, ServerIcon, ShieldIcon } from "@usepreface/ui/icons";
-import { SelfHostedIllustration } from "@usepreface/ui/illustrations";
-import { FieldHint, PasswordInput, PasswordStrength } from "@usepreface/ui/preface/account-fields";
+import { AuthHeading, AuthLayout } from "#/components/auth/auth-layout";
+import { Notice } from "#/components/feedback/notice";
+import { SubmitButton } from "#/components/form/submit-button";
+import { TextField } from "#/components/form/text-field";
+import { instanceSetupForm } from "#/forms/setup";
+import { useSchemaForm } from "#/lib/forms/use-schema-form";
+import { placeholder } from "#/lib/placeholder";
+import { previewSearch, previewState } from "#/lib/preview";
 
-import { placeholder } from "../../lib/placeholder";
-import { AsidePoints } from "./-components/aside-points";
-import { SetupField, SetupHeading, SetupLayout, largeInput } from "./-components/setup-layout";
+import { InstanceAside, setupSteps } from "./-components/setup-asides";
 
 export const Route = createFileRoute("/setup/")({
   head: () => ({ meta: [{ title: "Set up your instance · Preface" }] }),
+  validateSearch: previewSearch,
   component: InstanceSetup,
 });
 
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MIN_PASSWORD = 12;
-
-/*
- * Step 1, Figma "Set up instance" and "Instance error". Validation is client-side only: nothing
- * is sent anywhere yet, submitting moves on to step 2.
- */
+/** Step 1: name the instance and add its owner. `?state=invalid` shows the validation state. */
 function InstanceSetup() {
   const navigate = useNavigate();
-  const [values, setValues] = React.useState({ instance: "", name: "", email: "" });
-  const [password, setPassword] = React.useState("");
-  const [confirm, setConfirm] = React.useState("");
-  const [submitted, setSubmitted] = React.useState(false);
+  const invalid = previewState(["invalid"], Route.useSearch().state) === "invalid";
+  const form = useSchemaForm(instanceSetupForm, {
+    defaultValues: invalid
+      ? {
+          instanceName: placeholder.instance.name,
+          ownerName: placeholder.owner.name,
+          email: "aisha@acme",
+        }
+      : { instanceName: "", ownerName: "", email: "" },
+  });
 
-  const set = (key: keyof typeof values) => (e: React.ChangeEvent<HTMLInputElement>) =>
-    setValues((v) => ({ ...v, [key]: e.target.value }));
-
-  const emailOk = EMAIL.test(values.email);
-  const passwordOk = password.length >= MIN_PASSWORD;
-  const matches = confirm.length > 0 && confirm === password;
-  const showMismatch =
-    confirm.length > 0 && !matches && (submitted || confirm.length >= password.length);
-  const ready = values.instance.trim() && values.name.trim() && emailOk && passwordOk && matches;
+  React.useEffect(() => {
+    if (invalid) void form.trigger();
+  }, [invalid, form]);
 
   return (
-    <SetupLayout
-      step={1}
-      aside={
-        <>
-          <SelfHostedIllustration className="h-72 w-auto" />
-          <div className="flex max-w-100 flex-col items-center gap-2 text-center">
-            <h2 className="text-heading-3 text-foreground">Your knowledge, on your servers</h2>
-            <p className="text-sm text-fg-secondary">
-              This instance runs on infrastructure you control. You’re the owner: you can add admins
-              and organizations later.
-            </p>
-          </div>
-          <AsidePoints
-            items={[
-              [
-                ServerIcon,
-                "Data stays in your network",
-                "Documents, embeddings and logs never leave this instance.",
-              ],
-              [BrainIcon, "Bring your own models", "OpenAI, Anthropic, Azure, Bedrock or Ollama."],
-              [
-                ShieldIcon,
-                "Owner account first",
-                "SSO and SCIM can take over once you connect your IdP.",
-              ],
-            ]}
-          />
-        </>
-      }
+    <AuthLayout
+      steps={{ labels: setupSteps, current: 1 }}
+      topRight="Step 1 of 3"
+      aside={<InstanceAside />}
     >
-      <SetupHeading title="Set up your instance">
-        Name this Preface instance and create the owner account. It takes under a minute.
-      </SetupHeading>
+      <AuthHeading title="Set up your instance">
+        Name this Preface instance and add its owner. We’ll email the owner a code to confirm it’s
+        really them.
+      </AuthHeading>
       <form
-        noValidate
         className="flex flex-col gap-5"
-        onSubmit={(e) => {
-          e.preventDefault();
-          setSubmitted(true);
-          if (ready) {
-            void navigate({ to: "/setup/organization" });
-          }
-        }}
+        noValidate
+        onSubmit={form.handleSubmit(() => navigate({ to: "/setup/verify" }))}
       >
-        <SetupField
-          id="instance-name"
+        <TextField
+          control={form.control}
+          name="instanceName"
           label="Instance name"
-          hints={
-            submitted && !values.instance.trim() ? (
-              <FieldHint tone="danger">Give the instance a name.</FieldHint>
-            ) : (
-              <FieldHint>Shown on the sign-in page and in emails.</FieldHint>
-            )
-          }
-        >
-          <Input
-            id="instance-name"
-            className={largeInput}
-            placeholder={placeholder.instance.name}
-            value={values.instance}
-            aria-invalid={(submitted && !values.instance.trim()) || undefined}
-            onChange={set("instance")}
-            autoFocus
-            required
+          description="Shown on the sign-in page and in every email Preface sends."
+          size="lg"
+          inputProps={{ placeholder: "Acme Knowledge", autoFocus: true }}
+        />
+        <div className="grid gap-5 sm:grid-cols-2">
+          <TextField
+            control={form.control}
+            name="ownerName"
+            label="Owner display name"
+            size="lg"
+            inputProps={{ placeholder: "Aisha Khan", autoComplete: "name" }}
           />
-        </SetupField>
-        <div className="flex flex-col gap-5 sm:flex-row sm:gap-3">
-          <SetupField
-            id="owner-name"
-            label="Owner name"
-            hints={
-              submitted && !values.name.trim() ? (
-                <FieldHint tone="danger">Enter your name.</FieldHint>
-              ) : null
-            }
-          >
-            <Input
-              id="owner-name"
-              className={largeInput}
-              autoComplete="name"
-              placeholder={placeholder.owner.name}
-              value={values.name}
-              aria-invalid={(submitted && !values.name.trim()) || undefined}
-              onChange={set("name")}
-              required
-            />
-          </SetupField>
-          <SetupField
-            id="owner-email"
-            label="Email"
-            hints={
-              submitted && !emailOk ? (
-                <FieldHint tone="danger">Enter an email like name@company.com.</FieldHint>
-              ) : null
-            }
-          >
-            <Input
-              id="owner-email"
-              type="email"
-              className={largeInput}
-              autoComplete="email"
-              placeholder={placeholder.owner.email}
-              value={values.email}
-              aria-invalid={(submitted && !emailOk) || undefined}
-              onChange={set("email")}
-              required
-            />
-          </SetupField>
+          <TextField
+            control={form.control}
+            name="email"
+            label="Owner email"
+            size="lg"
+            inputProps={{ type: "email", placeholder: "name@acme.dev", autoComplete: "email" }}
+          />
         </div>
-        <SetupField
-          id="password"
-          label="Password"
-          hints={
-            password ? (
-              <PasswordStrength value={password} />
-            ) : (
-              <FieldHint tone={submitted ? "danger" : "neutral"}>
-                At least {MIN_PASSWORD} characters.
-              </FieldHint>
-            )
-          }
+        <Notice tone="neutral">
+          The owner can’t be removed later, only transferred. Use an address you’ll keep.
+        </Notice>
+        <SubmitButton
+          size="lg"
+          wide
+          arrow
+          pending={form.formState.isSubmitting}
+          pendingLabel="Sending code…"
         >
-          <PasswordInput
-            id="password"
-            value={password}
-            placeholder="••••••••••••"
-            aria-invalid={(submitted && !passwordOk) || undefined}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </SetupField>
-        <SetupField
-          id="confirm"
-          label="Confirm password"
-          hints={
-            showMismatch ? (
-              <FieldHint tone="danger" id="confirm-hint">
-                Passwords don’t match. Check the last characters.
-              </FieldHint>
-            ) : matches ? (
-              <FieldHint tone="success" id="confirm-hint">
-                Passwords match
-              </FieldHint>
-            ) : null
-          }
-        >
-          <PasswordInput
-            id="confirm"
-            value={confirm}
-            placeholder="••••••••••••"
-            aria-invalid={showMismatch || (submitted && !matches) || undefined}
-            aria-describedby="confirm-hint"
-            onChange={(e) => setConfirm(e.target.value)}
-            required
-          />
-        </SetupField>
-        <Button type="submit" size="lg" className="group h-10 w-full">
-          Create instance
-          <ArrowRightIcon
-            data-icon="inline-end"
-            className="transition-transform group-hover:translate-x-0.5"
-          />
-        </Button>
-        <p className="text-xs text-fg-tertiary">
-          You can change the instance name in Settings. The owner can’t be removed, only
-          transferred.
-        </p>
+          Send verification code
+        </SubmitButton>
       </form>
-    </SetupLayout>
+      <p className="text-caption text-fg-tertiary">
+        No password needed. The owner signs in with email codes, Google or SSO once an organization
+        adds it.
+      </p>
+    </AuthLayout>
   );
 }
