@@ -289,7 +289,7 @@ never credentials. Reads require organization ownership; mutations also need rec
 from a signed-out browser. `oidc.callback` is GET `/auth/oidc/callback`, a browser redirect endpoint
 returning 303. Starts return authorization URL/expiry and set the server-owned `preface_oidc_flow`
 cookie. Follow the URL in the same browser; successful sign-in sets the normal session cookie.
-Callback completion currently redirects only to `/api/docs`.
+Completion redirects to the configured dashboard origin, or `/api/docs` when no dashboard is configured.
 
 The existing policy PATCH accepts `{ expectedRevision, oidcConnectionIds }`, optionally alongside
 `googleEnabled`. Omission preserves each setting; the connection list replaces OIDC approvals and
