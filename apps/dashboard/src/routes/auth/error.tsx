@@ -1,6 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
-import { AuthHeading, AuthLayout } from "#/components/auth/auth-layout";
+import { ShieldIcon } from "@usepreface/ui/icons";
+
+import { AuthHeading } from "#/components/auth/auth-layout";
+import { StatusPage, StatusIcon } from "#/components/auth/status-page";
 import { Notice } from "#/components/feedback/notice";
 import { apiErrorMessage } from "#/lib/api-errors";
 export const Route = createFileRoute("/auth/error")({
@@ -12,11 +15,14 @@ export const Route = createFileRoute("/auth/error")({
 function AuthError() {
   const { code } = Route.useSearch();
   return (
-    <AuthLayout>
-      <AuthHeading title="Sign-in couldn’t finish">Your account has not been changed.</AuthHeading>
+    <StatusPage width="lg">
+      <StatusIcon icon={ShieldIcon} tone="warning" />
+      <AuthHeading align="center" title="Sign-in couldn’t finish">
+        Your account has not been changed.
+      </AuthHeading>
       <Notice tone="warning">{apiErrorMessage({ code })}</Notice>
       <Link to="/sign-in">Try signing in again</Link>
       <Link to="/organizations">Your organizations</Link>
-    </AuthLayout>
+    </StatusPage>
   );
 }

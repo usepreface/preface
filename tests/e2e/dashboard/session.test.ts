@@ -12,7 +12,7 @@ test("returning owner without an organization signs in through the dashboard", a
   const owner = await onboardOwner(api, backend, mailbox);
   await page.goto(`${backend.dashboard}/organizations`);
   await expect(
-    page.getByText("You’re not in an organization yet.", { exact: false }),
+    page.getByText("You’re not in any organizations yet", { exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Account", exact: true }).click();
   await page.getByRole("menuitem", { name: "Sign out", exact: true }).click();
@@ -26,7 +26,7 @@ test("returning owner without an organization signs in through the dashboard", a
   await expect(page).toHaveURL(/\/organizations\/?$/);
   await expect(page.getByRole("link", { name: "New organization", exact: true })).toBeVisible();
   await expect(
-    page.getByText("You’re not in an organization yet.", { exact: false }),
+    page.getByText("You’re not in any organizations yet", { exact: true }),
   ).toBeVisible();
 });
 

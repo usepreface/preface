@@ -146,8 +146,7 @@ function ProfileForm({ user }: { user: PublicUser }) {
           />
         </div>
         <FieldDescription id="profile-email-help">
-          Your sign-in email can’t be changed here. Changing your sign-in email is not currently
-          supported.
+          Your sign-in email can’t be changed here.
         </FieldDescription>
       </Field>
       <SaveBar

@@ -22,6 +22,7 @@ import { toMutation } from "#/hooks/mutation";
 import { toQuery } from "#/hooks/query";
 import { safeReturnPath } from "#/lib/navigation";
 import { requestFields } from "#/lib/request-fields";
+import { CodeAside } from "#/routes/sign-in/-components/sign-in-asides";
 
 export const Route = createFileRoute("/auth/verify-email")({
   validateSearch: Schema.decodeUnknownSync(Schema.Struct({ flowId: AuthFlowId })),
@@ -47,7 +48,7 @@ function ExternalEmail() {
     window.location.assign(safeReturnPath(redirectTo));
   }
   return (
-    <AuthLayout>
+    <AuthLayout aside={<CodeAside />}>
       <AuthHeading title="Verify your email">
         Confirm mailbox ownership to finish linking your identity.
       </AuthHeading>

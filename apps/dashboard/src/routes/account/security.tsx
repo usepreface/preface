@@ -3,8 +3,17 @@ import { useState } from "react";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 
 import type { SessionId, OrganizationId } from "@usepreface/protocol";
+import { Badge, BadgeDot } from "@usepreface/ui/components/badge";
 import { Button } from "@usepreface/ui/components/button";
-import { TrashIcon } from "@usepreface/ui/icons";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@usepreface/ui/components/table";
+import { BrowserIcon, ShieldIcon, TrashIcon } from "@usepreface/ui/icons";
 
 import {
   accountsStartGoogleMutation,
@@ -23,6 +32,7 @@ import { Pagination } from "#/components/api/pagination";
 import { QueryState } from "#/components/api/query-state";
 import { useResetAuthority } from "#/components/api/registry-provider";
 import { ReauthenticationLink } from "#/components/auth/reauthentication-link";
+import { TableCard } from "#/components/data-display/table-card";
 import { ConfirmDialog } from "#/components/feedback/confirm-dialog";
 import { Notice } from "#/components/feedback/notice";
 import { PageBar, PageContent, PageTitle, PageSection } from "#/components/shell/page";
@@ -83,7 +93,7 @@ function Security() {
       <PageContent width="lg">
         <PageTitle
           title="Accounts and sessions"
-          description="Manage your connected identities and active browser sessions."
+          description="The ways you sign in, and the devices signed in to your account."
         />
         <Notice action={<ReauthenticationLink />}>
           Linking and unlinking accounts requires a recent email confirmation.
@@ -107,58 +117,95 @@ function Security() {
           }
         >
           <QueryState query={accounts}>
-            <div className="flex flex-col divide-y rounded-xl border">
-              {accounts.data?.accounts
-                .filter((account) => !account.unlinkedAt)
-                .map((account) => (
-                  <div key={account.id} className="flex flex-wrap items-center gap-4 p-4">
-                    <div className="flex-1">
-                      <h3 className="text-sm font-medium">
-                        {account.provider.toUpperCase()} ·{" "}
-                        {account.providerEmail ?? "Connected identity"}
-                      </h3>
-                      <p className="text-xs text-fg-tertiary">
-                        Linked {formatDate(account.linkedAt)} ·{" "}
-                        {account.connectionAvailable ? "Available" : "Unavailable"}
-                      </p>
-                    </div>
-                    {account.provider === "google" && account.connectionAvailable ? (
-                      <Button
-                        variant="outline"
-                        disabled={confirmGoogle.pending}
-                        onClick={async () => {
-                          const response = await confirmGoogle.run({
-                            payload: { returnPath: "/account/security" },
-                          });
-                          if (response) window.location.assign(response.value.authorizationUrl);
-                        }}
-                      >
-                        Confirm Google
-                      </Button>
-                    ) : null}
-                    <Button
-                      variant="outline"
-                      disabled={unlink.pending}
-                      onClick={() =>
-                        setConfirm({
-                          title: "Unlink this account?",
-                          run: async () => {
-                            if (await unlink.run({ params: { accountId: account.id } })) {
-                              setConfirm(undefined);
-                              feedback.done("Account unlinked");
-                            }
-                          },
-                        })
-                      }
-                    >
-                      Unlink
-                    </Button>
-                  </div>
-                ))}
-              {accounts.data?.accounts.every((account) => account.unlinkedAt) ? (
-                <p className="p-4 text-sm text-fg-secondary">No connected accounts.</p>
-              ) : null}
-            </div>
+            <TableCard>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Provider</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="max-md:hidden">Connected</TableHead>
+                    <TableHead className="w-0">
+                      <span className="sr-only">Actions</span>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {accounts.data?.accounts
+                    .filter((account) => !account.unlinkedAt)
+                    .map((account) => (
+                      <TableRow key={account.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2.5">
+                            <span className="flex size-7 items-center justify-center rounded-lg bg-surface-2">
+                              <ShieldIcon className="size-4 text-icon-secondary" />
+                            </span>
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium text-foreground">
+                                {account.provider.toUpperCase()}
+                              </span>
+                              <span className="text-caption text-fg-tertiary">
+                                {account.providerEmail ?? "Connected identity"}
+                              </span>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge tone={account.connectionAvailable ? "success" : "neutral"}>
+                            <BadgeDot />
+                            {account.connectionAvailable ? "Connected" : "Unavailable"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-fg-secondary max-md:hidden">
+                          {formatDate(account.linkedAt)}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex justify-end gap-2">
+                            {account.provider === "google" && account.connectionAvailable ? (
+                              <Button
+                                variant="outline"
+                                disabled={confirmGoogle.pending}
+                                onClick={async () => {
+                                  const response = await confirmGoogle.run({
+                                    payload: { returnPath: "/account/security" },
+                                  });
+                                  if (response)
+                                    window.location.assign(response.value.authorizationUrl);
+                                }}
+                              >
+                                Confirm Google
+                              </Button>
+                            ) : null}
+                            <Button
+                              variant="outline"
+                              disabled={unlink.pending}
+                              onClick={() =>
+                                setConfirm({
+                                  title: "Unlink this account?",
+                                  run: async () => {
+                                    if (await unlink.run({ params: { accountId: account.id } })) {
+                                      setConfirm(undefined);
+                                      feedback.done("Account unlinked");
+                                    }
+                                  },
+                                })
+                              }
+                            >
+                              Unlink
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  {accounts.data?.accounts.every((account) => account.unlinkedAt) ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center text-fg-secondary">
+                        No connected accounts.
+                      </TableCell>
+                    </TableRow>
+                  ) : null}
+                </TableBody>
+              </Table>
+            </TableCard>
           </QueryState>
         </PageSection>
         <EnterpriseAccounts />
@@ -184,40 +231,73 @@ function Security() {
           }
         >
           <QueryState query={sessions}>
-            <div className="flex flex-col divide-y rounded-xl border">
-              {sessions.data?.sessions.map((session) => (
-                <div key={session.id} className="flex flex-wrap items-center gap-4 p-4">
-                  <div className="flex-1">
-                    <h3 className="text-sm font-medium">
-                      {session.isCurrent ? "This browser" : "Browser session"}
-                    </h3>
-                    <p className="text-xs text-fg-tertiary">
-                      Created {formatDate(session.createdAt)} · Last seen{" "}
-                      {formatDate(session.lastSeenAt)} · Expires {formatDate(session.expiresAt)}
-                    </p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    disabled={revoke.pending}
-                    onClick={() =>
-                      setConfirm({
-                        title: session.isCurrent
-                          ? "Sign out this browser?"
-                          : "Revoke this session?",
-                        run: async () => {
-                          if (await revoke.run({ params: { sessionId: session.id } })) {
-                            setConfirm(undefined);
-                            if (session.isCurrent) await signedOut();
+            <TableCard>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Device</TableHead>
+                    <TableHead className="max-md:hidden">Created</TableHead>
+                    <TableHead>Last active</TableHead>
+                    <TableHead className="max-md:hidden">Expires</TableHead>
+                    <TableHead className="w-0">
+                      <span className="sr-only">Actions</span>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {sessions.data?.sessions.map((session) => (
+                    <TableRow key={session.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2.5">
+                          <span className="flex size-7 items-center justify-center rounded-lg bg-surface-2">
+                            <BrowserIcon className="size-4 text-icon-secondary" />
+                          </span>
+                          <span className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+                            {session.isCurrent ? "This browser" : "Browser session"}
+                            {session.isCurrent ? (
+                              <Badge tone="success">
+                                <BadgeDot />
+                                Current session
+                              </Badge>
+                            ) : null}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-fg-secondary max-md:hidden">
+                        {formatDate(session.createdAt)}
+                      </TableCell>
+                      <TableCell className="text-fg-secondary">
+                        {formatDate(session.lastSeenAt)}
+                      </TableCell>
+                      <TableCell className="text-fg-secondary max-md:hidden">
+                        {formatDate(session.expiresAt)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="outline"
+                          disabled={revoke.pending}
+                          onClick={() =>
+                            setConfirm({
+                              title: session.isCurrent
+                                ? "Sign out this browser?"
+                                : "Revoke this session?",
+                              run: async () => {
+                                if (await revoke.run({ params: { sessionId: session.id } })) {
+                                  setConfirm(undefined);
+                                  if (session.isCurrent) await signedOut();
+                                }
+                              },
+                            })
                           }
-                        },
-                      })
-                    }
-                  >
-                    Revoke
-                  </Button>
-                </div>
-              ))}
-            </div>
+                        >
+                          Revoke
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableCard>
           </QueryState>
           <Pagination cursor={cursor} nextCursor={sessions.data?.nextCursor} onChange={setCursor} />
         </PageSection>

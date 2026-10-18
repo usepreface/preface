@@ -56,7 +56,7 @@ export function VerifyCodeForm({
 
   return (
     <form
-      className="flex flex-col gap-5"
+      className="flex w-full flex-col gap-5 text-left"
       noValidate
       onSubmit={form.handleSubmit(async ({ code }) => {
         await onVerified(Redacted.value(code));

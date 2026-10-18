@@ -17,6 +17,8 @@ import {
 import { linkProof } from "#/atoms/transient";
 import { useResetAuthority } from "#/components/api/registry-provider";
 import { AuthHeading, AuthLayout } from "#/components/auth/auth-layout";
+import { OrDivider } from "#/components/auth/auth-parts";
+import { StatusPage } from "#/components/auth/status-page";
 import { VerifyCodeForm } from "#/components/auth/verify-code-form";
 import { Notice } from "#/components/feedback/notice";
 import { SubmitButton } from "#/components/form/submit-button";
@@ -25,6 +27,8 @@ import { acceptInvitationForm } from "#/forms/invitation";
 import { toMutation } from "#/hooks/mutation";
 import { useSignOut } from "#/hooks/session";
 import { useSchemaForm } from "#/lib/forms/use-schema-form";
+
+import { InvitationAside, InvitationDetails } from "./-components/invitation-parts";
 
 export const Route = createFileRoute("/invitations/accept")({ component: Invitation });
 const useInspect = toMutation(invitationsInspectMutation);
@@ -48,16 +52,19 @@ function Invitation() {
   const resetAuthority = useResetAuthority();
   if (!Schema.is(OrganizationInvitationId)(invitationId) || !token)
     return (
-      <AuthLayout>
+      <StatusPage>
         <Notice tone="warning" title="Open your invitation link">
           Use the complete link in your invitation email.
         </Notice>
         <Link to="/sign-in">Sign in</Link>
-      </AuthLayout>
+      </StatusPage>
     );
   const credentials = { invitationId, token };
   return (
-    <AuthLayout>
+    <AuthLayout
+      topRight={preview ? "Invitation" : undefined}
+      aside={<InvitationAside preview={preview} />}
+    >
       <AuthHeading title={preview ? `Join ${preview.organization.name}` : "Review your invitation"}>
         Verify your email or use an available identity provider to join.
       </AuthHeading>
@@ -79,8 +86,9 @@ function Invitation() {
       ) : null}
       {preview ? (
         <>
+          <InvitationDetails preview={preview} />
           <form
-            className="flex flex-col gap-4"
+            className="flex flex-col gap-5"
             onSubmit={form.handleSubmit(async () => {
               const response = await request.run({ payload: credentials });
               if (response) setChallenge(response.value);
@@ -90,16 +98,23 @@ function Invitation() {
               control={form.control}
               name="displayName"
               label="Your display name"
+              description="How teammates see you in Preface."
+              size="lg"
               inputProps={{ autoComplete: "name" }}
             />
             {!challenge && !proofToken ? (
-              <SubmitButton pending={request.pending}>Email me a verification code</SubmitButton>
+              <SubmitButton size="lg" wide pending={request.pending}>
+                Email me a verification code
+              </SubmitButton>
             ) : null}
           </form>
+          {preview.methods.length ? <OrDivider /> : null}
           {preview.methods.map((method) => (
             <Button
               key={method.connectionId}
               variant="outline"
+              size="lg"
+              className="w-full"
               disabled={external.pending}
               onClick={form.handleSubmit(async ({ displayName }) => {
                 const response = await external.run({
@@ -173,7 +188,9 @@ function Invitation() {
             </Button>
           ) : null}
           {preview.ssoRequired ? (
-            <Notice>Organization access requires enterprise SSO after joining.</Notice>
+            <Notice tone="info" title="Single sign-on required">
+              Organization access requires enterprise SSO after joining.
+            </Notice>
           ) : null}
         </>
       ) : (

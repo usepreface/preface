@@ -138,6 +138,7 @@ function IconTip({
             aria-label={label}
             className={className}
             disabled={disabled}
+            nativeButton={!href}
             render={href ? <a href={href} target="_blank" rel="noreferrer" /> : undefined}
           />
         }

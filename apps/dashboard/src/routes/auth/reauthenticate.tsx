@@ -6,13 +6,15 @@ import { Schema } from "effect";
 
 import type { EmailSignInChallenge } from "@usepreface/protocol/dto";
 import { Button } from "@usepreface/ui/components/button";
+import { LockKeyIcon } from "@usepreface/ui/icons";
 
 import {
   reauthenticationRequestEmailMutation,
   reauthenticationResendEmailMutation,
   reauthenticationVerifyEmailMutation,
 } from "#/atoms/auth";
-import { AuthHeading, AuthLayout } from "#/components/auth/auth-layout";
+import { AuthHeading } from "#/components/auth/auth-layout";
+import { StatusPage, StatusIcon } from "#/components/auth/status-page";
 import { VerifyCodeForm } from "#/components/auth/verify-code-form";
 import { toMutation } from "#/hooks/mutation";
 import { safeReturnPath } from "#/lib/navigation";
@@ -38,8 +40,9 @@ function Reauthenticate() {
   const router = useRouter();
   const { actor } = Route.useRouteContext();
   return (
-    <AuthLayout>
-      <AuthHeading title="Confirm it’s you">
+    <StatusPage width="lg">
+      <StatusIcon icon={LockKeyIcon} tone="accent" />
+      <AuthHeading align="center" title="Confirm it’s you">
         Sensitive changes need a recent email confirmation.
       </AuthHeading>
       {!actor ? (
@@ -75,6 +78,6 @@ function Reauthenticate() {
           }}
         />
       )}
-    </AuthLayout>
+    </StatusPage>
   );
 }
