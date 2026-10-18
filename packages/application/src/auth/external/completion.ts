@@ -6,7 +6,11 @@ import type { SessionActor } from "@usepreface/protocol/dto";
 import type { AuthFlow } from "@usepreface/protocol/model";
 
 import { matchesFlowActor } from "#/auth/external/binding";
-import { makeExternalProof, type VerifiedExternalIdentity } from "#/auth/external/proof";
+import {
+  externalProofExpiresAt,
+  makeExternalProof,
+  type VerifiedExternalIdentity,
+} from "#/auth/external/proof";
 import { makeExternalRecipient } from "#/auth/external/recipient";
 import { makeGoogleEvidence } from "#/auth/google/evidence";
 import { makeIdentityAccess } from "#/auth/identity-access";
@@ -234,7 +238,7 @@ export const makeExternalCompletion = Effect.gen(function* () {
                   intent: flow.intent,
                   nextAction: "verify_email" as const,
                   flowId: flow.id,
-                  expiresAt: flow.expiresAt,
+                  expiresAt: externalProofExpiresAt(flow.expiresAt, identity),
                   returnPath: `/auth/verify-email?flowId=${flow.id}`,
                   sessionToken: undefined,
                   sessionExpiresAt: undefined,

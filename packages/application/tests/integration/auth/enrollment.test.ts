@@ -6,6 +6,7 @@ import { TestDatabase } from "@usepreface/database/testing";
 
 import { Application } from "../../../src/index.js";
 import { ApplicationTestLayer } from "../../fixtures/application.js";
+import { rejectLifecycleAudit } from "../../fixtures/audit-failure.js";
 import { readEmailJob } from "../../fixtures/email-job.js";
 import { TestGoogle } from "../../fixtures/google-provider.js";
 import { configureTestGoogle, googleCallbackInput } from "../../fixtures/google.js";
@@ -169,18 +170,62 @@ layer(ApplicationTestLayer)("External identity enrollment", (it) => {
             .status({ ...bound, browserToken: Redacted.make("wrong-browser") })
             .pipe(Effect.flip),
         ).toMatchObject({ code: "INVALID_FLOW" });
+        const replaced = yield* application.auth.external.request(bound);
         const challenge = yield* application.auth.external.request(bound);
+        expect(
+          yield* application.auth.external
+            .verify({
+              ...bound,
+              challengeId: replaced.challengeId,
+              code: Redacted.make("00000000"),
+            })
+            .pipe(Effect.flip),
+        ).toMatchObject({ code: "INVALID_PROOF" });
+        const status = yield* application.auth.external.status(bound);
+        expect(DateTime.toEpochMillis(status.expiresAt)).toBe(
+          DateTime.toEpochMillis(challenge.expiresAt),
+        );
+        expect(DateTime.toEpochMillis(pending.expiresAt ?? status.expiresAt)).toBe(
+          DateTime.toEpochMillis(challenge.expiresAt),
+        );
         const proof = yield* repository.auth.verification.findById(challenge.challengeId);
         if (proof?.emailJobId === null || proof?.emailJobId === undefined)
           throw new Error("Expected verification email intent");
         const payload = yield* readEmailJob(proof.emailJobId);
         if (payload.type !== "identity-verification")
           throw new Error("Expected external verification payload");
-        const completed = yield* application.auth.external.verify({
+        const verification = {
           ...bound,
           challengeId: challenge.challengeId,
           code: Redacted.make(payload.variables.code),
-        });
+        };
+        const wrongCode = payload.variables.code === "00000000" ? "11111111" : "00000000";
+        expect(
+          yield* application.auth.external
+            .verify({ ...verification, code: Redacted.make(wrongCode) })
+            .pipe(Effect.flip),
+        ).toMatchObject({ code: "INVALID_PROOF" });
+        expect(
+          (yield* repository.auth.verification.findById(challenge.challengeId))?.attempts,
+        ).toBe(1);
+        yield* Effect.scoped(
+          Effect.gen(function* () {
+            yield* rejectLifecycleAudit;
+            expect(
+              yield* application.auth.external.verify(verification).pipe(Effect.flip),
+            ).toMatchObject({ _tag: "DatabaseError" });
+          }),
+        );
+        expect(
+          yield* repository.auth.userEmail.findActiveByEmail("guest@external.example.test"),
+        ).toBeUndefined();
+        expect(
+          (yield* repository.organization.invitation.findById(
+            organization.id,
+            invitation.invitation.id,
+          ))?.acceptedAt,
+        ).toBeNull();
+        const completed = yield* application.auth.external.resume(bound);
         if (completed.sessionToken === undefined) throw new Error("Expected enrolled session");
         const actor = yield* application.auth.session.resolve(completed.sessionToken);
         expect(actor.user.email).toBe("guest@external.example.test");

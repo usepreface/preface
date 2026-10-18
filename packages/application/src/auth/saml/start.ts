@@ -13,7 +13,7 @@ import {
 import type { SessionActor } from "@usepreface/protocol/dto";
 import { ExternalIdentityStartInput } from "@usepreface/protocol/input";
 
-import type { InvitationEnrollment } from "#/auth/external/binding";
+import { externalFlowExpiresAt, type InvitationEnrollment } from "#/auth/external/binding";
 import { makeIdentitySecrets } from "#/auth/google/secrets";
 import { makeIdentityAccess } from "#/auth/identity-access";
 import { AuthenticationLinks } from "#/auth/links";
@@ -123,7 +123,10 @@ export const makeSamlFlowStart = Effect.gen(function* () {
           relayState,
           forceAuthentication: intent === "reauthenticate" || policy.ssoMode === "required",
         });
-        const expiresAt = DateTime.addDuration(yield* DateTime.now, "10 minutes");
+        const now = yield* DateTime.now;
+        const expiresAt = externalFlowExpiresAt(now, enrollment);
+        if (DateTime.toEpochMillis(expiresAt) <= DateTime.toEpochMillis(now))
+          return yield* new IdentityError({ code: "INVALID_FLOW" });
         yield* repository.auth.authFlow.create({
           id,
           signingKeyId: signingKeyId ?? null,

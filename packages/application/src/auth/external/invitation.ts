@@ -70,6 +70,7 @@ export const makeInvitationAuthentication = Effect.gen(function* () {
     const enrollment = {
       invitationId: invitation.id,
       invitationRevision: invitation.revision,
+      expiresAt: invitation.expiresAt,
       targetOrganizationId: invitation.organizationId,
       displayName: decoded.displayName,
     };

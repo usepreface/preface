@@ -46,6 +46,8 @@ HttpOnly `preface_external_flow` cookie and redirects to the verification route 
 live flow/connection and unexpired provider identity. Proofs use `external_identity_email`, a
 challenge-bound HMAC, durable five-attempt budget and encrypted `identity-verification` email.
 Replacement retires prior challenges/jobs. Wrong attempts commit before returning the failure.
+Flow start is capped by invitation expiry; continuation status, browser cookie and email challenge
+use the earliest flow, provider-proof or IdP-session deadline.
 Successful mailbox verification is durably consumed and recorded; final admission separately
 rechecks all authority. A failed final write can resume the still-live verified flow without another
 provider exchange. Repeated completion cannot mint another session.

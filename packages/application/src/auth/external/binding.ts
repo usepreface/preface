@@ -1,3 +1,5 @@
+import { DateTime } from "effect";
+
 import type { SessionActor } from "@usepreface/protocol/dto";
 import type { AuthFlow } from "@usepreface/protocol/model";
 
@@ -11,6 +13,12 @@ export const matchesFlowActor = (flow: AuthFlow, actor?: SessionActor) =>
 export interface InvitationEnrollment {
   readonly invitationId: NonNullable<AuthFlow["invitationId"]>;
   readonly invitationRevision: number;
+  readonly expiresAt: DateTime.Utc;
   readonly targetOrganizationId: NonNullable<AuthFlow["targetOrganizationId"]>;
   readonly displayName: string;
 }
+
+export const externalFlowExpiresAt = (now: DateTime.Utc, enrollment?: InvitationEnrollment) => {
+  const maximum = DateTime.addDuration(now, "10 minutes");
+  return DateTime.min(maximum, enrollment?.expiresAt ?? maximum);
+};

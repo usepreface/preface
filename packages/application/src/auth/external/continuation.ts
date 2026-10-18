@@ -9,7 +9,7 @@ import type { ExternalFlowInput, VerifyExternalEmailInput } from "@usepreface/pr
 
 import { matchesFlowActor } from "#/auth/external/binding";
 import { makeExternalCompletion } from "#/auth/external/completion";
-import { makeExternalProof } from "#/auth/external/proof";
+import { externalProofExpiresAt, makeExternalProof } from "#/auth/external/proof";
 
 export const makeExternalContinuation = Effect.gen(function* () {
   const repository = yield* DatabaseRepository;
@@ -79,14 +79,14 @@ export const makeExternalContinuation = Effect.gen(function* () {
     input: ExternalFlowInput,
     actor?: SessionActor,
   ) {
-    const { flow, email } = yield* requireFlow(input, actor);
+    const { flow, identity, email } = yield* requireFlow(input, actor);
     const at = email.lastIndexOf("@");
     return {
       flowId: flow.id,
       provider: flow.provider,
       nextAction: flow.emailVerifiedAt === null ? ("verify_email" as const) : ("continue" as const),
       maskedEmail: `${email.slice(0, 1)}***${email.slice(at)}`,
-      expiresAt: flow.expiresAt,
+      expiresAt: externalProofExpiresAt(flow.expiresAt, identity),
     };
   });
   const request = Effect.fn("Application.auth.external.requestEmail")(function* (
@@ -120,7 +120,7 @@ export const makeExternalContinuation = Effect.gen(function* () {
         );
         for (const proof of retired)
           if (proof.emailJobId !== null) yield* emails.cancel(proof.emailJobId);
-        const expiresAt = DateTime.min(flow.expiresAt, identity.validUntil ?? flow.expiresAt);
+        const expiresAt = externalProofExpiresAt(flow.expiresAt, identity);
         const settings = yield* repository.instance.settings.find();
         if (settings === undefined)
           return yield* Effect.die(new Error("Prepared instance has no settings"));

@@ -6,7 +6,7 @@ import { AuthFlowId, IdentityError, type AuthFlowIntent } from "@usepreface/prot
 import type { SessionActor } from "@usepreface/protocol/dto";
 import { GoogleStartInput } from "@usepreface/protocol/input";
 
-import type { InvitationEnrollment } from "#/auth/external/binding";
+import { externalFlowExpiresAt, type InvitationEnrollment } from "#/auth/external/binding";
 import { GoogleIdentity } from "#/auth/google/provider";
 import { makeIdentitySecrets } from "#/auth/google/secrets";
 import { makeIdentityAccess } from "#/auth/identity-access";
@@ -78,7 +78,10 @@ export const makeGoogleFlowStart = Effect.gen(function* () {
           if (intent === "link") yield* identityAccess.requireRecentEmail(actor);
           if (intent === "test") yield* identityAccess.requireInstanceOwner(actor);
         }
-        const expiresAt = DateTime.addDuration(yield* DateTime.now, "10 minutes");
+        const now = yield* DateTime.now;
+        const expiresAt = externalFlowExpiresAt(now, enrollment);
+        if (DateTime.toEpochMillis(expiresAt) <= DateTime.toEpochMillis(now))
+          return yield* new IdentityError({ code: "INVALID_FLOW" });
         const authorizationUrl = yield* provider.authorizationUrl({
           clientId: connection.configuration.clientId,
           clientSecret: yield* secrets.decryptConnection(connection),

@@ -1,4 +1,4 @@
-import { type DateTime, Effect, Redacted, Schema } from "effect";
+import { DateTime, Effect, Redacted, Schema } from "effect";
 
 import { SecretCrypto, cryptoPurpose } from "@usepreface/crypto";
 import { AuthFlowId, IdentityError } from "@usepreface/protocol";
@@ -13,6 +13,15 @@ export interface VerifiedExternalIdentity {
   readonly validUntil: DateTime.Utc | null;
   readonly sessionExpiresAt: DateTime.Utc | null;
 }
+
+export const externalProofExpiresAt = (
+  flowExpiresAt: DateTime.Utc,
+  identity: VerifiedExternalIdentity,
+) =>
+  DateTime.min(
+    DateTime.min(flowExpiresAt, identity.validUntil ?? flowExpiresAt),
+    identity.sessionExpiresAt ?? flowExpiresAt,
+  );
 
 const identity = Schema.Struct({
   issuer: Schema.NonEmptyString,
