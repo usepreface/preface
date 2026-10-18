@@ -24,7 +24,7 @@ Turbo's persistent dev tasks. The server's `dev` and `preface` scripts load thos
 fallback values, then optional `apps/server/.env` overrides. Package-local commands
 honor shell overrides; root Turbo also passes through `NODE_EXTRA_CA_CERTS`. Existing files and non-empty keys are never rewritten.
 Keep the generated crypto keys for as long as the development database is retained.
-With `NODE_ENV=development`, every backend request waits an additional 300 ms to
+With `NODE_ENV=development`, every backend request waits an additional 150 ms to
 simulate network latency, including health, documentation and preflight requests.
 Other environments have no artificial delay.
 

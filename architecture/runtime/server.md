@@ -65,7 +65,7 @@ logging is disabled. Sanitized dependency/defect logs and the supported one-time
 operator setup output remain enabled. Metrics/exporters are not currently configured.
 
 When `NODE_ENV` is exactly `development`, the request policy adds an interruptible
-300 ms wait before CORS or admission handling. This covers successful and rejected
+150 ms wait before CORS or admission handling. This covers successful and rejected
 requests, preflights, documentation and health checks. Other environments do not
 add latency.
 

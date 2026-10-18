@@ -67,7 +67,7 @@ layer(RequestLimits.layer)("request latency and access logging", (it) => {
           ),
         );
 
-        yield* TestClock.adjust("299 millis");
+        yield* TestClock.adjust("149 millis");
         expect(success.pollUnsafe()).toBeUndefined();
         expect(health.pollUnsafe()).toBeUndefined();
         expect(rejected.pollUnsafe()).toBeUndefined();

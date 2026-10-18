@@ -45,7 +45,7 @@ export const makeRequestPolicy = Effect.gen(function* () {
       const request = yield* HttpServerRequest.HttpServerRequest;
       const requestId = randomUUID();
 
-      if (config.isDevelopment) yield* Effect.sleep("300 millis");
+      if (config.isDevelopment) yield* Effect.sleep("150 millis");
 
       const path = request.url.split(/[?#]/, 1)[0] ?? "/";
       const segments = path.split("/");
