@@ -16,14 +16,13 @@ import { AuditRoutes } from "#/http/routes/audit/history";
 import { AccountsRoutes } from "#/http/routes/auth/accounts";
 import {
   AuthenticationDiscoveryRoutes,
-  OrganizationSelectionRoutes,
+  CurrentOrganizationAuthenticationRoutes,
 } from "#/http/routes/auth/discovery";
 import { EmailSignInRoutes } from "#/http/routes/auth/email-sign-in";
 import { ExternalAuthenticationRoutes } from "#/http/routes/auth/external";
 import { GoogleRoutes } from "#/http/routes/auth/google";
 import { InvitationsRoutes } from "#/http/routes/auth/invitations";
 import { OidcRoutes } from "#/http/routes/auth/oidc";
-import { ReauthenticationRoutes } from "#/http/routes/auth/reauthentication";
 import { SamlRoutes } from "#/http/routes/auth/saml";
 import { SessionRoutes } from "#/http/routes/auth/session";
 import { SessionsRoutes } from "#/http/routes/auth/sessions";
@@ -53,7 +52,7 @@ const ProductRoutes = HttpApiBuilder.layer(PrefaceApi, { openapiPath: "/api/open
       ConnectionOperationsRoutes,
       AuditRoutes,
       AuthenticationDiscoveryRoutes,
-      OrganizationSelectionRoutes,
+      CurrentOrganizationAuthenticationRoutes,
       ExternalAuthenticationRoutes,
       OrganizationDomainsRoutes,
       OidcRoutes,
@@ -62,7 +61,6 @@ const ProductRoutes = HttpApiBuilder.layer(PrefaceApi, { openapiPath: "/api/open
       GoogleRoutes,
       IdentityConnectionsRoutes,
       AccountsRoutes,
-      ReauthenticationRoutes,
       AuthenticationPolicyRoutes,
       OrganizationAuthRecoveryRoutes,
       TeamsRoutes,

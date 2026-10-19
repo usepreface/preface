@@ -4,7 +4,7 @@ import { cn } from "@usepreface/ui/lib/utils";
 import type { BrandName } from "@usepreface/ui/logos/registry";
 import { LogoTile } from "@usepreface/ui/preface/data-display";
 
-/** One organization's single sign-on, offered when an email matches more than one. */
+/** An enabled enterprise sign-in method. */
 export function SsoOption({
   brand,
   disabled,

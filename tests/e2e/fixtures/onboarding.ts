@@ -18,7 +18,7 @@ export async function onboardOwner(api: AuthApi, backend: Backend, mailbox: Mail
     "POST",
     {
       token: backend.token,
-      instanceName: "Auth fixture",
+      organizationName: "Fixture Company",
       ownerName: "Operator",
       email,
     },
@@ -39,17 +39,8 @@ export async function onboardOwner(api: AuthApi, backend: Backend, mailbox: Mail
   return { email, actor };
 }
 
-export async function createOrganization(api: AuthApi, slug = "company") {
-  return api.json(
-    OrganizationDetail,
-    "/organizations",
-    "POST",
-    {
-      metadata: { name: "Fixture Company" },
-      slug,
-    },
-    201,
-  );
+export async function currentOrganization(api: AuthApi) {
+  return api.json(OrganizationDetail, "/organization");
 }
 
 export async function signInWithEmail(api: AuthApi, mailbox: Mailbox, email: string) {

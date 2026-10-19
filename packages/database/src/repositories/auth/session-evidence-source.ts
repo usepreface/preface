@@ -19,16 +19,10 @@ export const usableSessionEvidenceSource = () =>
     and(
       inArray(sessionAuthentication.method, ["google", "oidc", "saml"]),
       eq(identityConnection.provider, sessionAuthentication.method),
-      or(
-        eq(sessionAuthentication.method, "google"),
-        and(
-          isNotNull(organization.id),
-          isNull(organization.archivedAt),
-          isNotNull(organizationMember.id),
-          isNull(organizationMember.suspendedAt),
-          isNull(organizationMember.removedAt),
-        ),
-      ),
+      isNotNull(organization.id),
+      isNotNull(organizationMember.id),
+      isNull(organizationMember.suspendedAt),
+      isNull(organizationMember.removedAt),
       isNotNull(account.id),
       isNull(account.unlinkedAt),
       eq(identityConnection.status, "active"),

@@ -160,47 +160,37 @@ layer(ApplicationTestLayer)("Organization SSO recovery", (it) => {
       }),
   );
 
-  it.effect(
-    "serializes concurrent recovery and preserves an explicit recovery route for archived organizations",
-    () =>
-      Effect.gen(function* () {
-        yield* (yield* TestDatabase).reset;
-        const application = yield* Application;
-        const fixture = yield* createRequiredSsoOrganization;
-        yield* application.organization.organization.archive(
+  it.effect("serializes concurrent recovery and restores normal organization access", () =>
+    Effect.gen(function* () {
+      yield* (yield* TestDatabase).reset;
+      const application = yield* Application;
+      const fixture = yield* createRequiredSsoOrganization;
+      const input = {
+        expectedRevision: fixture.policy.revision,
+        recoveryCredential: fixture.recovery.recoveryCredential,
+      };
+      const results = yield* Effect.all(
+        [
+          application.organization.authRecovery
+            .recover(fixture.owner.actor, fixture.organization.id, input)
+            .pipe(Effect.result),
+          application.organization.authRecovery
+            .recover(fixture.owner.actor, fixture.organization.id, input)
+            .pipe(Effect.result),
+        ],
+        { concurrency: 2 },
+      );
+      expect(results.filter(Result.isSuccess)).toHaveLength(1);
+      expect(results.find(Result.isFailure)?.failure).toMatchObject({
+        code: "REVISION_CONFLICT",
+      });
+      expect(
+        (yield* application.organization.organization.get(
           fixture.owner.actor,
           fixture.organization.id,
-        );
-        const input = {
-          expectedRevision: fixture.policy.revision,
-          recoveryCredential: fixture.recovery.recoveryCredential,
-        };
-        const results = yield* Effect.all(
-          [
-            application.organization.authRecovery
-              .recover(fixture.owner.actor, fixture.organization.id, input)
-              .pipe(Effect.result),
-            application.organization.authRecovery
-              .recover(fixture.owner.actor, fixture.organization.id, input)
-              .pipe(Effect.result),
-          ],
-          { concurrency: 2 },
-        );
-        expect(results.filter(Result.isSuccess)).toHaveLength(1);
-        expect(results.find(Result.isFailure)?.failure).toMatchObject({
-          code: "REVISION_CONFLICT",
-        });
-        yield* application.organization.organization.restore(
-          fixture.owner.actor,
-          fixture.organization.id,
-        );
-        expect(
-          (yield* application.organization.organization.get(
-            fixture.owner.actor,
-            fixture.organization.id,
-          )).organization.archivedAt,
-        ).toBeNull();
-      }),
+        )).access.isOwner,
+      ).toBe(true);
+    }),
   );
   it.effect(
     "serializes competing credential revocations so one prepared owner always remains",

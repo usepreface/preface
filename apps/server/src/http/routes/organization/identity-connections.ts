@@ -13,6 +13,7 @@ import {
 
 import { oidcFlowCookie, samlFlowCookie } from "#/http/cookies/browser-proof";
 import { mapInfrastructureError } from "#/http/errors";
+import { currentOrganizationId } from "#/http/organization";
 
 export const OrganizationIdentityConnectionsRoutes = HttpApiBuilder.group(
   PrefaceApi,
@@ -22,33 +23,30 @@ export const OrganizationIdentityConnectionsRoutes = HttpApiBuilder.group(
       const application = yield* Application;
       const connections = application.organization.identityConnection;
       return handlers.handleAll({
-        list: Effect.fn("http.oidcConnections.list")(function* ({ params }) {
+        list: Effect.fn("http.oidcConnections.list")(function* () {
           return yield* connections
-            .list(yield* CurrentActor, params.organizationId)
+            .list(yield* CurrentActor, yield* currentOrganizationId)
             .pipe(mapInfrastructureError);
         }),
         get: Effect.fn("http.oidcConnections.get")(function* ({ params }) {
           return yield* connections
-            .get(yield* CurrentActor, params.organizationId, params.connectionId)
+            .get(yield* CurrentActor, yield* currentOrganizationId, params.connectionId)
             .pipe(mapInfrastructureError);
         }),
-        create: Effect.fn("http.oidcConnections.create")(function* ({ params, payload }) {
+        create: Effect.fn("http.oidcConnections.create")(function* ({ payload }) {
           const input = yield* Schema.decodeUnknownEffect(CreateOidcConnectionInput)(payload).pipe(
             Effect.mapError(() => new RequestError({ code: "INVALID_INPUT" })),
           );
           return yield* connections
-            .createOidc(yield* CurrentActor, params.organizationId, input)
+            .createOidc(yield* CurrentActor, yield* currentOrganizationId, input)
             .pipe(mapInfrastructureError);
         }),
-        createSaml: Effect.fn("http.identityConnections.createSaml")(function* ({
-          params,
-          payload,
-        }) {
+        createSaml: Effect.fn("http.identityConnections.createSaml")(function* ({ payload }) {
           const input = yield* Schema.decodeUnknownEffect(CreateSamlConnectionInput)(payload).pipe(
             Effect.mapError(() => new RequestError({ code: "INVALID_INPUT" })),
           );
           return yield* connections
-            .createSaml(yield* CurrentActor, params.organizationId, input)
+            .createSaml(yield* CurrentActor, yield* currentOrganizationId, input)
             .pipe(mapInfrastructureError);
         }),
         updateSaml: Effect.fn("http.identityConnections.updateSaml")(function* ({
@@ -59,7 +57,12 @@ export const OrganizationIdentityConnectionsRoutes = HttpApiBuilder.group(
             Effect.mapError(() => new RequestError({ code: "INVALID_INPUT" })),
           );
           return yield* connections
-            .updateSaml(yield* CurrentActor, params.organizationId, params.connectionId, input)
+            .updateSaml(
+              yield* CurrentActor,
+              yield* currentOrganizationId,
+              params.connectionId,
+              input,
+            )
             .pipe(mapInfrastructureError);
         }),
         rotateSigningKey: Effect.fn("http.identityConnections.rotateSigningKey")(function* ({
@@ -69,7 +72,7 @@ export const OrganizationIdentityConnectionsRoutes = HttpApiBuilder.group(
           return yield* connections
             .rotateSigningKey(
               yield* CurrentActor,
-              params.organizationId,
+              yield* currentOrganizationId,
               params.connectionId,
               payload.expectedRevision,
             )
@@ -80,14 +83,19 @@ export const OrganizationIdentityConnectionsRoutes = HttpApiBuilder.group(
             Effect.mapError(() => new RequestError({ code: "INVALID_INPUT" })),
           );
           return yield* connections
-            .updateOidc(yield* CurrentActor, params.organizationId, params.connectionId, input)
+            .updateOidc(
+              yield* CurrentActor,
+              yield* currentOrganizationId,
+              params.connectionId,
+              input,
+            )
             .pipe(mapInfrastructureError);
         }),
         test: Effect.fn("http.oidcConnections.test")(function* ({ params, payload }) {
           const result = yield* connections
             .test(
               yield* CurrentActor,
-              params.organizationId,
+              yield* currentOrganizationId,
               params.connectionId,
               payload.expectedRevision,
             )
@@ -102,7 +110,7 @@ export const OrganizationIdentityConnectionsRoutes = HttpApiBuilder.group(
           return yield* connections
             .activate(
               yield* CurrentActor,
-              params.organizationId,
+              yield* currentOrganizationId,
               params.connectionId,
               payload.expectedRevision,
             )
@@ -112,7 +120,7 @@ export const OrganizationIdentityConnectionsRoutes = HttpApiBuilder.group(
           return yield* connections
             .disable(
               yield* CurrentActor,
-              params.organizationId,
+              yield* currentOrganizationId,
               params.connectionId,
               payload.expectedRevision,
             )
@@ -125,7 +133,7 @@ export const OrganizationIdentityConnectionsRoutes = HttpApiBuilder.group(
           return yield* connections
             .refreshMetadata(
               yield* CurrentActor,
-              params.organizationId,
+              yield* currentOrganizationId,
               params.connectionId,
               payload.expectedRevision,
             )
@@ -133,7 +141,12 @@ export const OrganizationIdentityConnectionsRoutes = HttpApiBuilder.group(
         }),
         link: Effect.fn("http.oidcConnections.link")(function* ({ params, payload }) {
           const result = yield* connections
-            .startLink(yield* CurrentActor, params.organizationId, params.connectionId, payload)
+            .startLink(
+              yield* CurrentActor,
+              yield* currentOrganizationId,
+              params.connectionId,
+              payload,
+            )
             .pipe(mapInfrastructureError);
           yield* (result.provider === "saml" ? samlFlowCookie : oidcFlowCookie).set(
             result.browserToken,
@@ -148,7 +161,7 @@ export const OrganizationIdentityConnectionsRoutes = HttpApiBuilder.group(
           const result = yield* connections
             .startReauthentication(
               yield* CurrentActor,
-              params.organizationId,
+              yield* currentOrganizationId,
               params.connectionId,
               payload,
             )

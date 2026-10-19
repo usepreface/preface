@@ -1,6 +1,6 @@
 import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema, OpenApi } from "effect/http-api";
 
-import { IdentityConnectionId, OrganizationId } from "@usepreface/protocol";
+import { IdentityConnectionId } from "@usepreface/protocol";
 import {
   CreateOidcConnectionRequest,
   UpdateOidcConnectionRequest,
@@ -18,9 +18,7 @@ import {
 import { identityErrors, organizationErrors, requestErrors } from "#/http-errors";
 import { SessionAuthentication } from "#/middleware/session-authentication";
 
-const organization = { organizationId: OrganizationId };
-
-const connection = { ...organization, connectionId: IdentityConnectionId };
+const connection = { connectionId: IdentityConnectionId };
 
 const errors = [...identityErrors, ...organizationErrors, ...requestErrors];
 
@@ -29,18 +27,15 @@ export class OrganizationIdentityConnectionsApi extends HttpApiGroup.make(
 )
   .add(
     HttpApiEndpoint.get("list", "/", {
-      params: organization,
       success: OrganizationIdentityConnectionList,
       error: errors,
     }),
     HttpApiEndpoint.post("create", "/", {
-      params: organization,
       payload: CreateOidcConnectionRequest,
       success: PublicOidcConnection.pipe(HttpApiSchema.status(201)),
       error: errors,
     }),
     HttpApiEndpoint.post("createSaml", "/saml", {
-      params: organization,
       payload: CreateSamlConnectionRequest,
       success: PublicSamlConnection.pipe(HttpApiSchema.status(201)),
       error: errors,
@@ -106,5 +101,5 @@ export class OrganizationIdentityConnectionsApi extends HttpApiGroup.make(
     }),
   )
   .middleware(SessionAuthentication)
-  .prefix("/organizations/:organizationId/identity-connections")
+  .prefix("/organization/identity-connections")
   .annotate(OpenApi.Title, "Organization identity connections") {}

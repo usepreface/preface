@@ -59,7 +59,7 @@ export const makeSigningKeys = Effect.gen(function* () {
     if (connection?.provider !== "saml" || connection.organizationId !== organizationId)
       return yield* new IdentityError({ code: "CONNECTION_NOT_FOUND" });
     yield* access.requireOwner(actor, organizationId, { lock });
-    yield* identities.requireRecentEmail(actor);
+    yield* identities.requireVerifiedEmail(actor);
     if (revision !== undefined && connection.revision !== revision)
       return yield* new IdentityError({ code: "REVISION_CONFLICT" });
     return connection;

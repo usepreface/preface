@@ -29,9 +29,7 @@ layer(HttpTestLayer, { excludeTestServices: true })("invitation HTTP boundary", 
               }),
             ),
         });
-        const created = yield* ownerApi.organizations.create({
-          payload: { metadata: { name: "Knowledge" }, slug: "knowledge" },
-        });
+        const created = yield* ownerApi.organizations.get();
         const params = { organizationId: created.organization.id };
         const memberRole = yield* repository.organization.role.findByKey(
           params.organizationId,
@@ -39,7 +37,6 @@ layer(HttpTestLayer, { excludeTestServices: true })("invitation HTTP boundary", 
         );
         if (memberRole === undefined) throw new Error("Expected member role");
         const [invitation, response] = yield* ownerApi.organizationInvitations.create({
-          params,
           payload: { email: " New@Example.Test ", roleIds: [memberRole.id] },
           responseMode: "decoded-and-response",
         });
@@ -52,7 +49,7 @@ layer(HttpTestLayer, { excludeTestServices: true })("invitation HTTP boundary", 
         );
         if (stored === undefined) throw new Error("Expected invitation");
         const delivery = yield* ownerApi.organizationInvitations.delivery({
-          params: { ...params, invitationId: invitation.id },
+          params: { invitationId: invitation.id },
         });
         expect(delivery).toMatchObject({ status: "pending", attempts: 0, lastErrorCode: null });
         expect(delivery).not.toHaveProperty("encryptedPayload");
@@ -72,7 +69,7 @@ layer(HttpTestLayer, { excludeTestServices: true })("invitation HTTP boundary", 
             ),
         });
         expect(
-          yield* publicApi.organizationInvitations.list({ params, query: {} }).pipe(Effect.flip),
+          yield* publicApi.organizationInvitations.list({ query: {} }).pipe(Effect.flip),
         ).toMatchObject({ _tag: "AuthenticationError", code: "UNAUTHENTICATED" });
         expect((yield* publicApi.invitations.inspect({ payload })).organization.id).toBe(
           params.organizationId,
@@ -128,7 +125,7 @@ layer(HttpTestLayer, { excludeTestServices: true })("invitation HTTP boundary", 
             .memberId,
         ).toBe(accepted.memberId);
         expect(
-          (yield* ownerApi.organizationInvitations.list({ params, query: {} })).invitations[0]
+          (yield* ownerApi.organizationInvitations.list({ query: {} })).invitations[0]
             ?.acceptedByUserId,
         ).toBe(accepted.actor.user.id);
         expect(

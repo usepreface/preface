@@ -47,7 +47,7 @@ Use `preface-source` for source development or build workspace dependencies befo
 | `session.revoke()`                               | `DELETE /api/v1/auth/session`             | `204`                                                  |
 
 Inspection accepts `{ token }`. Request verification accepts
-`{ token, instanceName, ownerName, email }`. The 202 response contains
+`{ token, organizationName, ownerName, email }`. The 202 response contains
 `{ challengeId, expiresAt, resendAt }`, never a code or session. Resend accepts
 `{ token, challengeId }`. Completion accepts `{ token, challengeId, code }` with the
 eight-digit emailed code and requires both operator proof and mailbox access.
@@ -88,31 +88,27 @@ All paths below are relative to `/api/v1` and require the session cookie.
 requires instance ownership; organization operations use current membership,
 authentication policy and permissions. Instance ownership alone grants no tenant access.
 
-| Client method                                            | Method and route                                                  | Result                                |
-| -------------------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------- |
-| `instanceCapabilities.get()`                             | `GET /instance/capabilities`                                      | `{ canCreateOrganization }`           |
-| `organizations.create({ payload })`                      | `POST /organizations`                                             | `201` `OrganizationDetail`            |
-| `organizations.list({ query })`                          | `GET /organizations`                                              | `OrganizationList`                    |
-| `organizations.get({ params })`                          | `GET /organizations/:organizationId`                              | `OrganizationDetail`                  |
-| `organizations.access({ params })`                       | `GET /organizations/:organizationId/access`                       | `OrganizationAccessInfo`              |
-| `organizations.update({ params, payload })`              | `PATCH /organizations/:organizationId`                            | `PublicOrganization`                  |
-| `organizations.archive({ params, payload: {} })`         | `POST /organizations/:organizationId/archive`                     | `PublicOrganization`                  |
-| `organizations.restore({ params, payload: {} })`         | `POST /organizations/:organizationId/restore`                     | `PublicOrganization`                  |
-| `organizations.authPolicy({ params })`                   | `GET /organizations/:organizationId/auth-policy`                  | `PublicOrganizationAuthPolicy`        |
-| `organizationMembers.list({ params, query })`            | `GET /organizations/:organizationId/members`                      | `OrganizationMemberList`              |
-| `organizationMembers.suspend({ params, payload: {} })`   | `POST /organizations/:organizationId/members/:memberId/suspend`   | `204`                                 |
-| `organizationMembers.reinstate({ params, payload: {} })` | `POST /organizations/:organizationId/members/:memberId/reinstate` | `204`                                 |
-| `organizationMembers.remove({ params })`                 | `DELETE /organizations/:organizationId/members/:memberId`         | `204`                                 |
-| `organizationMembers.leave({ params, payload: {} })`     | `POST /organizations/:organizationId/leave`                       | `204`                                 |
-| `organizationRoles.list({ params, query })`              | `GET /organizations/:organizationId/roles`                        | `OrganizationRoleList`                |
-| `organizationRoles.create({ params, payload })`          | `POST /organizations/:organizationId/roles`                       | `201` `PublicOrganizationRole`        |
-| `organizationRoles.update({ params, payload })`          | `PATCH /organizations/:organizationId/roles/:roleId`              | `PublicOrganizationRole`              |
-| `organizationRoles.archive({ params })`                  | `DELETE /organizations/:organizationId/roles/:roleId`             | `204`                                 |
-| `organizationRoleBindings.grant({ params, payload })`    | `POST /organizations/:organizationId/role-bindings`               | `201` `PublicOrganizationRoleBinding` |
-| `organizationRoleBindings.revoke({ params })`            | `DELETE /organizations/:organizationId/role-bindings/:bindingId`  | `204`                                 |
-| `organizationOwnership.grant({ params, payload: {} })`   | `PUT /organizations/:organizationId/owners/:memberId`             | `204`                                 |
-| `organizationOwnership.revoke({ params })`               | `DELETE /organizations/:organizationId/owners/:memberId`          | `204`                                 |
-| `organizationOwnership.transfer({ params, payload })`    | `POST /organizations/:organizationId/ownership/transfer`          | `204`                                 |
+| Client method                                            | Method and route                                 | Result                                |
+| -------------------------------------------------------- | ------------------------------------------------ | ------------------------------------- |
+| `instanceCapabilities.get()`                             | `GET /instance/capabilities`                     | `{ isInstanceOwner }`                 |
+| `organizations.get()`                                    | `GET /organization`                              | `OrganizationDetail`                  |
+| `organizations.access()`                                 | `GET /organization/access`                       | `OrganizationAccessInfo`              |
+| `organizations.update({ payload })`                      | `PATCH /organization`                            | `PublicOrganization`                  |
+| `organizations.authPolicy()`                             | `GET /organization/auth-policy`                  | `PublicOrganizationAuthPolicy`        |
+| `organizationMembers.list({ params, query })`            | `GET /organization/members`                      | `OrganizationMemberList`              |
+| `organizationMembers.suspend({ params, payload: {} })`   | `POST /organization/members/:memberId/suspend`   | `204`                                 |
+| `organizationMembers.reinstate({ params, payload: {} })` | `POST /organization/members/:memberId/reinstate` | `204`                                 |
+| `organizationMembers.remove({ params })`                 | `DELETE /organization/members/:memberId`         | `204`                                 |
+| `organizationMembers.leave({ payload: {} })`             | `POST /organization/leave`                       | `204`                                 |
+| `organizationRoles.list({ params, query })`              | `GET /organization/roles`                        | `OrganizationRoleList`                |
+| `organizationRoles.create({ params, payload })`          | `POST /organization/roles`                       | `201` `PublicOrganizationRole`        |
+| `organizationRoles.update({ params, payload })`          | `PATCH /organization/roles/:roleId`              | `PublicOrganizationRole`              |
+| `organizationRoles.archive({ params })`                  | `DELETE /organization/roles/:roleId`             | `204`                                 |
+| `organizationRoleBindings.grant({ params, payload })`    | `POST /organization/role-bindings`               | `201` `PublicOrganizationRoleBinding` |
+| `organizationRoleBindings.revoke({ params })`            | `DELETE /organization/role-bindings/:bindingId`  | `204`                                 |
+| `organizationOwnership.grant({ params, payload: {} })`   | `PUT /organization/owners/:memberId`             | `204`                                 |
+| `organizationOwnership.revoke({ params })`               | `DELETE /organization/owners/:memberId`          | `204`                                 |
+| `organizationOwnership.transfer({ params, payload })`    | `POST /organization/ownership/transfer`          | `204`                                 |
 
 Creation accepts `{ metadata: { name, description? }, slug }`; organization update accepts
 `metadata` and/or `slug`. Metadata patches preserve omitted fields; `description: null` clears it.
@@ -139,15 +135,15 @@ uniqueness conflicts to 409. Outsiders and removed/suspended memberships receive
 
 ## Invitations
 
-| Method | Path                                                              | Result                                                                |
-| ------ | ----------------------------------------------------------------- | --------------------------------------------------------------------- |
-| POST   | `/organizations/:organizationId/invitations`                      | 201 `PublicInvitation`                                                |
-| GET    | `/organizations/:organizationId/invitations`                      | `InvitationList`                                                      |
-| POST   | `/organizations/:organizationId/invitations/:invitationId/resend` | `PublicInvitation`                                                    |
-| DELETE | `/organizations/:organizationId/invitations/:invitationId`        | 204                                                                   |
-| POST   | `/invitations/inspect`                                            | `InvitationPreview`                                                   |
-| POST   | `/invitations/verification/request`                               | 202 challenge identity/expiry; browser cookie                         |
-| POST   | `/invitations/accept`                                             | 201 `{ nextAction, actor, organizationId, memberId }`; session cookie |
+| Method | Path                                             | Result                                                                |
+| ------ | ------------------------------------------------ | --------------------------------------------------------------------- |
+| POST   | `/organization/invitations`                      | 201 `PublicInvitation`                                                |
+| GET    | `/organization/invitations`                      | `InvitationList`                                                      |
+| POST   | `/organization/invitations/:invitationId/resend` | `PublicInvitation`                                                    |
+| DELETE | `/organization/invitations/:invitationId`        | 204                                                                   |
+| POST   | `/invitations/inspect`                           | `InvitationPreview`                                                   |
+| POST   | `/invitations/verification/request`              | 202 challenge identity/expiry; browser cookie                         |
+| POST   | `/invitations/accept`                            | 201 `{ nextAction, actor, organizationId, memberId }`; session cookie |
 
 Paths use the same `/api/v1` prefix. Typed-client groups are `organizationInvitations`
 and `invitations`. Management requires cookie authentication; listing/revocation need
@@ -176,19 +172,19 @@ All paths use `/api/v1` and cookie authentication. Team directory listing requir
 and role operations use current team permissions. Organization `teams.manage` explicitly
 supplies team administration without requiring team membership.
 
-| Client method                                                         | Method and path                                            |
-| --------------------------------------------------------------------- | ---------------------------------------------------------- |
-| `profile.get()` / `profile.update({ payload })`                       | GET / PATCH `/users/me`                                    |
-| `teams.create({ params, payload })` / `teams.list({ params, query })` | POST / GET `/organizations/:organizationId/teams`          |
-| `teams.get({ params })` / `teams.update({ params, payload })`         | GET / PATCH `/organizations/:organizationId/teams/:teamId` |
-| `teams.archive({ params, payload: {} })`                              | POST `…/:teamId/archive`                                   |
-| `teams.access({ params })`                                            | GET `…/:teamId/access`                                     |
-| `teams.roles({ params, query })`                                      | GET `…/:teamId/roles`                                      |
-| `teams.members({ params, query })`                                    | GET `…/:teamId/members`                                    |
-| `teams.addMember({ params, payload: {} })`                            | PUT `…/:teamId/members/:memberId`                          |
-| `teams.removeMember({ params })`                                      | DELETE `…/:teamId/members/:memberId`                       |
+| Client method                                                         | Method and path                           |
+| --------------------------------------------------------------------- | ----------------------------------------- |
+| `profile.get()` / `profile.update({ payload })`                       | GET / PATCH `/users/me`                   |
+| `teams.create({ params, payload })` / `teams.list({ params, query })` | POST / GET `/organization/teams`          |
+| `teams.get({ params })` / `teams.update({ params, payload })`         | GET / PATCH `/organization/teams/:teamId` |
+| `teams.archive({ params, payload: {} })`                              | POST `…/:teamId/archive`                  |
+| `teams.access({ params })`                                            | GET `…/:teamId/access`                    |
+| `teams.roles({ params, query })`                                      | GET `…/:teamId/roles`                     |
+| `teams.members({ params, query })`                                    | GET `…/:teamId/members`                   |
+| `teams.addMember({ params, payload: {} })`                            | PUT `…/:teamId/members/:memberId`         |
+| `teams.removeMember({ params })`                                      | DELETE `…/:teamId/members/:memberId`      |
 
-Team create/update payloads follow the organization metadata/slug shape. Profiles accept
+Team create/update payloads include versioned presentation metadata and a team slug. Profiles accept
 `{ metadata: { name?, title?, bio? } }`; `null` clears title/bio. Image/logo metadata is
 optional presentation data; upload and image editing routes are not available. Team member
 responses include safe user metadata and current scoped roles. Lists use the existing cursor
@@ -220,40 +216,19 @@ Scalar at `/api/docs` always. Health routes and operator commands are server con
 are absent from the product specification. Endpoint status variants have narrowed code schemas
 so documentation and generated-client decoding agree with the actual HTTP status.
 
-## Google and reauthentication
+## Google and authentication methods
 
-All routes use `/api/v1`. `google.methods()` reads installation-wide availability;
-`google.start({ payload: {} })` begins signed-out login. The shared GET Google callback is a browser
-redirect endpoint returning 303; follow authorization URLs in the browser holding the flow cookie.
-Successful sign-in sets the existing session cookie. Never log authorization URLs or callback queries.
+Google configuration uses `/api/v1/organization/authentication/google`: GET/PUT for
+settings, POST `/test`, `/activate` and `/disable` for lifecycle. Organization owners
+use their current session; no separate five-minute email proof is required.
 
-`identityConnections.getGoogle/saveGoogle/testGoogle/activateGoogle/disableGoogle` use
-`/instance/authentication/google` and its `/test`, `/activate`, `/disable` actions. Save is PUT with
-`{ expectedRevision, clientId, clientSecret?, name? }`; first save uses revision zero and requires
-the secret. Action payloads contain `expectedRevision`. Test returns `GoogleStartResult`; other
-operations return `PublicGoogleConnection` without secrets. Instance ownership and recent email
-proof are enforced by application workflows.
-
-`accounts.list/startGoogle/unlink` map to GET `/users/me/accounts`, POST its `/google/start`, and
-DELETE `/:accountId`. `reauthentication.startGoogle` maps to POST `/auth/reauthentication/google/start`.
-All starts accept `{ returnPath?: string }` with a bounded relative path on the configured frontend origin. Account responses include safe provider email,
-link history and connection availability; they contain neither stable provider subjects nor tokens.
-
-`reauthentication.requestEmail/resendEmail/verifyEmail` map to POST
-`/auth/reauthentication/email/request`, `/resend`, `/verify`. Request takes `{}`; resend and verify
-reuse the email sign-in wire payloads with a separate browser cookie and existing session.
-Issuance returns 202 `EmailSignInChallenge`; verification returns 204 without replacing the session.
-
-`authenticationPolicy.methods({ params })` reads GET
-`/organizations/:organizationId/authentication/methods`. Its response distinguishes Google
-preference, global availability and effective availability. `authenticationPolicy.update` PATCHes
-`/organizations/:organizationId/auth-policy` with `{ expectedRevision, googleEnabled }` and returns
-`PublicOrganizationAuthPolicy`. Organization ownership, recent email and active global configuration
-are required to enable; both email methods remain enabled.
-
-Expected failures use `IdentityError` and closed code/status mappings. Expired/replayed browser
-flows are 401, unavailable configuration and revision/account conflicts are 409, recent-proof or
-authority failures are 403, and provider unavailability is 503. Infrastructure causes remain private.
+`accounts.startGoogle` links an identity. `google.start` and `google.callback` retain
+browser-bound provider sign-in. Public discovery is `GET /api/v1/auth/discovery` and
+lists the single organization's supported methods without email or slug input.
+`GET /api/v1/auth/access` returns current authentication requirements for an active
+member. No route selects an organization. Email administrative reauthentication
+endpoints have been removed. OIDC/SAML renewal remains available to satisfy required
+SSO after the configured authentication age elapses.
 
 ## Verification
 
@@ -272,7 +247,7 @@ is tested in the server package.
 
 All paths use `/api/v1`. The `organizationIdentityConnections` client group exposes:
 
-- `list`/`create`: GET/POST `/organizations/:organizationId/identity-connections`.
+- `list`/`create`: GET/POST `/organization/identity-connections`.
 - `get`/`update`: GET/PATCH the connection's `/:connectionId` path.
 - `test`, `activate`, `disable`, `refreshMetadata`: POST its `/test`, `/activate`, `/disable`,
   `/refresh-metadata` action, with `{ expectedRevision }`.
@@ -284,9 +259,9 @@ clientAuthenticationMethod }`. The supported authentication methods are `client_
 and `client_secret_post`. Update takes expected revision and optional name/issuer/client ID/
 secret/authentication method. Issuer/client ID cannot change after first activation. Configuration
 responses include versioned discovered endpoints, test/activation timestamps and secret presence;
-never credentials. Reads require organization ownership; mutations also need recent email.
+never credentials. Reads require organization ownership; mutations also need a current authenticated session.
 
-`oidc.start` POSTs `/organizations/:organizationId/identity-connections/:connectionId/sign-in/start`
+`oidc.start` POSTs `/organization/identity-connections/:connectionId/sign-in/start`
 from a signed-out browser. `oidc.callback` is GET `/auth/oidc/callback`, a browser redirect endpoint
 returning 303. Starts return authorization URL/expiry and set the server-owned `preface_oidc_flow`
 cookie. Follow the URL in the same browser; successful sign-in sets the normal session cookie.
@@ -297,13 +272,13 @@ The existing policy PATCH accepts `{ expectedRevision, oidcConnectionIds }`, opt
 accepts up to 20 distinct same-organization connections. Policy responses include connection IDs.
 Member method discovery returns an `oidc` array of `{ id, name, available, linked }`. The existing
 account list includes OIDC provider/connection/organization summaries, and DELETE account unlinks
-with recent email proof. Email remains available for global login. Required SSO and recovery are described below.
+with a current authenticated session. Email remains available for global login. Required SSO and recovery are described below.
 
 ## Required organization SSO
 
 All following paths are relative to `/api/v1` and use the existing session cookie and trusted-Origin
 mutation policy. `authenticationPolicy.readiness` reads
-`GET /organizations/:organizationId/auth-policy/readiness` as a current owner, even before satisfying
+`GET /organization/auth-policy/readiness` as a current owner, even before satisfying
 SSO. It returns `policyRevision`, `ready`, typed `blockers`, approved connection availability and
 owner link/recovery readiness. Member `authenticationPolicy.methods` adds `ssoMode`,
 `ssoMaxAgeSeconds`, `authenticationSatisfied`, `emailSatisfiesOrganization` and `nextAction`.
@@ -322,26 +297,25 @@ reauthentication and issuing an offline recovery credential, enable SSO through 
 }
 ```
 
-The credential is checked but not consumed. Local email and provider authentication must both be
-within five minutes. The age range is 300–604,800 seconds, with 43,200 as the default. Policy responses
-include mode/age and no credentials. The approved organization connections satisfy SSO; installation
-Google and email do not. Expired provider authentication requires the existing OIDC reauthentication
+The credential is checked but not consumed. Provider authentication must satisfy the
+resulting policy age; administrative email step-up is not required. The age range is 300–604,800 seconds, with 43,200 as the default. Policy responses
+include mode/age and no credentials. The approved organization connections satisfy SSO; Google and email do not. Expired provider authentication requires the existing OIDC reauthentication
 flow, without extending the Preface session's absolute expiry.
 
 `organizationAuthRecovery` exposes the current owner's recovery credential:
 
-- `get`: GET `/organizations/:organizationId/auth-recovery`, returning `{ credential: null }` or
+- `get`: GET `/organization/auth-recovery`, returning `{ credential: null }` or
   `{ credential: { id, createdAt } }`.
 - `rotate`: POST its `/rotate` action with `{}`, returning `{ id, createdAt, recoveryCredential }`.
   This is the only response containing the secret. Store it in a password manager; the response
   uses `Cache-Control: no-store`. Rotation revokes the previous credential.
 - `revoke`: DELETE the base path, returning 204. Removing the final required recovery path fails.
 - `recover`: POST its `/recover` action with `{ expectedRevision, recoveryCredential }`, returning
-  the updated public authentication policy. Requires current ownership and recent local email,
+  the updated public authentication policy. Requires current ownership and a current authenticated session,
   but no provider proof. It consumes the owner-bound credential and makes SSO optional atomically
-  with audit and owner notifications. It does not restore an archived organization.
+  with audit and owner notifications. The sole organization has no archive lifecycle.
 
-Normal rotation/revocation require owner access satisfying current policy and recent local email.
+Normal rotation/revocation require owner access satisfying current policy and a current authenticated session.
 Recovery status/readiness and credential redemption use narrowly scoped owner checks. Credential
 redemption cannot grant membership or ownership. Credentials have no automatic expiry and are
 revoked on owner suspension, removal or demotion. A lost issuance response requires another rotation.
@@ -356,7 +330,7 @@ Signed-out callers receive no organization provider directory.
 The existing connection list/get and lifecycle endpoints return OIDC or SAML connection DTOs.
 SAML uses these additional `organizationIdentityConnections` actions, relative to `/api/v1`:
 
-- `createSaml`: POST `/organizations/:organizationId/identity-connections/saml` with `{ name }`.
+- `createSaml`: POST `/organization/identity-connections/saml` with `{ name }`.
   Returns 201, including generated SP certificate, entity ID, ACS URL, metadata URL and `idp: null`.
 - `updateSaml`: PATCH the connection's `/:connectionId/saml` path with `{ expectedRevision, name?, idp? }`.
 - `rotateSigningKey`: POST its `/:connectionId/saml/rotate-signing-key` path with `{ expectedRevision }`.
@@ -384,15 +358,15 @@ profile, certificate lifecycle and shared required-SSO/owner-recovery guarantees
 
 ## Organization domains
 
-Authenticated organization owners manage `/api/v1/organizations/:organizationId/domains`.
+Authenticated organization owners manage `/api/v1/organization/domains`.
 Create with `{ domain }`; verification request/confirm and revocation take
 `{ expectedRevision }`. Request returns `{ domain, recordName, recordValue, expiresAt }` for
 the DNS TXT instruction. Claims last one year after verification; challenges last 30 minutes.
 Instance owners may manually approve the exact claim through
-`POST /api/v1/instance/organizations/:organizationId/domains/:domainId/approve`.
+`POST /api/v1/instance/organization/domains/:domainId/approve`.
 Connection `/domains` GET/PUT reads or replaces approved claims with
 `{ expectedRevision, domainIds }`. Only verified claims for that organization are accepted.
-These mutations require recent local email and do not create accounts or memberships.
+These mutations require a current authenticated session and do not create accounts or memberships.
 
 ## Direct invitation SSO and continuation
 
@@ -410,15 +384,14 @@ to read `{ flowId, provider, nextAction, maskedEmail, expiresAt }`. Request a co
 `{ nextAction, redirectTo }` and delivers a session only through its cookie. All these POSTs
 require a trusted Origin. Flow IDs alone are insufficient authority.
 
-`POST /api/v1/auth/discovery` accepts `{ email, organizationSlug? }` and returns email/Google
-availability plus eligible enterprise connections. It does not disclose whether an account or
-membership exists. Authenticated organization selection uses a JSON `{}` POST to
-`/api/v1/auth/organizations/:organizationId/select`, returning current authentication requirements.
+`GET /api/v1/auth/discovery` returns supported methods without an email or slug.
+`GET /api/v1/auth/access` returns the authenticated member's current requirements.
+Neither route selects an organization or bypasses its access policy.
 
 ## Audit history
 
-`GET /api/v1/organizations/:organizationId/audit-events` requires `audit.read`; built-in owners
-and administrators have it. `GET /api/v1/instance/audit-events` requires recent-email-authenticated
+`GET /api/v1/organization/audit-events` requires `audit.read`; built-in owners
+and administrators have it. `GET /api/v1/instance/audit-events` requires session-eligibility-authenticated
 instance ownership and returns only instance administration and operator domain decisions.
 List responses are `{ events, nextCursor }`; limits default to 25 and cap at 100. Filters are
 `eventType`, `actorUserId`, `targetId`, `after`, `before` and the returned opaque JSON `cursor`.
@@ -426,22 +399,22 @@ Each path's `/export` returns `{ contentType, filename, content, nextCursor }` c
 page of at most 1,000 events. Continue with `nextCursor` when present; exports retain scope checks.
 
 Instance owners review a domain before manual approval with
-`GET /api/v1/instance/organizations/:organizationId/domains/:domainId` and can withdraw manual
+`GET /api/v1/instance/organization/domains/:domainId` and can withdraw manual
 approval with its `/revoke` POST and `{ expectedRevision }`. This grants no organization membership.
 
-Organization connection owners can read `GET /api/v1/organizations/:organizationId/identity-connections/:connectionId/health`.
+Organization connection owners can read `GET /api/v1/organization/identity-connections/:connectionId/health`.
 Staged SAML rollover uses `/saml/keys` to list/prepare, then `/:keyId/test`, `/:keyId/activate` and
 `/:keyId/retire` with `expectedRevision`. Import the overlapping metadata at the IdP before testing.
-All mutations require recent email authentication. Key responses contain no private keys.
-Invitation managers can inspect `GET /api/v1/organizations/:organizationId/invitations/:invitationId/delivery`
+All mutations require a current authenticated session authentication. Key responses contain no private keys.
+Invitation managers can inspect `GET /api/v1/organization/invitations/:invitationId/delivery`
 for safe current-job status and retry diagnostics.
 
-For an IdP application tile, use `GET /api/v1/organizations/:organizationId/identity-connections/:connectionId/saml/login`
+For an IdP application tile, use `GET /api/v1/organization/identity-connections/:connectionId/saml/login`
 with an optional relative `returnPath`. It redirects into a fresh SP-bound login, or forced
 reauthentication for an authenticated current member. It does not accept unsolicited assertions.
 
 `organizationRoleBindings.list({ params: { organizationId }, query: { memberId, teamId? } })`
-reads active assignment identities at GET `/organizations/:organizationId/role-bindings`.
+reads active assignment identities at GET `/organization/role-bindings`.
 Organization assignments require `roles.read`; supplying `teamId` requires that team's
 `team.roles.read`. The response is `{ bindings }`, scoped to that member and exact scope,
 so editors can revoke an existing grant without guessing its identity.

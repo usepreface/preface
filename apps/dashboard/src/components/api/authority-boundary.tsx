@@ -4,6 +4,7 @@ import { useRouterState } from "@tanstack/react-router";
 
 import { useAuthorityReset } from "#/hooks/authority";
 import { useSession } from "#/hooks/session";
+import { isPublicPath } from "#/lib/route-access";
 
 export function AuthorityBoundary({ children }: { children: ReactNode }) {
   const session = useSession();
@@ -22,10 +23,7 @@ export function AuthorityBoundary({ children }: { children: ReactNode }) {
     };
   }, [session.refetch]);
 
-  if (
-    blocked ||
-    (fingerprint === "signed-out" && /^(\/org\/|\/account|\/instance|\/organizations)/.test(path))
-  )
+  if (blocked || (fingerprint === "signed-out" && !isPublicPath(path)))
     return (
       <p role="status" className="p-6">
         Checking your session…

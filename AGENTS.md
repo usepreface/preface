@@ -1,13 +1,17 @@
 # Preface repository guide
 
 Preface is self-hosted knowledge infrastructure with installation-wide identity
-and multiple organizations. This repository is a pnpm/Turborepo TypeScript
+and exactly one organization per installation. This repository is a pnpm/Turborepo TypeScript
 monorepo targeting Node.js 24 and using Effect v4.
 
-Signup is invitation-only. Only instance owners may create organizations.
-Instance ownership and organization membership are separate authorities; being
-an instance owner does not automatically grant access to organization content.
-Neither signup nor organization creation policy is a configurable setting.
+Signup is invitation-only. Installation verification atomically creates the sole
+organization, owner membership, roles, authentication policy and owner session.
+Additional organization creation, selection and archival are not product features.
+Instance operator grants and organization memberships remain separate authorities;
+bootstrap explicitly grants both to the first owner. Later operator grants do not
+implicitly grant content access. Administrative actions use the current authorized
+session without a five-minute email step-up. Required SSO policy, session expiry,
+role checks and explicit owner recovery remain enforced.
 
 ## Working sequence
 
@@ -109,7 +113,7 @@ Apply these conventions to public documentation when it is introduced.
 - Keep Installation focused on requirements and install commands. A short page
   is fine; do not pad it with import checks or redundant setup explanations.
 - Order Getting Started by the actual user workflow: installation, instance
-  setup, account/session setup, first organization, then the documented task.
+  setup with its organization, account/session setup, then the documented task.
   Use ordinary H2/H3 headings, not numbered Steps wrappers. Short ordered lists
   within setup sections are fine.
 - Use documentation components when they help: package-manager tabs and

@@ -7,37 +7,37 @@ write schemas; they do not authorize business actors or deliver HTTP responses.
 
 ## Domain schemas
 
-| Table                                 | Durable responsibility                                                                         |
-| ------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `instance.installation`               | Fixed singleton row, UUIDv7 installation identity, setup proof window and completion           |
-| `instance.settings`                   | Instance display name, optimistic revision and lifecycle timestamps                            |
-| `instance.bootstrap_challenge`        | One pending setup challenge, code HMAC, proof binding, expiry, attempt budget and email job    |
-| `instance.owner`                      | Owner grants, attribution and revocation history                                               |
-| `auth.user`                           | Installation-wide identity, versioned metadata, disabled state and lifecycle                   |
-| `auth.user_email`                     | Active email ownership, primary designation, verification and login eligibility                |
-| `auth.verification`                   | Browser-bound single-use code/link proofs and durable attempt budget                           |
-| `auth.session_authentication`         | Session authentication method, email/account source, assurance and expiry                      |
-| `auth.identity_connection`            | Installation Google or organization OIDC/SAML trust, encrypted credentials and tested revision |
-| `auth.identity_connection_domain`     | Revision-bound verified domain approvals for organization connections                          |
-| `auth.identity_connection_key`        | Pending/retiring SAML certificates and encrypted pending signing keys                          |
-| `auth.account`                        | Historical provider subject/user bindings and unlink state                                     |
-| `auth.auth_flow`                      | Browser-bound external transactions, terminal state and encrypted PKCE or verified context     |
-| `auth.sso_replay`                     | Shared reservations of consumed SAML response/assertion identifiers                            |
-| `auth.session`                        | Credential digest, activity, absolute expiry and revocation                                    |
-| `organization.organization`           | Versioned metadata, unique slug, creator attribution, archive state and lifecycle              |
-| `organization.member`                 | Stable user/organization relationship, suspension and removal                                  |
-| `organization.role`                   | Protected built-ins and custom code-owned permission sets                                      |
-| `organization.role_binding`           | Attributed member grants and revocation history                                                |
-| `organization.invitation`             | Intended email, inviter, token digest, email job, deadline and acceptance/revocation           |
-| `organization.invitation_assignment`  | Tenant- and scope-bound organization/team role assignments                                     |
-| `organization.team`                   | Organization-scoped slug, versioned metadata, creator and archive state                        |
-| `organization.team_member`            | Direct team membership of an organization member with removal history                          |
-| `organization.auth_policy`            | Configured methods, SSO requirement/freshness and policy revision                              |
-| `organization.auth_policy_connection` | Approved same-organization identity connections and approving member                           |
-| `organization.auth_recovery_token`    | Owner-bound recovery credential digests and consumption/revocation                             |
-| `organization.domain`                 | Domain verification challenge, validity, revision and operator approval attribution            |
-| `audit.event`                         | Typed actor/event/target metadata and occurrence time                                          |
-| `jobs.email`                          | Encrypted email intent, deduplication, attempt state and token-owned delivery lease            |
+| Table                                 | Durable responsibility                                                                      |
+| ------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `instance.installation`               | Fixed singleton row, UUIDv7 installation identity, setup proof window and completion        |
+| `instance.settings`                   | Instance display name, optimistic revision and lifecycle timestamps                         |
+| `instance.bootstrap_challenge`        | One pending setup challenge, code HMAC, proof binding, expiry, attempt budget and email job |
+| `instance.owner`                      | Owner grants, attribution and revocation history                                            |
+| `auth.user`                           | Installation-wide identity, versioned metadata, disabled state and lifecycle                |
+| `auth.user_email`                     | Active email ownership, primary designation, verification and login eligibility             |
+| `auth.verification`                   | Browser-bound single-use code/link proofs and durable attempt budget                        |
+| `auth.session_authentication`         | Session authentication method, email/account source, assurance and expiry                   |
+| `auth.identity_connection`            | Organization Google/OIDC/SAML trust, encrypted credentials and tested revision              |
+| `auth.identity_connection_domain`     | Revision-bound verified domain approvals for organization connections                       |
+| `auth.identity_connection_key`        | Pending/retiring SAML certificates and encrypted pending signing keys                       |
+| `auth.account`                        | Historical provider subject/user bindings and unlink state                                  |
+| `auth.auth_flow`                      | Browser-bound external transactions, terminal state and encrypted PKCE or verified context  |
+| `auth.sso_replay`                     | Shared reservations of consumed SAML response/assertion identifiers                         |
+| `auth.session`                        | Credential digest, activity, absolute expiry and revocation                                 |
+| `organization.organization`           | One organization per installation, versioned metadata, creator and timestamps               |
+| `organization.member`                 | Stable user/organization relationship, suspension and removal                               |
+| `organization.role`                   | Protected built-ins and custom code-owned permission sets                                   |
+| `organization.role_binding`           | Attributed member grants and revocation history                                             |
+| `organization.invitation`             | Intended email, inviter, token digest, email job, deadline and acceptance/revocation        |
+| `organization.invitation_assignment`  | Tenant- and scope-bound organization/team role assignments                                  |
+| `organization.team`                   | Organization-scoped slug, versioned metadata, creator and archive state                     |
+| `organization.team_member`            | Direct team membership of an organization member with removal history                       |
+| `organization.auth_policy`            | Configured methods, SSO requirement/freshness and policy revision                           |
+| `organization.auth_policy_connection` | Approved same-organization identity connections and approving member                        |
+| `organization.auth_recovery_token`    | Owner-bound recovery credential digests and consumption/revocation                          |
+| `organization.domain`                 | Domain verification challenge, validity, revision and operator approval attribution         |
+| `audit.event`                         | Typed actor/event/target metadata and occurrence time                                       |
+| `jobs.email`                          | Encrypted email intent, deduplication, attempt state and token-owned delivery lease         |
 
 Tables use singular SQL names and UUIDv7 identities generated by the shared UUID
 function. Application defaults do not generate IDs for arbitrary direct SQL writers.

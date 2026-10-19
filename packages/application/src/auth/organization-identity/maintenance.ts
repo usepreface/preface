@@ -49,7 +49,6 @@ export const makeConnectionMaintenance = Effect.gen(function* () {
             );
             if (
               organization === undefined ||
-              organization.archivedAt !== null ||
               (yield* repository.audit.event.hasCertificateWarning(current.id, details.fingerprint))
             )
               return;

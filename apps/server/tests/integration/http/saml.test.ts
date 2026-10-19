@@ -28,15 +28,14 @@ layer(HttpTestLayer, { excludeTestServices: true })("SAML HTTP", (it) => {
               }),
             ),
         });
-        const organization = (yield* api.organizations.create({
-          payload: { metadata: { name: "Knowledge" }, slug: "knowledge" },
-        })).organization;
         const issuer = yield* makeSamlIssuer.pipe(Effect.provide(NodeCertificateCrypto.layer));
         const created = yield* api.organizationIdentityConnections.createSaml({
-          params: { organizationId: organization.id },
           payload: { name: "Company SAML" },
         });
-        const params = { organizationId: organization.id, connectionId: created.id };
+        const params = { connectionId: created.id };
+        expect(new URL(created.configuration.entityId).pathname).toBe(
+          `/api/v1/organization/identity-connections/${created.id}/saml/metadata`,
+        );
         if (issuer.configuration.idp === null) throw new Error("Expected IdP configuration");
         const configured = yield* api.organizationIdentityConnections.updateSaml({
           params,
@@ -114,7 +113,6 @@ layer(HttpTestLayer, { excludeTestServices: true })("SAML HTTP", (it) => {
           payload: { expectedRevision: configured.revision },
         });
         yield* api.authenticationPolicy.update({
-          params: { organizationId: organization.id },
           payload: { expectedRevision: 1, samlConnectionIds: [created.id] },
         });
 
@@ -151,7 +149,7 @@ layer(HttpTestLayer, { excludeTestServices: true })("SAML HTTP", (it) => {
 
         const loggingIn = yield* http.execute(
           HttpClientRequest.get(
-            `/api/v1/organizations/${organization.id}/identity-connections/${created.id}/saml/login`,
+            `/api/v1/organization/identity-connections/${created.id}/saml/login`,
           ),
         );
         expect(loggingIn.status).toBe(303);

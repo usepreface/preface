@@ -1,1 +1,0 @@
-ALTER TABLE "auth"."auth_flow" ADD COLUMN "verified_at" timestamp with time zone;

@@ -76,7 +76,7 @@ export const makeOidcFlowStart = Effect.gen(function* () {
           if (connection.revision !== expectedRevision)
             return yield* new IdentityError({ code: "REVISION_CONFLICT" });
           yield* organizations.requireOwner(actor, organizationId, { lock: true });
-          yield* identityAccess.requireRecentEmail(actor);
+          yield* identityAccess.requireVerifiedEmail(actor);
         } else {
           if (connection.status !== "active")
             return yield* new IdentityError({ code: "CONNECTION_UNAVAILABLE" });
@@ -84,13 +84,13 @@ export const makeOidcFlowStart = Effect.gen(function* () {
             yield* access.requireActorMember(actor, organizationId, true);
           if (intent === "link") {
             if (actor === undefined) return yield* new IdentityError({ code: "INVALID_FLOW" });
-            yield* identityAccess.requireRecentEmail(actor);
+            yield* identityAccess.requireVerifiedEmail(actor);
           }
           if (intent === "sign_in" || intent === "reauthenticate" || intent === "accept_invitation")
             yield* access.requireApproved(organizationId, connectionId);
-          // Signed-out starts expose no member information and still reject archived organizations.
+          // Signed-out starts expose no member information.
           const organization = yield* repository.organization.organization.findById(organizationId);
-          if (organization?.archivedAt !== null)
+          if (organization === undefined)
             return yield* new IdentityError({ code: "CONNECTION_UNAVAILABLE" });
         }
         const policy =

@@ -72,7 +72,7 @@ export const makeSamlFlowCallback = Effect.gen(function* () {
         DateTime.toEpochMillis(verified.authenticatedAt) <
           DateTime.toEpochMillis(flow.createdAt) - 60_000
       )
-        return yield* new IdentityError({ code: "RECENT_SSO_REQUIRED" });
+        return yield* new IdentityError({ code: "SSO_AUTHENTICATION_REQUIRED" });
       const subject = yield* random.digestToken({
         purpose: cryptoPurpose.samlSubject,
         token: Redacted.make(verified.subject),
@@ -108,10 +108,7 @@ export const makeSamlFlowCallback = Effect.gen(function* () {
             current.organizationId,
           );
           const now = DateTime.toEpochMillis(yield* DateTime.now);
-          if (
-            organization?.archivedAt !== null ||
-            DateTime.toEpochMillis(verified.validUntil) <= now
-          )
+          if (organization === undefined || DateTime.toEpochMillis(verified.validUntil) <= now)
             return yield* new IdentityError({ code: "INVALID_FLOW" });
           const replayExpiresAt = DateTime.addDuration(verified.validUntil, "1 minute");
           if (

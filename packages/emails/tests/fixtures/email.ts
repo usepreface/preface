@@ -73,7 +73,7 @@ export const signInEmail = Effect.gen(function* (): Effect.fn.Return<
   return {
     type: "sign-in",
     to: "operator@example.test",
-    variables: { instanceName: "Preface Test", code: "48271936", expiresAt },
+    variables: { organizationName: "Preface Test", code: "48271936", expiresAt },
     idempotencyKey: "sign-in:test-challenge",
     expiresAt,
   };

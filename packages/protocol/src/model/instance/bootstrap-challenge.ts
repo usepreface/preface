@@ -9,7 +9,7 @@ import { EmailJobId } from "#/identifiers/email";
 export const CreateBootstrapChallenge = Schema.Struct({
   id: BootstrapChallengeId,
   bootstrapTokenHash: CredentialDigest,
-  instanceName: DisplayName,
+  organizationName: DisplayName,
   ownerName: DisplayName,
   email: UserEmail,
   codeHash: CredentialDigest,

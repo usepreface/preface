@@ -28,7 +28,7 @@ function VerifySignIn() {
   const resetAuthority = useResetAuthority();
   const challengeId = signIn.challenge?.challengeId;
   return (
-    <AuthLayout topRight={instance.instanceName} aside={<CodeAside />}>
+    <AuthLayout topRight={instance.organizationName} aside={<CodeAside />}>
       <AuthHeading title="Enter the code we emailed">
         If {signIn.email || "your email"} has access, a code and sign-in link are on their way.
       </AuthHeading>
@@ -49,7 +49,7 @@ function VerifySignIn() {
               if (!response) return;
               setSignIn({ email: "" });
               resetAuthority();
-              await router.navigate({ to: "/organizations" });
+              await router.navigate({ to: "/" });
               await router.invalidate();
             }}
             onResend={async () => {

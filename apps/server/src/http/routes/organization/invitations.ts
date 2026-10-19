@@ -7,6 +7,7 @@ import { RequestError } from "@usepreface/protocol";
 import { CreateInvitationInput } from "@usepreface/protocol/input";
 
 import { mapInfrastructureError } from "#/http/errors";
+import { currentOrganizationId } from "#/http/organization";
 
 export const OrganizationInvitationsRoutes = HttpApiBuilder.group(
   PrefaceApi,
@@ -17,30 +18,30 @@ export const OrganizationInvitationsRoutes = HttpApiBuilder.group(
       return handlers.handleAll({
         delivery: Effect.fn("http.organizationInvitations.delivery")(function* ({ params }) {
           return yield* invitations
-            .delivery(yield* CurrentActor, params.organizationId, params.invitationId)
+            .delivery(yield* CurrentActor, yield* currentOrganizationId, params.invitationId)
             .pipe(mapInfrastructureError);
         }),
-        create: Effect.fn("http.organizationInvitations.create")(function* ({ params, payload }) {
+        create: Effect.fn("http.organizationInvitations.create")(function* ({ payload }) {
           const input = yield* Schema.decodeUnknownEffect(CreateInvitationInput)(payload).pipe(
             Effect.mapError(() => new RequestError({ code: "INVALID_INPUT" })),
           );
           return yield* invitations
-            .create(yield* CurrentActor, params.organizationId, input)
+            .create(yield* CurrentActor, yield* currentOrganizationId, input)
             .pipe(mapInfrastructureError);
         }),
-        list: Effect.fn("http.organizationInvitations.list")(function* ({ params, query }) {
+        list: Effect.fn("http.organizationInvitations.list")(function* ({ query }) {
           return yield* invitations
-            .list(yield* CurrentActor, params.organizationId, query)
+            .list(yield* CurrentActor, yield* currentOrganizationId, query)
             .pipe(mapInfrastructureError);
         }),
         resend: Effect.fn("http.organizationInvitations.resend")(function* ({ params }) {
           return yield* invitations
-            .resend(yield* CurrentActor, params.organizationId, params.invitationId)
+            .resend(yield* CurrentActor, yield* currentOrganizationId, params.invitationId)
             .pipe(mapInfrastructureError);
         }),
         revoke: Effect.fn("http.organizationInvitations.revoke")(function* ({ params }) {
           return yield* invitations
-            .revoke(yield* CurrentActor, params.organizationId, params.invitationId)
+            .revoke(yield* CurrentActor, yield* currentOrganizationId, params.invitationId)
             .pipe(mapInfrastructureError);
         }),
       });

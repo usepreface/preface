@@ -75,8 +75,16 @@ export const makeGoogleFlowStart = Effect.gen(function* () {
           return yield* new IdentityError({ code: "REVISION_CONFLICT" });
         if (actor !== undefined) {
           yield* actors.requireActor(actor);
-          if (intent === "link") yield* identityAccess.requireRecentEmail(actor);
-          if (intent === "test") yield* identityAccess.requireInstanceOwner(actor);
+          if (intent === "link") {
+            yield* identityAccess.requireVerifiedEmail(actor);
+            const member = yield* repository.organization.member.findByUserId(
+              connection.organizationId,
+              actor.user.id,
+            );
+            if (member === undefined || member.removedAt !== null || member.suspendedAt !== null)
+              return yield* new IdentityError({ code: "FORBIDDEN" });
+          }
+          if (intent === "test") yield* actors.requireOwner(actor, connection.organizationId);
         }
         const now = yield* DateTime.now;
         const expiresAt = externalFlowExpiresAt(now, enrollment);
@@ -100,7 +108,7 @@ export const makeGoogleFlowStart = Effect.gen(function* () {
           displayName: enrollment?.displayName ?? null,
           initiatingSessionId: actor?.session.id ?? null,
           expectedUserId: actor?.user.id ?? null,
-          targetOrganizationId: enrollment?.targetOrganizationId ?? null,
+          targetOrganizationId: enrollment?.targetOrganizationId ?? connection.organizationId,
           stateHash,
           nonceHash,
           browserBindingHash,

@@ -1,7 +1,7 @@
 import { Schema } from "effect";
 import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema, OpenApi } from "effect/http-api";
 
-import { IdentityConnectionId, OrganizationId } from "@usepreface/protocol";
+import { IdentityConnectionId } from "@usepreface/protocol";
 import {
   ExternalIdentityStartRequest,
   SamlCallbackRequest,
@@ -16,9 +16,9 @@ export class SamlApi extends HttpApiGroup.make("saml")
   .add(
     HttpApiEndpoint.get(
       "tileStart",
-      "/organizations/:organizationId/identity-connections/:connectionId/saml/login",
+      "/organization/identity-connections/:connectionId/saml/login",
       {
-        params: { organizationId: OrganizationId, connectionId: IdentityConnectionId },
+        params: { connectionId: IdentityConnectionId },
         query: ExternalIdentityStartRequest,
         success: HttpApiSchema.NoContent.pipe(HttpApiSchema.status(303)),
         error: errors,
@@ -29,9 +29,9 @@ export class SamlApi extends HttpApiGroup.make("saml")
     ),
     HttpApiEndpoint.get(
       "metadata",
-      "/organizations/:organizationId/identity-connections/:connectionId/saml/metadata",
+      "/organization/identity-connections/:connectionId/saml/metadata",
       {
-        params: { organizationId: OrganizationId, connectionId: IdentityConnectionId },
+        params: { connectionId: IdentityConnectionId },
         success: Schema.String.pipe(
           HttpApiSchema.asText({ contentType: "application/samlmetadata+xml" }),
         ),

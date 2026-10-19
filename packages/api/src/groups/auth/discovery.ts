@@ -1,36 +1,29 @@
-import { Schema } from "effect";
 import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/http-api";
 
-import { OrganizationId } from "@usepreface/protocol";
 import {
   AuthenticationDiscovery,
-  AuthenticationDiscoveryRequest,
-  OrganizationSelection,
+  CurrentOrganizationAuthentication,
 } from "@usepreface/protocol/dto";
 
 import { identityErrors, organizationErrors, requestErrors } from "#/http-errors";
 import { SessionAuthentication } from "#/middleware/session-authentication";
-
 const errors = [...identityErrors, ...organizationErrors, ...requestErrors];
-
 export class AuthenticationDiscoveryApi extends HttpApiGroup.make("authenticationDiscovery")
   .add(
-    HttpApiEndpoint.post("discover", "/auth/discovery", {
-      payload: AuthenticationDiscoveryRequest,
+    HttpApiEndpoint.get("discover", "/auth/discovery", {
       success: AuthenticationDiscovery,
       error: errors,
     }),
   )
-  .annotate(OpenApi.Title, "Authentication discovery") {}
-
-export class OrganizationSelectionApi extends HttpApiGroup.make("organizationSelection")
+  .annotate(OpenApi.Title, "Authentication methods") {}
+export class CurrentOrganizationAuthenticationApi extends HttpApiGroup.make(
+  "currentOrganizationAuthentication",
+)
   .add(
-    HttpApiEndpoint.post("select", "/auth/organizations/:organizationId/select", {
-      params: { organizationId: OrganizationId },
-      payload: Schema.Struct({}),
-      success: OrganizationSelection,
+    HttpApiEndpoint.get("get", "/auth/access", {
+      success: CurrentOrganizationAuthentication,
       error: errors,
     }),
   )
   .middleware(SessionAuthentication)
-  .annotate(OpenApi.Title, "Organization selection") {}
+  .annotate(OpenApi.Title, "Current access") {}

@@ -8,7 +8,7 @@ import {
 
 import {
   onboardOwner,
-  createOrganization,
+  currentOrganization,
   authenticateAtKeycloak,
 } from "../fixtures/onboarding.js";
 import { test, expect } from "../fixtures/test.js";
@@ -24,12 +24,12 @@ test("OIDC is configured and activated in the dashboard, then an invitation admi
   browser,
 }) => {
   await onboardOwner(api, backend, mailbox);
-  const { organization } = await createOrganization(api);
+  await currentOrganization(api);
   await realm.user("operator", "owner@company.example.test");
   await realm.user("alice", "alice@company.example.test");
   await realm.oidc(`${backend.origin}/api/v1/auth/oidc/callback`);
-  const connectionsPath = `/organizations/${organization.id}/identity-connections`;
-  await page.goto(`${backend.dashboard}/org/company/settings/connections`);
+  const connectionsPath = `/organization/identity-connections`;
+  await page.goto(`${backend.dashboard}/settings/connections`);
   await page.getByRole("button", { name: "Add connection", exact: true }).click();
   await page.getByLabel("Connection name", { exact: true }).fill("Company OIDC");
   await page.getByLabel("Issuer URL", { exact: true }).fill(realm.issuer);
@@ -43,7 +43,7 @@ test("OIDC is configured and activated in the dashboard, then an invitation admi
   await page.getByRole("button", { name: "Test login", exact: true }).click();
   await page.waitForURL((url) => url.origin !== backend.dashboard);
   await authenticateAtKeycloak(page, page.url(), "operator", realm.password, backend.dashboard);
-  await page.goto(`${backend.dashboard}/org/company/settings/connections/${created.id}`);
+  await page.goto(`${backend.dashboard}/settings/connections/${created.id}`);
   await page.getByRole("button", { name: "Activate tested revision", exact: true }).click();
   await expect(page.getByText("active", { exact: true })).toBeVisible();
   const activated = await api.json(PublicOidcConnection, `${connectionsPath}/${created.id}`);
@@ -59,26 +59,22 @@ test("OIDC is configured and activated in the dashboard, then an invitation admi
     (await api.json(PublicOidcConnection, `${connectionsPath}/${created.id}`)).hasClientSecret,
   ).toBe(true);
 
-  await page.goto(`${backend.dashboard}/org/company/settings/authentication`);
+  await page.goto(`${backend.dashboard}/settings/authentication`);
   await page.getByRole("checkbox", { name: "Company OIDC Updated", exact: false }).check();
   await page.getByRole("button", { name: "Save login policy", exact: true }).click();
   await expect
     .poll(
       async () =>
-        (
-          await api.json(
-            PublicOrganizationAuthPolicy,
-            `/organizations/${organization.id}/auth-policy`,
-          )
-        ).oidcConnectionIds,
+        (await api.json(PublicOrganizationAuthPolicy, `/organization/auth-policy`))
+          .oidcConnectionIds,
     )
     .toContain(created.id);
-  const roles = await api.json(OrganizationRoleList, `/organizations/${organization.id}/roles`);
+  const roles = await api.json(OrganizationRoleList, `/organization/roles`);
   const memberRole = roles.roles.find((role) => role.key === "member");
   if (!memberRole) throw new Error("Missing member role");
   expect(
     (
-      await api.request(`/organizations/${organization.id}/invitations`, "POST", {
+      await api.request(`/organization/invitations`, "POST", {
         email: "alice@company.example.test",
         roleIds: [memberRole.id],
       })
@@ -96,13 +92,20 @@ test("OIDC is configured and activated in the dashboard, then an invitation admi
       .click();
     await alice.waitForURL((url) => url.origin !== backend.dashboard);
     await authenticateAtKeycloak(alice, alice.url(), "alice", realm.password, backend.dashboard);
-    await expect(
-      alice.getByRole("heading", { name: "Choose an organization", exact: true }),
-    ).toBeVisible();
-    await alice.getByRole("link", { name: "Open", exact: true }).click();
+    await expect(alice.getByRole("heading", { name: /Welcome to/ })).toBeVisible();
+
     await expect(
       alice.getByRole("heading", { name: "Welcome to Fixture Company, Alice", exact: true }),
     ).toBeVisible();
+    await alice.getByRole("button", { name: "Account", exact: true }).click();
+    await alice.getByRole("menuitem", { name: "Sign out", exact: true }).click();
+    await expect(alice).toHaveURL(/\/sign-in\/?$/);
+    await expect(
+      alice.getByRole("button", { name: /^Continue with Company OIDC Updated\b/ }),
+    ).toBeVisible();
+    await expect(
+      alice.getByRole("button", { name: "Find your organization", exact: true }),
+    ).toHaveCount(0);
   } finally {
     await context.close();
   }
@@ -116,10 +119,10 @@ test("SAML metadata and IdP settings are configured and browser-tested through t
   realm,
 }) => {
   await onboardOwner(api, backend, mailbox);
-  const { organization } = await createOrganization(api);
+  await currentOrganization(api);
   await realm.user("operator", "owner@company.example.test");
-  const base = `/organizations/${organization.id}/identity-connections`;
-  await page.goto(`${backend.dashboard}/org/company/settings/connections`);
+  const base = `/organization/identity-connections`;
+  await page.goto(`${backend.dashboard}/settings/connections`);
   await page.getByRole("button", { name: "Add connection", exact: true }).click();
   await page.getByRole("radio", { name: "SAML 2.0", exact: true }).check();
   await page.getByLabel("Connection name", { exact: true }).fill("Company SAML");
@@ -144,7 +147,7 @@ test("SAML metadata and IdP settings are configured and browser-tested through t
   await page.getByRole("button", { name: "Test login", exact: true }).click();
   await page.waitForURL((url) => url.origin !== backend.dashboard);
   await authenticateAtKeycloak(page, page.url(), "operator", realm.password, backend.dashboard);
-  await page.goto(`${backend.dashboard}/org/company/settings/connections/${connection.id}`);
+  await page.goto(`${backend.dashboard}/settings/connections/${connection.id}`);
   await page.getByRole("button", { name: "Activate tested revision", exact: true }).click();
   await expect(page.getByText("active", { exact: true })).toBeVisible();
   expect((await api.json(PublicSamlConnection, `${base}/${connection.id}`)).status).toBe("active");

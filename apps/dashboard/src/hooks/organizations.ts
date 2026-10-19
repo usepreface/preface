@@ -13,7 +13,6 @@ export function useOrganization() {
   if (!detail) throw new Error("Organization context is missing");
   return detail;
 }
-export const useOrganizations = toQuery(atoms.organizationsAtom);
 export const useOrganizationDetail = toQuery(atoms.organizationAtom);
 export const useMembers = toQuery(atoms.membersAtom);
 export const useTeams = toQuery(atoms.teamsAtom);
@@ -24,8 +23,5 @@ export const useMethods = toQuery(atoms.methodsAtom);
 export const useReadiness = toQuery(atoms.readinessAtom);
 export const useRecovery = toQuery(atoms.recoveryAtom);
 export const useConnection = toQuery(atoms.connectionAtom);
-export const useCreateOrganization = toMutation(atoms.createOrganizationMutation);
 export const useUpdateOrganization = toMutation(atoms.updateOrganizationMutation);
-export const useArchiveOrganization = toMutation(atoms.archiveOrganizationMutation);
-export const useRestoreOrganization = toMutation(atoms.restoreOrganizationMutation);
 export const useLeaveOrganization = toMutation(atoms.leaveOrganizationMutation);

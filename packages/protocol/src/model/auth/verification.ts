@@ -6,7 +6,6 @@ import { UserEmailId, VerificationId } from "#/identifiers/auth";
 import { EmailJobId } from "#/identifiers/email";
 import { AuthFlowId } from "#/identifiers/identity";
 import { OrganizationInvitationId } from "#/identifiers/organization";
-import { SessionId } from "#/identifiers/session";
 import { UserId } from "#/identifiers/user";
 
 export { CredentialDigest } from "#/common/credential-digest";
@@ -34,14 +33,6 @@ const invitationFields = {
   emailJobId: EmailJobId,
   context: Schema.Struct({ version: Schema.Literal(1), invitationId: OrganizationInvitationId }),
 };
-const reauthenticationFields = {
-  ...proofFields,
-  purpose: Schema.Literal("email_reauthentication"),
-  userId: UserId,
-  userEmailId: UserEmailId,
-  emailJobId: EmailJobId,
-  context: Schema.Struct({ version: Schema.Literal(1), sessionId: SessionId }),
-};
 const externalFields = {
   ...proofFields,
   purpose: Schema.Literal("external_identity_email"),
@@ -53,7 +44,6 @@ const externalFields = {
 export const CreateVerification = Schema.Union([
   Schema.Struct(signInFields),
   Schema.Struct(externalFields),
-  Schema.Struct(reauthenticationFields),
   Schema.Struct(invitationFields),
 ]);
 export type CreateVerification = typeof CreateVerification.Type;
@@ -66,7 +56,6 @@ const lifecycle = {
 export const Verification = Schema.Union([
   Schema.Struct({ ...externalFields, ...lifecycle }),
   Schema.Struct({ ...signInFields, ...lifecycle }),
-  Schema.Struct({ ...reauthenticationFields, ...lifecycle }),
   Schema.Struct({ ...invitationFields, ...lifecycle }),
 ]);
 export type Verification = typeof Verification.Type;

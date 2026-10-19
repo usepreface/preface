@@ -6,7 +6,7 @@ import type { SessionActor } from "@usepreface/protocol/dto";
 
 import { OrganizationAccess } from "#/organization/access";
 
-// Limited to readiness/recovery, including archived organizations. Never authorizes content or restore.
+// Recovery checks ownership without requiring the unavailable provider; it never authorizes content.
 export const makeOrganizationRecoveryAccess = Effect.gen(function* () {
   const repository = yield* DatabaseRepository;
   const actors = yield* OrganizationAccess;

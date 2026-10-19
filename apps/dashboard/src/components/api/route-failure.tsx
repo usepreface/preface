@@ -22,11 +22,8 @@ export function RouteFailure({ error }: ErrorComponentProps) {
       >
         Try again
       </Button>
-      <Link to="/organizations" className={buttonVariants({ variant: "outline" })}>
-        Organizations
-      </Link>
-      <Link to="/auth/reauthenticate" className={buttonVariants({ variant: "ghost" })}>
-        Confirm your email
+      <Link to="/" className={buttonVariants({ variant: "outline" })}>
+        Dashboard
       </Link>
     </main>
   );

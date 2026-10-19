@@ -6,15 +6,12 @@ import type { SessionActor } from "@usepreface/protocol/dto";
 import { SaveGoogleConnectionInput } from "@usepreface/protocol/input";
 
 import { makeIdentitySecrets } from "#/auth/google/secrets";
-import { makeIdentityAccess } from "#/auth/identity-access";
 import { AuthenticationLinks } from "#/auth/links";
 import { OrganizationAccess } from "#/organization/access";
-import { isInstallationAuthentication } from "#/security/authentication-method";
 
 export const makeGoogleConnectionApplication = Effect.gen(function* () {
   const repository = yield* DatabaseRepository;
   const transaction = yield* TransactionService;
-  const access = yield* makeIdentityAccess;
   const actors = yield* OrganizationAccess;
   const secrets = yield* makeIdentitySecrets;
   const links = yield* AuthenticationLinks;
@@ -35,11 +32,10 @@ export const makeGoogleConnectionApplication = Effect.gen(function* () {
   const get = Effect.fn("Application.instance.authentication.google.get")(function* (
     actor: SessionActor,
   ) {
-    const { evidence } = yield* actors.requireActor(actor);
-    if (!evidence.some((proof) => isInstallationAuthentication(proof.method)))
-      return yield* new IdentityError({ code: "REAUTHENTICATION_REQUIRED" });
-    if ((yield* repository.instance.owner.findActiveByUserId(actor.user.id)) === undefined)
-      return yield* new IdentityError({ code: "FORBIDDEN" });
+    const organization = yield* repository.organization.organization.find();
+    if (organization === undefined)
+      return yield* new IdentityError({ code: "CONNECTION_UNAVAILABLE" });
+    yield* actors.requireOwner(actor, organization.id);
     return yield* view();
   });
   const save = Effect.fn("Application.instance.authentication.google.save")(function* (
@@ -52,12 +48,15 @@ export const makeGoogleConnectionApplication = Effect.gen(function* () {
     return yield* transaction.run(
       Effect.gen(function* () {
         yield* repository.instance.installation.lock();
-        yield* access.requireInstanceOwner(actor);
+        const organization = yield* repository.organization.organization.find();
+        if (organization === undefined)
+          return yield* new IdentityError({ code: "CONNECTION_UNAVAILABLE" });
         const previous = yield* repository.auth.identityConnection.findGoogle();
         const current =
           previous === undefined
             ? undefined
             : yield* repository.auth.identityConnection.lockById(previous.id);
+        yield* actors.requireOwner(actor, organization.id, { lock: true });
         if (decoded.expectedRevision !== (current?.revision ?? 0))
           return yield* new IdentityError({ code: "REVISION_CONFLICT" });
         const secret =
@@ -69,7 +68,7 @@ export const makeGoogleConnectionApplication = Effect.gen(function* () {
         const revision = (current?.revision ?? 0) + 1;
         const next = {
           id,
-          installationId: 1 as const,
+          organizationId: organization.id,
           provider: "google" as const,
           name: decoded.name ?? current?.name ?? "Google",
           status: "draft" as const,
@@ -90,6 +89,7 @@ export const makeGoogleConnectionApplication = Effect.gen(function* () {
         yield* repository.audit.event.append({
           actorKind: "user",
           actorUserId: actor.user.id,
+          organizationId: organization.id,
           eventType: "auth.connection_configured",
           targetType: "identity_connection",
           targetId: id,
@@ -107,11 +107,14 @@ export const makeGoogleConnectionApplication = Effect.gen(function* () {
     return yield* transaction.run(
       Effect.gen(function* () {
         yield* repository.instance.installation.lock();
-        yield* access.requireInstanceOwner(actor);
+        const organization = yield* repository.organization.organization.find();
+        if (organization === undefined)
+          return yield* new IdentityError({ code: "CONNECTION_UNAVAILABLE" });
         const previous = yield* repository.auth.identityConnection.findGoogle();
         if (previous === undefined)
           return yield* new IdentityError({ code: "CONNECTION_UNAVAILABLE" });
         const current = yield* repository.auth.identityConnection.lockById(previous.id);
+        yield* actors.requireOwner(actor, organization.id, { lock: true });
         if (current === undefined || current.revision !== expectedRevision)
           return yield* new IdentityError({ code: "REVISION_CONFLICT" });
         if (action === "activate" && current.status === "active") return yield* view();
@@ -145,6 +148,7 @@ export const makeGoogleConnectionApplication = Effect.gen(function* () {
         yield* repository.audit.event.append({
           actorKind: "user",
           actorUserId: actor.user.id,
+          organizationId: organization.id,
           eventType:
             action === "activate" ? "auth.connection_activated" : "auth.connection_disabled",
           targetType: "identity_connection",

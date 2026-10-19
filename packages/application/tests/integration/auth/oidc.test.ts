@@ -43,16 +43,9 @@ layer(ApplicationTestLayer)("Organization OIDC", (it) => {
         const signedIn = yield* signInTestOidc(organization.id, connection.id);
         expect(signedIn.actor.user.id).toBe(owner.actor.user.id);
         expect(yield* application.instance.capabilities.get(signedIn.actor)).toEqual({
-          canCreateOrganization: false,
+          isInstanceOwner: true,
         });
-        expect(
-          yield* application.organization.organization
-            .create(signedIn.actor, { metadata: { name: "Unexpected" }, slug: "unexpected" })
-            .pipe(Effect.flip),
-        ).toMatchObject({ code: "AUTHENTICATION_REQUIRED" });
-        expect(
-          yield* application.instance.authentication.google.get(signedIn.actor).pipe(Effect.flip),
-        ).toMatchObject({ code: "REAUTHENTICATION_REQUIRED" });
+        yield* application.instance.authentication.google.get(signedIn.actor);
         expect(
           (yield* application.organization.organization.get(signedIn.actor, organization.id))
             .organization.id,
@@ -69,25 +62,22 @@ layer(ApplicationTestLayer)("Organization OIDC", (it) => {
         expect((yield* application.auth.session.resolve(signedIn.token)).session).toEqual(
           signedIn.actor.session,
         );
-        expect(
-          yield* application.organization.identityConnection
-            .disable(signedIn.actor, organization.id, connection.id, connection.revision)
-            .pipe(Effect.flip),
-        ).toMatchObject({ code: "REAUTHENTICATION_REQUIRED" });
+        yield* application.organization.identityConnection.disable(
+          signedIn.actor,
+          organization.id,
+          connection.id,
+          connection.revision,
+        );
       }),
   );
 
   it.effect(
-    "keeps connection authority, account linking and accepted evidence scoped to their organization",
+    "rejects nonmember linking and withdraws access when a connection is no longer approved",
     () =>
       Effect.gen(function* () {
         yield* (yield* TestDatabase).reset;
         const application = yield* Application;
         const { owner, organization } = yield* createTestOrganization;
-        const other = yield* application.organization.organization.create(owner.actor, {
-          metadata: { name: "Other" },
-          slug: "other",
-        });
         const connection = yield* configureTestOidc(owner.actor, organization.id);
         const outsider = yield* createTestIdentity("outsider@example.test", "Outsider");
         expect(
@@ -95,32 +85,8 @@ layer(ApplicationTestLayer)("Organization OIDC", (it) => {
             .startLink(outsider.actor, organization.id, connection.id)
             .pipe(Effect.flip),
         ).toMatchObject({ code: "ORGANIZATION_NOT_FOUND" });
-        expect(
-          yield* application.organization.identityConnection
-            .get(owner.actor, other.organization.id, connection.id)
-            .pipe(Effect.flip),
-        ).toMatchObject({ code: "CONNECTION_NOT_FOUND" });
-        expect(
-          yield* application.organization.authPolicy
-            .update(owner.actor, other.organization.id, {
-              expectedRevision: 1,
-              oidcConnectionIds: [connection.id],
-            })
-            .pipe(Effect.flip),
-        ).toMatchObject({ code: "CONNECTION_UNAVAILABLE" });
         yield* linkTestOidc(owner.actor, organization.id, connection.id);
         const signedIn = yield* signInTestOidc(organization.id, connection.id);
-        expect(
-          yield* application.organization.organization
-            .get(signedIn.actor, other.organization.id)
-            .pipe(Effect.flip),
-        ).toMatchObject({ code: "AUTHENTICATION_REQUIRED" });
-        expect(
-          (yield* application.organization.authPolicy.methods(
-            signedIn.actor,
-            other.organization.id,
-          )).oidc,
-        ).toEqual([]);
         const policy = yield* application.organization.authPolicy.get(owner.actor, organization.id);
         yield* application.organization.authPolicy.update(owner.actor, organization.id, {
           expectedRevision: policy.revision,

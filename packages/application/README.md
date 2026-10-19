@@ -23,7 +23,7 @@ Supply `DomainDns` for organization-domain verification. The Node entry exports
 `NodeDomainDns.layer`, which performs bounded, cancellable TXT resolution. Tests can replace
 only this capability. `application.organization.domain` exposes `list`, `create`, `request`,
 `verify`, `revoke`, `connectionDomains` and `bind`. Organization mutations require owner
-authority and recent local email; `verify(..., "operator")` requires instance ownership.
+authority and a current authenticated session; `verify(..., "operator")` requires instance ownership.
 Verification and exact connection binding are separate and do not grant membership.
 
 ## Instance setup
@@ -45,7 +45,7 @@ export const prepareInstance = Effect.gen(function* () {
 | Method                       | Behavior                                                                                                   |
 | ---------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | `prepare()`                  | Initialize installation/settings, issue a missing/expired proof, preserve a valid pending proof.           |
-| `getStatus()`                | Return `{ state: "setup_required" \| "ready", instanceName }`.                                             |
+| `getStatus()`                | Return `{ state: "setup_required" \| "ready", organizationName }`.                                         |
 | `inspectToken(token)`        | Check the current redacted operator proof and return its expiry.                                           |
 | `requestVerification(input)` | Store pending account details and enqueue a setup code; return challenge identity, expiry and resend time. |
 | `resendVerification(input)`  | Replace the current challenge/code after the shared cooldown.                                              |
@@ -63,7 +63,7 @@ Decode wire requests through `RequestBootstrapVerificationInput`,
 `@usepreface/protocol/input`. Names trim, email trims/lowercases, and credentials
 become non-encodable `Redacted` values. Sanitize validation failures at transport.
 
-Request accepts `{ token, instanceName, ownerName, email }`. It creates no user/session.
+Request accepts `{ token, organizationName, ownerName, email }`. It creates no user/session.
 Its challenge, encrypted email job and audit event commit together. The returned
 `{ challengeId, expiresAt, resendAt }` contains no code. Verification codes have eight
 digits, ten-minute expiry bounded by the operator proof, a one-minute resend cooldown
@@ -76,7 +76,7 @@ The transaction locks installation, rechecks proof and code, writes the verified
 verified primary email, owner grant, display name, session, authentication evidence and required audit, then consumes both credentials.
 No password credential is created. Audit failure rolls back the entire operation;
 concurrent completion admits one winner. Final consumption rechecks expiry.
-Completion creates no organization or organization access.
+Completion creates the sole organization and explicitly grants its owner membership.
 
 Encode `actor` with `SessionActor` from `@usepreface/protocol/dto` for ISO timestamps.
 It contains only safe user/profile and session identity/expiry. Unwrap `sessionToken`
@@ -133,58 +133,17 @@ Sessions alone imply neither instance ownership nor organization membership.
 
 ## Organizations
 
-Only instance owners may create organizations. Supply a cookie-authenticated actor;
-workflows recheck current session/user, membership, evidence and role bindings.
-Instance ownership does not grant access to another organization's content or administration.
+Installation verification initializes the sole organization, owner membership,
+built-in roles and default policy atomically. There is no general organization-create,
+list, select, archive or restore workflow. `application.organization.organization`
+exposes `currentId`, `get`, `getAccess` and `update`; internal callers pass the resolved
+organization ID explicitly. `update` patches versioned presentation metadata.
 
-```ts
-import { Effect, Schema } from "effect";
-
-import { Application } from "@usepreface/application";
-import type { SessionActor } from "@usepreface/protocol/dto";
-import { CreateOrganizationInput } from "@usepreface/protocol/input";
-
-export const createOrganizationForOwner = Effect.fn("createOrganizationForOwner")(function* (
-  actor: SessionActor,
-) {
-  const input = yield* Schema.decodeUnknownEffect(CreateOrganizationInput)({
-    metadata: { name: "Knowledge" },
-    slug: "knowledge",
-  });
-  return yield* (yield* Application).organization.organization.create(actor, input);
-});
-```
-
-Creation returns `{ organization, membership, access }` with Effect timestamps. The
-transaction creates the creator membership, built-in organization and team role definitions,
-explicit owner grant and default local-email auth policy with required audit.
-`instance.capabilities.get(actor)` returns `{ canCreateOrganization }`.
-
-`application.organization` exposes:
-
-- `organization`: `create`, `listMine`, `get`, `getAccess`, `update`, `archive`, `restore`.
-- `member`: `list`, `suspend`, `reinstate`, `remove`, `leave`.
-- `role`: `list`, `create`, `update`, `archive` for custom definitions.
-- `roleBinding`: `list`, `grant`, `revoke` for direct member assignments.
-- `ownership`: protected `grant`, `revoke`, `transfer` workflows.
-- `authPolicy.get`: read the currently enforced policy.
-- `team`: `create`, `list`, `get`, `getAccess`, `update`, `archive`, `listRoles`, plus `member.add/list/remove`.
-- `invitation`: `create`, `list`, `inspect`, `resend`, `revoke`, `requestVerification`, `accept`.
-
-List inputs use an exclusive ID `cursor` and `limit` (default 25, maximum 100).
-Organization/role lists accept `includeArchived`; member lists accept `includeRemoved`.
-Only owners can discover archived organizations. Normal access remains blocked until restore.
-
-Mutations serialize on organization identity and recheck authority after locking.
-Owner removal/suspension/departure/revocation preserves another usable owner.
-Transfer grants the target owner, demotes the source to administrator and audits
-atomically. Custom roles cannot manufacture ownership or delegate permissions the
-actor lacks. Role retirement and member removal revoke assignments transactionally;
-suspension preserves them for explicit reinstatement.
-
-Teams use direct memberships and explicitly scoped roles. The authentication workflows below own
-SSO and policy editing. Organization content permissions are not implemented. See the
-[organization architecture](../../architecture/identity-access/organizations.md) for boundaries.
+Current membership, permissions, authentication policy and last-owner protection
+remain authoritative. `application.instance.capabilities.get(actor)` returns
+`{ isInstanceOwner }`; it does not grant organization membership. Organization/member,
+role, team, ownership and invitation workflows remain grouped under the existing
+application aggregate. See the [organization architecture](../../architecture/identity-access/organizations.md).
 
 ## Invitations
 
@@ -250,32 +209,17 @@ independent keys stable across replicas/restarts and back them up with the datab
 
 ## Google identity
 
-Supply `GoogleIdentity` to `Application.layer`; the Node entry exports `NodeGoogleIdentity.layer`
-backed by `openid-client`. The adapter validates the code/PKCE/nonce exchange and signed identity
-against fixed Google endpoints. Tokens and provider credentials are not public results.
+`application.instance.authentication.google` retains the provider-specific aggregate
+for `get`, `save`, `test`, `activate` and `disable`. Its connection is organization-owned
+and every configuration operation checks current organization ownership. Save accepts
+`SaveGoogleConnectionInput`; secrets stay redacted and encrypted. Test the exact revision
+before activation, then enable Google in the single authentication policy.
 
-`instance.authentication.google` exposes `get`, `save`, `test`, `activate` and `disable`.
-Save input comes from `SaveGoogleConnectionInput`: expected revision (zero for first save), client
-ID, optional redacted client secret and name. First save requires the secret; omission on update
-preserves it. A save creates a draft/new revision and invalidates prior flows/evidence. Complete
-the returned test authorization URL in a browser, then activate its tested revision. Mutations
-require current instance ownership and email evidence no older than five minutes.
-
-`auth.account.list(actor)` returns safe connection summaries. `startGoogle(actor, {})` starts
-explicit linking; `unlink(actor, accountId)` retains history and revokes Google evidence. Linking
-and unlinking require recent email proof. `auth.google.start({}, actor?)` is signed-out only;
-`callback(input, actor?)` is for the server's browser-bound transport. Callback results can contain
-an internal session token: unwrap only for cookie delivery. Unknown identities require verified email and existing admission or a valid invitation. See external enrollment below; provider claims never merge users or overwrite canonical email/profile.
-
-`auth.reauthentication.google(actor, {})` adds Google proof for the current user.
-`auth.reauthentication.email.request/resend/verify` uses existing email proof inputs and binds them
-to the current session. Success adds email evidence without a new session or expiry extension.
-`organization.authPolicy.methods/update` exposes effective availability and revision-checked
-`{ expectedRevision, googleEnabled }` updates. Only organization owners may update; email remains
-available and global Google configuration must be active to enable it.
-
-See [Google architecture](../../architecture/identity-access/google.md) for transactions,
-revocation, test behavior, safe errors and remaining enterprise SSO limits.
+`auth.account.startGoogle` explicitly links the current member; `auth.google.start`
+starts signed-out sign-in. Callback completion checks browser binding, current
+membership, account conflicts and policy. Invitation-authorized enrollment can admit a
+new user; ordinary provider authentication cannot create membership. Unlink revokes its
+source evidence. Administrative email reauthentication is not part of this API.
 
 ## Verification
 
@@ -308,7 +252,7 @@ TLS verification remains enabled. The adapter performs no network request at con
 `organization.identityConnection` exposes `list`, `get`, `createOidc`, `updateOidc`, `test`,
 `activate`, `disable` and `refreshMetadata`. Creation takes actor, organization ID and decoded
 `CreateOidcConnectionInput`; updates use `UpdateOidcConnectionInput`. Inputs redact secrets.
-All mutations require current organization ownership and recent local email. Discovery occurs
+All mutations require current organization ownership and a current authenticated session. Discovery occurs
 outside SQL, followed by fresh locked authority/revision checks and required audit. Test the exact
 revision in a browser before activation. After first activation, issuer/client ID are immutable;
 use another connection to replace the identity space. Trust changes invalidate testing/evidence;
@@ -319,8 +263,8 @@ Approve an active connection with `organization.authPolicy.update(actor, organiz
 preserves it, including when editing only Google. Email remains enabled. `methods` returns safe
 approved connection labels, availability and current-user link state to active members.
 
-`auth.oidc.startLink(actor, organizationId, connectionId, {})` requires active membership and recent
-email. `startSignIn(organizationId, connectionId, {}, actor?)` rejects authenticated browsers and
+`auth.oidc.startLink(actor, organizationId, connectionId, {})` requires active membership and a verified
+email address. `startSignIn(organizationId, connectionId, {}, actor?)` rejects authenticated browsers and
 resolves a stable binding or verified email with current membership at completion. `startReauthentication(actor, organizationId,
 connectionId, {})` proves the current user again. The server owns flow cookies and calls
 `callback(input, actor?)`; successful sign-in credentials are for cookie delivery only. Linking
@@ -332,31 +276,21 @@ certificate; they change certificate trust only inside their test process and cl
 
 ## Required SSO and owner recovery
 
-`organization.authPolicy.update` accepts decoded `UpdateOrganizationAuthPolicyInput`, including
-`ssoMode: "optional" | "required"` and `ssoMaxAgeSeconds` (default 43,200; range 300–604,800).
-Existing Google policy input names remain aliases. Omitted settings are preserved. The installation
-Google connection does not satisfy required organization SSO.
+The organization can require approved OIDC/SAML authentication within its configured
+`ssoMaxAgeSeconds`. Email and Google do not satisfy enterprise SSO, but email sign-in
+remains available for identity confirmation and explicit recovery. Administrative
+actions do not impose an additional five-minute email or provider step-up.
 
-Before enabling, approve an active tested OIDC or SAML connection, link the owner's identity, complete
-`auth.oidc.startReauthentication`/callback, and issue a credential through
-`organization.authRecovery.rotate(actor, organizationId)`. Save the redacted credential securely;
-ordinary reads cannot retrieve it. Pass it as `recoveryCredential` with the current policy revision
-and `ssoMode: "required"`. Enablement requires provider authentication and local email evidence no
-older than five minutes. `authPolicy.readiness` reports current blockers; `authPolicy.methods`
-remains available to active members before satisfying SSO and reports the next action.
+`authPolicy.readiness` reports active approved connections, owner account linking,
+policy-valid SSO evidence and offline recovery preparation. Enabling enforcement
+requires the owner's recovery credential and an authentication that satisfies the
+resulting policy. Mutations preserve a recoverable owner and current actor access.
 
-`organization.authRecovery.get` returns the current owner's active credential identity/time.
-`rotate` replaces it atomically; `revoke` rejects removal of the final required recovery path.
-`recover(actor, organizationId, decoded RecoverOrganizationAuthInput)` requires current ownership,
-recent email, current policy revision and the offline credential, independently of provider access.
-It consumes the credential, makes SSO optional, and commits audit plus owner email jobs together.
-Recovery also permits archived organizations without restoring them. There is no automatic fallback.
-
-Invitations still verify the mailbox and admit membership/assignments. Required organizations return
-`nextAction: "authenticate_with_sso"`; the member must link and authenticate before using their roles.
-Owner/connection/account mutations preserve a prepared recovery owner under the organization lock.
-See [required SSO architecture](../../architecture/identity-access/required-sso.md) for boundaries,
-credential loss, archival and provider revocation limits.
+`authRecovery.get`, `rotate`, `revoke` and `recover` retain one-time offline recovery.
+Recovery checks a current owner session and credential, consumes the credential,
+changes required SSO to optional and writes audits/notifications atomically.
+Provider renewal remains available when required SSO evidence reaches the configured
+age; it does not extend the Preface session lifetime. See the [required SSO architecture](../../architecture/identity-access/required-sso.md).
 
 ## Organization SAML
 
@@ -401,10 +335,10 @@ also takes challenge ID and redacted code. Provider proof is encrypted and brows
 so code verification does not repeat the provider exchange. Direct admission uses exact
 connection-domain authority, a fresh emailed invitation, or the inline mailbox proof.
 
-`auth.discover({ email, organizationSlug? })` returns eligible login choices independently of
-account existence. Existing current-session, capabilities and organization-list APIs supply
-returning-owner state; no organization is required to sign back in. Organization selection
-uses `organization.authPolicy.methods` and does not grant access by itself.
+`auth.discover()` returns the sole organization's supported methods independently of
+account existence. The server resolves the organization for all public requests.
+`organization.authPolicy.methods` reports current member policy requirements without
+granting content access or changing a selected organization.
 
 `AuthenticationLinks` optionally accepts `dashboardOrigin` for frontend email/return URLs.
 Keep `publicOrigin` as the provider callback origin. The runtime validates those origins.
@@ -417,7 +351,7 @@ remain outside these workflows.
 `application.audit.list(actor, organizationId, query?)` returns a scoped event page;
 `exportCsv` returns a bounded CSV page with a continuation cursor. Supply `null` for the narrow
 instance-administration scope. Organization scope requires current `audit.read`; instance scope
-requires instance ownership and recent local email. See [audit architecture](../../architecture/identity-access/audit.md).
+requires instance ownership and a current authenticated session. See [audit architecture](../../architecture/identity-access/audit.md).
 `organization.domain.inspectForOperator` permits reviewing a claim before manual approval;
 `revoke(..., true)` withdraws operator approval without granting organization content access.
 

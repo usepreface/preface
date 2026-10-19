@@ -46,7 +46,7 @@ export const makeSamlConnectionApplication = Effect.gen(function* () {
     lock = false,
   ) {
     const resolved = yield* organizations.requireOwner(actor, organizationId, { lock });
-    yield* identities.requireRecentEmail(actor);
+    yield* identities.requireVerifiedEmail(actor);
     return resolved;
   });
   const requireConnection = Effect.fn("SamlConnection.requireConnection")(function* (
@@ -84,7 +84,6 @@ export const makeSamlConnectionApplication = Effect.gen(function* () {
         const now = yield* DateTime.now;
         const connection = yield* repository.auth.identityConnection.createSaml({
           id,
-          installationId: null,
           organizationId,
           provider: "saml",
           name: decoded.name,
@@ -99,7 +98,7 @@ export const makeSamlConnectionApplication = Effect.gen(function* () {
           configuration: {
             version: 1,
             entityId: new URL(
-              `/api/v1/organizations/${organizationId}/identity-connections/${id}/saml/metadata`,
+              `/api/v1/organization/identity-connections/${id}/saml/metadata`,
               links.publicOrigin,
             ).href,
             callbackUrl: new URL(`/api/v1/auth/saml/${id}/acs`, links.publicOrigin).href,

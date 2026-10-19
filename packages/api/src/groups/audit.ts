@@ -1,6 +1,5 @@
 import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/http-api";
 
-import { OrganizationId } from "@usepreface/protocol";
 import {
   AuditEventPage,
   AuditExport,
@@ -15,22 +14,16 @@ const errors = [...identityErrors, ...organizationErrors, ...requestErrors];
 
 export class AuditApi extends HttpApiGroup.make("audit")
   .add(
-    HttpApiEndpoint.get("organization", "/organizations/:organizationId/audit-events", {
-      params: { organizationId: OrganizationId },
+    HttpApiEndpoint.get("organization", "/organization/audit-events", {
       query: ListAuditEventsQuery,
       success: AuditEventPage,
       error: errors,
     }),
-    HttpApiEndpoint.get(
-      "exportOrganization",
-      "/organizations/:organizationId/audit-events/export",
-      {
-        params: { organizationId: OrganizationId },
-        query: AuditExportQuery,
-        success: AuditExport,
-        error: errors,
-      },
-    ),
+    HttpApiEndpoint.get("exportOrganization", "/organization/audit-events/export", {
+      query: AuditExportQuery,
+      success: AuditExport,
+      error: errors,
+    }),
     HttpApiEndpoint.get("instance", "/instance/audit-events", {
       query: ListAuditEventsQuery,
       success: AuditEventPage,

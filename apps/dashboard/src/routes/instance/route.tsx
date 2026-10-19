@@ -18,7 +18,7 @@ function InstanceLayout() {
   const capabilities = useCapabilities();
   return (
     <QueryState query={capabilities}>
-      {capabilities.data?.canCreateOrganization ? (
+      {capabilities.data?.isInstanceOwner ? (
         <ShellLayout
           topBar={(props) => (
             <AppTopBar

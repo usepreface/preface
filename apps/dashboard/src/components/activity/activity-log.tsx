@@ -44,9 +44,8 @@ const useEvents = toQuery(
           "audit",
           "organization",
           requestFields({
-            params: { organizationId },
             query,
-            reactivityKeys: [QueryKeys.authority, QueryKeys.organization(organizationId)],
+            reactivityKeys: [QueryKeys.authority, QueryKeys.organization],
           }),
         )
       : ApiClient.query(
@@ -145,7 +144,7 @@ export function ActivityLog({ organizationId }: { organizationId?: OrganizationI
           onClick={async () => {
             const exportQuery = { ...filters, cursor: exportStarted ? exportCursor : undefined };
             const response = organizationId
-              ? await exportOrganization.run({ params: { organizationId }, query: exportQuery })
+              ? await exportOrganization.run({ query: exportQuery })
               : await exportInstance.run({ query: exportQuery });
             if (!response) return;
             const file = URL.createObjectURL(

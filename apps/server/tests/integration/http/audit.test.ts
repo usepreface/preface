@@ -22,18 +22,15 @@ layer(HttpTestLayer, { excludeTestServices: true })("Audit HTTP boundary", (it) 
             }),
           ),
       });
-      const created = yield* api.organizations.create({
-        payload: { metadata: { name: "Knowledge" }, slug: "knowledge" },
-      });
+      const created = yield* api.organizations.get();
       const params = { organizationId: created.organization.id };
       const history = yield* api.audit.organization({
-        params,
         query: { limit: 1, eventType: "organization.created" },
       });
       expect(history.events[0]?.organizationId).toBe(params.organizationId);
       expect(history.events[0]?.eventType).toBe("organization.created");
       expect(history.nextCursor).toBeNull();
-      expect((yield* api.audit.exportOrganization({ params, query: {} })).content).toContain(
+      expect((yield* api.audit.exportOrganization({ query: {} })).content).toContain(
         "organization.created",
       );
       const instance = yield* api.audit.instance({ query: {} });
@@ -51,9 +48,9 @@ layer(HttpTestLayer, { excludeTestServices: true })("Audit HTTP boundary", (it) 
             ),
           ),
       });
-      expect(
-        yield* denied.audit.organization({ params, query: {} }).pipe(Effect.flip),
-      ).toMatchObject({ code: "ORGANIZATION_NOT_FOUND" });
+      expect(yield* denied.audit.organization({ query: {} }).pipe(Effect.flip)).toMatchObject({
+        code: "ORGANIZATION_NOT_FOUND",
+      });
     }),
   );
 });

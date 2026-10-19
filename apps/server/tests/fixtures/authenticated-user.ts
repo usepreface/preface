@@ -12,7 +12,7 @@ export const completeTestSetup = Effect.gen(function* () {
   const application = yield* Application;
   const verification = yield* application.instance.bootstrap.requestVerification({
     token: prepared.token,
-    instanceName: "Knowledge",
+    organizationName: "Knowledge",
     ownerName: "Owner",
     email: "owner@example.test",
   });

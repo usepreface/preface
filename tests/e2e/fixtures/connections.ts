@@ -15,13 +15,8 @@ import type { Realm } from "./keycloak.js";
 import type { Mailbox } from "./mailbox.js";
 import { authenticateAtKeycloak } from "./onboarding.js";
 
-export async function configureOidc(
-  api: AuthApi,
-  realm: Realm,
-  page: Page,
-  organizationId: string,
-) {
-  const path = `/organizations/${organizationId}/identity-connections`;
+export async function configureOidc(api: AuthApi, realm: Realm, page: Page) {
+  const path = `/organization/identity-connections`;
   await realm.user("operator", "owner@company.example.test");
   await realm.oidc(`${api.origin}/api/v1/auth/oidc/callback`);
   let connection = await api.json(
@@ -56,13 +51,8 @@ export async function configureOidc(
   return connection;
 }
 
-export async function configureSaml(
-  api: AuthApi,
-  realm: Realm,
-  page: Page,
-  organizationId: string,
-) {
-  const path = `/organizations/${organizationId}/identity-connections`;
+export async function configureSaml(api: AuthApi, realm: Realm, page: Page) {
+  const path = `/organization/identity-connections`;
   await realm.user("operator", "owner@company.example.test");
   let connection = await api.json(
     PublicSamlConnection,
@@ -103,11 +93,10 @@ export async function configureSaml(
 
 export async function approveConnection(
   api: AuthApi,
-  organizationId: string,
   connection: { id: string; revision: number; provider: "oidc" | "saml" },
   trustDomain = true,
 ) {
-  const base = `/organizations/${organizationId}`;
+  const base = `/organization`;
   const policy = await api.json(PublicOrganizationAuthPolicy, `${base}/auth-policy`);
   await api.json(PublicOrganizationAuthPolicy, `${base}/auth-policy`, "PATCH", {
     expectedRevision: policy.revision,
@@ -119,7 +108,7 @@ export async function approveConnection(
   });
   await api.json(
     PublicOrganizationDomain,
-    `/instance/organizations/${organizationId}/domains/${domain.id}/approve`,
+    `/instance/organization/domains/${domain.id}/approve`,
     "POST",
     { expectedRevision: domain.revision },
   );
@@ -134,16 +123,15 @@ export async function approveConnection(
 export async function inviteMember(
   api: AuthApi,
   mailbox: Mailbox,
-  organizationId: string,
   email: string,
   teams: readonly { teamId: string }[] = [],
 ) {
-  const roles = await api.json(OrganizationRoleList, `/organizations/${organizationId}/roles`);
+  const roles = await api.json(OrganizationRoleList, `/organization/roles`);
   const member = roles.roles.find((role) => role.key === "member");
   if (!member) throw new Error("Missing built-in member role");
   const invitation = await api.json(
     PublicInvitation,
-    `/organizations/${organizationId}/invitations`,
+    `/organization/invitations`,
     "POST",
     { email, roleIds: [member.id], teams },
     201,

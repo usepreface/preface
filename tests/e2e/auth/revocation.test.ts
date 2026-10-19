@@ -2,7 +2,7 @@ import { ExternalIdentityStartResult, PublicOidcConnection } from "@usepreface/p
 
 import { AuthApi } from "../fixtures/api.js";
 import { approveConnection, configureOidc, inviteMember } from "../fixtures/connections.js";
-import { createOrganization, onboardOwner } from "../fixtures/onboarding.js";
+import { currentOrganization, onboardOwner } from "../fixtures/onboarding.js";
 import { test, expect } from "../fixtures/test.js";
 
 test("revocation during an OIDC round trip prevents invitation admission", async ({
@@ -14,16 +14,11 @@ test("revocation during an OIDC round trip prevents invitation admission", async
   browser,
 }) => {
   await onboardOwner(api, backend, mailbox);
-  const { organization } = await createOrganization(api);
-  const connection = await configureOidc(api, realm, page, organization.id);
-  await approveConnection(api, organization.id, connection);
+  await currentOrganization(api);
+  const connection = await configureOidc(api, realm, page);
+  await approveConnection(api, connection);
   await realm.user("alice", "alice@company.example.test");
-  const invitation = await inviteMember(
-    api,
-    mailbox,
-    organization.id,
-    "alice@company.example.test",
-  );
+  const invitation = await inviteMember(api, mailbox, "alice@company.example.test");
   const memberContext = await browser.newContext({ ignoreHTTPSErrors: true });
   try {
     const member = new AuthApi(memberContext, backend.origin, backend.dashboard);
@@ -39,10 +34,7 @@ test("revocation during an OIDC round trip prevents invitation admission", async
     await memberPage.getByLabel("Password", { exact: true }).fill(realm.password);
     expect(
       (
-        await api.request(
-          `/organizations/${organization.id}/invitations/${invitation.invitationId}`,
-          "DELETE",
-        )
+        await api.request(`/organization/invitations/${invitation.invitationId}`, "DELETE")
       ).status(),
     ).toBe(204);
     await memberPage.getByRole("button", { name: "Sign In", exact: true }).click();
@@ -51,13 +43,13 @@ test("revocation during an OIDC round trip prevents invitation admission", async
     expect((await member.request("/auth/session")).status()).toBe(401);
     const disabled = await api.json(
       PublicOidcConnection,
-      `/organizations/${organization.id}/identity-connections/${connection.id}/disable`,
+      `/organization/identity-connections/${connection.id}/disable`,
       "POST",
       { expectedRevision: connection.revision },
     );
     expect(disabled.status).toBe("disabled");
     const denied = await member.request(
-      `/organizations/${organization.id}/identity-connections/${connection.id}/sign-in/start`,
+      `/organization/identity-connections/${connection.id}/sign-in/start`,
       "POST",
       {},
     );

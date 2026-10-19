@@ -16,7 +16,7 @@ layer(HttpTestLayer, { excludeTestServices: true })("HTTP request policy", (it) 
         const http = yield* HttpClient.HttpClient;
         const payload = {
           token: Redacted.value(prepared.token),
-          instanceName: "Preface",
+          organizationName: "Preface",
           ownerName: "Owner",
           email: "owner@example.test",
         };

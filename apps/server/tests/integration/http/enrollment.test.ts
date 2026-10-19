@@ -31,10 +31,10 @@ layer(
         const owner = yield* completeTestSetup;
         const application = yield* Application;
         const repository = yield* DatabaseRepository;
-        const created = yield* application.organization.organization.create(owner.actor, {
-          metadata: { name: "Knowledge" },
-          slug: "knowledge",
-        });
+        const created = yield* application.organization.organization.get(
+          owner.actor,
+          yield* application.organization.organization.currentId(),
+        );
         const organizationId = created.organization.id;
         const connection = yield* application.organization.identityConnection.createOidc(
           owner.actor,

@@ -82,17 +82,18 @@ export const makeOidcFlowCallback = Effect.gen(function* () {
       if (flow.intent === "test") {
         if (actor === undefined) return yield* new IdentityError({ code: "INVALID_FLOW" });
         yield* actors.requireOwner(actor, connection.organizationId);
-        yield* access.requireRecentEmail(actor);
+        yield* access.requireVerifiedEmail(actor);
       } else {
         if (actor !== undefined && flow.intent !== "accept_invitation")
           yield* organizationAccess.requireActorMember(actor, connection.organizationId);
-        if (flow.intent === "link" && actor !== undefined) yield* access.requireRecentEmail(actor);
+        if (flow.intent === "link" && actor !== undefined)
+          yield* access.requireVerifiedEmail(actor);
         if (flow.intent !== "link")
           yield* organizationAccess.requireApproved(connection.organizationId, connection.id);
         const organization = yield* repository.organization.organization.findById(
           connection.organizationId,
         );
-        if (organization?.archivedAt !== null)
+        if (organization === undefined)
           return yield* new IdentityError({ code: "CONNECTION_UNAVAILABLE" });
       }
       const proof = yield* secrets.decryptFlow(flow.id, flow.pkceVerifierCiphertext);

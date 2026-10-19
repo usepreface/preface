@@ -1,10 +1,6 @@
 import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/http-api";
 
-import {
-  IdentityConnectionId,
-  IdentityConnectionKeyId,
-  OrganizationId,
-} from "@usepreface/protocol";
+import { IdentityConnectionId, IdentityConnectionKeyId } from "@usepreface/protocol";
 import {
   ConnectionHealth,
   PublicConnectionKey,
@@ -16,7 +12,7 @@ import {
 import { identityErrors, organizationErrors, requestErrors } from "#/http-errors";
 import { SessionAuthentication } from "#/middleware/session-authentication";
 
-const params = { organizationId: OrganizationId, connectionId: IdentityConnectionId };
+const params = { connectionId: IdentityConnectionId };
 
 const keyParams = { ...params, keyId: IdentityConnectionKeyId };
 
@@ -52,5 +48,5 @@ export class ConnectionOperationsApi extends HttpApiGroup.make("connectionOperat
     }),
   )
   .middleware(SessionAuthentication)
-  .prefix("/organizations/:organizationId/identity-connections/:connectionId")
+  .prefix("/organization/identity-connections/:connectionId")
   .annotate(OpenApi.Title, "Connection operations") {}

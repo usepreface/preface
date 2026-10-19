@@ -33,6 +33,6 @@ export function usePerson() {
   return {
     name: session.data?.user.metadata.name ?? "",
     email: session.data?.user.email ?? "",
-    instanceOwner: capabilities.data?.canCreateOrganization ?? false,
+    instanceOwner: capabilities.data?.isInstanceOwner ?? false,
   };
 }

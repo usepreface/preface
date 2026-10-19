@@ -1,6 +1,6 @@
 import { Schema } from "effect";
 
-import { OrganizationSlug, TeamPermission } from "#/common/organization";
+import { TeamSlug, TeamPermission } from "#/common/organization";
 import { PageSize } from "#/common/pagination";
 import { PublicOrganizationRole } from "#/dto/organization/role";
 import { TeamId, TeamMemberId, OrganizationMemberId } from "#/identifiers/organization";
@@ -10,7 +10,7 @@ import { UserMetadata } from "#/metadata/user";
 
 export const PublicTeam = Schema.Struct({
   id: TeamId,
-  slug: OrganizationSlug,
+  slug: TeamSlug,
   metadata: TeamMetadata,
   archivedAt: Schema.NullOr(Schema.DateTimeUtcFromString),
   createdAt: Schema.DateTimeUtcFromString,

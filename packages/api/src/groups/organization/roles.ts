@@ -1,6 +1,6 @@
 import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema, OpenApi } from "effect/http-api";
 
-import { OrganizationId, OrganizationRoleId } from "@usepreface/protocol";
+import { OrganizationRoleId } from "@usepreface/protocol";
 import {
   CreateOrganizationRoleRequest,
   UpdateOrganizationRoleRequest,
@@ -14,30 +14,28 @@ import { SessionAuthentication } from "#/middleware/session-authentication";
 
 export class OrganizationRolesApi extends HttpApiGroup.make("organizationRoles")
   .add(
-    HttpApiEndpoint.get("list", "/:organizationId/roles", {
-      params: { organizationId: OrganizationId },
+    HttpApiEndpoint.get("list", "/roles", {
       query: ListOrganizationRolesQuery,
       success: OrganizationRoleList,
       error: [...organizationErrors, ...requestErrors],
     }),
-    HttpApiEndpoint.post("create", "/:organizationId/roles", {
-      params: { organizationId: OrganizationId },
+    HttpApiEndpoint.post("create", "/roles", {
       payload: CreateOrganizationRoleRequest,
       success: PublicOrganizationRole.pipe(HttpApiSchema.status(201)),
       error: [...organizationErrors, ...requestErrors],
     }),
-    HttpApiEndpoint.patch("update", "/:organizationId/roles/:roleId", {
-      params: { organizationId: OrganizationId, roleId: OrganizationRoleId },
+    HttpApiEndpoint.patch("update", "/roles/:roleId", {
+      params: { roleId: OrganizationRoleId },
       payload: UpdateOrganizationRoleRequest,
       success: PublicOrganizationRole,
       error: [...organizationErrors, ...requestErrors],
     }),
-    HttpApiEndpoint.delete("archive", "/:organizationId/roles/:roleId", {
-      params: { organizationId: OrganizationId, roleId: OrganizationRoleId },
+    HttpApiEndpoint.delete("archive", "/roles/:roleId", {
+      params: { roleId: OrganizationRoleId },
       success: HttpApiSchema.NoContent,
       error: [...organizationErrors, ...requestErrors],
     }),
   )
   .middleware(SessionAuthentication)
-  .prefix("/organizations")
+  .prefix("/organization")
   .annotate(OpenApi.Title, "Organization roles") {}

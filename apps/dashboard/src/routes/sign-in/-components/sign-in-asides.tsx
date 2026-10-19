@@ -17,7 +17,7 @@ export function SignInAside() {
     <AuthAside
       art={<SSOConnectedIllustration className="h-64 w-auto" />}
       title="Answers your team can check"
-      description={`${instance.instanceName} searches your docs, code and conversations, and cites every answer.`}
+      description={`${instance.organizationName} searches your docs, code and conversations, and cites every answer.`}
       points={[
         [
           AiSearchIcon,

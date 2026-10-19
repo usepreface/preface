@@ -10,12 +10,12 @@ export class AccountsApi extends HttpApiGroup.make("accounts")
   .add(
     HttpApiEndpoint.get("list", "/", {
       success: AccountList,
-      error: [...identityErrors, ...requestErrors],
+      error: [...identityErrors, ...organizationErrors, ...requestErrors],
     }),
     HttpApiEndpoint.post("startGoogle", "/google/start", {
       payload: GoogleStartRequest,
       success: GoogleStartResult,
-      error: [...identityErrors, ...requestErrors],
+      error: [...identityErrors, ...organizationErrors, ...requestErrors],
     }),
     HttpApiEndpoint.delete("unlink", "/:accountId", {
       params: { accountId: AccountId },

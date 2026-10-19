@@ -12,7 +12,7 @@ export const bootstrapInput = (
 ) =>
   Schema.decodeUnknownEffect(RequestBootstrapVerificationInput)({
     token: Redacted.value(token),
-    instanceName: "Preface Test",
+    organizationName: "Preface Test",
     ownerName: "First Owner",
     email: "owner@example.test",
     ...overrides,

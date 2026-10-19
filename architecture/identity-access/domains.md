@@ -1,8 +1,8 @@
 # Organization domain authority
 
-Organizations can establish exact email-domain authority through DNS TXT verification or
+The organization can establish exact email-domain authority through DNS TXT verification or
 explicit instance-owner approval. This is identity proof, not membership, global domain
-capture, or permission to create organizations. Multiple organizations may verify a domain.
+capture, or membership admission.
 
 `organization.domain` stores the canonical domain, revision, verification source, one-year
 verification deadline and optional operator attribution. `auth.identity_connection_domain`
@@ -10,8 +10,8 @@ binds that claim's revision to an exact active organization connection revision.
 foreign keys prevent cross-organization approval. Expired/revoked claims and stale bindings
 are excluded from authority queries. Changing claims requires an explicit fresh binding.
 
-Organization owners use `/api/v1/organizations/:organizationId/domains` to create/list claims,
-request/confirm verification or revoke them. Mutation requires recent local email. The
+Organization owners use `/api/v1/organization/domains` to create/list claims,
+request/confirm verification or revoke them. Mutation requires a current authenticated session. The
 request returns a random TXT value for `_preface-verification.<domain>` with a 30-minute
 deadline; only its purpose-separated digest is stored. Replacement invalidates the old proof.
 The Node resolver bounds requests, records and response sizes, supports cancellation, and
@@ -19,11 +19,11 @@ performs DNS work outside the business transaction. Final verification rechecks 
 authority, challenge revision and expiry under the organization lock before committing audit.
 
 An instance owner can manually approve a claim through
-`/api/v1/instance/organizations/:organizationId/domains/:domainId/approve` after independently
-establishing control, including private/internal deployments. This requires fresh local email;
+`/api/v1/instance/organization/domains/:domainId/approve` after independently
+establishing control, including private/internal deployments. This requires a current instance-owner session;
 ordinary organization administration cannot self-attest through this route. The matching instance
 GET permits reviewing the exact claim before approval, and POST `/revoke` withdraws only a manual
-operator approval. Both require fresh instance-owner authentication and reveal no organization
+operator approval. Both require current instance-owner authentication and reveal no organization
 content. Organization owners can revoke their own claims through the ordinary route. It grants no
 organization content access to the operator.
 
@@ -41,7 +41,7 @@ There is no automatic DNS refresh or membership admission from verified domains.
 
 Workflow regressions compose real migrated repositories and substitute only DNS resolution.
 They cover replaced proofs, exact connection binding, revocation, manual approval authority
-and cross-organization rejection. Protocol trust consumers are documented with their owning
+and invalid connection binding rejection. Protocol trust consumers are documented with their owning
 authentication flow when wired.
 
 ## Source

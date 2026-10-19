@@ -80,16 +80,13 @@ export const makeExternalCompletion = Effect.gen(function* () {
               DateTime.toEpochMillis(identity.sessionExpiresAt) <= DateTime.toEpochMillis(now))
           )
             return yield* new IdentityError({ code: "INVALID_FLOW" });
-          if (
-            connection.provider !== "google" &&
-            connection.organizationId !== flow.targetOrganizationId
-          )
+          if (connection.organizationId !== flow.targetOrganizationId)
             return yield* new IdentityError({ code: "INVALID_FLOW" });
           if (flow.targetOrganizationId !== null) {
             const organization = yield* repository.organization.organization.lockById(
               flow.targetOrganizationId,
             );
-            if (organization === undefined || organization.archivedAt !== null)
+            if (organization === undefined)
               return yield* new IdentityError({ code: "CONNECTION_UNAVAILABLE" });
           }
           if (flow.intent === "test") {
@@ -139,7 +136,7 @@ export const makeExternalCompletion = Effect.gen(function* () {
               DateTime.toEpochMillis(now) - DateTime.toEpochMillis(identity.authenticatedAt) >
                 policy.ssoMaxAgeSeconds * 1000)
           )
-            return yield* new IdentityError({ code: "RECENT_SSO_REQUIRED" });
+            return yield* new IdentityError({ code: "SSO_AUTHENTICATION_REQUIRED" });
 
           let account = yield* repository.auth.account.findByIdentity(
             connection.id,
@@ -158,9 +155,8 @@ export const makeExternalCompletion = Effect.gen(function* () {
           if (flow.intent === "link") {
             if (actor === undefined) return yield* new IdentityError({ code: "INVALID_FLOW" });
             yield* repository.auth.user.lockById(actor.user.id);
-            yield* access.requireRecentEmail(actor);
-            if (connection.provider !== "google")
-              yield* organizationAccess.requireActorMember(actor, connection.organizationId);
+            yield* access.requireVerifiedEmail(actor);
+            yield* organizationAccess.requireActorMember(actor, connection.organizationId);
             if (account !== undefined && account.userId !== actor.user.id)
               return yield* new IdentityError({ code: "ACCOUNT_ALREADY_LINKED" });
             userId = actor.user.id;
@@ -205,7 +201,7 @@ export const makeExternalCompletion = Effect.gen(function* () {
             }
             if (userId === undefined)
               return yield* new IdentityError({ code: "IDENTITY_NOT_LINKED" });
-            if (flow.intent !== "accept_invitation" && connection.provider !== "google")
+            if (flow.intent !== "accept_invitation")
               yield* organizationAccess.requireMembership(connection.organizationId, userId);
             if (
               flow.intent === "reauthenticate" &&

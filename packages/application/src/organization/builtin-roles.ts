@@ -10,7 +10,6 @@ export const builtinOrganizationRoles = [
       "teams.manage",
       "organization.read",
       "organization.update",
-      "organization.archive",
       "members.read",
       "members.manage",
       "roles.read",

@@ -52,7 +52,7 @@ export function AuthFooter({ className }: { className?: string }) {
   return (
     <footer className={className ?? "flex flex-wrap items-center justify-between gap-4 text-xs"}>
       <span className="text-fg-tertiary">
-        {instance.instanceName} · self-hosted at {window.location.host}
+        {instance.organizationName} · self-hosted at {window.location.host}
       </span>
       <span className="flex items-center gap-4 font-medium text-fg-secondary">
         <a href={"https://github.com/usepreface/preface#readme"} className="hover:text-foreground">

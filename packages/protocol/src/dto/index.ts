@@ -30,10 +30,7 @@ export {
   PublicOrganization,
   OrganizationAccessInfo,
   OrganizationDetail,
-  CreateOrganizationRequest,
   UpdateOrganizationRequest,
-  ListOrganizationsQuery,
-  OrganizationList,
   InstanceCapabilities,
 } from "#/dto/organization/organization";
 

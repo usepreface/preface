@@ -9,7 +9,7 @@ export const instanceSetupForm = toFormSchema(
   RequestBootstrapVerificationInput.mapFields(Struct.omit(["token"])),
   {
     required: {
-      instanceName: "Give the instance a name.",
+      organizationName: "Give the instance a name.",
       ownerName: "Enter the owner’s name.",
       email: "Enter the owner’s email.",
     },

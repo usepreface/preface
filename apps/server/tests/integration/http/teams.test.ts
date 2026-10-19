@@ -29,15 +29,9 @@ layer(HttpTestLayer, { excludeTestServices: true })("teams and profile HTTP cont
         });
         expect(profile.metadata.title).toBe("Engineer");
         expect((yield* api.profile.get()).metadata.version).toBe(1);
-        const created = yield* api.organizations.create({
-          payload: {
-            metadata: { name: "Knowledge", description: "Shared knowledge" },
-            slug: "knowledge",
-          },
-        });
+        const created = yield* api.organizations.get();
         const organizationId = created.organization.id;
         const team = yield* api.teams.create({
-          params: { organizationId },
           payload: {
             metadata: { name: " Engineering ", description: " Build " },
             slug: " ENGINEERING ",
@@ -50,7 +44,6 @@ layer(HttpTestLayer, { excludeTestServices: true })("teams and profile HTTP cont
           (yield* api.teams.roles({ params, query: {} })).roles.map((role) => role.scopeKind),
         ).toEqual(["team", "team"]);
         const role = yield* api.organizationRoles.create({
-          params: { organizationId },
           payload: {
             scopeKind: "team",
             key: "team-editor",
@@ -59,7 +52,6 @@ layer(HttpTestLayer, { excludeTestServices: true })("teams and profile HTTP cont
           },
         });
         const grant = yield* api.organizationRoleBindings.grant({
-          params: { organizationId },
           payload: {
             teamId: team.id,
             roleId: role.id,

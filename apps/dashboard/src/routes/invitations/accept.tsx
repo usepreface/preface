@@ -122,7 +122,7 @@ function Invitation() {
                     ...credentials,
                     connectionId: method.connectionId,
                     displayName,
-                    returnPath: "/organizations",
+                    returnPath: "/",
                   },
                 });
                 if (response) window.location.assign(response.value.authorizationUrl);
@@ -152,7 +152,7 @@ function Invitation() {
                   delete linkProof.token;
                   delete linkProof.proofToken;
                   resetAuthority();
-                  await router.navigate({ to: "/organizations" });
+                  await router.navigate({ to: "/" });
                   await router.invalidate();
                 }
               }}
@@ -179,7 +179,7 @@ function Invitation() {
                   delete linkProof.token;
                   delete linkProof.proofToken;
                   resetAuthority();
-                  await router.navigate({ to: "/organizations" });
+                  await router.navigate({ to: "/" });
                   await router.invalidate();
                 }
               })}

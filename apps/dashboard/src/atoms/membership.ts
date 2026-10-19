@@ -1,8 +1,6 @@
 import { Effect } from "effect";
-import { Atom } from "effect/reactivity";
 
 import type {
-  OrganizationId,
   OrganizationMemberId,
   OrganizationInvitationId,
   OrganizationRoleId,
@@ -19,208 +17,183 @@ import { QueryKeys as K } from "./query-keys";
 
 export const organizationMembersSuspendMutation = mutation(
   (client) => client.organizationMembers.suspend,
-  (request) => [K.organization(request.params.organizationId)],
+  () => [K.organization],
 );
 export const organizationMembersReinstateMutation = mutation(
   (client) => client.organizationMembers.reinstate,
-  (request) => [K.organization(request.params.organizationId)],
+  () => [K.organization],
 );
 export const organizationMembersRemoveMutation = mutation(
   (client) => client.organizationMembers.remove,
-  (request) => [K.organization(request.params.organizationId)],
+  () => [K.organization],
 );
 export const organizationInvitationsCreateMutation = mutation(
   (client) => client.organizationInvitations.create,
-  (request) => [K.organization(request.params.organizationId)],
+  () => [K.organization],
 );
 export const organizationInvitationsResendMutation = mutation(
   (client) => client.organizationInvitations.resend,
-  (request) => [K.organization(request.params.organizationId)],
+  () => [K.organization],
 );
 export const organizationInvitationsRevokeMutation = mutation(
   (client) => client.organizationInvitations.revoke,
-  (request) => [K.organization(request.params.organizationId)],
+  () => [K.organization],
 );
 export const organizationRolesCreateMutation = mutation(
   (client) => client.organizationRoles.create,
-  (request) => [K.organization(request.params.organizationId)],
+  () => [K.organization],
 );
 export const organizationRolesUpdateMutation = mutation(
   (client) => client.organizationRoles.update,
-  (request) => [K.organization(request.params.organizationId)],
+  () => [K.organization],
 );
 export const organizationRolesArchiveMutation = mutation(
   (client) => client.organizationRoles.archive,
-  (request) => [K.organization(request.params.organizationId)],
+  () => [K.organization],
 );
 export const organizationRoleBindingsGrantMutation = mutation(
   (client) => client.organizationRoleBindings.grant,
-  (request) => [K.organization(request.params.organizationId)],
+  () => [K.organization],
 );
 export const organizationRoleBindingsRevokeMutation = mutation(
   (client) => client.organizationRoleBindings.revoke,
-  (request) => [K.organization(request.params.organizationId)],
+  () => [K.organization],
 );
 export const organizationOwnershipGrantMutation = mutation(
   (client) => client.organizationOwnership.grant,
-  (request) => [K.organization(request.params.organizationId)],
+  () => [K.organization],
 );
 export const organizationOwnershipRevokeMutation = mutation(
   (client) => client.organizationOwnership.revoke,
-  (request) => [K.organization(request.params.organizationId)],
+  () => [K.organization],
 );
 export const organizationOwnershipTransferMutation = mutation(
   (client) => client.organizationOwnership.transfer,
-  (request) => [K.organization(request.params.organizationId)],
+  () => [K.organization],
 );
 export const teamsCreateMutation = mutation(
   (client) => client.teams.create,
-  (request) => [K.organization(request.params.organizationId)],
+  () => [K.organization],
 );
 export const teamsUpdateMutation = mutation(
   (client) => client.teams.update,
-  (request) => [K.organization(request.params.organizationId)],
+  () => [K.organization],
 );
 export const teamsArchiveMutation = mutation(
   (client) => client.teams.archive,
-  (request) => [K.organization(request.params.organizationId)],
+  () => [K.organization],
 );
 export const teamsAddMemberMutation = mutation(
   (client) => client.teams.addMember,
-  (request) => [K.organization(request.params.organizationId)],
+  () => [K.organization],
 );
 export const teamsRemoveMemberMutation = mutation(
   (client) => client.teams.removeMember,
-  (request) => [K.organization(request.params.organizationId)],
+  () => [K.organization],
 );
 
-export const rolesAtom = (
-  organizationId: OrganizationId,
-  cursor?: OrganizationRoleId,
-  scopeKind: RoleScope = "organization",
-) =>
+export const rolesAtom = (cursor?: OrganizationRoleId, scopeKind: RoleScope = "organization") =>
   ApiClient.query(
     "organizationRoles",
     "list",
     requestFields({
-      params: { organizationId },
       query: { limit: 100, includeArchived: true, scopeKind, ...(cursor ? { cursor } : {}) },
-      reactivityKeys: [K.authority, K.organization(organizationId)],
+      reactivityKeys: [K.authority, K.organization],
     }),
   );
-export const invitationsAtom = (
-  organizationId: OrganizationId,
-  cursor?: OrganizationInvitationId,
-) =>
+export const invitationsAtom = (cursor?: OrganizationInvitationId) =>
   ApiClient.query(
     "organizationInvitations",
     "list",
     requestFields({
-      params: { organizationId },
       query: { limit: 100, ...(cursor ? { cursor } : {}) },
-      reactivityKeys: [K.authority, K.organization(organizationId)],
+      reactivityKeys: [K.authority, K.organization],
     }),
   );
-export const bindingsAtom = (
-  organizationId: OrganizationId,
-  memberId: OrganizationMemberId,
-  teamId?: TeamId,
-) =>
+export const bindingsAtom = (memberId: OrganizationMemberId, teamId?: TeamId) =>
   ApiClient.query(
     "organizationRoleBindings",
     "list",
     requestFields({
-      params: { organizationId },
       query: { memberId, teamId },
-      reactivityKeys: [K.authority, K.organization(organizationId)],
+      reactivityKeys: [K.authority, K.organization],
     }),
   );
-export const teamAtom = (organizationId: OrganizationId, teamId: TeamId) =>
+export const teamAtom = (teamId: TeamId) =>
   ApiClient.query(
     "teams",
     "get",
     requestFields({
-      params: { organizationId, teamId },
-      reactivityKeys: [K.authority, K.organization(organizationId)],
+      params: { teamId },
+      reactivityKeys: [K.authority, K.organization],
     }),
   );
-export const teamAccessAtom = (organizationId: OrganizationId, teamId: TeamId) =>
+export const teamAccessAtom = (teamId: TeamId) =>
   ApiClient.query(
     "teams",
     "access",
     requestFields({
-      params: { organizationId, teamId },
-      reactivityKeys: [K.authority, K.organization(organizationId)],
+      params: { teamId },
+      reactivityKeys: [K.authority, K.organization],
     }),
   );
-export const teamMembersAtom = (
-  organizationId: OrganizationId,
-  teamId: TeamId,
-  cursor?: TeamMemberId,
-) =>
+export const teamMembersAtom = (teamId: TeamId, cursor?: TeamMemberId) =>
   ApiClient.query(
     "teams",
     "members",
     requestFields({
-      params: { organizationId, teamId },
+      params: { teamId },
       query: { cursor, limit: 100 },
-      reactivityKeys: [K.authority, K.organization(organizationId)],
+      reactivityKeys: [K.authority, K.organization],
     }),
   );
-export const allRolesAtom = Atom.family((organizationId: OrganizationId) =>
-  ApiClient.runtime
-    .atom(
-      Effect.gen(function* () {
-        const client = yield* ApiClient;
-        const scopes = yield* Effect.forEach(
-          ["organization", "team"] as const,
-          (scopeKind) =>
-            collectPages((cursor?: OrganizationRoleId) =>
-              client.organizationRoles
-                .list({
-                  params: { organizationId },
-                  query: { limit: 100, scopeKind, ...(cursor ? { cursor } : {}) },
-                })
-                .pipe(Effect.map((page) => ({ values: page.roles, nextCursor: page.nextCursor }))),
-            ),
-          { concurrency: 2 },
-        );
-        return scopes.flat();
-      }),
-    )
-    .pipe(ApiClient.runtime.factory.withReactivity([K.authority, K.organization(organizationId)])),
-);
-export const allMembersAtom = Atom.family((organizationId: OrganizationId) =>
-  ApiClient.runtime
-    .atom(
-      Effect.gen(function* () {
-        const client = yield* ApiClient;
-        return yield* collectPages((cursor?: OrganizationMemberId) =>
-          client.organizationMembers
-            .list({
-              params: { organizationId },
-              query: { limit: 100, ...(cursor ? { cursor } : {}) },
-            })
-            .pipe(Effect.map((page) => ({ values: page.members, nextCursor: page.nextCursor }))),
-        );
-      }),
-    )
-    .pipe(ApiClient.runtime.factory.withReactivity([K.authority, K.organization(organizationId)])),
-);
-export const allTeamsAtom = Atom.family((organizationId: OrganizationId) =>
-  ApiClient.runtime
-    .atom(
-      Effect.gen(function* () {
-        const client = yield* ApiClient;
-        return yield* collectPages((cursor?: TeamId) =>
-          client.teams
-            .list({
-              params: { organizationId },
-              query: { limit: 100, ...(cursor ? { cursor } : {}) },
-            })
-            .pipe(Effect.map((page) => ({ values: page.teams, nextCursor: page.nextCursor }))),
-        );
-      }),
-    )
-    .pipe(ApiClient.runtime.factory.withReactivity([K.authority, K.organization(organizationId)])),
-);
+export const allRolesAtom = ApiClient.runtime
+  .atom(
+    Effect.gen(function* () {
+      const client = yield* ApiClient;
+      const scopes = yield* Effect.forEach(
+        ["organization", "team"] as const,
+        (scopeKind) =>
+          collectPages((cursor?: OrganizationRoleId) =>
+            client.organizationRoles
+              .list({
+                query: { limit: 100, scopeKind, ...(cursor ? { cursor } : {}) },
+              })
+              .pipe(Effect.map((page) => ({ values: page.roles, nextCursor: page.nextCursor }))),
+          ),
+        { concurrency: 2 },
+      );
+      return scopes.flat();
+    }),
+  )
+  .pipe(ApiClient.runtime.factory.withReactivity([K.authority, K.organization]));
+
+export const allMembersAtom = ApiClient.runtime
+  .atom(
+    Effect.gen(function* () {
+      const client = yield* ApiClient;
+      return yield* collectPages((cursor?: OrganizationMemberId) =>
+        client.organizationMembers
+          .list({
+            query: { limit: 100, ...(cursor ? { cursor } : {}) },
+          })
+          .pipe(Effect.map((page) => ({ values: page.members, nextCursor: page.nextCursor }))),
+      );
+    }),
+  )
+  .pipe(ApiClient.runtime.factory.withReactivity([K.authority, K.organization]));
+
+export const allTeamsAtom = ApiClient.runtime
+  .atom(
+    Effect.gen(function* () {
+      const client = yield* ApiClient;
+      return yield* collectPages((cursor?: TeamId) =>
+        client.teams
+          .list({
+            query: { limit: 100, ...(cursor ? { cursor } : {}) },
+          })
+          .pipe(Effect.map((page) => ({ values: page.teams, nextCursor: page.nextCursor }))),
+      );
+    }),
+  )
+  .pipe(ApiClient.runtime.factory.withReactivity([K.authority, K.organization]));

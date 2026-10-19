@@ -7,7 +7,7 @@ import { VerificationCode } from "#/common/verification-code";
 const EmailLink = Schema.String.check(Schema.isPattern(/^https?:\/\/[^\s]+$/));
 
 export const InstanceSetupEmailVariables = Schema.Struct({
-  instanceName: DisplayName,
+  organizationName: DisplayName,
   displayName: DisplayName,
   code: VerificationCode,
   magicLinkUrl: Schema.optionalKey(EmailLink),
@@ -16,7 +16,7 @@ export const InstanceSetupEmailVariables = Schema.Struct({
 export type InstanceSetupEmailVariables = typeof InstanceSetupEmailVariables.Type;
 
 export const SignInEmailVariables = Schema.Struct({
-  instanceName: DisplayName,
+  organizationName: DisplayName,
   code: VerificationCode,
   magicLinkUrl: Schema.optionalKey(EmailLink),
   expiresAt: Schema.DateTimeUtcFromString,
@@ -24,8 +24,7 @@ export const SignInEmailVariables = Schema.Struct({
 export type SignInEmailVariables = typeof SignInEmailVariables.Type;
 
 export const OrganizationInvitationEmailVariables = Schema.Struct({
-  instanceName: DisplayName,
-  organizationName: Schema.NonEmptyString,
+  organizationName: DisplayName,
   inviterName: DisplayName,
   roleName: Schema.NonEmptyString,
   invitationUrl: EmailLink,
@@ -60,11 +59,6 @@ export const EmailPayload = Schema.Union([
     type: Schema.Literal("organization-security"),
     to: UserEmail,
     variables: OrganizationSecurityEmailVariables,
-  }),
-  Schema.Struct({
-    type: Schema.Literal("email-reauthentication"),
-    to: UserEmail,
-    variables: SignInEmailVariables,
   }),
   Schema.Struct({
     type: Schema.Literal("invitation-verification"),

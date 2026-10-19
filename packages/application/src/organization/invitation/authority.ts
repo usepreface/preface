@@ -44,7 +44,6 @@ export const makeInvitationAuthority = Effect.gen(function* () {
     );
     if (
       organization === undefined ||
-      organization.archivedAt !== null ||
       invitation === undefined ||
       invitation.acceptedAt !== null ||
       invitation.revokedAt !== null ||

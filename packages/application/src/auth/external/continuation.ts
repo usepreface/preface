@@ -127,7 +127,13 @@ export const makeExternalContinuation = Effect.gen(function* () {
         const emailJobId = yield* emails.enqueue({
           type: "identity-verification",
           to: email,
-          variables: { instanceName: settings.displayName, code: Redacted.value(code), expiresAt },
+          variables: {
+            organizationName:
+              (yield* repository.organization.organization.find())?.metadata.name ??
+              settings.displayName,
+            code: Redacted.value(code),
+            expiresAt,
+          },
           idempotencyKey: `external-email:${id}`,
           expiresAt,
         });

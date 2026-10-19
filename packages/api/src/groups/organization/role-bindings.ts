@@ -1,6 +1,6 @@
 import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema, OpenApi } from "effect/http-api";
 
-import { OrganizationId, OrganizationRoleBindingId } from "@usepreface/protocol";
+import { OrganizationRoleBindingId } from "@usepreface/protocol";
 import {
   ListRoleBindingsQuery,
   OrganizationRoleBindingList,
@@ -13,24 +13,22 @@ import { SessionAuthentication } from "#/middleware/session-authentication";
 
 export class OrganizationRoleBindingsApi extends HttpApiGroup.make("organizationRoleBindings")
   .add(
-    HttpApiEndpoint.get("list", "/:organizationId/role-bindings", {
-      params: { organizationId: OrganizationId },
+    HttpApiEndpoint.get("list", "/role-bindings", {
       query: ListRoleBindingsQuery,
       success: OrganizationRoleBindingList,
       error: [...teamErrors, ...organizationErrors, ...requestErrors],
     }),
-    HttpApiEndpoint.post("grant", "/:organizationId/role-bindings", {
-      params: { organizationId: OrganizationId },
+    HttpApiEndpoint.post("grant", "/role-bindings", {
       payload: GrantOrganizationRoleRequest,
       success: PublicOrganizationRoleBinding.pipe(HttpApiSchema.status(201)),
       error: [...teamErrors, ...organizationErrors, ...requestErrors],
     }),
-    HttpApiEndpoint.delete("revoke", "/:organizationId/role-bindings/:bindingId", {
-      params: { organizationId: OrganizationId, bindingId: OrganizationRoleBindingId },
+    HttpApiEndpoint.delete("revoke", "/role-bindings/:bindingId", {
+      params: { bindingId: OrganizationRoleBindingId },
       success: HttpApiSchema.NoContent,
       error: [...teamErrors, ...organizationErrors, ...requestErrors],
     }),
   )
   .middleware(SessionAuthentication)
-  .prefix("/organizations")
+  .prefix("/organization")
   .annotate(OpenApi.Title, "Organization role assignments") {}

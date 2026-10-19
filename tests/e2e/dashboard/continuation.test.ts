@@ -2,7 +2,7 @@ import { configureOidc, approveConnection, inviteMember } from "../fixtures/conn
 import { ageInvitationDelivery } from "../fixtures/invitation-delivery.js";
 import {
   onboardOwner,
-  createOrganization,
+  currentOrganization,
   authenticateAtKeycloak,
 } from "../fixtures/onboarding.js";
 import { test, expect } from "../fixtures/test.js";
@@ -20,16 +20,11 @@ test("dashboard resumes an SSO invitation after fresh mailbox verification", asy
   database,
 }) => {
   await onboardOwner(api, backend, mailbox);
-  const { organization } = await createOrganization(api);
-  const connection = await configureOidc(api, realm, page, organization.id);
-  await approveConnection(api, organization.id, connection, false);
+  await currentOrganization(api);
+  const connection = await configureOidc(api, realm, page);
+  await approveConnection(api, connection, false);
   await realm.user("contractor", "contractor@outside.example.test");
-  const invitation = await inviteMember(
-    api,
-    mailbox,
-    organization.id,
-    "contractor@outside.example.test",
-  );
+  const invitation = await inviteMember(api, mailbox, "contractor@outside.example.test");
   // The invitation is valid, but an old delivery no longer proves recent mailbox access.
   const aged = await ageInvitationDelivery(infrastructure, database, invitation.invitationId);
   expect(aged.exitCode, aged.output).toBe(0);
@@ -58,8 +53,8 @@ test("dashboard resumes an SSO invitation after fresh mailbox verification", asy
       .getByLabel("Verification code", { exact: true })
       .fill(await mailbox.code("contractor@outside.example.test"));
     await contractor.getByRole("button", { name: "Verify and continue", exact: true }).click();
-    await expect(contractor).toHaveURL(/\/organizations\/?$/);
-    await contractor.getByRole("link", { name: "Open", exact: true }).click();
+    await expect(contractor).toHaveURL(/\/$/);
+
     await expect(
       contractor.getByRole("heading", {
         name: "Welcome to Fixture Company, Contractor",

@@ -15,10 +15,6 @@ export const cryptoPurpose = {
   authFlowState: "preface/identity/state/v1",
   authFlowBrowser: "preface/identity/browser/v1",
   authFlowNonce: "preface/identity/nonce/v1",
-  emailReauthenticationLink: "preface/email-reauthentication/link/v1",
-  emailReauthenticationBrowser: "preface/email-reauthentication/browser/v1",
-  emailReauthenticationCode: "preface/email-reauthentication/code/v1",
-  emailReauthenticationSubject: "preface/email-reauthentication/subject/v1",
   invitationToken: "preface/invitation/token/v1",
   invitationBrowser: "preface/invitation/browser/v1",
   invitationLink: "preface/invitation/link/v1",
@@ -45,8 +41,6 @@ export type TokenPurpose =
   | typeof cryptoPurpose.authFlowState
   | typeof cryptoPurpose.authFlowBrowser
   | typeof cryptoPurpose.authFlowNonce
-  | typeof cryptoPurpose.emailReauthenticationLink
-  | typeof cryptoPurpose.emailReauthenticationBrowser
   | typeof cryptoPurpose.invitationToken
   | typeof cryptoPurpose.invitationBrowser
   | typeof cryptoPurpose.invitationLink
@@ -64,8 +58,6 @@ export type EncryptionPurpose =
 export type FingerprintPurpose =
   | typeof cryptoPurpose.externalEmailCode
   | typeof cryptoPurpose.externalEmailSubject
-  | typeof cryptoPurpose.emailReauthenticationCode
-  | typeof cryptoPurpose.emailReauthenticationSubject
   | typeof cryptoPurpose.invitationCode
   | typeof cryptoPurpose.invitationRecipient
   | typeof cryptoPurpose.emailOutboxFingerprint

@@ -58,7 +58,7 @@ test("built application completes and revokes setup using packaged repositories 
       assert.equal(prepared.state, "issued");
       const input = Schema.decodeUnknownSync(RequestBootstrapVerificationInput)({
         token: Redacted.value(prepared.token),
-        instanceName: "Preface",
+        organizationName: "Preface",
         ownerName: "Instance Owner",
         email: "owner@example.test",
       });

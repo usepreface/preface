@@ -1,4 +1,6 @@
-import { mutation } from "./client";
+import { requestFields } from "#/lib/request-fields";
+
+import { ApiClient, mutation } from "./client";
 import { QueryKeys as K } from "./query-keys";
 
 export const instanceSetupInspectMutation = mutation(
@@ -29,28 +31,13 @@ export const emailSignInVerifyMutation = mutation(
   (client) => client.emailSignIn.verify,
   () => [],
 );
-export const authenticationDiscoveryDiscoverMutation = mutation(
-  (client) => client.authenticationDiscovery.discover,
-  () => [],
+export const authenticationMethodsAtom = ApiClient.query(
+  "authenticationDiscovery",
+  "discover",
+  requestFields({ reactivityKeys: [K.instance, K.organization] }),
 );
 export const googleStartMutation = mutation(
   (client) => client.google.start,
-  () => [],
-);
-export const reauthenticationRequestEmailMutation = mutation(
-  (client) => client.reauthentication.requestEmail,
-  () => [],
-);
-export const reauthenticationResendEmailMutation = mutation(
-  (client) => client.reauthentication.resendEmail,
-  () => [],
-);
-export const reauthenticationVerifyEmailMutation = mutation(
-  (client) => client.reauthentication.verifyEmail,
-  () => [K.account, K.authority],
-);
-export const reauthenticationStartGoogleMutation = mutation(
-  (client) => client.reauthentication.startGoogle,
   () => [],
 );
 export const accountsStartGoogleMutation = mutation(

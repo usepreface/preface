@@ -16,8 +16,8 @@ Executable schemas, migrations, source and tests settle disagreements with prose
   operator proofs, first-owner creation and recovery from lost setup output.
 - [Email sign-in](identity-access/email-sign-in.md): browser-bound codes and links,
   proof replacement, durable attempts, returning operators and proof cleanup.
-- [Organizations](identity-access/organizations.md): creation, current authority,
-  membership lifecycle, delegation, ownership, policy and tenant-safe storage.
+- [Organization](identity-access/organizations.md): singleton installation initialization,
+  current authority, membership lifecycle, delegation, ownership and policy.
 - [Invitations](identity-access/invitations.md): verified mailbox admission, current delegation,
   readmission, credential replacement and one-use acceptance.
 - [Teams and profiles](identity-access/teams-profiles.md): versioned metadata, direct team membership,

@@ -24,12 +24,12 @@ describe("public HTTP contract", () => {
     expect(
       spec.paths["/api/v1/auth/external/flows/{flowId}/email/verify"]?.post?.responses,
     ).toHaveProperty("200");
-    expect(
-      spec.paths["/api/v1/organizations/{organizationId}/auth-policy"]?.patch?.security,
-    ).toEqual([{ session: [] }]);
-    expect(
-      spec.paths["/api/v1/organizations/{organizationId}/audit-events"]?.get?.security,
-    ).toEqual([{ session: [] }]);
+    expect(spec.paths["/api/v1/organization/auth-policy"]?.patch?.security).toEqual([
+      { session: [] },
+    ]);
+    expect(spec.paths["/api/v1/organization/audit-events"]?.get?.security).toEqual([
+      { session: [] },
+    ]);
 
     expect(spec.paths["/api/v1/auth/session"]?.get?.security).toEqual([{ session: [] }]);
     expect(spec.components?.securitySchemes?.session).toEqual({
@@ -48,12 +48,17 @@ describe("public HTTP contract", () => {
       "passwordHash",
     );
     expect(JSON.stringify(spec)).not.toContain("reissue");
+    expect(spec.paths["/api/v1/organizations"]).toBeUndefined();
+    expect(spec.paths["/api/v1/organization"]?.post).toBeUndefined();
+    expect(spec.paths["/api/v1/auth/reauthentication/email/request"]).toBeUndefined();
+    expect(spec.paths["/api/v1/auth/discovery"]?.get).toBeDefined();
+    expect(spec.paths["/api/v1/auth/access"]?.get?.security).toEqual([{ session: [] }]);
   });
 
   it("encodes a client request while preserving the non-encodable application input", () => {
     const request = {
       token: "example-setup-proof",
-      instanceName: " Knowledge ",
+      organizationName: " Knowledge ",
       ownerName: " Owner ",
       email: " Owner@Example.Test ",
     };
@@ -62,7 +67,7 @@ describe("public HTTP contract", () => {
 
     expect(encoded).toEqual(request);
     expect(input).toMatchObject({
-      instanceName: "Knowledge",
+      organizationName: "Knowledge",
       ownerName: "Owner",
       email: "owner@example.test",
     });

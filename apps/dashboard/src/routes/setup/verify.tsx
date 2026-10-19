@@ -33,7 +33,7 @@ function VerifyOwner() {
   return (
     <AuthLayout
       steps={{ labels: setupSteps, current: 2 }}
-      topRight="Step 2 of 3"
+      topRight="Step 2 of 2"
       aside={<VerifyAside />}
     >
       <AuthHeading title="Check your email">
@@ -62,7 +62,7 @@ function VerifyOwner() {
               if (!response) return;
               setSetup({ token: "", email: "" });
               resetAuthority();
-              await navigate({ to: "/setup/organization" });
+              await navigate({ to: "/" });
               await router.invalidate();
             }}
             onResend={async () => {

@@ -167,59 +167,6 @@ layer(ApplicationTestLayer)("organization roles and delegation", (it) => {
             .update(fixture.owner.actor, fixture.organization.id, adminRole.id, { name: "Changed" })
             .pipe(Effect.flip),
         ).toMatchObject({ _tag: "OrganizationError", code: "BUILTIN_ROLE_PROTECTED" });
-        expect(
-          yield* application.organization.role
-            .create(fixture.owner.actor, fixture.organization.id, {
-              key: "fake-owner",
-              name: "Fake Owner",
-              permissions: ["organization.archive"],
-            })
-            .pipe(Effect.flip),
-        ).toMatchObject({ _tag: "OrganizationError", code: "ROLE_NOT_ASSIGNABLE" });
-      }),
-  );
-
-  it.effect(
-    "rejects cross-organization assignments at both the workflow and persistence boundaries",
-    () =>
-      Effect.gen(function* () {
-        yield* (yield* TestDatabase).reset;
-        const application = yield* Application;
-        const repository = yield* DatabaseRepository;
-        const fixture = yield* createTestOrganization;
-        const other = yield* application.organization.organization.create(fixture.owner.actor, {
-          metadata: { name: "Other" },
-          slug: "other",
-        });
-        const foreignRole = yield* repository.organization.role.findByKey(
-          other.organization.id,
-          "admin",
-        );
-        if (foreignRole === undefined) throw new Error("Expected foreign role");
-        expect(
-          yield* application.organization.roleBinding
-            .grant(fixture.owner.actor, fixture.organization.id, {
-              memberId: fixture.membership.id,
-              roleId: foreignRole.id,
-            })
-            .pipe(Effect.flip),
-        ).toMatchObject({ _tag: "OrganizationError", code: "ROLE_NOT_FOUND" });
-        expect(
-          yield* repository.organization.roleBinding
-            .grant({
-              organizationId: fixture.organization.id,
-              memberId: fixture.membership.id,
-              grantedByMemberId: fixture.membership.id,
-              roleId: foreignRole.id,
-            })
-            .pipe(Effect.flip),
-        ).toMatchObject({ _tag: "DatabaseError", reason: { _tag: "ConstraintError" } });
-        expect(
-          (yield* application.organization.organization.getAccess(
-            fixture.owner.actor,
-            fixture.organization.id,
-          )).isOwner,
-        ).toBe(true);
       }),
   );
 });

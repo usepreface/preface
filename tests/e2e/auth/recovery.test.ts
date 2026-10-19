@@ -10,7 +10,7 @@ import {
 import { approveConnection, configureOidc } from "../fixtures/connections.js";
 import {
   authenticateAtKeycloak,
-  createOrganization,
+  currentOrganization,
   onboardOwner,
   signInWithEmail,
 } from "../fixtures/onboarding.js";
@@ -24,10 +24,10 @@ test("required SSO gates email-only sessions and an offline owner credential rec
   page,
 }) => {
   const owner = await onboardOwner(api, backend, mailbox);
-  const { organization } = await createOrganization(api);
-  const connection = await configureOidc(api, realm, page, organization.id);
-  await approveConnection(api, organization.id, connection);
-  const path = `/organizations/${organization.id}`;
+  await currentOrganization(api);
+  const connection = await configureOidc(api, realm, page);
+  await approveConnection(api, connection);
+  const path = `/organization`;
   const connectionPath = `${path}/identity-connections/${connection.id}`;
   const link = await api.json(
     ExternalIdentityStartResult,

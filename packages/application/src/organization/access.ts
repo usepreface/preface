@@ -42,7 +42,7 @@ const makeOrganizationAccess = Effect.gen(function* () {
   const requireMember = Effect.fn("OrganizationAccess.requireMember")(function* (
     actor: SessionActor,
     organizationId: OrganizationId,
-    options: { readonly lock?: boolean; readonly allowArchived?: boolean } = {},
+    options: { readonly lock?: boolean } = {},
   ) {
     const authenticated = yield* requireActor(actor);
     const organization =
@@ -62,8 +62,6 @@ const makeOrganizationAccess = Effect.gen(function* () {
       member.removedAt !== null
     )
       return yield* new OrganizationError({ code: "ORGANIZATION_NOT_FOUND" });
-    if (organization.archivedAt !== null && options.allowArchived !== true)
-      return yield* new OrganizationError({ code: "ORGANIZATION_ARCHIVED" });
 
     const policy = yield* repository.organization.authPolicy.findByOrganizationId(organizationId);
     if (policy === undefined)
@@ -113,7 +111,7 @@ const makeOrganizationAccess = Effect.gen(function* () {
   const requireOwner = Effect.fn("OrganizationAccess.requireOwner")(function* (
     actor: SessionActor,
     organizationId: OrganizationId,
-    options: { readonly lock?: boolean; readonly allowArchived?: boolean } = {},
+    options: { readonly lock?: boolean } = {},
   ) {
     const access = yield* requireMember(actor, organizationId, options);
     if (!access.isOwner) return yield* new OrganizationError({ code: "FORBIDDEN" });

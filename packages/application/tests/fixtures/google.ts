@@ -30,7 +30,17 @@ export const configureTestGoogle = Effect.fnUntraced(function* (actor: SessionAc
     configuration.revision,
   );
   yield* application.auth.google.callback(yield* googleCallbackInput(test), actor);
-  return yield* application.instance.authentication.google.activate(actor, configuration.revision);
+  const activated = yield* application.instance.authentication.google.activate(
+    actor,
+    configuration.revision,
+  );
+  const id = yield* application.organization.organization.currentId();
+  const policy = yield* application.organization.authPolicy.get(actor, id);
+  yield* application.organization.authPolicy.update(actor, id, {
+    expectedRevision: policy.revision,
+    googleEnabled: true,
+  });
+  return activated;
 });
 
 export const linkTestGoogle = Effect.fnUntraced(function* (actor: SessionActor) {

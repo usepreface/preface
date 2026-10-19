@@ -1,7 +1,3 @@
-export function organizationUrl(slug: string): string {
-  return `${window.location.host}/org/${slug}`;
-}
-export const organizationUrlPrefix = `${window.location.host}/org/`;
 export function instanceUrl(path: string): string {
   return new URL(path, import.meta.env.VITE_API_URL || window.location.origin).href;
 }

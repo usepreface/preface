@@ -48,7 +48,7 @@ export const makeOidcConnectionApplication = Effect.gen(function* () {
     lock = false,
   ) {
     const resolved = yield* organizations.requireOwner(actor, organizationId, { lock });
-    yield* identities.requireRecentEmail(actor);
+    yield* identities.requireVerifiedEmail(actor);
     return resolved;
   });
   const list = Effect.fn("Application.organization.identityConnection.list")(function* (
@@ -88,7 +88,6 @@ export const makeOidcConnectionApplication = Effect.gen(function* () {
         const now = yield* DateTime.now;
         const connection = yield* repository.auth.identityConnection.createOidc({
           id,
-          installationId: null,
           organizationId,
           provider: "oidc",
           name: decoded.name,

@@ -3,14 +3,14 @@
 Organization owners can configure OIDC login connections and approve them for optional or
 [required SSO](required-sso.md). An existing member explicitly
 links an external identity, then uses it for sign-in or reauthentication. Preface continues to own
-users, verified email, admission, roles and teams. Invitation-authorized callbacks can create users/memberships through [external enrollment](enrollment.md); verified email can attach a new provider identity to an existing user. User records are never merged. Instance ownership grants no organization connection authority. Conversely, organization OIDC
-evidence cannot authorize instance configuration reads or organization creation by itself; those
-require an installation-trusted email/Google proof, and sensitive changes still require recent email.
+users, verified email, admission, roles and teams. Invitation-authorized callbacks can create users/memberships through [external enrollment](enrollment.md); verified email can attach a new provider identity to an existing user. User records are never merged. Instance ownership grants no organization connection authority. Operator privileges still require an explicit instance-owner grant. Administrative
+configuration uses current ownership and session eligibility, without a five-minute
+email step-up. Enterprise policy remains enforced for organization content.
 
 ## Configuration and trust
 
-`auth.identity_connection` has mutually exclusive installation/organization owners. Google remains
-installation-owned; OIDC is organization-owned. Organizations can hold multiple connections.
+`auth.identity_connection` belongs to the sole organization for every provider. Multiple
+OIDC/SAML connections can be configured alongside its single Google connection.
 Configuration is a versioned discriminated model; encrypted credentials are separate from public
 settings. Encryption binds credentials to connection ID and trust revision. IDs and ownership are
 immutable through the API.
@@ -21,14 +21,13 @@ advertise code flow, RS256, S256 and the chosen client authentication method whe
 methods are supplied. Missing provider email is allowed. No UserInfo request is required; access,
 refresh and ID tokens are not persisted. No MFA assurance is inferred from arbitrary claims.
 
-Creation checks owner/recent email, discovers metadata outside SQL, then rechecks authority under
+Creation checks owner/a current authenticated session, discovers metadata outside SQL, then rechecks authority under
 an organization lock and commits configuration plus required audit. The saved metadata contains
 only the trusted issuer and supported endpoints/configuration. A client secret is mandatory on
 creation, encrypted at rest and never returned. Omission on update preserves it.
 
 `draft -> tested -> active` requires a real browser test of the exact revision. Test completion
-rechecks the initiating session, current owner authority and email evidence no older than five
-minutes. It creates neither account binding nor session evidence. Testing an active connection
+rechecks the initiating session and current owner authority. It creates neither account binding nor session evidence. Testing an active connection
 preserves active state. Activation records `activatedAt`; subsequent issuer/client ID replacement
 is rejected even after disabling or a trust change. Use a new connection for a new identity space.
 
@@ -52,7 +51,7 @@ session and active membership, but not acceptable organization evidence, so a me
 reauthentication path. It returns labels, IDs, availability and the current user's link status,
 not issuer settings or credentials. Full connection configuration is owner-only.
 
-Linking needs an active organization member and recent local email at both start and completion.
+Linking needs an active organization member and a current authenticated session at both start and completion.
 It can prepare an active connection before policy approval; it grants no content access by itself.
 An invitation can start SSO directly through [external enrollment](enrollment.md). Ordinary OIDC sign-in resolves a stable link or safely attaches an identity after verified email, with active membership, an approved connection and usable local identity. There is no uninvited JIT membership, domain admission or role synchronization.
 
@@ -91,7 +90,7 @@ If cleanup cannot commit, the claim prevents replay and existing maintenance lat
 Account identity is `(connection, issuer, case-sensitive subject)`, unique across unlink history.
 Another user cannot claim an old identity; the same user may explicitly reconnect it. Linked accounts
 are included in the existing account list without provider subjects or tokens. Unlinking requires
-recent local email and invalidates its evidence and pending authenticated flows.
+a current authenticated session and invalidates its evidence and pending authenticated flows.
 
 OIDC sign-in issues the normal opaque Preface session. Linking and reauthentication add evidence
 without extending its expiry. Reauthentication requests `prompt=login`, `max_age=0` and validates the
@@ -122,7 +121,7 @@ performed at server startup or while SQL locks are held.
 
 Workflow tests compose real migrated repositories, crypto and application with an external-provider
 substitute. They cover linking, unknown identity denial, identity conflicts, tenant isolation,
-recent-email separation, trust revisions, callback/browser replay and in-flight disable/audit rollback.
+session-eligibility separation, trust revisions, callback/browser replay and in-flight disable/audit rollback.
 SDK tests provide signed OIDC token/JWKS responses and verify dynamic discovery, issuer, audience,
 nonce, signature and client authentication/PKCE. HTTPS tests use a disposable certificate trusted
 only within the test process to exercise real TLS, body forwarding, redirects and response limits;

@@ -6,14 +6,7 @@ import { PrefaceMark } from "@usepreface/ui/brand";
 import { Button } from "@usepreface/ui/components/button";
 import { Kbd } from "@usepreface/ui/components/kbd";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@usepreface/ui/components/tooltip";
-import {
-  ChevronDownIcon,
-  HelpIcon,
-  InboxIcon,
-  MenuIcon,
-  SearchIcon,
-  SidebarIcon,
-} from "@usepreface/ui/icons";
+import { HelpIcon, InboxIcon, MenuIcon, SearchIcon, SidebarIcon } from "@usepreface/ui/icons";
 import { TopBar } from "@usepreface/ui/preface/layout";
 
 import { OrgAvatar } from "#/components/organization/org-avatar";
@@ -69,7 +62,7 @@ export function AppTopBar({
         </Button>
       ) : null}
       <Link
-        to="/organizations"
+        to="/"
         className="flex items-center gap-2 rounded-md px-1.5 py-1 outline-none transition-colors hover:bg-hover focus-visible:ring-3 focus-visible:ring-focus-ring"
       >
         {workspace ? (
@@ -80,9 +73,8 @@ export function AppTopBar({
           </span>
         )}
         <span className="text-sm font-medium text-foreground">
-          {workspace ?? instance.instanceName}
+          {workspace ?? instance.organizationName}
         </span>
-        <ChevronDownIcon size={14} className="text-icon-secondary" />
       </Link>
       <div className="flex min-w-0 flex-1 justify-center">{search ? <SearchButton /> : null}</div>
       {search ? (

@@ -109,7 +109,7 @@ export const makeAuthenticationPolicyApplication = Effect.gen(function* () {
     )
       return yield* new IdentityError({ code: "INVALID_INPUT" });
     yield* organizations.requireOwner(actor, organizationId);
-    yield* access.requireRecentEmail(actor);
+    yield* access.requireVerifiedEmail(actor);
     return yield* transaction.run(
       Effect.gen(function* () {
         // Lock connection trust before organization authority, matching OIDC completion/configuration.
@@ -124,7 +124,7 @@ export const makeAuthenticationPolicyApplication = Effect.gen(function* () {
         const locked = [];
         for (const id of ids) locked.push(yield* repository.auth.identityConnection.lockById(id));
         const resolved = yield* organizations.requireOwner(actor, organizationId, { lock: true });
-        yield* access.requireRecentEmail(actor);
+        yield* access.requireVerifiedEmail(actor);
         if (resolved.policy.revision !== decoded.expectedRevision)
           return yield* new IdentityError({ code: "REVISION_CONFLICT" });
         const previous = (yield* repository.organization.authPolicyConnection.listByOrganization(
@@ -195,9 +195,10 @@ export const makeAuthenticationPolicyApplication = Effect.gen(function* () {
             { ...resolved.policy, allowedMethods },
             evidence,
             approvedIds,
-            300,
+            ssoMaxAgeSeconds,
           );
-          if (!proof.freshSso) return yield* new IdentityError({ code: "RECENT_SSO_REQUIRED" });
+          if (!proof.freshSso)
+            return yield* new IdentityError({ code: "SSO_AUTHENTICATION_REQUIRED" });
         }
         const policy = yield* repository.organization.authPolicy.update(
           organizationId,
@@ -221,7 +222,8 @@ export const makeAuthenticationPolicyApplication = Effect.gen(function* () {
         if (ssoMode === "required") {
           const { evidence } = yield* organizations.requireActor(actor);
           const proof = yield* evaluate(policy, evidence, approvedIds);
-          if (!proof.accepted) return yield* new IdentityError({ code: "RECENT_SSO_REQUIRED" });
+          if (!proof.accepted)
+            return yield* new IdentityError({ code: "SSO_AUTHENTICATION_REQUIRED" });
         }
         yield* repository.audit.event.append({
           actorKind: "user",

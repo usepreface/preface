@@ -7,6 +7,7 @@ import { RequestError } from "@usepreface/protocol";
 import { CreateDomainInput } from "@usepreface/protocol/input";
 
 import { mapInfrastructureError } from "#/http/errors";
+import { currentOrganizationId } from "#/http/organization";
 
 export const OrganizationDomainsRoutes = HttpApiBuilder.group(
   PrefaceApi,
@@ -17,7 +18,7 @@ export const OrganizationDomainsRoutes = HttpApiBuilder.group(
       return handlers.handleAll({
         inspectForOperator: Effect.fn("http.domains.inspectForOperator")(function* ({ params }) {
           return yield* domains
-            .inspectForOperator(yield* CurrentActor, params.organizationId, params.domainId)
+            .inspectForOperator(yield* CurrentActor, yield* currentOrganizationId, params.domainId)
             .pipe(mapInfrastructureError);
         }),
         withdrawApproval: Effect.fn("http.domains.withdrawApproval")(function* ({
@@ -27,31 +28,31 @@ export const OrganizationDomainsRoutes = HttpApiBuilder.group(
           return yield* domains
             .revoke(
               yield* CurrentActor,
-              params.organizationId,
+              yield* currentOrganizationId,
               params.domainId,
               payload.expectedRevision,
               true,
             )
             .pipe(mapInfrastructureError);
         }),
-        list: Effect.fn("http.domains.list")(function* ({ params }) {
+        list: Effect.fn("http.domains.list")(function* () {
           return yield* domains
-            .list(yield* CurrentActor, params.organizationId)
+            .list(yield* CurrentActor, yield* currentOrganizationId)
             .pipe(mapInfrastructureError);
         }),
-        create: Effect.fn("http.domains.create")(function* ({ params, payload }) {
+        create: Effect.fn("http.domains.create")(function* ({ payload }) {
           const input = yield* Schema.decodeUnknownEffect(CreateDomainInput)(payload).pipe(
             Effect.mapError(() => new RequestError({ code: "INVALID_INPUT" })),
           );
           return yield* domains
-            .create(yield* CurrentActor, params.organizationId, input)
+            .create(yield* CurrentActor, yield* currentOrganizationId, input)
             .pipe(mapInfrastructureError);
         }),
         request: Effect.fn("http.domains.request")(function* ({ params, payload }) {
           const result = yield* domains
             .request(
               yield* CurrentActor,
-              params.organizationId,
+              yield* currentOrganizationId,
               params.domainId,
               payload.expectedRevision,
             )
@@ -67,7 +68,7 @@ export const OrganizationDomainsRoutes = HttpApiBuilder.group(
           return yield* domains
             .verify(
               yield* CurrentActor,
-              params.organizationId,
+              yield* currentOrganizationId,
               params.domainId,
               payload.expectedRevision,
             )
@@ -77,7 +78,7 @@ export const OrganizationDomainsRoutes = HttpApiBuilder.group(
           return yield* domains
             .verify(
               yield* CurrentActor,
-              params.organizationId,
+              yield* currentOrganizationId,
               params.domainId,
               payload.expectedRevision,
               "operator",
@@ -88,7 +89,7 @@ export const OrganizationDomainsRoutes = HttpApiBuilder.group(
           return yield* domains
             .revoke(
               yield* CurrentActor,
-              params.organizationId,
+              yield* currentOrganizationId,
               params.domainId,
               payload.expectedRevision,
             )
@@ -96,12 +97,16 @@ export const OrganizationDomainsRoutes = HttpApiBuilder.group(
         }),
         connectionDomains: Effect.fn("http.domains.connectionDomains")(function* ({ params }) {
           return yield* domains
-            .connectionDomains(yield* CurrentActor, params.organizationId, params.connectionId)
+            .connectionDomains(
+              yield* CurrentActor,
+              yield* currentOrganizationId,
+              params.connectionId,
+            )
             .pipe(mapInfrastructureError);
         }),
         bind: Effect.fn("http.domains.bind")(function* ({ params, payload }) {
           return yield* domains
-            .bind(yield* CurrentActor, params.organizationId, params.connectionId, payload)
+            .bind(yield* CurrentActor, yield* currentOrganizationId, params.connectionId, payload)
             .pipe(mapInfrastructureError);
         }),
       });

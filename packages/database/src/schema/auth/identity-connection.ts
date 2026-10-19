@@ -8,7 +8,6 @@ import {
   index,
   integer,
   jsonb,
-  smallint,
   text,
   timestamp,
   uniqueIndex,
@@ -17,7 +16,6 @@ import {
 
 import { generateUuid7 } from "#/id";
 import { authSchema } from "#/schema/auth/schema";
-import { installation } from "#/schema/instance/installation";
 import { organization } from "#/schema/organization/organization";
 import { timestampColumns } from "#/schema/timestamps";
 export const identityConnection = authSchema.table(
@@ -27,11 +25,9 @@ export const identityConnection = authSchema.table(
       .$type<IdentityConnectionId>()
       .primaryKey()
       .$defaultFn(() => Schema.decodeSync(IdentityConnectionId)(generateUuid7())),
-    installationId: smallint("installation_id")
-      .$type<1>()
-      .references(() => installation.id, { onDelete: "restrict" }),
     organizationId: uuid("organization_id")
       .$type<OrganizationId>()
+      .notNull()
       .references(() => organization.id, { onDelete: "restrict" }),
     provider: text("provider").$type<IdentityConnection["provider"]>().notNull(),
     name: text("name").notNull(),
@@ -45,15 +41,15 @@ export const identityConnection = authSchema.table(
     ...timestampColumns(),
   },
   (t) => [
-    uniqueIndex("identity_connection_installation_provider_uidx")
-      .on(t.installationId, t.provider)
-      .where(sql`${t.installationId} is not null`),
+    uniqueIndex("identity_connection_google_uidx")
+      .on(t.organizationId, t.provider)
+      .where(sql`${t.provider} = 'google'`),
     uniqueIndex("identity_connection_id_organization_uidx").on(t.id, t.organizationId),
     uniqueIndex("identity_connection_id_provider_uidx").on(t.id, t.provider),
     index("identity_connection_organization_idx").on(t.organizationId, t.id),
     check(
       "identity_connection_provider_check",
-      sql`(${t.provider} = 'google' and ${t.installationId} is not null and ${t.installationId} = 1 and ${t.organizationId} is null) or (${t.provider} in ('oidc','saml') and ${t.installationId} is null and ${t.organizationId} is not null)`,
+      sql`${t.provider} in ('google','oidc','saml') and ${t.organizationId} is not null`,
     ),
     check(
       "identity_connection_status_check",

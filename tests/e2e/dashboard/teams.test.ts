@@ -1,6 +1,6 @@
 import { PublicTeam } from "@usepreface/protocol/dto";
 
-import { createOrganization, onboardOwner } from "../fixtures/onboarding.js";
+import { currentOrganization, onboardOwner } from "../fixtures/onboarding.js";
 import { test, expect } from "../fixtures/test.js";
 
 test.use({ dashboardUI: true });
@@ -12,8 +12,8 @@ test("team settings cancel edits and preserve a concurrent change to an untouche
   mailbox,
 }) => {
   await onboardOwner(api, backend, mailbox);
-  const { organization } = await createOrganization(api);
-  const path = `/organizations/${organization.id}/teams`;
+  await currentOrganization(api);
+  const path = `/organization/teams`;
   const team = await api.json(
     PublicTeam,
     path,
@@ -25,7 +25,7 @@ test("team settings cancel edits and preserve a concurrent change to an untouche
     201,
   );
 
-  await page.goto(`${backend.dashboard}/org/company/settings/teams/${team.id}`);
+  await page.goto(`${backend.dashboard}/settings/teams/${team.id}`);
   await page.getByRole("tab", { name: "Settings", exact: true }).click();
   const name = page.getByLabel("Name", { exact: true });
   const description = page.getByLabel("Description", { exact: true });

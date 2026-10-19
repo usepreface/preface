@@ -31,8 +31,6 @@ export const makeOrganizationIdentityAccess = Effect.gen(function* () {
       member.suspendedAt !== null
     )
       return yield* new OrganizationError({ code: "ORGANIZATION_NOT_FOUND" });
-    if (organization.archivedAt !== null)
-      return yield* new OrganizationError({ code: "ORGANIZATION_ARCHIVED" });
     return member;
   });
   const requireActorMember = Effect.fn("OrganizationIdentityAccess.requireActorMember")(function* (

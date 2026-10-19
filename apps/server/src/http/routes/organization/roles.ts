@@ -10,6 +10,7 @@ import {
 } from "@usepreface/protocol/input";
 
 import { mapInfrastructureError } from "#/http/errors";
+import { currentOrganizationId } from "#/http/organization";
 
 export const OrganizationRolesRoutes = HttpApiBuilder.group(
   PrefaceApi,
@@ -18,17 +19,17 @@ export const OrganizationRolesRoutes = HttpApiBuilder.group(
     Effect.gen(function* () {
       const roles = (yield* Application).organization.role;
       return handlers.handleAll({
-        list: Effect.fn("http.organizationRoles.list")(function* ({ params, query }) {
+        list: Effect.fn("http.organizationRoles.list")(function* ({ query }) {
           return yield* roles
-            .list(yield* CurrentActor, params.organizationId, query)
+            .list(yield* CurrentActor, yield* currentOrganizationId, query)
             .pipe(mapInfrastructureError);
         }),
-        create: Effect.fn("http.organizationRoles.create")(function* ({ params, payload }) {
+        create: Effect.fn("http.organizationRoles.create")(function* ({ payload }) {
           const input = yield* Schema.decodeUnknownEffect(CreateOrganizationRoleInput)(
             payload,
           ).pipe(Effect.mapError(() => new RequestError({ code: "INVALID_INPUT" })));
           return yield* roles
-            .create(yield* CurrentActor, params.organizationId, input)
+            .create(yield* CurrentActor, yield* currentOrganizationId, input)
             .pipe(mapInfrastructureError);
         }),
         update: Effect.fn("http.organizationRoles.update")(function* ({ params, payload }) {
@@ -36,12 +37,12 @@ export const OrganizationRolesRoutes = HttpApiBuilder.group(
             payload,
           ).pipe(Effect.mapError(() => new RequestError({ code: "INVALID_INPUT" })));
           return yield* roles
-            .update(yield* CurrentActor, params.organizationId, params.roleId, input)
+            .update(yield* CurrentActor, yield* currentOrganizationId, params.roleId, input)
             .pipe(mapInfrastructureError);
         }),
         archive: Effect.fn("http.organizationRoles.archive")(function* ({ params }) {
           return yield* roles
-            .archive(yield* CurrentActor, params.organizationId, params.roleId)
+            .archive(yield* CurrentActor, yield* currentOrganizationId, params.roleId)
             .pipe(mapInfrastructureError);
         }),
       });

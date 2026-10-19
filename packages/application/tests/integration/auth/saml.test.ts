@@ -79,7 +79,7 @@ layer(ApplicationTestLayer)("Organization SAML", (it) => {
             .id,
         ).toBe(organization.id);
         expect(yield* application.instance.capabilities.get(actor)).toEqual({
-          canCreateOrganization: false,
+          isInstanceOwner: true,
         });
         expect(JSON.stringify(connection)).not.toContain("PRIVATE KEY");
       }),
@@ -195,7 +195,7 @@ layer(ApplicationTestLayer)("Organization SAML", (it) => {
         expect(new URL(stale.authorizationUrl).searchParams.get("ForceAuthn")).toBe("true");
         expect(
           yield* completeTestSaml(connection.id, stale, owner.actor).pipe(Effect.flip),
-        ).toMatchObject({ code: "RECENT_SSO_REQUIRED" });
+        ).toMatchObject({ code: "SSO_AUTHENTICATION_REQUIRED" });
         const freshTime = yield* DateTime.now;
         yield* Ref.update((yield* TestSaml).identity, (identity) => ({
           ...identity,

@@ -14,7 +14,6 @@ test("dashboard email links reject a different browser and finish in the request
   expect((await api.request("/auth/session", "DELETE")).status()).toBe(204);
   await page.goto(`${backend.dashboard}/sign-in`);
   await page.getByLabel("Work email", { exact: true }).fill(owner.email);
-  await page.getByRole("button", { name: "Continue", exact: true }).click();
   await page.getByRole("button", { name: "Email me a code", exact: true }).click();
   await expect(page).toHaveURL(/\/sign-in\/verify$/);
   const link = await mailbox.signInLink(owner.email);
@@ -34,6 +33,6 @@ test("dashboard email links reject a different browser and finish in the request
   }
   await page.goto(link.href);
   await page.getByRole("button", { name: "Continue", exact: true }).click();
-  await expect(page).toHaveURL(/\/organizations\/?$/);
-  await expect(page.getByRole("link", { name: "New organization", exact: true })).toBeVisible();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole("heading", { name: /Welcome to/ })).toBeVisible();
 });

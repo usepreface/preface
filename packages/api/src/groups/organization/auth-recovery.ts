@@ -1,7 +1,6 @@
 import { Schema } from "effect";
 import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema, OpenApi } from "effect/http-api";
 
-import { OrganizationId } from "@usepreface/protocol";
 import {
   OrganizationAuthRecoveryStatus,
   OrganizationAuthRecoveryIssued,
@@ -12,19 +11,15 @@ import {
 import { identityErrors, organizationErrors, requestErrors } from "#/http-errors";
 import { SessionAuthentication } from "#/middleware/session-authentication";
 
-const params = { organizationId: OrganizationId };
-
 const errors = [...identityErrors, ...organizationErrors, ...requestErrors];
 
 export class OrganizationAuthRecoveryApi extends HttpApiGroup.make("organizationAuthRecovery")
   .add(
     HttpApiEndpoint.get("get", "/", {
-      params,
       success: OrganizationAuthRecoveryStatus,
       error: errors,
     }),
     HttpApiEndpoint.post("rotate", "/rotate", {
-      params,
       payload: Schema.Struct({}),
       success: OrganizationAuthRecoveryIssued,
       error: errors,
@@ -33,20 +28,18 @@ export class OrganizationAuthRecoveryApi extends HttpApiGroup.make("organization
       "Issue a replacement owner-bound recovery credential. Its secret is returned only once.",
     ),
     HttpApiEndpoint.delete("revoke", "/", {
-      params,
       success: HttpApiSchema.NoContent,
       error: errors,
     }),
     HttpApiEndpoint.post("recover", "/recover", {
-      params,
       payload: RecoverOrganizationAuthRequest,
       success: PublicOrganizationAuthPolicy,
       error: errors,
     }).annotate(
       OpenApi.Description,
-      "Consume the owner's offline credential and make organization SSO optional. Requires recent local email authentication.",
+      "Consume the owner's offline credential and make organization SSO optional. Requires a current owner session.",
     ),
   )
   .middleware(SessionAuthentication)
-  .prefix("/organizations/:organizationId/auth-recovery")
+  .prefix("/organization/auth-recovery")
   .annotate(OpenApi.Title, "Organization authentication recovery") {}

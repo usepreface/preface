@@ -62,7 +62,7 @@ layer(ApplicationTestLayer)("Required organization SSO", (it) => {
               recoveryCredential: credential.recoveryCredential,
             })
             .pipe(Effect.flip),
-        ).toMatchObject({ code: "RECENT_SSO_REQUIRED" });
+        ).toMatchObject({ code: "SSO_AUTHENTICATION_REQUIRED" });
         yield* linkTestOidc(owner.actor, organization.id, connection.id);
         expect(
           (yield* application.organization.authPolicy.readiness(owner.actor, organization.id))
@@ -102,9 +102,6 @@ layer(ApplicationTestLayer)("Required organization SSO", (it) => {
           fixture.owner.actor.user.id,
         );
         expect(
-          (yield* application.organization.organization.listMine(email.actor, {})).organizations,
-        ).toHaveLength(1);
-        expect(
           yield* application.organization.organization
             .get(email.actor, fixture.organization.id)
             .pipe(Effect.flip),
@@ -118,17 +115,6 @@ layer(ApplicationTestLayer)("Required organization SSO", (it) => {
           authenticationSatisfied: false,
           nextAction: "authenticate_with_sso",
         });
-        const other = yield* application.organization.organization.create(email.actor, {
-          metadata: { name: "Other" },
-          slug: "other",
-        });
-        const otherConnection = yield* configureTestOidc(email.actor, other.organization.id);
-        yield* linkTestOidc(email.actor, other.organization.id, otherConnection.id);
-        expect(
-          yield* application.organization.organization
-            .get(email.actor, fixture.organization.id)
-            .pipe(Effect.flip),
-        ).toMatchObject({ code: "AUTHENTICATION_REQUIRED" });
         const start = yield* application.auth.oidc.startReauthentication(
           email.actor,
           fixture.organization.id,
@@ -186,7 +172,7 @@ layer(ApplicationTestLayer)("Required organization SSO", (it) => {
           yield* application.auth.oidc
             .callback(yield* oidcCallbackInput(stale), fixture.owner.actor)
             .pipe(Effect.flip),
-        ).toMatchObject({ code: "RECENT_SSO_REQUIRED" });
+        ).toMatchObject({ code: "SSO_AUTHENTICATION_REQUIRED" });
         yield* Ref.update(provider.identity, (identity) => ({
           ...identity,
           authenticatedAt: null,
@@ -200,7 +186,7 @@ layer(ApplicationTestLayer)("Required organization SSO", (it) => {
           yield* application.auth.oidc
             .callback(yield* oidcCallbackInput(missing), fixture.owner.actor)
             .pipe(Effect.flip),
-        ).toMatchObject({ code: "RECENT_SSO_REQUIRED" });
+        ).toMatchObject({ code: "SSO_AUTHENTICATION_REQUIRED" });
         const now = yield* DateTime.now;
         yield* Ref.update(provider.identity, (identity) => ({ ...identity, authenticatedAt: now }));
         const fresh = yield* application.auth.oidc.startReauthentication(
@@ -415,7 +401,7 @@ layer(ApplicationTestLayer)("Required organization SSO", (it) => {
       yield* Deferred.succeed(resume, undefined);
       expect(yield* Fiber.join(completion)).toMatchObject({
         _tag: "Failure",
-        failure: { code: "RECENT_SSO_REQUIRED" },
+        failure: { code: "SSO_AUTHENTICATION_REQUIRED" },
       });
     }),
   );

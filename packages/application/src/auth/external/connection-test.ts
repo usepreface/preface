@@ -5,13 +5,11 @@ import { IdentityError } from "@usepreface/protocol";
 import type { SessionActor } from "@usepreface/protocol/dto";
 import type { AuthFlow, IdentityConnection } from "@usepreface/protocol/model";
 
-import { makeIdentityAccess } from "#/auth/identity-access";
 import { isPendingKeyUsable } from "#/auth/saml/keys";
 import { OrganizationAccess } from "#/organization/access";
 
 export const makeConnectionTestCompletion = Effect.gen(function* () {
   const repository = yield* DatabaseRepository;
-  const access = yield* makeIdentityAccess;
   const actors = yield* OrganizationAccess;
 
   // The caller holds the connection/organization locks and owns the completion transaction.
@@ -21,11 +19,7 @@ export const makeConnectionTestCompletion = Effect.gen(function* () {
     actor: SessionActor,
     now: DateTime.Utc,
   ) {
-    if (connection.provider === "google") yield* access.requireInstanceOwner(actor);
-    else {
-      yield* actors.requireOwner(actor, connection.organizationId);
-      yield* access.requireRecentEmail(actor);
-    }
+    yield* actors.requireOwner(actor, connection.organizationId);
     if (flow.signingKeyId !== null) {
       const key = yield* repository.auth.identityConnectionKey.find(flow.signingKeyId, true);
       if (

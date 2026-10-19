@@ -8,6 +8,7 @@ import { ExternalIdentityCallbackInput } from "@usepreface/protocol/input";
 
 import { oidcFlowCookie, samlFlowCookie } from "#/http/cookies/browser-proof";
 import { mapInfrastructureError } from "#/http/errors";
+import { currentOrganizationId } from "#/http/organization";
 import {
   externalCallbackResponse,
   authenticationFailureRedirect,
@@ -21,7 +22,7 @@ export const OidcRoutes = HttpApiBuilder.group(PrefaceApi, "oidc", (handlers) =>
       start: Effect.fn("http.oidc.start")(function* ({ params, payload }) {
         const result = yield* application.organization.identityConnection
           .startSignIn(
-            params.organizationId,
+            yield* currentOrganizationId,
             params.connectionId,
             payload,
             yield* optionalSessionActor,

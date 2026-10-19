@@ -7,7 +7,7 @@ import {
 import { configureOidc, approveConnection } from "../fixtures/connections.js";
 import {
   onboardOwner,
-  createOrganization,
+  currentOrganization,
   completeKeycloakAuthentication,
   signInWithEmail,
 } from "../fixtures/onboarding.js";
@@ -23,12 +23,12 @@ test("owners prepare required SSO, verify a domain, and recover with their one-t
   realm,
 }) => {
   await onboardOwner(api, backend, mailbox);
-  const { organization } = await createOrganization(api);
-  const connection = await configureOidc(api, realm, page, organization.id);
-  await approveConnection(api, organization.id, { ...connection, provider: "oidc" }, false);
+  await currentOrganization(api);
+  const connection = await configureOidc(api, realm, page);
+  await approveConnection(api, { ...connection, provider: "oidc" }, false);
 
   await page.goto(`${backend.dashboard}/account/security`);
-  await page.getByRole("button", { name: "Fixture Company", exact: true }).click();
+
   const linking = page.waitForEvent("framenavigated", {
     predicate: (frame) => frame === page.mainFrame(),
   });
@@ -36,7 +36,7 @@ test("owners prepare required SSO, verify a domain, and recover with their one-t
   await linking;
   await completeKeycloakAuthentication(page, "operator", realm.password, backend.dashboard);
 
-  await page.goto(`${backend.dashboard}/org/company/settings/domains`);
+  await page.goto(`${backend.dashboard}/settings/domains`);
   await page.getByLabel("Domain", { exact: true }).fill("company.example.test");
   await page.getByRole("button", { name: "Add domain", exact: true }).click();
   await page.getByRole("button", { name: "Close", exact: true }).first().click();
@@ -47,11 +47,11 @@ test("owners prepare required SSO, verify a domain, and recover with their one-t
   await expect
     .poll(
       async () =>
-        (await api.json(OrganizationDomainList, `/organizations/${organization.id}/domains`))
-          .domains[0]?.verificationMethod,
+        (await api.json(OrganizationDomainList, `/organization/domains`)).domains[0]
+          ?.verificationMethod,
     )
     .toBe("operator");
-  await page.goto(`${backend.dashboard}/org/company/settings/connections/${connection.id}`);
+  await page.goto(`${backend.dashboard}/settings/connections/${connection.id}`);
   await page.getByRole("checkbox", { name: "company.example.test", exact: true }).check();
   await page.getByRole("button", { name: "Save trusted domains", exact: true }).click();
   await expect
@@ -59,21 +59,21 @@ test("owners prepare required SSO, verify a domain, and recover with their one-t
       (
         await api.json(
           ConnectionDomains,
-          `/organizations/${organization.id}/identity-connections/${connection.id}/domains`,
+          `/organization/identity-connections/${connection.id}/domains`,
         )
       ).domains.map((domain) => domain.domain),
     )
     .toEqual(["company.example.test"]);
 
   await page.goto(`${backend.dashboard}/account/security`);
-  await page.getByRole("button", { name: "Fixture Company", exact: true }).click();
+
   const confirming = page.waitForEvent("framenavigated", {
     predicate: (frame) => frame === page.mainFrame(),
   });
   await page.getByRole("button", { name: "Confirm Keycloak OIDC", exact: true }).click();
   await confirming;
   await completeKeycloakAuthentication(page, "operator", realm.password, backend.dashboard);
-  await page.goto(`${backend.dashboard}/org/company/settings/authentication`);
+  await page.goto(`${backend.dashboard}/settings/authentication`);
   await page.getByRole("button", { name: "Generate replacement credential", exact: true }).click();
   await page.getByRole("button", { name: "Generate credential", exact: true }).click();
   const credential = await page.getByLabel("Recovery credential", { exact: true }).textContent();
@@ -86,33 +86,25 @@ test("owners prepare required SSO, verify a domain, and recover with their one-t
   await expect
     .poll(
       async () =>
-        (
-          await api.json(
-            PublicOrganizationAuthPolicy,
-            `/organizations/${organization.id}/auth-policy`,
-          )
-        ).ssoMode,
+        (await api.json(PublicOrganizationAuthPolicy, `/organization/auth-policy`)).ssoMode,
     )
     .toBe("required");
 
   expect((await api.request("/auth/session", "DELETE")).status()).toBe(204);
   await signInWithEmail(api, mailbox, "owner@company.example.test");
-  await page.goto(`${backend.dashboard}/org/company`);
-  await expect(
-    page.getByRole("heading", { name: "Continue with organization SSO", exact: true }),
-  ).toBeVisible();
+  await page.goto(`${backend.dashboard}`);
+  await expect(page.getByRole("heading", { name: "Continue with SSO", exact: true })).toBeVisible();
   await page.getByRole("link", { name: "Owner recovery", exact: true }).click();
   await page.getByLabel("Recovery credential", { exact: true }).fill(credential);
   await page.getByRole("button", { name: "Recover organization access", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "Welcome to Fixture Company, Operator", exact: true }),
   ).toBeVisible();
-  expect(
-    (await api.json(PublicOrganizationAuthPolicy, `/organizations/${organization.id}/auth-policy`))
-      .ssoMode,
-  ).toBe("optional");
+  expect((await api.json(PublicOrganizationAuthPolicy, `/organization/auth-policy`)).ssoMode).toBe(
+    "optional",
+  );
 
-  await page.goto(`${backend.dashboard}/org/company/settings/audit`);
+  await page.goto(`${backend.dashboard}/settings/audit`);
   await expect(
     page.getByRole("button", { name: "View details", exact: true }).first(),
   ).toBeVisible();

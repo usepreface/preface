@@ -31,12 +31,9 @@ layer(makeHttpTestLayer(makeBackendTestLayer(HttpOidcProvider)), { excludeTestSe
                 }),
               ),
           });
-          const created = yield* api.organizations.create({
-            payload: { metadata: { name: "Knowledge" }, slug: "knowledge" },
-          });
+          const created = yield* api.organizations.get();
           const organizationId = created.organization.id;
           const configuration = yield* api.organizationIdentityConnections.create({
-            params: { organizationId },
             payload: {
               name: "Company",
               issuer: "https://identity.example.test",
@@ -90,7 +87,6 @@ layer(makeHttpTestLayer(makeBackendTestLayer(HttpOidcProvider)), { excludeTestSe
             payload: { expectedRevision: configuration.revision },
           });
           yield* api.authenticationPolicy.update({
-            params: { organizationId },
             payload: { expectedRevision: 1, oidcConnectionIds: [configuration.id] },
           });
           const [link, linking] = yield* api.organizationIdentityConnections.link({
@@ -148,19 +144,15 @@ layer(makeHttpTestLayer(makeBackendTestLayer(HttpOidcProvider)), { excludeTestSe
           expect(current.status).toBe(200);
           expect(JSON.stringify(yield* current.json)).not.toContain(sessionCookie.value);
           const [recovery, issued] = yield* api.organizationAuthRecovery.rotate({
-            params: { organizationId },
             payload: {},
             responseMode: "decoded-and-response",
           });
           expect(issued.headers["cache-control"]).toBe("no-store");
-          const status = yield* api.organizationAuthRecovery.get({ params: { organizationId } });
+          const status = yield* api.organizationAuthRecovery.get({});
           expect(status.credential?.id).toBe(recovery.id);
           expect(JSON.stringify(status)).not.toContain(recovery.recoveryCredential);
-          expect(
-            (yield* api.authenticationPolicy.readiness({ params: { organizationId } })).ready,
-          ).toBe(true);
+          expect((yield* api.authenticationPolicy.readiness({})).ready).toBe(true);
           const enforced = yield* api.authenticationPolicy.update({
-            params: { organizationId },
             payload: {
               expectedRevision: 2,
               ssoMode: "required",
@@ -207,31 +199,25 @@ layer(makeHttpTestLayer(makeBackendTestLayer(HttpOidcProvider)), { excludeTestSe
                 }),
               ),
           });
-          expect(
-            yield* emailApi.organizations.get({ params: { organizationId } }).pipe(Effect.flip),
-          ).toMatchObject({ code: "AUTHENTICATION_REQUIRED" });
-          expect(
-            yield* emailApi.authenticationPolicy.methods({ params: { organizationId } }),
-          ).toMatchObject({
+          expect(yield* emailApi.organizations.get({}).pipe(Effect.flip)).toMatchObject({
+            code: "AUTHENTICATION_REQUIRED",
+          });
+          expect(yield* emailApi.authenticationPolicy.methods({})).toMatchObject({
             email: true,
             emailSatisfiesOrganization: false,
             authenticationSatisfied: false,
           });
           const recovered = yield* emailApi.organizationAuthRecovery.recover({
-            params: { organizationId },
             payload: {
               expectedRevision: enforced.revision,
               recoveryCredential: recovery.recoveryCredential,
             },
           });
           expect(recovered.ssoMode).toBe("optional");
-          expect(
-            (yield* emailApi.organizations.get({ params: { organizationId } })).organization.id,
-          ).toBe(organizationId);
+          expect((yield* emailApi.organizations.get({})).organization.id).toBe(organizationId);
           expect(
             yield* emailApi.organizationAuthRecovery
               .recover({
-                params: { organizationId },
                 payload: {
                   expectedRevision: recovered.revision,
                   recoveryCredential: recovery.recoveryCredential,

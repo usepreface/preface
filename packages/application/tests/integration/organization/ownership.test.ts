@@ -126,11 +126,6 @@ layer(ApplicationTestLayer)("organization ownership", (it) => {
             .suspend(fixture.owner.actor, fixture.organization.id, member.id)
             .pipe(Effect.flip),
         ).toMatchObject({ _tag: "OrganizationError", code: "FORBIDDEN" });
-        expect(
-          yield* application.organization.organization
-            .archive(fixture.owner.actor, fixture.organization.id)
-            .pipe(Effect.flip),
-        ).toMatchObject({ _tag: "OrganizationError", code: "FORBIDDEN" });
         const ownerRole = yield* repository.organization.role.findByKey(
           fixture.organization.id,
           "owner",

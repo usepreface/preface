@@ -125,21 +125,7 @@ const makeRepository = Effect.gen(function* () {
       );
     return rows.map((row) => decode(row.domain));
   }, mapToDatabaseError);
-  const discover = Effect.fn("DomainRepository.discover")(function* (domain: string) {
-    const rows = yield* database
-      .select()
-      .from(table)
-      .where(
-        and(
-          eq(table.domain, domain),
-          isNull(table.revokedAt),
-          gt(table.verifiedUntil, DateTime.toDateUtc(yield* DateTime.now)),
-        ),
-      )
-      .limit(51);
-    return rows.map((row) => decode(row));
-  }, mapToDatabaseError);
-  return { find, list, create, update, replaceBindings, forConnection, discover };
+  return { find, list, create, update, replaceBindings, forConnection };
 });
 
 export class OrganizationDomainRepository extends Context.Service<

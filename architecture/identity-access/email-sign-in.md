@@ -3,7 +3,7 @@
 An existing enabled user can sign in with an eight-digit email code or a magic
 link. Ordinary sign-in creates no account, owner grant or organization membership.
 After setup, an operator whose session expires can authenticate the same identity
-and retain instance ownership even if no organization has been created.
+and return to the organization created during installation.
 
 ## Proof issuance and replacement
 
@@ -40,9 +40,8 @@ completion require this binding. Opening the email on another device requires
 entering its code in the browser that requested sign-in.
 
 Links use the configured trusted `DASHBOARD_URL` origin, falling back to `PUBLIC_URL`, and put challenge identity and
-credential in `/auth/email/verify#challengeId=…&token=…`. The server does not render
-this frontend route. A future client must read the fragment and explicitly POST
-completion; a GET never consumes a proof, and a request cannot supply a redirect URL.
+credential in `/auth/email/verify#challengeId=…&token=…`. The dashboard reads the fragment and explicitly posts completion after the user
+selects Continue; a GET never consumes a proof, and a request cannot supply a redirect URL.
 The operational email renderer supplies both code and link for that client.
 
 `POST /api/v1/auth/email/verify` accepts a discriminated code or magic-link payload.
@@ -74,7 +73,7 @@ Email expiry and terminal payload removal belong to the email worker. Cleanup
 failure logs a bounded message and retries next cycle; it does not alter proof
 validity checks.
 
-Additional-address management and sign-in UI remain pending. [Google](google.md) and
+Additional-address management remains pending. [Google](google.md) and
 [enterprise SSO](oidc.md) use separate provider flows. Sign-in adds no distributed request throttling.
 
 ## Verification and source

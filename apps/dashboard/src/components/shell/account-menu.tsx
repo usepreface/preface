@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@usepreface/ui/components/dropdown-menu";
-import { BuildingIcon, LogoutIcon, ServerIcon, ShieldIcon, UserIcon } from "@usepreface/ui/icons";
+import { LogoutIcon, ServerIcon, ShieldIcon, UserIcon } from "@usepreface/ui/icons";
 import { cn } from "@usepreface/ui/lib/utils";
 
 import { ThemeSwitch } from "#/components/theme-switch";
@@ -19,7 +19,7 @@ import { initialsOf, toneOf } from "#/lib/identity";
 
 export type Person = { name: string; email: string };
 
-/** The avatar in the top bar and the menu behind it: account pages, organizations, theme, sign out. */
+/** The avatar in the top bar and the menu behind it: account pages, operator settings, theme, sign out. */
 export function AccountMenu({
   person,
   instanceOwner,
@@ -55,10 +55,6 @@ export function AccountMenu({
         <DropdownMenuItem render={<Link to="/account/security" />}>
           <ShieldIcon />
           Accounts and sessions
-        </DropdownMenuItem>
-        <DropdownMenuItem render={<Link to="/organizations" />}>
-          <BuildingIcon />
-          Switch organization
         </DropdownMenuItem>
         {instanceOwner ? (
           <DropdownMenuItem render={<Link to="/instance" />}>

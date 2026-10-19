@@ -157,7 +157,7 @@ layer(ApplicationTestLayer)("teams and scoped authority", (it) => {
   );
 
   it.effect(
-    "rolls back team creation when required audit fails and denies archived and cross-organization mutations",
+    "rolls back team creation when required audit fails and denies archived team mutations",
     () =>
       Effect.gen(function* () {
         yield* (yield* TestDatabase).reset;
@@ -188,17 +188,6 @@ layer(ApplicationTestLayer)("teams and scoped authority", (it) => {
             slug: "engineering",
           },
         );
-        const other = yield* application.organization.organization.create(fixture.owner.actor, {
-          metadata: { name: "Other" },
-          slug: "other",
-        });
-        expect(
-          yield* application.organization.team
-            .update(fixture.owner.actor, other.organization.id, team.id, {
-              metadata: { name: "Forbidden" },
-            })
-            .pipe(Effect.flip),
-        ).toMatchObject({ _tag: "TeamError", code: "TEAM_NOT_FOUND" });
         yield* application.organization.team.archive(
           fixture.owner.actor,
           fixture.organization.id,

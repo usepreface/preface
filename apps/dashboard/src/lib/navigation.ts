@@ -1,4 +1,4 @@
-export function safeReturnPath(destination: string, fallback = "/organizations"): string {
+export function safeReturnPath(destination: string, fallback = "/"): string {
   try {
     const url = new URL(destination, window.location.origin);
     if (

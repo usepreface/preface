@@ -17,15 +17,8 @@ layer(ApplicationTestLayer)("Audit history authority", (it) => {
       yield* (yield* TestDatabase).reset;
       const application = yield* Application;
       const { owner, organization } = yield* createTestOrganization;
-      const other = yield* application.organization.organization.create(owner.actor, {
-        metadata: { name: "Other" },
-        slug: "other",
-      });
       yield* application.organization.organization.update(owner.actor, organization.id, {
         metadata: { name: "Knowledge updated" },
-      });
-      yield* application.organization.organization.update(owner.actor, other.organization.id, {
-        metadata: { name: "Private other organization" },
       });
       const first = yield* application.audit.list(owner.actor, organization.id, { limit: 1 });
       expect(first.events).toHaveLength(1);
@@ -55,7 +48,6 @@ layer(ApplicationTestLayer)("Audit history authority", (it) => {
       ).toBe(false);
       const exported = yield* application.audit.exportCsv(owner.actor, organization.id);
       expect(exported.content).toContain("Knowledge updated");
-      expect(exported.content).not.toContain("Private other organization");
       const outsider = yield* createTestIdentity("outsider@example.test", "Outsider");
       expect(
         yield* application.audit.list(outsider.actor, organization.id).pipe(Effect.flip),

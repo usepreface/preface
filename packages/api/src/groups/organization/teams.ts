@@ -1,7 +1,7 @@
 import { Schema } from "effect";
 import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema, OpenApi } from "effect/http-api";
 
-import { OrganizationId, TeamId, OrganizationMemberId } from "@usepreface/protocol";
+import { TeamId, OrganizationMemberId } from "@usepreface/protocol";
 import {
   PublicTeam,
   CreateTeamRequest,
@@ -20,45 +20,43 @@ import { SessionAuthentication } from "#/middleware/session-authentication";
 
 const errors = [...teamErrors, ...organizationErrors, ...requestErrors];
 
-const params = { organizationId: OrganizationId, teamId: TeamId };
+const params = { teamId: TeamId };
 
 export class TeamsApi extends HttpApiGroup.make("teams")
   .add(
-    HttpApiEndpoint.post("create", "/:organizationId/teams", {
-      params: { organizationId: OrganizationId },
+    HttpApiEndpoint.post("create", "/teams", {
       payload: CreateTeamRequest,
       success: PublicTeam.pipe(HttpApiSchema.status(201)),
       error: errors,
     }),
-    HttpApiEndpoint.get("list", "/:organizationId/teams", {
-      params: { organizationId: OrganizationId },
+    HttpApiEndpoint.get("list", "/teams", {
       query: ListTeamsQuery,
       success: TeamList,
       error: errors,
     }),
-    HttpApiEndpoint.get("get", "/:organizationId/teams/:teamId", {
+    HttpApiEndpoint.get("get", "/teams/:teamId", {
       params,
       success: PublicTeam,
       error: errors,
     }),
-    HttpApiEndpoint.patch("update", "/:organizationId/teams/:teamId", {
+    HttpApiEndpoint.patch("update", "/teams/:teamId", {
       params,
       payload: UpdateTeamRequest,
       success: PublicTeam,
       error: errors,
     }),
-    HttpApiEndpoint.post("archive", "/:organizationId/teams/:teamId/archive", {
+    HttpApiEndpoint.post("archive", "/teams/:teamId/archive", {
       params,
       payload: Schema.Struct({}),
       success: PublicTeam,
       error: errors,
     }),
-    HttpApiEndpoint.get("access", "/:organizationId/teams/:teamId/access", {
+    HttpApiEndpoint.get("access", "/teams/:teamId/access", {
       params,
       success: TeamAccessInfo,
       error: errors,
     }),
-    HttpApiEndpoint.get("roles", "/:organizationId/teams/:teamId/roles", {
+    HttpApiEndpoint.get("roles", "/teams/:teamId/roles", {
       params,
       query: Schema.Struct({
         cursor: ListOrganizationRolesQuery.fields.cursor,
@@ -68,24 +66,24 @@ export class TeamsApi extends HttpApiGroup.make("teams")
       success: OrganizationRoleList,
       error: errors,
     }),
-    HttpApiEndpoint.get("members", "/:organizationId/teams/:teamId/members", {
+    HttpApiEndpoint.get("members", "/teams/:teamId/members", {
       params,
       query: ListTeamMembersQuery,
       success: TeamMemberList,
       error: errors,
     }),
-    HttpApiEndpoint.put("addMember", "/:organizationId/teams/:teamId/members/:memberId", {
+    HttpApiEndpoint.put("addMember", "/teams/:teamId/members/:memberId", {
       params: { ...params, memberId: OrganizationMemberId },
       payload: Schema.Struct({}),
       success: Schema.Struct({ isEffectiveMember: Schema.Boolean }),
       error: errors,
     }),
-    HttpApiEndpoint.delete("removeMember", "/:organizationId/teams/:teamId/members/:memberId", {
+    HttpApiEndpoint.delete("removeMember", "/teams/:teamId/members/:memberId", {
       params: { ...params, memberId: OrganizationMemberId },
       success: Schema.Struct({ isEffectiveMember: Schema.Boolean }),
       error: errors,
     }),
   )
   .middleware(SessionAuthentication)
-  .prefix("/organizations")
+  .prefix("/organization")
   .annotate(OpenApi.Title, "Teams") {}

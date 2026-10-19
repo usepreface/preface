@@ -33,7 +33,7 @@ layer(HttpTestLayer, { excludeTestServices: true })("onboarding HTTP boundary", 
         const [verification, requestedResponse] = yield* api.instanceSetup.requestVerification({
           payload: {
             token: Redacted.value(prepared.token),
-            instanceName: "Knowledge",
+            organizationName: "Knowledge",
             ownerName: " Owner ",
             email: " Owner@Example.Test ",
           },

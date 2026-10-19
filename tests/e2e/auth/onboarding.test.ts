@@ -10,10 +10,10 @@ import {
 } from "@usepreface/protocol/dto";
 
 import { AuthApi } from "../fixtures/api.js";
-import { createOrganization, onboardOwner, signInWithEmail } from "../fixtures/onboarding.js";
+import { onboardOwner, signInWithEmail } from "../fixtures/onboarding.js";
 import { test, expect } from "../fixtures/test.js";
 
-test("operator verifies delivered email, returns before creating an organization, and logs out", async ({
+test("operator installs the organization, signs back into it, and logs out", async ({
   page,
   context,
   api,
@@ -29,7 +29,7 @@ test("operator verifies delivered email, returns before creating an organization
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           token,
-          instanceName: "Fixture",
+          organizationName: "Fixture",
           ownerName: "Operator",
           email: "owner@company.example.test",
         }),
@@ -75,12 +75,9 @@ test("operator verifies delivered email, returns before creating an organization
 
   const returning = await signInWithEmail(api, mailbox, "owner@company.example.test");
   expect(returning.user.id).toBe(actor.user.id);
-  const organization = await createOrganization(api);
-  const persisted = await api.json(
-    OrganizationDetail,
-    `/organizations/${organization.organization.id}`,
-  );
+  const persisted = await api.json(OrganizationDetail, `/organization`);
   expect(persisted.access.isOwner).toBe(true);
+  expect(persisted.organization.metadata.name).toBe("Fixture");
   const browserRead = await page.evaluate(async (url) => {
     const response = await fetch(`${url}/api/v1/auth/session`, { credentials: "include" });
     return { status: response.status, body: await response.json() };

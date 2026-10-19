@@ -16,7 +16,7 @@ export const bootstrapChallenge = instanceSchema.table(
       .default(1)
       .references(() => installation.id, { onDelete: "restrict" }),
     bootstrapTokenHash: text("bootstrap_token_hash").notNull(),
-    instanceName: text("instance_name").notNull(),
+    organizationName: text("organization_name").notNull(),
     ownerName: text("owner_name").notNull(),
     email: text("email").notNull(),
     codeHash: text("code_hash").notNull(),

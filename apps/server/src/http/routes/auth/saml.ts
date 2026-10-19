@@ -9,6 +9,7 @@ import { SamlCallbackInput } from "@usepreface/protocol/input";
 
 import { samlFlowCookie } from "#/http/cookies/browser-proof";
 import { mapInfrastructureError } from "#/http/errors";
+import { currentOrganizationId } from "#/http/organization";
 import {
   externalCallbackResponse,
   authenticationFailureRedirect,
@@ -23,8 +24,13 @@ export const SamlRoutes = HttpApiBuilder.group(PrefaceApi, "saml", (handlers) =>
         const actor = yield* optionalSessionActor;
         const started = yield* (
           actor === undefined
-            ? saml.startSignIn(params.organizationId, params.connectionId, query)
-            : saml.startReauthentication(actor, params.organizationId, params.connectionId, query)
+            ? saml.startSignIn(yield* currentOrganizationId, params.connectionId, query)
+            : saml.startReauthentication(
+                actor,
+                yield* currentOrganizationId,
+                params.connectionId,
+                query,
+              )
         ).pipe(mapInfrastructureError);
         yield* samlFlowCookie.set(started.browserToken, started.expiresAt);
         return HttpServerResponse.empty({
@@ -34,7 +40,7 @@ export const SamlRoutes = HttpApiBuilder.group(PrefaceApi, "saml", (handlers) =>
       }, authenticationFailureRedirect(samlFlowCookie)),
       metadata: Effect.fn("http.saml.metadata")(function* ({ params }) {
         return yield* saml
-          .metadata(params.organizationId, params.connectionId)
+          .metadata(yield* currentOrganizationId, params.connectionId)
           .pipe(mapInfrastructureError);
       }),
       callback: Effect.fn("http.saml.callback")(function* ({ params, payload }) {

@@ -1,7 +1,7 @@
 # External identity enrollment and completion
 
 An organization invitation can enroll a new person directly through an approved OIDC/SAML
-connection or an enabled installation Google connection. Ordinary sign-in can attach an
+connection or an enabled organization Google connection. Ordinary sign-in can attach an
 unknown external identity to an existing eligible user after sufficient email proof. Neither
 verified domains nor an IdP login creates membership without an invitation. Provider subjects
 remain stable account identity; canonical email/profile is not synchronized from provider claims.
@@ -59,7 +59,7 @@ transaction. Shared invitation admission is also used by ordinary email acceptan
 creation conflicts retry only the local transaction, never the provider exchange. Audit failure
 rolls back the business writes. Maintenance scrubs expired staged ciphertext.
 
-SSO proof never manufactures recent local-email evidence or instance-management authority.
+SSO proof never grants instance-operator authority without an explicit grant.
 Required enterprise SSO checks the exact connection and actual provider authentication age.
 Google invitation choices are unavailable when the target requires enterprise SSO. Existing owner
 recovery remains explicit. Changes to provider email do not move a known account to another user.
@@ -70,11 +70,10 @@ recovery remains explicit. Changes to provider email do not move a known account
 - `POST /api/v1/invitations/authentication/start` selects a connection and binds invitation/profile intent.
 - `GET /api/v1/auth/external/flows/:flowId` reads safe next-action, masked email and expiry.
 - Flow `/email/request`, `/email/verify`, and `/complete` POSTs use JSON, trusted Origin and the browser cookie.
-- `POST /api/v1/auth/discovery` returns provider choices independently of account existence. Domain
-  discovery uses generic labels and no private user membership list; explicit organization slugs
-  reveal their configured connection labels. More than 50 matching domain claims disables broad discovery.
-- Authenticated `/api/v1/auth/organizations/:organizationId/select` returns the target's current
-  authentication requirements. Selection is not a grant or a cached authorization decision.
+- `GET /api/v1/auth/discovery` returns the single organization's supported methods,
+  without email, domain routing or slug input. It is independent of account existence.
+- Authenticated `GET /api/v1/auth/access` reports current membership authentication
+  requirements. Reading these requirements does not authorize organization content.
 
 `DASHBOARD_URL` optionally supplies a trusted frontend origin. Expected browser callback failures redirect to its `/auth/error` with a public error code; backend-only mode retains typed API errors. It is included in allowed mutation/
 CORS origins and supplies email/setup destinations and callback returns. `PUBLIC_URL` remains the

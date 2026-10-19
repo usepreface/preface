@@ -10,7 +10,7 @@ Organization reads require current acceptable organization authentication, activ
 Custom roles can delegate it under existing permission rules. Every query includes the exact
 organization ID, including cursor and export requests.
 
-Instance history requires current instance ownership and recent local email. It includes
+Instance history requires current instance ownership and a current authenticated session. It includes
 bootstrap/instance events, installation Google connection administration, and operator domain
 approval/withdrawal decisions. The last category may carry the reviewed organization/domain ID;
 it does not grant the operator access to that organization's remaining history. Unrelated global

@@ -21,6 +21,7 @@ import {
 import type { Installation } from "@usepreface/protocol/model";
 
 import { makeSessionIssuance } from "#/auth/session-issuance";
+import { makeOrganizationInitialization } from "#/organization/initialize";
 import type { SecurityError } from "#/security/errors";
 import { bootstrapTokenLifetime } from "#/security/policy";
 import { TokenService } from "#/security/token";
@@ -64,6 +65,7 @@ export const makeBootstrapApplication = Effect.gen(function* () {
   const crypto = yield* SecretCrypto;
   const emails = yield* EmailJobs;
   const issueSession = yield* makeSessionIssuance;
+  const initializeOrganization = yield* makeOrganizationInitialization;
 
   const validateToken = Effect.fn("Application.instance.bootstrap.validateToken")(function* (
     installation: Installation,
@@ -92,7 +94,8 @@ export const makeBootstrapApplication = Effect.gen(function* () {
       return yield* new InstanceStateError({ code: "NOT_INITIALIZED" });
     return {
       state: installation.bootstrapCompletedAt === null ? "setup_required" : "ready",
-      instanceName: settings.displayName,
+      organizationName:
+        (yield* repository.organization.organization.find())?.metadata.name ?? settings.displayName,
     } satisfies BootstrapStatus;
   });
 
@@ -192,7 +195,7 @@ export const makeBootstrapApplication = Effect.gen(function* () {
             type: "instance-setup",
             to: details.email,
             variables: {
-              instanceName: details.instanceName,
+              organizationName: details.organizationName,
               displayName: details.ownerName,
               code: Redacted.value(code),
               expiresAt,
@@ -203,7 +206,7 @@ export const makeBootstrapApplication = Effect.gen(function* () {
           const challenge = yield* repository.instance.challenge.replace({
             id,
             bootstrapTokenHash: proof.hash,
-            instanceName: details.instanceName,
+            organizationName: details.organizationName,
             ownerName: details.ownerName,
             email: details.email,
             codeHash,
@@ -313,11 +316,12 @@ export const makeBootstrapApplication = Effect.gen(function* () {
           grantSource: "bootstrap",
           grantedByUserId: null,
         });
+        yield* initializeOrganization(user.id, challenge.organizationName);
         const settings = yield* repository.instance.settings.find();
         if (settings === undefined)
           return yield* new InstanceStateError({ code: "NOT_INITIALIZED" });
         const updated = yield* repository.instance.settings.update({
-          displayName: challenge.instanceName,
+          displayName: challenge.organizationName,
           revision: settings.revision,
         });
         if (updated === undefined)

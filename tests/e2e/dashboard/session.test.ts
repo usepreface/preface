@@ -1,32 +1,31 @@
-import { onboardOwner, createOrganization } from "../fixtures/onboarding.js";
+import { onboardOwner, currentOrganization } from "../fixtures/onboarding.js";
 import { test, expect } from "../fixtures/test.js";
 
 test.use({ dashboardUI: true });
 
-test("returning owner without an organization signs in through the dashboard", async ({
+test("returning owner signs in directly to the installed organization", async ({
   page,
   api,
   backend,
   mailbox,
 }) => {
   const owner = await onboardOwner(api, backend, mailbox);
-  await page.goto(`${backend.dashboard}/organizations`);
+  await page.goto(`${backend.dashboard}/`);
   await expect(
-    page.getByText("You’re not in any organizations yet", { exact: true }),
+    page.getByRole("heading", { name: "Welcome to Fixture Company, Operator", exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Account", exact: true }).click();
   await page.getByRole("menuitem", { name: "Sign out", exact: true }).click();
   await expect(page).toHaveURL(/\/sign-in\/?$/);
   await page.getByLabel("Work email", { exact: true }).fill(owner.email);
-  await page.getByRole("button", { name: "Continue", exact: true }).click();
   await page.getByRole("button", { name: "Email me a code", exact: true }).click();
   await expect(page).toHaveURL(/\/sign-in\/verify$/);
   await page.getByLabel("Sign-in code", { exact: true }).fill(await mailbox.code(owner.email));
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await expect(page).toHaveURL(/\/organizations\/?$/);
-  await expect(page.getByRole("link", { name: "New organization", exact: true })).toBeVisible();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole("link", { name: "New organization", exact: true })).toHaveCount(0);
   await expect(
-    page.getByText("You’re not in any organizations yet", { exact: true }),
+    page.getByRole("heading", { name: "Welcome to Fixture Company, Operator", exact: true }),
   ).toBeVisible();
 });
 
@@ -37,19 +36,16 @@ test("shared query cache survives an operational failure and clears after confir
   mailbox,
 }) => {
   await onboardOwner(api, backend, mailbox);
-  await createOrganization(api);
+  await currentOrganization(api);
   let directoryRequests = 0;
   page.on("request", (request) => {
-    if (request.method() === "GET" && new URL(request.url()).pathname === "/api/v1/organizations")
+    if (request.method() === "GET" && new URL(request.url()).pathname === "/api/v1/organization")
       directoryRequests += 1;
   });
-  await page.goto(`${backend.dashboard}/organizations`);
-  await expect(
-    page.getByRole("heading", { name: "Choose an organization", exact: true }),
-  ).toBeVisible();
-  await expect(page.getByRole("link", { name: "Open", exact: true })).toBeVisible();
+  await page.goto(`${backend.dashboard}/`);
+  await expect(page.getByRole("heading", { name: /Welcome to/ })).toBeVisible();
   expect(directoryRequests, "Loader and component share one atom registry").toBe(1);
-  await page.getByRole("link", { name: "Open", exact: true }).click();
+
   await expect(page.getByRole("heading", { name: /Welcome to/ })).toBeVisible();
 
   await page.route("**/api/v1/auth/session", (route) =>
@@ -73,7 +69,7 @@ test("shared query cache survives an operational failure and clears after confir
   await page.evaluate(() => window.dispatchEvent(new Event("focus")));
   await expect(page).toHaveURL(/\/sign-in\/?$/);
   await expect(page.getByRole("heading", { name: /Welcome to/ })).toHaveCount(0);
-  await page.goto(`${backend.dashboard}/organizations`);
+  await page.goto(`${backend.dashboard}/`);
   await expect(page).toHaveURL(/\/sign-in\/?$/);
 });
 

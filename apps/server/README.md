@@ -139,8 +139,8 @@ connections. The host-only `preface_session` cookie has `HttpOnly`, `SameSite=La
 absolute expiry. HTTPS installations also use `Secure` and HSTS. Additional CORS origins do not
 override browser SameSite rules; use a same-site frontend for cookie authentication.
 
-Migration history contains a regenerated baseline and additive handoff, audit-permission and
-SAML-key migrations. Databases using deleted development history need an explicit reset.
+Migration history contains a regenerated single-organization development baseline.
+Databases using the deleted development history require an explicit reset.
 Startup never resets a database.
 
 ## Request policy
@@ -172,44 +172,27 @@ Logout is idempotent for an absent, malformed or invalid cookie. Operational fai
 the request; a failed revocation is not reported as successful logout.
 
 Organization handlers provide current membership/permission checks, owner-protected
-lifecycle operations and transactional audit. Instance owners create organizations;
+lifecycle operations and transactional audit. Installation creates the sole organization;
 organization membership authorizes access. Scalar documents the complete contract.
 Parameterized request logs retain the route template rather than tenant/resource IDs.
 No additional environment variables or provider dependencies are needed.
 
 ## Configure Google sign-in
 
-An instance owner configures Google through the authenticated API; no Google environment variables
-are required. Use the existing encryption key and `PUBLIC_URL`. Register exactly
-`<PUBLIC_URL>/api/v1/auth/google/callback` as the Google OAuth web client redirect URI.
+Organization owners configure Google through
+`/api/v1/organization/authentication/google`. Register exactly
+`<PUBLIC_URL>/api/v1/auth/google/callback` as the OAuth redirect URI. No Google-specific
+environment variables are needed. Secrets use the shared encryption service.
 
-Save client ID/secret at `PUT /api/v1/instance/authentication/google` with `expectedRevision: 0`
-for first configuration. The API returns safe draft settings. Start a test at its `/test` action,
-open the authorization URL in that browser, then call `/activate` with the tested revision.
-Each action requires current instance ownership and recent email proof. The test never switches
-or links the operator's account. Secret updates invalidate Google evidence and require retesting.
+Save the client ID/secret with revision 0 for initial configuration, test the exact
+revision, activate it and enable Google in the organization authentication policy.
+These operations require current organization ownership, without email step-up.
 
-Organization owners opt in with `PATCH /api/v1/organizations/:organizationId/auth-policy` and
-`{ expectedRevision, googleEnabled: true }`. Members explicitly connect Google through
-`POST /api/v1/users/me/accounts/google/start`; ordinary Google login starts at
-`POST /api/v1/auth/google/start`. Every start returns an authorization URL and sets a separate
-HttpOnly browser-flow cookie. Follow the URL in that same browser. The callback sets any new
-session only by cookie and returns 303 to the configured dashboard destination, or `/api/docs`
-when no dashboard is configured. A valid invitation can enroll a user directly through Google;
-an uninvited login cannot create organization membership. See external enrollment below.
-
-Signed-in users can request an email proof at `/api/v1/auth/reauthentication/email/request`,
-replace it at `/resend`, and verify code/link at `/verify`. The temporary cookie and current
-session are both required. Verification adds email evidence to that session. This permits
-Google-authenticated members to access an email-only organization and approve sensitive account
-changes. Ordinary signed-out email sign-in remains separate.
-
-Disabling the instance connection invalidates Google evidence everywhere; unlinking an account
-invalidates its evidence. Independent email proof remains usable. Maintenance scrubs expired
-external-flow context and removes old flows after startup, alongside existing email proofs.
-Verified Gmail or matching Workspace hosted-domain claims can supply email ownership proof for
-external enrollment. Invitation and membership requirements still apply. Google-side logout and
-deprovisioning notifications are not implemented. See [Google architecture](../../architecture/identity-access/google.md).
+Members link Google through `/api/v1/users/me/accounts/google/start`. Ordinary sign-in
+starts through `/api/v1/auth/google/start`; callbacks remain browser-bound and deliver
+sessions by HttpOnly cookie. There are no administrative email reauthentication routes.
+Public `GET /api/v1/auth/discovery` lists supported methods directly, and authenticated
+`GET /api/v1/auth/access` reports policy satisfaction without changing any selection.
 
 ## Verification
 
@@ -251,7 +234,7 @@ They can contain synthetic session credentials; CI retains failure artifacts for
 
 ## Organization OIDC
 
-Organization owners configure their providers through `/api/v1/organizations/:organizationId/
+Organization owners configure their providers through `/api/v1/organization/
 identity-connections`. The [API README](../../packages/api/README.md#organization-oidc) documents
 payloads and actions. Register the returned callback URL with the provider, run the browser test,
 activate the tested revision, approve it through organization policy, then explicitly link accounts.
@@ -277,16 +260,15 @@ are not implemented.
 ## Required SSO and recovery
 
 Owners can require approved organization OIDC or SAML connections through the policy editor after preparing
-a tested active connection, fresh provider/email evidence and an offline recovery credential.
+a tested active connection, policy-valid provider evidence and an offline recovery credential.
 The [API usage](../../packages/api/README.md#required-organization-sso) documents readiness, policy
 settings and `/auth-recovery` endpoints. Existing sessions remain global; email alone cannot access
 an organization requiring SSO. Invitation acceptance directs members to complete SSO after verifying
 their mailbox. The installation Google connection is not enterprise organization SSO evidence.
 
-If the provider is unavailable, an existing organization owner signs in by email, verifies recently,
+If the provider is unavailable, an existing organization owner signs in by email
 and redeems their offline credential. Recovery makes SSO optional, consumes the credential and
-queues owner alerts atomically. It grants no new authority and adds no automatic fallback. This
-works for archived organizations without restoring them. Recovery secrets are shown only at
+queues owner alerts atomically. It grants no new authority and adds no automatic fallback. The sole organization has no archive lifecycle. Recovery secrets are shown only at
 rotation; store them securely. No additional environment variables or dependencies are needed.
 
 ## Organization SAML

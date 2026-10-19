@@ -14,9 +14,9 @@ Invalidation tags are independent memberships, not hierarchical prefixes. The
 registry's idle retention is not a freshness interval.
 
 Each router owns one registry, passed to both loaders and React. Required loaders
-await the same atoms that components read, with route cancellation. Slug routes
-resolve only against the actor's paginated organization directory, then freshly
-check authentication requirements and organization access. An instance-owner grant
+await the same atoms that components read, with route cancellation. A pathless application route
+reads the current-access atom, then loads the singleton organization detail when
+authentication is satisfied. An instance-owner grant
 never bypasses membership. Lists expose cursor controls; assignment/invitation
 choices collect both role scopes and all relevant pages, rejecting repeated cursors.
 
@@ -78,10 +78,11 @@ request or reopening its original link. Code screens use server expiry/cooldown
 values. Proof acceptance is an explicit submission, avoiding mount-time replay.
 Email/browser binding, expiry and single consumption remain server responsibilities.
 
-Setup creates the owner session, then permits first-organization creation or a later
-return. First-organization creation shows a completion summary from the successful
-API response; opening the organization or its members page is an explicit navigation.
-That summary remains in component memory and is not an additional setup authority.
+Setup creates the sole organization and its complete owner authority in the same
+transaction as the owner session. The two screens collect organization/owner details
+and verify email, then open `/` directly. There is no organization picker, creation
+screen, switcher or slug entry. Sign-in loads supported methods immediately through
+public discovery; email code submission remains a separate browser-bound proof.
 Invitations support email code/link acceptance and first-time Google/OIDC/SAML
 enrollment. External callbacks can redirect into `/auth/verify-email`; that page
 requests/verifies a browser-bound code or resumes a verified flow before continuing.
@@ -92,11 +93,11 @@ open a required-SSO organization, including for an owner.
 ## Administration
 
 Organization pages connect membership lifecycle, roles, ownership, invitations,
-direct teams, metadata patches and archival. Active role-binding reads supply exact
+direct teams and metadata patches. Team and custom-role archival remain available. Active role-binding reads supply exact
 revocation identities at organization/team scope. Owners configure/test/activate
 OIDC/SAML, approve policy connections, bind verified domains, inspect connection
-health and manage staged SAML signing keys. Instance Google configuration follows
-its separate owner/test/activation boundary.
+health and manage staged SAML signing keys. Google configuration lives beside organization authentication settings and uses the
+same current-owner authority. No administrative action requires a five-minute email step-up.
 
 Directory search and status/role controls filter the currently loaded page; cursor
 navigation remains available. Team details live under the team's Settings tab and
@@ -105,7 +106,7 @@ Member role only when the actor may assign all of its permissions; otherwise it
 opens the full role-selection dialog. Unsupported knowledge actions stay disabled.
 
 Recovery issuance displays the credential once and clears it on close; redemption
-uses the owner's current policy revision and recent email proof independently of
+uses the owner's current policy revision and a current authenticated session independently of
 SSO. The backend consumes it and changes policy atomically. Audit pages filter,
 paginate, inspect safe events and download bounded CSV pages, including continuation.
 Instance audit/domain decisions remain separate from organization access. Unsupported

@@ -10,7 +10,6 @@ it.effect("renders invitation text safely when names contain HTML", () =>
       type: "organization-invitation",
       to: "recipient@example.test",
       variables: {
-        instanceName: "Preface",
         organizationName: '<script>alert("x")</script>',
         inviterName: "Owner & Team",
         roleName: "Reader < Member",

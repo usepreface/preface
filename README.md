@@ -23,9 +23,9 @@ The database package includes connection/transaction services, error mapping, mi
 PGlite/PostgreSQL test layers, and instance, auth and audit tables/repositories grouped in PostgreSQL
 schemas. Protocol provides storage models, public bootstrap/session contracts and branded identities.
 Application implements first-owner setup, browser-bound email code/link sign-in, sessions and
-organization creation, membership, roles and ownership. The server wires
+atomic initialization of the sole organization, membership, roles and ownership. The server wires
 startup preparation, operator links, HTTP handlers and always-available Scalar/OpenAPI
-on port 8080. The dashboard defaults to port 3000 and the landing page to port 4000. The dashboard connects setup, sign-in, organizations, teams, roles, invitations and enterprise authentication.
+on port 8080. The dashboard defaults to port 3000 and the landing page to port 4000. The dashboard connects setup, sign-in, organization settings, teams, roles, invitations and enterprise authentication.
 
 Start with the [architecture index](architecture/README.md) for system boundaries, contracts,
 identity flows, storage, runtime and frontend ownership. The [server README](apps/server/README.md)

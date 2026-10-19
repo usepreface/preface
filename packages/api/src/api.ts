@@ -2,13 +2,15 @@ import { HttpApi, OpenApi } from "effect/http-api";
 
 import { AuditApi } from "#/groups/audit";
 import { AccountsApi } from "#/groups/auth/accounts";
-import { AuthenticationDiscoveryApi, OrganizationSelectionApi } from "#/groups/auth/discovery";
+import {
+  AuthenticationDiscoveryApi,
+  CurrentOrganizationAuthenticationApi,
+} from "#/groups/auth/discovery";
 import { EmailSignInApi } from "#/groups/auth/email-sign-in";
 import { ExternalAuthenticationApi } from "#/groups/auth/external";
 import { GoogleApi } from "#/groups/auth/google";
 import { InvitationsApi } from "#/groups/auth/invitations";
 import { OidcApi } from "#/groups/auth/oidc";
-import { ReauthenticationApi } from "#/groups/auth/reauthentication";
 import { SamlApi } from "#/groups/auth/saml";
 import { SessionApi } from "#/groups/auth/session";
 import { SessionsApi } from "#/groups/auth/sessions";
@@ -34,7 +36,7 @@ export class PrefaceApi extends HttpApi.make("PrefaceApi")
     ConnectionOperationsApi,
     AuditApi,
     AuthenticationDiscoveryApi,
-    OrganizationSelectionApi,
+    CurrentOrganizationAuthenticationApi,
     ExternalAuthenticationApi,
     OrganizationDomainsApi,
     OidcApi,
@@ -43,7 +45,6 @@ export class PrefaceApi extends HttpApi.make("PrefaceApi")
     GoogleApi,
     IdentityConnectionsApi,
     AccountsApi,
-    ReauthenticationApi,
     AuthenticationPolicyApi,
     OrganizationAuthRecoveryApi,
     TeamsApi,

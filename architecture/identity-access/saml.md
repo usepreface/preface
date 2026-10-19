@@ -7,7 +7,7 @@ authority. Provider email and attributes never merge users or assign roles.
 
 ## Configuration and trust
 
-A recently email-authenticated organization owner creates a named draft connection. Preface generates
+An authenticated organization owner creates a named draft connection. Preface generates
 an RSA-2048 signing key and one-year self-signed certificate through the crypto capability. The
 private key is encrypted in the existing connection/revision envelope. Public responses contain
 only the certificate, fixed entity ID, ACS URL, metadata URL and IdP settings. The metadata endpoint
@@ -68,7 +68,7 @@ A mismatched browser cannot consume a staged proof.
 
 Final completion shares OIDC's locked connection → organization → user checks and transaction.
 It rechecks trust, current membership, policy, account identity, freshness and expiry. Explicit linking
-requires recent local email; sign-in resolves a stable link or verified email through [external enrollment](enrollment.md). Required audit, account/session/evidence
+requires a current authenticated session; sign-in resolves a stable link or verified email through [external enrollment](enrollment.md). Required audit, account/session/evidence
 writes and conditional flow consumption commit together. Failures revoke/scrub temporary context;
 consumption clears it. Maintenance scrubs expired proofs and removes expired replay rows in bounded
 batches. Raw XML, NameID, keys and flow credentials are absent from routine logs and audit metadata.

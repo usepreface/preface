@@ -128,7 +128,7 @@ layer(ApplicationTestLayer)("External identity enrollment", (it) => {
       ).toBe(actor.user.id);
       expect(
         yield* application.instance.authentication.google.get(actor).pipe(Effect.flip),
-      ).toMatchObject({ code: "REAUTHENTICATION_REQUIRED" });
+      ).toMatchObject({ code: "FORBIDDEN" });
       expect(
         yield* application.auth.oidc.callback(yield* oidcCallbackInput(started)).pipe(Effect.flip),
       ).toMatchObject({ code: "INVALID_FLOW" });

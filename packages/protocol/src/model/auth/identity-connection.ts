@@ -19,15 +19,13 @@ const fields = {
 };
 export const GoogleConnection = Schema.Struct({
   ...fields,
-  installationId: Schema.Literal(1),
-  organizationId: Schema.optionalKey(Schema.Null),
+  organizationId: OrganizationId,
   provider: Schema.Literal("google"),
   configuration: GoogleConfiguration,
 });
 export type GoogleConnection = typeof GoogleConnection.Type;
 export const OidcConnection = Schema.Struct({
   ...fields,
-  installationId: Schema.Null,
   organizationId: OrganizationId,
   provider: Schema.Literal("oidc"),
   configuration: OidcConfiguration,
@@ -36,7 +34,6 @@ export const OidcConnection = Schema.Struct({
 export type OidcConnection = typeof OidcConnection.Type;
 export const SamlConnection = Schema.Struct({
   ...fields,
-  installationId: Schema.Null,
   organizationId: OrganizationId,
   provider: Schema.Literal("saml"),
   configuration: SamlConfiguration,

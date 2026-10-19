@@ -1,7 +1,7 @@
 import { Schema } from "effect";
 
 export { DisplayName as OrganizationName } from "#/common/display-name";
-export const OrganizationSlug = Schema.String.check(
+export const TeamSlug = Schema.String.check(
   Schema.isMinLength(3),
   Schema.isMaxLength(63),
   Schema.isPattern(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
@@ -17,7 +17,6 @@ export const OrganizationPermission = Schema.Literals([
   "teams.manage",
   "organization.read",
   "organization.update",
-  "organization.archive",
   "members.read",
   "members.manage",
   "roles.read",

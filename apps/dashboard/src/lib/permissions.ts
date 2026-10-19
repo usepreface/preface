@@ -15,7 +15,6 @@ export const organizationPermissionGroups: readonly PermissionGroup<Organization
     permissions: [
       { id: "organization.read", label: "View organization" },
       { id: "organization.update", label: "Edit details" },
-      { id: "organization.archive", label: "Archive and restore" },
     ],
   },
   {

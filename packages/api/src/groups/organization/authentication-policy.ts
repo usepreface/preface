@@ -1,6 +1,5 @@
 import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/http-api";
 
-import { OrganizationId } from "@usepreface/protocol";
 import {
   PublicOrganizationAuthPolicy,
   OrganizationAuthenticationMethods,
@@ -15,23 +14,20 @@ const errors = [...identityErrors, ...organizationErrors, ...requestErrors];
 
 export class AuthenticationPolicyApi extends HttpApiGroup.make("authenticationPolicy")
   .add(
-    HttpApiEndpoint.get("methods", "/:organizationId/authentication/methods", {
-      params: { organizationId: OrganizationId },
+    HttpApiEndpoint.get("methods", "/authentication/methods", {
       success: OrganizationAuthenticationMethods,
       error: errors,
     }),
-    HttpApiEndpoint.get("readiness", "/:organizationId/auth-policy/readiness", {
-      params: { organizationId: OrganizationId },
+    HttpApiEndpoint.get("readiness", "/auth-policy/readiness", {
       success: OrganizationSsoReadiness,
       error: errors,
     }),
-    HttpApiEndpoint.patch("update", "/:organizationId/auth-policy", {
-      params: { organizationId: OrganizationId },
+    HttpApiEndpoint.patch("update", "/auth-policy", {
       payload: UpdateOrganizationAuthPolicyRequest,
       success: PublicOrganizationAuthPolicy,
       error: errors,
     }),
   )
   .middleware(SessionAuthentication)
-  .prefix("/organizations")
+  .prefix("/organization")
   .annotate(OpenApi.Title, "Organization authentication") {}

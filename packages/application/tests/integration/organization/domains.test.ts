@@ -77,34 +77,37 @@ layer(ApplicationTestLayer)("Organization email authority", (it) => {
   );
 
   it.effect(
-    "keeps manual approval behind instance ownership and rejects cross-organization bindings",
+    "keeps manual approval behind instance ownership and rejects revoked domain bindings",
     () =>
       Effect.gen(function* () {
         yield* (yield* TestDatabase).reset;
         const application = yield* Application;
         const { owner, organization } = yield* createTestOrganization;
-        const other = yield* application.organization.organization.create(owner.actor, {
-          metadata: { name: "Other" },
-          slug: "other",
-        });
         const connection = yield* configureTestOidc(owner.actor, organization.id);
         const outsider = yield* createTestIdentity("outsider@example.test", "Outsider");
-        const domain = yield* application.organization.domain.create(
-          owner.actor,
-          other.organization.id,
-          { domain: "internal.example.test" },
-        );
+        const domain = yield* application.organization.domain.create(owner.actor, organization.id, {
+          domain: "internal.example.test",
+        });
         expect(
           yield* application.organization.domain
-            .verify(outsider.actor, other.organization.id, domain.id, domain.revision, "operator")
+            .verify(outsider.actor, organization.id, domain.id, domain.revision, "operator")
             .pipe(Effect.flip),
         ).toMatchObject({ code: "FORBIDDEN" });
         yield* application.organization.domain.verify(
           owner.actor,
-          other.organization.id,
+          organization.id,
           domain.id,
           domain.revision,
           "operator",
+        );
+        const claims = yield* application.organization.domain.list(owner.actor, organization.id);
+        const verified = claims.domains.find((claim) => claim.id === domain.id);
+        if (!verified) throw new Error("Expected verified claim");
+        yield* application.organization.domain.revoke(
+          owner.actor,
+          organization.id,
+          domain.id,
+          verified.revision,
         );
         expect(
           yield* application.organization.domain
@@ -113,7 +116,7 @@ layer(ApplicationTestLayer)("Organization email authority", (it) => {
               domainIds: [domain.id],
             })
             .pipe(Effect.flip),
-        ).toMatchObject({ code: "DOMAIN_NOT_FOUND" });
+        ).toMatchObject({ code: "DOMAIN_NOT_VERIFIED" });
         expect(
           (yield* application.organization.domain.connectionDomains(
             owner.actor,

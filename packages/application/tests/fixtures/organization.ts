@@ -30,9 +30,11 @@ export const admitTestMember = Effect.fnUntraced(function* (
 
 export const createTestOrganization = Effect.gen(function* () {
   const owner = yield* completeTestBootstrap;
-  const created = yield* (yield* Application).organization.organization.create(owner.actor, {
-    metadata: { name: "Knowledge" },
-    slug: "knowledge",
+  const application = yield* Application;
+  const id = yield* application.organization.organization.currentId();
+  yield* (yield* DatabaseRepository).organization.organization.update(id, {
+    metadata: { version: 1, name: "Knowledge" },
   });
+  const created = yield* application.organization.organization.get(owner.actor, id);
   return { owner, ...created };
 });

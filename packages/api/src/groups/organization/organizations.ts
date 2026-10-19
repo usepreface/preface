@@ -1,12 +1,7 @@
-import { Schema } from "effect";
-import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema, OpenApi } from "effect/http-api";
+import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/http-api";
 
-import { OrganizationId } from "@usepreface/protocol";
 import {
-  CreateOrganizationRequest,
   UpdateOrganizationRequest,
-  ListOrganizationsQuery,
-  OrganizationList,
   OrganizationDetail,
   PublicOrganization,
   OrganizationAccessInfo,
@@ -15,53 +10,23 @@ import {
 
 import { organizationErrors, requestErrors } from "#/http-errors";
 import { SessionAuthentication } from "#/middleware/session-authentication";
-
+const errors = [...organizationErrors, ...requestErrors];
 export class OrganizationsApi extends HttpApiGroup.make("organizations")
   .add(
-    HttpApiEndpoint.post("create", "/", {
-      payload: CreateOrganizationRequest,
-      success: OrganizationDetail.pipe(HttpApiSchema.status(201)),
-      error: [...organizationErrors, ...requestErrors],
-    }).annotate(OpenApi.Summary, "Create an organization as an instance owner"),
-    HttpApiEndpoint.get("list", "/", {
-      query: ListOrganizationsQuery,
-      success: OrganizationList,
-      error: [...organizationErrors, ...requestErrors],
-    }).annotate(OpenApi.Summary, "List organizations through current memberships"),
-    HttpApiEndpoint.get("get", "/:organizationId", {
-      params: { organizationId: OrganizationId },
-      success: OrganizationDetail,
-      error: [...organizationErrors, ...requestErrors],
-    }),
-    HttpApiEndpoint.get("access", "/:organizationId/access", {
-      params: { organizationId: OrganizationId },
+    HttpApiEndpoint.get("get", "/organization", { success: OrganizationDetail, error: errors }),
+    HttpApiEndpoint.get("access", "/organization/access", {
       success: OrganizationAccessInfo,
-      error: [...organizationErrors, ...requestErrors],
+      error: errors,
     }),
-    HttpApiEndpoint.patch("update", "/:organizationId", {
-      params: { organizationId: OrganizationId },
+    HttpApiEndpoint.patch("update", "/organization", {
       payload: UpdateOrganizationRequest,
       success: PublicOrganization,
-      error: [...organizationErrors, ...requestErrors],
+      error: errors,
     }),
-    HttpApiEndpoint.post("archive", "/:organizationId/archive", {
-      params: { organizationId: OrganizationId },
-      payload: Schema.Struct({}),
-      success: PublicOrganization,
-      error: [...organizationErrors, ...requestErrors],
-    }),
-    HttpApiEndpoint.post("restore", "/:organizationId/restore", {
-      params: { organizationId: OrganizationId },
-      payload: Schema.Struct({}),
-      success: PublicOrganization,
-      error: [...organizationErrors, ...requestErrors],
-    }),
-    HttpApiEndpoint.get("authPolicy", "/:organizationId/auth-policy", {
-      params: { organizationId: OrganizationId },
+    HttpApiEndpoint.get("authPolicy", "/organization/auth-policy", {
       success: PublicOrganizationAuthPolicy,
-      error: [...organizationErrors, ...requestErrors],
+      error: errors,
     }),
   )
   .middleware(SessionAuthentication)
-  .prefix("/organizations")
-  .annotate(OpenApi.Title, "Organizations") {}
+  .annotate(OpenApi.Title, "Organization") {}

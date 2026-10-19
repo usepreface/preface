@@ -3,7 +3,7 @@
 Invitations also support direct enterprise SSO/Google enrollment and inline mailbox verification through [external enrollment](enrollment.md). The email-only path below remains available; its required-SSO next action does not apply when enrollment already supplies acceptable enterprise evidence.
 
 Organization owners can require authentication through an approved organization OIDC or SAML connection.
-The installation-wide Google connection does not satisfy this requirement. Global email login,
+The organization Google connection does not satisfy this requirement. Global email login,
 organization membership discovery, account linking and explicit owner recovery remain available.
 Instance ownership grants no exemption. [OIDC](oidc.md) and [SAML](saml.md) own provider configuration
 and browser transactions; [invitations](invitations.md) own admission.
@@ -25,7 +25,7 @@ closed when suitable evidence is absent. There is no outage-triggered email fall
 `auth.session_authentication.providerAuthenticatedAt` stores validated OIDC `auth_time` or SAML `AuthnInstant`.
 The existing `authenticatedAt` remains the time Preface obtained evidence. A callback cannot make
 an old provider login fresh. Existing evidence without provider authentication time remains usable
-for optional policy and global identity, but cannot satisfy required SSO. Up to 60 seconds of future
+for optional policy and installation identity, but cannot satisfy required SSO. Up to 60 seconds of future
 clock skew is tolerated; deployments need synchronized clocks.
 
 `auth.auth_flow.requestedMaxAgeSeconds` records the request's `max_age` requirement. Required-mode
@@ -46,13 +46,13 @@ organization access. It does not reveal an organization directory to signed-out 
 Invitation acceptance verifies the intended mailbox and commits membership, currently authorized
 role/team assignments, email session and audit as before. Its response adds `nextAction`: required
 organizations return `authenticate_with_sso`. Email admission grants no SSO exemption. The member
-links an approved provider using recent local email proof and completes suitable OIDC or SAML authentication
+links an approved provider using a current authenticated session and completes suitable OIDC or SAML authentication
 before using their assignments. There is no pending-enrollment table, email-based identity merging,
 provider-driven signup or just-in-time membership.
 
 An owner prepares a tested active approved connection, links their account, completes provider
 reauthentication, and issues an offline recovery credential before enabling enforcement. The policy
-PATCH requires its current revision, recent local email, provider authentication within five minutes,
+PATCH requires its current revision, a current authenticated session, provider authentication within the configured policy age,
 and possession of that owner's recovery credential. Checking possession does not consume it.
 `GET /auth-policy/readiness` reports blockers and safe owner/connection readiness; the mutation
 rechecks conditions. Readiness cannot establish future provider uptime or prove that a credential
@@ -95,21 +95,19 @@ raw secret is redacted in application results and returned once by the rotation 
 
 Credentials have no automatic expiry. Owners store them offline, for example in a password manager.
 Rotation revokes the previous credential and issues its replacement atomically. Normal issuance and
-revocation require organization owner access plus local email authentication within five minutes;
+revocation require organization owner access with a current authenticated session;
 revoking the last required recovery path is rejected.
 
-To recover, an owner signs into Preface by email, obtains recent email evidence, reads the current
+To recover, an owner signs into Preface by email, obtains a current authenticated session, reads the current
 revision through readiness and submits their credential to `/auth-recovery/recover`. This narrow
 path verifies current ownership independently of organization SSO. It consumes the credential,
 switches policy to optional, appends recovery/policy audits and enqueues owner alerts in one
 transaction. Concurrent attempts admit one transition. A failed audit or outbox write rolls
 back consumption and policy changes. No external provider is contacted.
 
-Recovery also works for archived organizations but does not restore them. Archived organizations
-invalidate ordinary organization SSO sources; an owner can recover to optional mode and then use the separate
-restore operation. Recovery never grants membership, roles or instance authority. It preserves
-provider settings and account bindings for deliberate repair or disablement. Enablement after
-recovery requires a new credential and fresh provider proof.
+Recovery grants no new membership, role or operator authority. It preserves provider
+settings and account bindings for deliberate repair or disablement. Enabling SSO
+again requires a replacement recovery credential and policy-valid provider proof.
 
 There is no API bypass if both provider access and all prepared owners' offline credentials are
 lost. A lost rotation response requires rotation again through normal owner access; secrets cannot
@@ -126,7 +124,7 @@ committing a notification does not prove inbox delivery.
 
 Workflow tests use real migrated repositories and cover readiness/possession, organization isolation,
 email versus SSO, signed provider authentication age, invitation enrollment, unsafe owner/provider
-changes, credential rotation/replay, recovery after a week, archival, audit/outbox rollback and
+changes, credential rotation/replay, recovery after a week, audit/outbox rollback and
 competing recovery/revocation. SDK tests validate `max_age` and signed `auth_time`; HTTP tests exercise
 policy/recovery payload decoding, cookie sessions, safe output and access rejection. PostgreSQL is
 the concurrency lane; PGlite supplies fast persistence checks.

@@ -6,7 +6,7 @@ export { SecretToken, SecretTokenFromString } from "#/common/secret-token";
 export { VerificationCode, VerificationCodeFromString } from "#/common/verification-code";
 export {
   OrganizationName,
-  OrganizationSlug,
+  TeamSlug,
   OrganizationRoleKey,
   OrganizationRoleKind,
   OrganizationPermission,

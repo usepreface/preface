@@ -11,7 +11,6 @@ export {
 } from "#/input/auth/email-sign-in";
 
 export {
-  CreateOrganizationInput,
   UpdateOrganizationInput,
   CreateOrganizationRoleInput,
   UpdateOrganizationRoleInput,
@@ -23,10 +22,7 @@ export {
   AcceptInvitationInput,
 } from "#/input/organization/invitation";
 
-export {
-  CreateOrganizationInput as CreateTeamInput,
-  UpdateOrganizationInput as UpdateTeamInput,
-} from "#/input/organization/organization";
+export { CreateTeamInput, UpdateTeamInput } from "#/input/organization/team";
 
 export { UpdateProfileInput } from "#/input/auth/profile";
 
@@ -60,5 +56,3 @@ export {
 export * from "#/input/organization/domain";
 
 export * from "#/input/auth/external";
-
-export * from "#/input/auth/discovery";

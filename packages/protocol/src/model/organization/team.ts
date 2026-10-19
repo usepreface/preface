@@ -1,6 +1,6 @@
 import { Schema } from "effect";
 
-import { OrganizationSlug } from "#/common/organization";
+import { TeamSlug } from "#/common/organization";
 import {
   OrganizationId,
   OrganizationMemberId,
@@ -10,7 +10,7 @@ import {
 import { TeamMetadata } from "#/metadata/team";
 export const CreateTeam = Schema.Struct({
   organizationId: OrganizationId,
-  slug: OrganizationSlug,
+  slug: TeamSlug,
   metadata: TeamMetadata,
   createdByMemberId: OrganizationMemberId,
 });

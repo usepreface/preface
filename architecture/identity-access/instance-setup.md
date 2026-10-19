@@ -2,7 +2,7 @@
 
 Startup initializes one installation and its settings, then issues a 30-minute
 operator proof. Its link is printed only after commit. Setup creates a verified
-first owner and a session; it creates no organization.
+first owner and a session; it creates the sole organization.
 
 ## Operator proof
 
@@ -21,7 +21,7 @@ in-flight message cannot be recalled, but its code is no longer eligible.
 
 ## Request and resend
 
-`POST /api/v1/instance/setup` accepts the proof, instance name, owner name and email.
+`POST /api/v1/instance/setup` accepts the proof, organization name, owner name and email.
 Application inputs trim names and trim/lowercase email. Inspection checks the proof
 without consuming it. Code generation happens outside SQL locks.
 
@@ -45,29 +45,23 @@ without an externally reachable callback or magic-link origin.
 
 ## Verification and completion
 
-`POST /api/v1/instance/setup/verify` accepts proof, challenge ID and code. Completion
-locks installation and checks the current proof, challenge binding, fresh expiry
-and five-attempt budget before constant-time HMAC verification.
+Verification locks the installation and checks the current setup proof, challenge,
+expiry and durable attempt budget. An incorrect code commits its failed attempt and
+audit before returning the error. Expired/replaced proofs cannot complete setup.
 
-A wrong code increments the durable attempt count and writes
-`instance.bootstrap_verification_failed`. The transaction returns a marker so these
-writes commit before `INVALID_CODE` is returned. The fifth failure cancels pending
-email delivery. The correct code is also refused once this budget is exhausted;
-after cooldown the operator can request another code. Attempt enforcement is shared
-across replicas, independently of process-local HTTP admission limits.
+Success writes the verified user and primary email, instance-owner grant, sole
+organization, owner membership/binding, built-in organization and team roles,
+default authentication policy, session and authentication evidence. It consumes
+setup authority, cancels delivery and appends required audit rows in that same
+transaction. Bootstrap marks completion only after initialization succeeds.
+Any failure rolls back every completion write; the pending proof remains retryable
+within its deadline. Concurrent completion produces one installation organization.
 
-Successful verification writes the user, verified login-enabled primary email, bootstrap owner grant,
-instance display name and initial session. It consumes the challenge and operator
-proof, and appends owner-granted, email-verified, session-created/authenticated and bootstrap-completed
-audit rows in the same transaction, including email authentication evidence. No
-password storage exists in the fresh initial schema.
-
-Final conditional consumption rechecks fresh expiry. Audit or storage failure rolls
-back all completion writes, including challenge consumption and email cancellation.
-Concurrent completions admit one winner. Only the canonical email uniqueness
-violation becomes `EMAIL_UNAVAILABLE`; other storage failures remain operational.
-After commit, the server returns 201 with the safe actor and session cookie.
-See [sessions](sessions.md) for cookie and authority boundaries.
+The public request uses `organizationName`, `ownerName` and `email`. The organization
+metadata owns its display name after setup; there is no subsequent organization
+creation screen. The transport returns the safe actor and delivers the opaque session
+credential only in the HttpOnly cookie. Organization-specific proof and authority
+are not inferred from the cookie alone.
 
 ## Recovery and limits
 
@@ -75,8 +69,9 @@ Email acceptance is asynchronous and does not guarantee inbox delivery. The oper
 can resend after cooldown or replace a lost setup proof locally. Restart does not
 extend proof/code expiry. A lost successful completion response cannot be replayed
 to obtain another session. Use [email sign-in](email-sign-in.md) to obtain a fresh
-session for the same owner, including after a week with no organization.
-No organization, SSO or onboarding UI is implied by this flow.
+session for the same owner, including after a week away.
+The dashboard completes these two setup screens and opens the organization directly.
+Google and enterprise SSO are configured afterward through organization settings.
 
 Application regressions cover replacement, expiry, concurrent failure/completion,
 failed-attempt durability and audit rollback. Built PostgreSQL tests exercise startup,

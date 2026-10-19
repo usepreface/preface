@@ -1,9 +1,9 @@
 # System model
 
 Preface is self-hosted knowledge infrastructure with installation-wide identity
-and multiple organizations as its product model. The implemented backend currently
+and exactly one organization per installation as its product model. The implemented backend currently
 supports installation preparation, first-owner setup, email code/link sign-in,
-session resolution, session management, organization creation, membership lifecycle,
+session resolution, session management, atomic organization initialization, membership lifecycle,
 roles, ownership management, verified organization invitations, direct teams, versioned profiles, Google account linking/sign-in, organization-owned OIDC and SAML, domain authority, direct invitation SSO enrollment, verified implicit account linking, resumable proofs, discovery and optional/required organization authentication and owner-bound offline SSO recovery.
 Setup verifies mailbox ownership through an encrypted email outbox, minimal renderer
 and scoped worker. Image uploads and knowledge ingestion are not implemented. The dashboard connects those authentication and administration workflows. The landing page illustrates the product independently of
@@ -37,12 +37,18 @@ Installation identity describes one deployment. User identity spans that deploym
 Instance-owner grants are separate from organization memberships. Being an
 instance owner must not imply access to organization content.
 
-Signup is invitation-only and only instance owners may create organizations. These
-are fixed product rules, not configurable settings. The current setup proof is a
-special authority to create the first owner, not a general signup invitation.
-A resolved session identifies a usable user and session; it is not evidence of
-an instance-owner grant or organization permissions. Organization workflows freshly
-check membership, role bindings and acceptable evidence under the organization policy.
+Signup is invitation-only. Installation completion creates the organization and
+explicitly grants its first owner membership and ownership in the same transaction
+as verified identity, operator grant and session issuance. PostgreSQL permits at
+most one organization. A completed installation always has its organization.
+There are no organization creation, selection, slug or archival APIs.
+
+A resolved session identifies a usable user and session; it is not evidence of an
+operator grant or organization permissions. Organization workflows freshly check
+membership, role bindings and acceptable evidence under the single policy.
+Administrative mutations require a current authorized session, without a separate
+five-minute email confirmation. Required enterprise SSO still uses its configured
+authentication age and explicit recovery safeguards.
 
 ## Runtime and durable state
 

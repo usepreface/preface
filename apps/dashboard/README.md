@@ -49,30 +49,23 @@ recovery credentials are written to local/session storage.
 
 ## Available workflows
 
-- `/setup`, `/setup/verify`, `/setup/organization`: owner email verification and
-  first organization, followed by a setup summary with links to open the organization
-  or invite members. Setup can be completed before an organization is created.
-- `/sign-in`, `/sign-in/verify`: email discovery, codes and available Google/OIDC/SAML
-  methods. `/auth/email/verify` handles browser-bound email links.
-- `/invitations/accept`: review an invitation, verify by code/link, or enroll directly
-  through an approved provider. `/auth/verify-email` completes provider flows that
-  need additional mailbox proof.
-- `/organizations`, `/organizations/new`: membership-scoped organization selection,
-  owner-only creation and restoration of archived organizations.
-- `/org/:slug/settings`: organization details, members/invitations, scoped roles,
-  teams, login policy, OIDC/SAML connections, domains and audit history/CSV export.
-- `/org/:slug/auth-recovery`: owner-bound offline recovery without provider access.
-- `/account/profile`, `/account/security`: profile patches, linked identities,
-  provider confirmation and current/other/all-session revocation.
-- `/instance`: owner-only overview, Google configuration, exact domain-claim review
-  links and separate instance audit history.
-- `/auth/reauthenticate`, `/auth/email/reauthenticate`: fresh local-email evidence
-  for sensitive operations. Provider starts return through backend callbacks.
+- `/setup`, `/setup/verify`: organization name, owner name and email, followed by
+  code verification. Completion opens the dashboard with the sole organization ready.
+- `/sign-in`, `/sign-in/verify`: enabled Google/OIDC/SAML methods are shown immediately;
+  email code/link sign-in does not require organization discovery or slug entry.
+- `/invitations/accept`: inspect an invitation and join through email or an approved
+  provider. `/auth/verify-email` handles additional mailbox proof when required.
+- `/`: organization dashboard. `/settings/general`, `/settings/members`,
+  `/settings/teams`, `/settings/roles`, `/settings/authentication`, `/settings/google`,
+  `/settings/connections`, `/settings/domains` and `/settings/audit` provide administration.
+- `/account/profile`, `/account/security`: personal metadata, linked accounts and sessions.
+- `/auth-recovery`: explicit owner recovery using an offline credential.
+- `/instance`: operator overview, exact domain-review links and installation audit.
 
-Image uploads, knowledge ingestion, AI features, global organization administration
-and an instance-domain review queue are not provided by the current backend. Their
-former sample records/actions are absent or disabled. Instance ownership never
-supplies organization membership. The API remains authoritative for every action.
+There is no organization picker, switcher, additional-organization creation, routing
+slug or organization archival. Current owner sessions can manage settings without a
+five-minute email step-up. Required SSO, membership, role and recovery checks remain.
+Image uploads, knowledge ingestion and AI features are not implemented.
 
 ## Verification
 

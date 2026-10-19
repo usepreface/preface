@@ -22,11 +22,8 @@ layer(HttpTestLayer, { excludeTestServices: true })("Connection operations HTTP"
             }),
           ),
       });
-      const { organization } = yield* api.organizations.create({
-        payload: { metadata: { name: "Knowledge" }, slug: "knowledge" },
-      });
+      const { organization } = yield* api.organizations.get();
       const connection = yield* api.organizationIdentityConnections.createSaml({
-        params: { organizationId: organization.id },
         payload: { name: "Enterprise SAML" },
       });
       const params = { organizationId: organization.id, connectionId: connection.id };

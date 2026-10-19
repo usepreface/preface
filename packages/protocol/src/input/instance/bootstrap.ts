@@ -8,7 +8,7 @@ import { BootstrapChallengeId } from "#/identifiers/bootstrap";
 
 export const RequestBootstrapVerificationInput = Schema.Struct({
   token: SecretTokenFromString,
-  instanceName: DisplayNameInput,
+  organizationName: DisplayNameInput,
   ownerName: DisplayNameInput,
   email: EmailAddressInput,
 });

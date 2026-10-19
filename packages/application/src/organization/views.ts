@@ -18,8 +18,6 @@ import type { ResolvedOrganizationAccess } from "#/organization/access";
 export const publicOrganization = (organization: Organization): PublicOrganization => ({
   id: organization.id,
   metadata: organization.metadata,
-  slug: organization.slug,
-  archivedAt: organization.archivedAt,
   createdAt: organization.createdAt,
   updatedAt: organization.updatedAt,
 });

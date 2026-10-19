@@ -98,7 +98,7 @@ export const authFlow = authSchema.table(
     check("auth_flow_max_age_check", sql`${t.requestedMaxAgeSeconds} >= 0`),
     check(
       "auth_flow_owner_check",
-      sql`(${t.provider} = 'google' and ${t.connectionOrganizationId} is null and (${t.targetOrganizationId} is null or ${t.intent} = 'accept_invitation')) or (${t.provider} in ('oidc','saml') and ${t.targetOrganizationId} is not null and ${t.connectionOrganizationId} = ${t.targetOrganizationId})`,
+      sql`${t.targetOrganizationId} is not null and ${t.connectionOrganizationId} is not null and ${t.connectionOrganizationId} = ${t.targetOrganizationId}`,
     ),
     uniqueIndex("auth_flow_saml_request_uidx").on(t.samlRequestId),
     check(

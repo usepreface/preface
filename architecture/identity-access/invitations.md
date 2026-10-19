@@ -114,7 +114,7 @@ be in flight externally; acceptance independently checks current credentials.
 
 ## HTTP and practical limits
 
-Management routes under `/api/v1/organizations/:organizationId/invitations` provide
+Management routes under `/api/v1/organization/invitations` provide
 create, paginated list, resend and revoke. Listing requires `members.manage`, resend
 and creation also require `roles.assign`. Public POST routes under
 `/api/v1/invitations` provide inspect, verification request and acceptance. All writes

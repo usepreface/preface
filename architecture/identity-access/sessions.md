@@ -4,7 +4,7 @@ Setup creates the initial browser session; [email sign-in](email-sign-in.md) cre
 fresh sessions for returning users. [Google sign-in](google.md) also issues sessions for explicitly linked users. Authentication resolves an opaque cookie
 credential through the application on every protected request. A successful actor
 identifies the current user/session, without asserting instance ownership or future
-organization membership. There is no sign-in or session-management UI yet.
+organization membership. The dashboard provides sign-in and session management.
 
 ## Credential and resolution
 
@@ -87,17 +87,18 @@ rejection of the old credential after revocation.
 ## External evidence
 
 [Google identity](google.md) adds account/connection-backed evidence alongside email proofs.
-Usable Google evidence requires an active connection at the same revision and a linked account.
+Usable Google evidence requires an active connection at the same revision, a linked account
+and active organization membership.
 Unlink, disable and credential changes invalidate that source. Session resolution requires at
 least one usable source; losing Google does not remove independent email evidence. Google
-sign-in creates a new Preface session, while explicit linking and Google/email reauthentication
+sign-in creates a new Preface session, while explicit linking and enterprise SSO renewal
 add evidence to the current session without extending its absolute expiry. Organization policy
 checks these proofs on every access. Logout also revokes pending authenticated provider flows.
 
 [Organization OIDC](oidc.md) and [SAML](saml.md) add connection-backed evidence scoped to active organization membership.
 Source validation requires its current linked account, active trust revision and usable organization.
-Organization policy additionally checks the exact approved connection. Organization SSO proof cannot satisfy
-local recent-email requirements or another organization's connection policy.
+Organization policy additionally checks the exact approved connection. The organization policy checks approved enterprise connections independently from basic
+session eligibility.
 
 Required organization policy additionally evaluates the signed provider authentication time,
 independently of the callback/evidence creation time. Stale SSO evidence may still identify the

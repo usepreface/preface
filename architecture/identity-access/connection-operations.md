@@ -7,12 +7,12 @@ owner recovery path remains necessary when a required-SSO provider is unavailabl
 
 ## Health and delivery
 
-`GET /api/v1/organizations/:organizationId/identity-connections/:connectionId/health` reports the
+`GET /api/v1/organization/identity-connections/:connectionId/health` reports the
 connection revision, lifecycle, last successful test, policy approval and usable bound-domain
 proof. SAML certificates report fingerprint, expiry and valid/expiring/expired/not-yet-valid/invalid
 state. This is a stored-configuration observation, not a live provider availability probe or MFA claim.
 
-Invitation managers can read `/api/v1/organizations/:organizationId/invitations/:invitationId/delivery`.
+Invitation managers can read `/api/v1/organization/invitations/:invitationId/delivery`.
 It exposes delivery status, attempt count, provider, safe failure code, retry availability, expiry and
 sent time for the invitation's current job. It never exposes encrypted content, credentials or provider
 message IDs. Resending uses the existing invitation workflow, replacing its credential and job.
@@ -73,7 +73,7 @@ Sources: [key workflows](../../packages/application/src/auth/saml/keys.ts),
 
 ## IdP application tile
 
-`GET /api/v1/organizations/:organizationId/identity-connections/:connectionId/saml/login`
+`GET /api/v1/organization/identity-connections/:connectionId/saml/login`
 starts a fresh SP-bound transaction and redirects to the IdP after setting the browser proof cookie.
 It accepts an optional validated relative `returnPath`. A signed-out visitor enters normal SSO sign-in;
 an authenticated current member enters forced reauthentication. The connection must be active and

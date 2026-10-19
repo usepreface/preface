@@ -1,5 +1,5 @@
 import { expect, it } from "@effect/vitest";
-import { Effect, Ref } from "effect";
+import { Effect, Ref, Result } from "effect";
 
 import { DatabaseRepository } from "@usepreface/database";
 import { TestDatabase } from "@usepreface/database/testing";
@@ -12,19 +12,20 @@ import { configureTestOidc, oidcCallbackInput } from "../../fixtures/oidc.js";
 import { createTestOrganization } from "../../fixtures/organization.js";
 
 it.live.skipIf(process.env.PREFACE_TEST_POSTGRES_PORT === undefined)(
-  "concurrent invitations across organizations resolve one installation-wide user and preserve both admissions",
+  "concurrent provider completions consume one invitation and create one membership",
   () =>
     Effect.gen(function* () {
       yield* (yield* TestDatabase).reset;
       const application = yield* Application;
       const repository = yield* DatabaseRepository;
       const { owner, organization } = yield* createTestOrganization;
-      const second = yield* application.organization.organization.create(owner.actor, {
-        metadata: { name: "Second" },
-        slug: "second",
-      });
       const firstConnection = yield* configureTestOidc(owner.actor, organization.id);
-      const secondConnection = yield* configureTestOidc(owner.actor, second.organization.id);
+      const secondConnection = yield* configureTestOidc(owner.actor, organization.id);
+      const policy = yield* application.organization.authPolicy.get(owner.actor, organization.id);
+      yield* application.organization.authPolicy.update(owner.actor, organization.id, {
+        expectedRevision: policy.revision,
+        oidcConnectionIds: [firstConnection.id, secondConnection.id],
+      });
       const domain = yield* application.organization.domain.create(owner.actor, organization.id, {
         domain: "company.example.test",
       });
@@ -41,32 +42,18 @@ it.live.skipIf(process.env.PREFACE_TEST_POSTGRES_PORT === undefined)(
         firstConnection.id,
         { expectedRevision: firstConnection.revision, domainIds: [domain.id] },
       );
-      const secondDomain = yield* application.organization.domain.create(
-        owner.actor,
-        second.organization.id,
-        { domain: "company.example.test" },
-      );
-      yield* application.organization.domain.verify(
-        owner.actor,
-        second.organization.id,
-        secondDomain.id,
-        secondDomain.revision,
-        "operator",
-      );
       yield* application.organization.domain.bind(
         owner.actor,
-        second.organization.id,
+        organization.id,
         secondConnection.id,
-        { expectedRevision: secondConnection.revision, domainIds: [secondDomain.id] },
+        {
+          expectedRevision: secondConnection.revision,
+          domainIds: [domain.id],
+        },
       );
       const firstInvite = yield* createTestInvitation(
         owner.actor,
         organization.id,
-        "alice@company.example.test",
-      );
-      const secondInvite = yield* createTestInvitation(
-        owner.actor,
-        second.organization.id,
         "alice@company.example.test",
       );
       yield* Ref.set((yield* TestOidc).identity, {
@@ -81,51 +68,37 @@ it.live.skipIf(process.env.PREFACE_TEST_POSTGRES_PORT === undefined)(
         displayName: "Alice",
       });
       const secondFlow = yield* application.auth.external.invitation.start({
-        ...secondInvite.input,
+        ...firstInvite.input,
         connectionId: secondConnection.id,
         displayName: "Alice",
       });
-      const [first, other] = yield* Effect.all(
+      const results = yield* Effect.all(
         [
           oidcCallbackInput(firstFlow).pipe(
             Effect.flatMap((input) => application.auth.oidc.callback(input)),
+            Effect.result,
           ),
           oidcCallbackInput(secondFlow).pipe(
             Effect.flatMap((input) => application.auth.oidc.callback(input)),
+            Effect.result,
           ),
         ],
         { concurrency: "unbounded" },
       );
-      if (first.sessionToken === undefined || other.sessionToken === undefined)
-        throw new Error("Expected both completed sessions");
-      const firstActor = yield* application.auth.session.resolve(first.sessionToken);
-      const secondActor = yield* application.auth.session.resolve(other.sessionToken);
-      expect(firstActor.user.id).toBe(secondActor.user.id);
+      const successful = results.filter(Result.isSuccess);
+      expect(successful).toHaveLength(1);
+      const completed = successful[0]?.success;
+      if (completed?.sessionToken === undefined) throw new Error("Expected completed session");
+      const actor = yield* application.auth.session.resolve(completed.sessionToken);
       expect(
-        yield* repository.organization.member.findByUserId(organization.id, firstActor.user.id),
+        yield* repository.organization.member.findByUserId(organization.id, actor.user.id),
       ).toMatchObject({ removedAt: null, suspendedAt: null });
-      expect(
-        yield* repository.organization.member.findByUserId(
-          second.organization.id,
-          firstActor.user.id,
-        ),
-      ).toMatchObject({ removedAt: null, suspendedAt: null });
-      expect(
-        (yield* repository.auth.account.listByUserId(firstActor.user.id))
-          .map((account) => account.identityConnectionId)
-          .toSorted(),
-      ).toEqual([firstConnection.id, secondConnection.id].toSorted());
+      expect(yield* repository.auth.account.listByUserId(actor.user.id)).toHaveLength(1);
       expect(
         (yield* repository.organization.invitation.findById(
           organization.id,
           firstInvite.invitation.id,
         ))?.acceptedByUserId,
-      ).toBe(firstActor.user.id);
-      expect(
-        (yield* repository.organization.invitation.findById(
-          second.organization.id,
-          secondInvite.invitation.id,
-        ))?.acceptedByUserId,
-      ).toBe(firstActor.user.id);
+      ).toBe(actor.user.id);
     }).pipe(Effect.provide(ApplicationTestLayer)),
 );

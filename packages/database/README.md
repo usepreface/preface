@@ -113,7 +113,7 @@ Application bootstrap creates the email-verified user, owner grant, session and 
 completion in one outer transaction with required audit events. Application also generates setup
 proofs, resolves sessions and coordinates revocation. The server implements setup-proof replacement,
 startup logging and HTTP integration; frontend integration remains pending.
-Signup remains invitation-only, and only instance owners may create organizations; neither policy is a configurable settings column.
+Signup remains invitation-only, and installation creates the sole organization; neither policy is a configurable settings column.
 
 `instance.bootstrap_challenge` holds one pending setup verification per installation,
 including bound operator-proof digest, account details, code HMAC, attempts, expiry
@@ -166,8 +166,9 @@ Generation and tests do not reset a developer database automatically.
 `roleBinding`, `authPolicy` and `invitation`. These are storage APIs; application owns authorization,
 last-owner checks, admission, permission delegation and required audit.
 
-- `organization` supports creation, ID/slug lookup, transaction-only locking,
-  membership-based pagination, updates, archive and restore.
+- `organization` supports singleton/ID lookup, transaction-only locking,
+  installation-only initialization and metadata updates. A fixed unique installation
+  reference prevents a second organization.
 - `member` supports stable membership creation/lookups, paginated profile projections,
   suspension, reinstatement and removal. There is no public direct-admission API.
 - `role` supports built-in/custom storage, lookup, pagination, custom updates and
@@ -178,8 +179,7 @@ last-owner checks, admission, permission delegation and required audit.
 
 Composite foreign keys bind roles, members, granting members and policy updaters to
 the same organization. Role/member lists default to active records unless history
-is requested. Organization discovery can include archived records only for their
-owners. Audit adds organization identity without changing global events' null scope.
+is requested. The organization has no archive state or discovery directory. Audit adds organization identity without changing global events' null scope.
 All write results decode through protocol storage models. Locking and application
 mutations use the same ambient transaction.
 
@@ -380,11 +380,11 @@ revision. Source-specific nullability and composite FKs keep Google evidence tie
 Repositories provide persistence/conditional writes; application owns authority and provider calls.
 
 Organization OIDC extends the same connection/account/flow repositories. Connections have exclusive
-installation/organization ownership; organization lookups and lists return the OIDC/SAML discriminated union.
+organization ownership; organization lookups and lists return the OIDC/SAML discriminated union.
 `organization.authPolicyConnection.listByOrganization/replaceForOrganization` persists accepted
 connections with composite tenant references. Replacement requires an ambient transaction and must
 be coordinated by the application's policy revision/organization lock. Evidence queries reject
-organization SSO sources with inactive membership, archived organization, unlinked account or obsolete trust.
+organization SSO sources with inactive membership, unlinked account or obsolete trust.
 
 Required SSO uses `ssoMode`/`ssoMaxAgeSeconds` in policy, `requestedMaxAgeSeconds` in auth flows,
 and `providerAuthenticatedAt` in external evidence. `organization.authRecoveryToken`

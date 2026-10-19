@@ -3,13 +3,11 @@ import { BuildingIcon, ShieldIcon, UserCircleIcon } from "@usepreface/ui/icons";
 import { Person } from "#/components/data-display/identity";
 import { NavSidebar } from "#/components/shell/nav-sidebar";
 import type { SidebarRender } from "#/components/shell/shell-layout";
-import { useOrganizations } from "#/hooks/organizations";
 import { usePerson } from "#/hooks/session";
 
 export const accountSidebar: SidebarRender = (props) => <AccountSidebar {...props} />;
 function AccountSidebar(props: Parameters<SidebarRender>[0]) {
   const person = usePerson();
-  const organizations = useOrganizations();
   return (
     <NavSidebar
       {...props}
@@ -22,17 +20,7 @@ function AccountSidebar(props: Parameters<SidebarRender>[0]) {
           ],
         },
         {
-          section: "Organizations",
-          items: [
-            ...(organizations.data?.organizations
-              .filter((organization) => !organization.archivedAt)
-              .map((organization) => ({
-                label: organization.metadata.name,
-                icon: BuildingIcon,
-                link: { to: "/org/$slug" as const, params: { slug: organization.slug } },
-              })) ?? []),
-            { label: "All organizations", icon: BuildingIcon, link: { to: "/organizations" } },
-          ],
+          items: [{ label: "Dashboard", icon: BuildingIcon, link: { to: "/" } }],
         },
       ]}
       footer={

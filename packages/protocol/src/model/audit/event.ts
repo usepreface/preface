@@ -2,7 +2,7 @@ import { Schema } from "effect";
 
 import {
   OrganizationName,
-  OrganizationSlug,
+  TeamSlug,
   OrganizationRoleKey,
   RolePermissions,
 } from "#/common/organization";
@@ -118,15 +118,10 @@ const organizationActor = {
 };
 const organizationFields = {
   ...organizationActor,
-  eventType: Schema.Literals([
-    "organization.created",
-    "organization.updated",
-    "organization.archived",
-    "organization.restored",
-  ]),
+  eventType: Schema.Literals(["organization.created", "organization.updated"]),
   targetType: Schema.Literal("organization"),
   targetId: OrganizationId,
-  metadata: Schema.Struct({ name: OrganizationName, slug: OrganizationSlug }),
+  metadata: Schema.Struct({ name: OrganizationName }),
 };
 const organizationMemberFields = {
   ...organizationActor,
@@ -206,7 +201,7 @@ const teamFields = {
   eventType: Schema.Literals(["team.created", "team.updated", "team.archived"]),
   targetType: Schema.Literal("team"),
   targetId: TeamId,
-  metadata: Schema.Struct({ name: OrganizationName, slug: OrganizationSlug }),
+  metadata: Schema.Struct({ name: OrganizationName, slug: TeamSlug }),
 };
 const teamMemberFields = {
   ...organizationActor,
@@ -307,17 +302,6 @@ const googleAuthenticatedFields = {
     connectionRevision: Schema.Int,
   }),
 };
-const reauthenticationFields = {
-  actorKind: Schema.Literal("user"),
-  actorUserId: UserId,
-  eventType: Schema.Literals([
-    "auth.email_reauthentication_requested",
-    "auth.email_reauthentication_failed",
-  ]),
-  targetType: Schema.Literal("verification"),
-  targetId: VerificationId,
-  metadata: Schema.Struct({ attempts: Schema.Natural }),
-};
 const policyFields = {
   ...organizationActor,
   eventType: Schema.Literal("organization.auth_policy_updated"),
@@ -389,7 +373,6 @@ export const RecordAuditEvent = Schema.Union([
   Schema.Struct(accountFields),
   Schema.Struct(flowFields),
   Schema.Struct(googleAuthenticatedFields),
-  Schema.Struct(reauthenticationFields),
   Schema.Struct(policyFields),
   Schema.Struct(profileFields),
   Schema.Struct(teamFields),
@@ -434,7 +417,6 @@ export const AuditEvent = Schema.Union([
   Schema.Struct({ ...accountFields, ...identityStoredFields }),
   Schema.Struct({ ...flowFields, ...identityStoredFields }),
   Schema.Struct({ ...googleAuthenticatedFields, ...identityStoredFields }),
-  Schema.Struct({ ...reauthenticationFields, ...storedFields }),
   Schema.Struct({ ...policyFields, ...organizationStoredFields }),
   Schema.Struct({ ...profileFields, ...storedFields }),
   Schema.Struct({ ...teamFields, ...organizationStoredFields }),

@@ -70,7 +70,9 @@ export const makeInvitationVerification = Effect.gen(function* () {
           type: "invitation-verification",
           to: invitation.email,
           variables: {
-            instanceName: settings.displayName,
+            organizationName:
+              (yield* repository.organization.organization.find())?.metadata.name ??
+              settings.displayName,
             code: Redacted.value(code),
             magicLinkUrl: url.href,
             expiresAt,

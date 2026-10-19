@@ -65,7 +65,7 @@ export {
   VerificationCode,
   VerificationCodeFromString,
   OrganizationName,
-  OrganizationSlug,
+  TeamSlug,
   OrganizationRoleKey,
   OrganizationRoleKind,
   OrganizationPermission,

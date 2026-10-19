@@ -12,7 +12,7 @@ import { approveConnection, configureOidc, inviteMember } from "../fixtures/conn
 import { ageInvitationDelivery } from "../fixtures/invitation-delivery.js";
 import {
   authenticateAtKeycloak,
-  createOrganization,
+  currentOrganization,
   onboardOwner,
 } from "../fixtures/onboarding.js";
 import { test, expect } from "../fixtures/test.js";
@@ -28,16 +28,11 @@ test("untrusted external email requires a browser-bound fresh code before admiss
   database,
 }) => {
   await onboardOwner(api, backend, mailbox);
-  const { organization } = await createOrganization(api);
-  const connection = await configureOidc(api, realm, page, organization.id);
-  await approveConnection(api, organization.id, connection, false);
+  await currentOrganization(api);
+  const connection = await configureOidc(api, realm, page);
+  await approveConnection(api, connection, false);
   await realm.user("contractor", "contractor@outside.example.test");
-  const invitation = await inviteMember(
-    api,
-    mailbox,
-    organization.id,
-    "contractor@outside.example.test",
-  );
+  const invitation = await inviteMember(api, mailbox, "contractor@outside.example.test");
   // Model an invitation read days later: the invitation is valid, its delivery is no longer fresh proof.
   const aged = await ageInvitationDelivery(infrastructure, database, invitation.invitationId);
   expect(aged.exitCode, aged.output).toBe(0);
@@ -87,10 +82,9 @@ test("untrusted external email requires a browser-bound fresh code before admiss
     expect(completed.nextAction).toBe("continue");
     expect(new URL(completed.redirectTo).origin).toBe(backend.dashboard);
     const actor = await member.json(SessionActor, "/auth/session");
-    expect(
-      (await member.json(OrganizationDetail, `/organizations/${organization.id}`)).membership
-        .userId,
-    ).toBe(actor.user.id);
+    expect((await member.json(OrganizationDetail, `/organization`)).membership.userId).toBe(
+      actor.user.id,
+    );
     const replay = await member.request(`${path}/email/verify`, "POST", {
       challengeId: challenge.challengeId,
       code,

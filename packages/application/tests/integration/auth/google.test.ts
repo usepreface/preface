@@ -8,14 +8,13 @@ import { TestDatabase } from "@usepreface/database/testing";
 import { Application } from "../../../src/index.js";
 import { ApplicationTestLayer } from "../../fixtures/application.js";
 import { completeTestBootstrap } from "../../fixtures/bootstrap.js";
-import { readEmailJob } from "../../fixtures/email-job.js";
 import {
   configureTestGoogle,
   googleCallbackInput,
   linkTestGoogle,
   signInTestGoogle,
 } from "../../fixtures/google.js";
-import { createTestIdentity, createTestOrganization } from "../../fixtures/organization.js";
+import { admitTestMember, createTestIdentity } from "../../fixtures/organization.js";
 
 layer(ApplicationTestLayer)("Google identity workflows", (it) => {
   it.effect(
@@ -46,6 +45,10 @@ layer(ApplicationTestLayer)("Google identity workflows", (it) => {
           )).map((proof) => proof.method),
         ).toEqual(["google"]);
         const other = yield* createTestIdentity("different@example.test", "Different User");
+        yield* admitTestMember(
+          yield* application.organization.organization.currentId(),
+          other.actor.user.id,
+        );
         const attempt = yield* application.auth.account.startGoogle(other.actor);
         expect(
           yield* application.auth.google
@@ -95,100 +98,25 @@ layer(ApplicationTestLayer)("Google identity workflows", (it) => {
   );
 
   it.effect(
-    "requires explicit organization opt-in and adds email evidence to a Google session without changing its identity",
-    () =>
-      Effect.gen(function* () {
-        yield* (yield* TestDatabase).reset;
-        const application = yield* Application;
-        const repository = yield* DatabaseRepository;
-        const fixture = yield* createTestOrganization;
-        yield* configureTestGoogle(fixture.owner.actor);
-        yield* linkTestGoogle(fixture.owner.actor);
-        const google = yield* signInTestGoogle;
-        expect(
-          yield* application.organization.organization
-            .get(google.actor, fixture.organization.id)
-            .pipe(Effect.flip),
-        ).toMatchObject({ _tag: "OrganizationError", code: "AUTHENTICATION_REQUIRED" });
-        expect(
-          yield* application.organization.authPolicy.methods(google.actor, fixture.organization.id),
-        ).toMatchObject({
-          email: true,
-          googleEnabled: false,
-          googleAvailable: true,
-          googleEffective: false,
-        });
-        const policy = yield* application.organization.authPolicy.update(
-          fixture.owner.actor,
-          fixture.organization.id,
-          { expectedRevision: 1, googleEnabled: true },
-        );
-        expect(
-          (yield* application.organization.organization.get(google.actor, fixture.organization.id))
-            .access.isOwner,
-        ).toBe(true);
-        yield* application.organization.authPolicy.update(
-          fixture.owner.actor,
-          fixture.organization.id,
-          { expectedRevision: policy.revision, googleEnabled: false },
-        );
-        const issued = yield* application.auth.reauthentication.email.request(google.actor);
-        const stored = yield* repository.auth.verification.findById(issued.challenge.challengeId);
-        if (stored?.emailJobId === undefined || stored.emailJobId === null)
-          throw new Error("Expected reauthentication email");
-        const mail = yield* readEmailJob(stored.emailJobId);
-        if (mail.type !== "email-reauthentication")
-          throw new Error("Expected reauthentication payload");
-        const input = {
-          challengeId: issued.challenge.challengeId,
-          browserToken: issued.browserToken,
-          method: "code" as const,
-          code: Redacted.make(mail.variables.code),
-        };
-        expect(yield* application.auth.emailSignIn.verify(input).pipe(Effect.flip)).toMatchObject({
-          _tag: "EmailSignInError",
-          code: "INVALID_PROOF",
-        });
-        yield* application.auth.reauthentication.email.verify(google.actor, input);
-        expect((yield* application.auth.session.resolve(google.sessionToken)).session.id).toBe(
-          google.actor.session.id,
-        );
-        expect(
-          (yield* application.organization.organization.get(google.actor, fixture.organization.id))
-            .access.isOwner,
-        ).toBe(true);
-        expect(
-          yield* application.auth.reauthentication.email
-            .verify(google.actor, input)
-            .pipe(Effect.flip),
-        ).toMatchObject({ _tag: "IdentityError", code: "INVALID_PROOF" });
-      }),
-  );
-
-  it.effect(
-    "requires recent email proof for unlinking and revokes the Google source without destroying independent email sessions",
+    "an older owner session can manage providers and linked accounts without email step-up",
     () =>
       Effect.gen(function* () {
         yield* (yield* TestDatabase).reset;
         const application = yield* Application;
         const owner = yield* completeTestBootstrap;
-        yield* configureTestGoogle(owner.actor);
+        const config = yield* configureTestGoogle(owner.actor);
         const account = yield* linkTestGoogle(owner.actor);
         const google = yield* signInTestGoogle;
-        expect(
-          yield* application.auth.account.unlink(google.actor, account.id).pipe(Effect.flip),
-        ).toMatchObject({ _tag: "IdentityError", code: "REAUTHENTICATION_REQUIRED" });
-        yield* application.auth.account.unlink(owner.actor, account.id);
+        yield* TestClock.adjust("6 minutes");
+        yield* application.instance.authentication.google.get(google.actor);
+        yield* application.auth.account.unlink(google.actor, account.id);
         expect(
           yield* application.auth.session.resolve(google.sessionToken).pipe(Effect.flip),
-        ).toMatchObject({ _tag: "AuthenticationError", code: "UNAUTHENTICATED" });
+        ).toMatchObject({ code: "UNAUTHENTICATED" });
         expect((yield* application.auth.session.resolve(owner.sessionToken)).user.id).toBe(
           owner.actor.user.id,
         );
-        yield* TestClock.adjust("6 minutes");
-        expect(
-          yield* application.auth.account.startGoogle(owner.actor).pipe(Effect.flip),
-        ).toMatchObject({ _tag: "IdentityError", code: "REAUTHENTICATION_REQUIRED" });
+        yield* application.instance.authentication.google.disable(owner.actor, config.revision);
       }),
   );
 });

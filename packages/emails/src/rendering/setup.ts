@@ -7,11 +7,11 @@ export const renderSetupEmail: EmailRenderer["Service"]["render"] = Effect.fn(
   "EmailRenderer.setup",
 )(function* (payload) {
   if (payload.type !== "instance-setup") return yield* new EmailError({ code: "RENDER_FAILED" });
-  const { code, displayName, instanceName, expiresAt } = payload.variables;
+  const { code, displayName, organizationName, expiresAt } = payload.variables;
   const expiry = DateTime.formatIso(expiresAt);
   return {
     subject: "Verify your email to set up Preface",
-    text: `Hello ${displayName},\n\nEnter this code to finish setting up ${instanceName}:\n\n${code}\n\nThe code expires at ${expiry} and can be used once.\nIf you did not request this email, ignore it.`,
+    text: `Hello ${displayName},\n\nEnter this code to finish setting up ${organizationName}:\n\n${code}\n\nThe code expires at ${expiry} and can be used once.\nIf you did not request this email, ignore it.`,
     // Only schema-validated digits and a generated ISO timestamp enter HTML.
     html: `<p>Enter this code to finish setting up Preface:</p><p><strong>${code}</strong></p><p>Expires at ${expiry}. This code can be used once.</p><p>If you did not request this email, ignore it.</p>`,
   };

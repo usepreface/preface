@@ -4,7 +4,6 @@ import { DatabaseRepository } from "@usepreface/database";
 import type { OrganizationId, SsoReadinessBlocker } from "@usepreface/protocol";
 import type { SessionActor } from "@usepreface/protocol/dto";
 
-import { makeIdentityAccess } from "#/auth/identity-access";
 import { OrganizationAccess } from "#/organization/access";
 import { makeOrganizationAuthenticationEvidence } from "#/organization/authentication/evidence";
 import { makeOrganizationOwnerPaths } from "#/organization/authentication/owner-paths";
@@ -13,7 +12,6 @@ import { makeOrganizationRecoveryAccess } from "#/organization/authentication/re
 export const makeOrganizationSsoReadiness = Effect.gen(function* () {
   const repository = yield* DatabaseRepository;
   const requireOwner = yield* makeOrganizationRecoveryAccess;
-  const identities = yield* makeIdentityAccess;
   const actors = yield* OrganizationAccess;
   const evaluate = yield* makeOrganizationAuthenticationEvidence;
   const paths = yield* makeOrganizationOwnerPaths;
@@ -32,22 +30,17 @@ export const makeOrganizationSsoReadiness = Effect.gen(function* () {
     );
     const owners = yield* paths.list(organizationId);
     const owner = owners.find((entry) => entry.memberId === member.id);
-    const recentEmail = yield* identities.requireRecentEmail(actor).pipe(
-      Effect.as(true),
-      Effect.catchTag("IdentityError", () => Effect.succeed(false)),
-    );
-    const recentSso = yield* evaluate(
+    const ssoProof = yield* evaluate(
       policy,
       evidence,
       connections.map((connection) => connection.id),
-      300,
+      policy.ssoMaxAgeSeconds,
     );
     const blockers: Array<typeof SsoReadinessBlocker.Type> = [];
     if (!connections.some((connection) => connection.status === "active"))
       blockers.push("NO_ACTIVE_APPROVED_CONNECTION");
     if (!owner?.ssoLinked) blockers.push("OWNER_ACCOUNT_NOT_LINKED");
-    if (!recentEmail) blockers.push("RECENT_EMAIL_REQUIRED");
-    if (!recentSso.freshSso) blockers.push("RECENT_SSO_REQUIRED");
+    if (!ssoProof.freshSso) blockers.push("SSO_AUTHENTICATION_REQUIRED");
     if (!owner?.recoveryPrepared) blockers.push("RECOVERY_CREDENTIAL_REQUIRED");
     return {
       policyRevision: policy.revision,

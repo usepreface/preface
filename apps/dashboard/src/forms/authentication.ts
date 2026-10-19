@@ -14,7 +14,7 @@ export const loginPolicyForm = toFormSchema(
   ),
 );
 
-/** /org/:slug/auth-recovery. */
+/** /auth-recovery. */
 export const recoveryForm = toFormSchema(
   RecoverOrganizationAuthInput.mapFields(Struct.pick(["recoveryCredential"])),
   { required: { recoveryCredential: "Paste the recovery credential." } },

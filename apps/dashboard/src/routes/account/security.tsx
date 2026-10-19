@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 
-import type { SessionId, OrganizationId } from "@usepreface/protocol";
+import type { SessionId } from "@usepreface/protocol";
 import { Badge, BadgeDot } from "@usepreface/ui/components/badge";
 import { Button } from "@usepreface/ui/components/button";
 import {
@@ -17,7 +17,6 @@ import { BrowserIcon, ShieldIcon, TrashIcon } from "@usepreface/ui/icons";
 
 import {
   accountsStartGoogleMutation,
-  reauthenticationStartGoogleMutation,
   accountsUnlinkMutation,
   sessionsRevokeMutation,
   sessionsRevokeAllMutation,
@@ -31,13 +30,11 @@ import { QueryKeys } from "#/atoms/query-keys";
 import { Pagination } from "#/components/api/pagination";
 import { QueryState } from "#/components/api/query-state";
 import { useResetAuthority } from "#/components/api/registry-provider";
-import { ReauthenticationLink } from "#/components/auth/reauthentication-link";
 import { TableCard } from "#/components/data-display/table-card";
 import { ConfirmDialog } from "#/components/feedback/confirm-dialog";
-import { Notice } from "#/components/feedback/notice";
 import { PageBar, PageContent, PageTitle, PageSection } from "#/components/shell/page";
 import { toMutation } from "#/hooks/mutation";
-import { useOrganizations, useMethods } from "#/hooks/organizations";
+import { useMethods } from "#/hooks/organizations";
 import { toQuery } from "#/hooks/query";
 import { formatDate } from "#/lib/dates";
 import { feedback } from "#/lib/feedback";
@@ -64,7 +61,6 @@ const useSessions = toQuery((cursor?: SessionId) =>
 const useGoogleMethods = toQuery(() =>
   ApiClient.query("google", "methods", requestFields({ reactivityKeys: [QueryKeys.instance] })),
 );
-const useConfirmGoogle = toMutation(reauthenticationStartGoogleMutation);
 const useLinkGoogle = toMutation(accountsStartGoogleMutation);
 const useUnlink = toMutation(accountsUnlinkMutation);
 const useRevoke = toMutation(sessionsRevokeMutation);
@@ -75,7 +71,6 @@ function Security() {
   const sessions = useSessions(cursor);
   const google = useGoogleMethods();
   const linkGoogle = useLinkGoogle();
-  const confirmGoogle = useConfirmGoogle();
   const unlink = useUnlink();
   const revoke = useRevoke();
   const revokeAll = useRevokeAll();
@@ -95,9 +90,6 @@ function Security() {
           title="Accounts and sessions"
           description="The ways you sign in, and the devices signed in to your account."
         />
-        <Notice action={<ReauthenticationLink />}>
-          Linking and unlinking accounts requires a recent email confirmation.
-        </Notice>
         <PageSection
           title="Connected accounts"
           actions={
@@ -160,21 +152,6 @@ function Security() {
                         </TableCell>
                         <TableCell>
                           <div className="flex justify-end gap-2">
-                            {account.provider === "google" && account.connectionAvailable ? (
-                              <Button
-                                variant="outline"
-                                disabled={confirmGoogle.pending}
-                                onClick={async () => {
-                                  const response = await confirmGoogle.run({
-                                    payload: { returnPath: "/account/security" },
-                                  });
-                                  if (response)
-                                    window.location.assign(response.value.authorizationUrl);
-                                }}
-                              >
-                                Confirm Google
-                              </Button>
-                            ) : null}
                             <Button
                               variant="outline"
                               disabled={unlink.pending}
@@ -318,42 +295,16 @@ function Security() {
   );
 }
 function EnterpriseAccounts() {
-  const [cursor, setCursor] = useState<OrganizationId>();
-  const organizations = useOrganizations(cursor);
-  const [selected, setSelected] = useState<OrganizationId>();
   return (
-    <PageSection
-      title="Organization SSO"
-      description="Link or confirm an approved identity provider for an organization you belong to."
-    >
-      <QueryState query={organizations}>
-        <div className="flex flex-wrap gap-2">
-          {organizations.data?.organizations
-            .filter((organization) => !organization.archivedAt)
-            .map((organization) => (
-              <Button
-                variant="outline"
-                key={organization.id}
-                onClick={() => setSelected(organization.id)}
-              >
-                {organization.metadata.name}
-              </Button>
-            ))}
-        </div>
-        <Pagination
-          cursor={cursor}
-          nextCursor={organizations.data?.nextCursor}
-          onChange={setCursor}
-        />
-      </QueryState>
-      {selected ? <EnterpriseMethods key={selected} organizationId={selected} /> : null}
+    <PageSection title="Organization SSO" description="Link your identity provider account.">
+      <EnterpriseMethods />
     </PageSection>
   );
 }
 const useLinkSso = toMutation(organizationIdentityConnectionsLinkMutation);
 const useReauthenticate = toMutation(organizationIdentityConnectionsReauthenticateMutation);
-function EnterpriseMethods({ organizationId }: { organizationId: OrganizationId }) {
-  const methods = useMethods(organizationId);
+function EnterpriseMethods() {
+  const methods = useMethods();
   const link = useLinkSso();
   const reauthenticate = useReauthenticate();
   return (
@@ -365,7 +316,7 @@ function EnterpriseMethods({ organizationId }: { organizationId: OrganizationId 
             disabled={!method.available || link.pending || reauthenticate.pending}
             onClick={async () => {
               const input = {
-                params: { organizationId, connectionId: method.id },
+                params: { connectionId: method.id },
                 payload: { returnPath: "/account/security" },
               };
               const response = method.linked

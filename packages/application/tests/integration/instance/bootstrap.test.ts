@@ -65,7 +65,7 @@ layer(ApplicationTestLayer)("instance bootstrap", (it) => {
         const details = yield* bootstrapInput(prepared.token, {
           email: " Owner@Example.Test ",
           ownerName: " First Owner ",
-          instanceName: " Knowledge ",
+          organizationName: " Knowledge ",
         });
 
         const verification = yield* application.instance.bootstrap.requestVerification(details);
@@ -104,7 +104,7 @@ layer(ApplicationTestLayer)("instance bootstrap", (it) => {
         );
         expect(yield* application.instance.bootstrap.getStatus()).toEqual({
           state: "ready",
-          instanceName: "Knowledge",
+          organizationName: "Knowledge",
         });
         expect(yield* application.instance.bootstrap.prepare()).toEqual({ state: "ready" });
         expect(
@@ -131,6 +131,8 @@ layer(ApplicationTestLayer)("instance bootstrap", (it) => {
           "instance.bootstrap_token_issued",
           "instance.bootstrap_verification_requested",
           "instance.owner_granted",
+          "organization.created",
+          "organization.owner_granted",
         ]);
       }),
   );
@@ -179,6 +181,10 @@ layer(ApplicationTestLayer)("instance bootstrap", (it) => {
       expect(yield* application.instance.bootstrap.getStatus()).toEqual(before);
       expect(yield* repository.instance.owner.listActive()).toEqual([]);
       expect(yield* database.query.user.findMany()).toEqual([]);
+      expect(yield* database.query.organization.findMany()).toEqual([]);
+      expect(yield* database.query.organizationMember.findMany()).toEqual([]);
+      expect(yield* database.query.organizationRole.findMany()).toEqual([]);
+      expect(yield* database.query.organizationAuthPolicy.findMany()).toEqual([]);
       expect(yield* database.query.userEmail.findMany()).toEqual([]);
       expect(yield* database.query.session.findMany()).toEqual([]);
       expect((yield* database.query.auditEvent.findMany()).map((event) => event.eventType)).toEqual(

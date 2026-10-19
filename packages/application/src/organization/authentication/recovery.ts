@@ -53,7 +53,7 @@ export const makeOrganizationAuthRecovery = Effect.gen(function* () {
     return yield* transaction.run(
       Effect.gen(function* () {
         const resolved = yield* access.requireOwner(actor, organizationId, { lock: true });
-        yield* identities.requireRecentEmail(actor);
+        yield* identities.requireVerifiedEmail(actor);
         yield* revokeCredentials(actor, organizationId, resolved.member.id);
         const token = yield* repository.organization.authRecoveryToken.create(
           organizationId,
@@ -81,7 +81,7 @@ export const makeOrganizationAuthRecovery = Effect.gen(function* () {
     yield* transaction.run(
       Effect.gen(function* () {
         const resolved = yield* access.requireOwner(actor, organizationId, { lock: true });
-        yield* identities.requireRecentEmail(actor);
+        yield* identities.requireVerifiedEmail(actor);
         const revoked = yield* revokeCredentials(actor, organizationId, resolved.member.id);
         yield* paths.requireRecoverable(organizationId);
         for (const token of revoked)
@@ -101,7 +101,7 @@ export const makeOrganizationAuthRecovery = Effect.gen(function* () {
     return yield* transaction.run(
       Effect.gen(function* () {
         const { member, organization, policy } = yield* recoveryOwner(actor, organizationId, true);
-        yield* identities.requireRecentEmail(actor);
+        yield* identities.requireVerifiedEmail(actor);
         if (policy.revision !== decoded.expectedRevision)
           return yield* new IdentityError({ code: "REVISION_CONFLICT" });
         const token = yield* verify(organizationId, member.id, decoded.recoveryCredential);

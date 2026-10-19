@@ -7,10 +7,10 @@ import {
   GoogleStartResult,
 } from "@usepreface/protocol/dto";
 
-import { identityErrors, requestErrors } from "#/http-errors";
+import { identityErrors, organizationErrors, requestErrors } from "#/http-errors";
 import { SessionAuthentication } from "#/middleware/session-authentication";
 
-const errors = [...identityErrors, ...requestErrors];
+const errors = [...identityErrors, ...organizationErrors, ...requestErrors];
 
 export class IdentityConnectionsApi extends HttpApiGroup.make("identityConnections")
   .add(
@@ -37,5 +37,5 @@ export class IdentityConnectionsApi extends HttpApiGroup.make("identityConnectio
     }),
   )
   .middleware(SessionAuthentication)
-  .prefix("/instance/authentication")
-  .annotate(OpenApi.Title, "Instance authentication") {}
+  .prefix("/organization/authentication")
+  .annotate(OpenApi.Title, "Organization authentication") {}

@@ -1,4 +1,4 @@
-import { ActivityIcon, BuildingIcon, DashboardIcon, KeyIcon } from "@usepreface/ui/icons";
+import { ActivityIcon, BuildingIcon, DashboardIcon } from "@usepreface/ui/icons";
 
 import { NavSidebar, SidebarCard } from "#/components/shell/nav-sidebar";
 import type { SidebarRender } from "#/components/shell/shell-layout";
@@ -19,13 +19,7 @@ function InstanceSidebar(props: Parameters<SidebarRender>[0]) {
               icon: DashboardIcon,
               link: { to: "/instance", activeOptions: { exact: true } },
             },
-            { label: "Your organizations", icon: BuildingIcon, link: { to: "/organizations" } },
-          ],
-        },
-        {
-          section: "Sign-in",
-          items: [
-            { label: "Google sign-in", icon: KeyIcon, link: { to: "/instance/authentication" } },
+            { label: "Dashboard", icon: BuildingIcon, link: { to: "/" } },
           ],
         },
         {
@@ -35,7 +29,7 @@ function InstanceSidebar(props: Parameters<SidebarRender>[0]) {
       ]}
       footer={
         <SidebarCard
-          title={instance.instanceName}
+          title={instance.organizationName}
           detail={`${window.location.host} · instance owner`}
         />
       }

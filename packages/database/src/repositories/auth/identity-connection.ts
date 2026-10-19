@@ -8,7 +8,7 @@ import {
   SamlConnection,
   OrganizationIdentityConnection,
 } from "@usepreface/protocol/model";
-import { and, eq, gt, asc } from "drizzle-orm";
+import { and, eq, gt, asc, ne } from "drizzle-orm";
 
 import { mapToDatabaseError } from "#/core/errors";
 import { Database } from "#/core/layer";
@@ -88,7 +88,7 @@ const makeRepository = Effect.gen(function* () {
       const rows = yield* database
         .select()
         .from(table)
-        .where(eq(table.organizationId, organizationId))
+        .where(and(eq(table.organizationId, organizationId), ne(table.provider, "google")))
         .orderBy(table.id);
       return rows.map((row) => Schema.decodeUnknownSync(OrganizationIdentityConnection)(row));
     },

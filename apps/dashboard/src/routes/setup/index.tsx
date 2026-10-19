@@ -22,16 +22,16 @@ function InstanceSetup() {
   const request = useRequest();
   const { instance } = Route.useRouteContext();
   const form = useSchemaForm(instanceSetupForm, {
-    defaultValues: { instanceName: "", ownerName: "", email: setup.email },
+    defaultValues: { organizationName: "", ownerName: "", email: setup.email },
   });
   return (
     <AuthLayout
       steps={{ labels: setupSteps, current: 1 }}
-      topRight="Step 1 of 3"
+      topRight="Step 1 of 2"
       aside={<InstanceAside />}
     >
       <AuthHeading title="Set up your instance">
-        Name this Preface instance and add its owner. We’ll email the owner a code to confirm it’s
+        Name your organization and add its owner. We’ll email the owner a code to confirm it’s
         really them.
       </AuthHeading>
       {instance.state === "ready" ? (
@@ -55,8 +55,8 @@ function InstanceSetup() {
         >
           <TextField
             control={form.control}
-            name="instanceName"
-            label="Instance name"
+            name="organizationName"
+            label="Organization name"
             description="Shown on the sign-in page and in every email Preface sends."
             size="lg"
           />
@@ -80,8 +80,7 @@ function InstanceSetup() {
             Send verification code
           </SubmitButton>
           <p className="text-xs text-fg-tertiary">
-            No password needed. The owner signs in with email codes, Google or SSO once an
-            organization adds it.
+            No password needed. The owner signs in with email codes, Google or SSO once configured.
           </p>
         </form>
       )}

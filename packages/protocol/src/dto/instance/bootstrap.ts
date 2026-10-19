@@ -1,6 +1,6 @@
 import { Schema } from "effect";
 
-import { DisplayName as InstanceDisplayName } from "#/common/display-name";
+import { DisplayName } from "#/common/display-name";
 import { SecretTokenFromString } from "#/common/secret-token";
 import { VerificationCode } from "#/common/verification-code";
 import { BootstrapChallengeId } from "#/identifiers/bootstrap";
@@ -12,8 +12,8 @@ const token = Schema.toEncoded(SecretTokenFromString).annotate({
 
 export const RequestBootstrapVerificationRequest = Schema.Struct({
   token,
-  instanceName: Schema.String.annotate({
-    description: "Instance display name; trimmed to 1–120 characters.",
+  organizationName: Schema.String.annotate({
+    description: "Organization display name; trimmed to 1–120 characters.",
   }),
   ownerName: Schema.String.annotate({
     description: "First owner's display name; trimmed to 1–120 characters.",
@@ -54,7 +54,7 @@ export type InspectBootstrapRequest = typeof InspectBootstrapRequest.Type;
 
 export const BootstrapStatus = Schema.Struct({
   state: Schema.Literals(["setup_required", "ready"]),
-  instanceName: InstanceDisplayName,
+  organizationName: DisplayName,
 });
 export type BootstrapStatus = typeof BootstrapStatus.Type;
 

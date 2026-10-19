@@ -40,7 +40,7 @@ grants, access, pagination and the default local-email authentication policy.
 `OrganizationError` owns its code/status mapping alongside other protocol errors.
 
 Internal email models define typed `instance-setup`, `sign-in` and
-`organization-invitation`, `invitation-verification` and `email-reauthentication` payloads plus encrypted outbox lifecycle records. Their
+`organization-invitation`, `invitation-verification` and `identity-verification` payloads plus encrypted outbox lifecycle records. Their
 variable schemas are exported for template props. These contracts do not provide
 templates, grant access or implement passwordless authentication.
 

@@ -75,17 +75,18 @@ export const makeSamlFlowStart = Effect.gen(function* () {
           if (connection.revision !== expectedRevision)
             return yield* new IdentityError({ code: "REVISION_CONFLICT" });
           yield* organizations.requireOwner(actor, organizationId, { lock: true });
-          yield* identities.requireRecentEmail(actor);
+          yield* identities.requireVerifiedEmail(actor);
         } else {
           if (connection.status !== "active")
             return yield* new IdentityError({ code: "CONNECTION_UNAVAILABLE" });
           if (actor !== undefined && intent !== "accept_invitation")
             yield* members.requireActorMember(actor, organizationId, true);
-          if (intent === "link" && actor !== undefined) yield* identities.requireRecentEmail(actor);
+          if (intent === "link" && actor !== undefined)
+            yield* identities.requireVerifiedEmail(actor);
           if (intent === "sign_in" || intent === "reauthenticate" || intent === "accept_invitation")
             yield* members.requireApproved(organizationId, connectionId);
           const organization = yield* repository.organization.organization.findById(organizationId);
-          if (organization?.archivedAt !== null)
+          if (organization === undefined)
             return yield* new IdentityError({ code: "CONNECTION_UNAVAILABLE" });
         }
         const policy =

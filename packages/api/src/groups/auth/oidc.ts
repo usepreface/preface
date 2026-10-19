@@ -1,6 +1,6 @@
 import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema, OpenApi } from "effect/http-api";
 
-import { IdentityConnectionId, OrganizationId } from "@usepreface/protocol";
+import { IdentityConnectionId } from "@usepreface/protocol";
 import {
   ExternalIdentityStartRequest,
   ExternalIdentityStartResult,
@@ -13,9 +13,9 @@ export class OidcApi extends HttpApiGroup.make("oidc")
   .add(
     HttpApiEndpoint.post(
       "start",
-      "/organizations/:organizationId/identity-connections/:connectionId/sign-in/start",
+      "/organization/identity-connections/:connectionId/sign-in/start",
       {
-        params: { organizationId: OrganizationId, connectionId: IdentityConnectionId },
+        params: { connectionId: IdentityConnectionId },
         payload: ExternalIdentityStartRequest,
         success: ExternalIdentityStartResult,
         error: [...identityErrors, ...invitationErrors, ...organizationErrors, ...requestErrors],

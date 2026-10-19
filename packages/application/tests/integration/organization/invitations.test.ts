@@ -91,7 +91,7 @@ layer(ApplicationTestLayer)("organization invitations", (it) => {
           events.filter((event) => event.event_type === "organization.invitation_accepted"),
         ).toHaveLength(1);
         expect(yield* application.instance.capabilities.get(accepted.actor)).toEqual({
-          canCreateOrganization: false,
+          isInstanceOwner: false,
         });
       }),
   );
@@ -331,22 +331,12 @@ layer(ApplicationTestLayer)("organization invitations", (it) => {
         const application = yield* Application;
         const repository = yield* DatabaseRepository;
         const fixture = yield* createTestOrganization;
-        const another = yield* application.organization.organization.create(fixture.owner.actor, {
-          metadata: { name: "Second" },
-          slug: "second",
-        });
         const first = yield* createTestInvitation(
           fixture.owner.actor,
           fixture.organization.id,
           "shared@example.test",
         );
-        const second = yield* createTestInvitation(
-          fixture.owner.actor,
-          another.organization.id,
-          "shared@example.test",
-        );
         const firstProof = yield* requestInvitationProof(first.input);
-        const secondProof = yield* requestInvitationProof(second.input);
         expect(
           yield* application.auth.emailSignIn.verify(firstProof).pipe(Effect.flip),
         ).toMatchObject({ _tag: "EmailSignInError", code: "INVALID_PROOF" });
@@ -355,15 +345,19 @@ layer(ApplicationTestLayer)("organization invitations", (it) => {
         ).toMatchObject({ _tag: "EmailSignInError", code: "INVALID_PROOF" });
         const results = yield* Effect.all(
           [
-            application.organization.invitation.accept(firstProof),
-            application.organization.invitation.accept(secondProof),
+            application.organization.invitation.accept(firstProof).pipe(Effect.result),
+            application.organization.invitation.accept(firstProof).pipe(Effect.result),
           ],
           { concurrency: 2 },
         );
-        expect(results[0].actor.user.id).toBe(results[1].actor.user.id);
-        expect(
-          (yield* repository.auth.userEmail.findActiveByEmail("shared@example.test"))?.userId,
-        ).toBe(results[0].actor.user.id);
+        expect(results.filter(Result.isSuccess)).toHaveLength(1);
+        const address = yield* repository.auth.userEmail.findActiveByEmail("shared@example.test");
+        if (address === undefined) throw new Error("Expected admitted email");
+        const members = yield* repository.organization.member.findByUserId(
+          fixture.organization.id,
+          address.userId,
+        );
+        expect(members?.removedAt).toBeNull();
       }),
   );
   it.effect(
@@ -419,28 +413,6 @@ layer(ApplicationTestLayer)("organization invitations", (it) => {
         );
         expect(page.invitations.map((invite) => invite.id)).toEqual([replacement.invitation.id]);
         expect(page.nextCursor).toBe(replacement.invitation.id);
-        const another = yield* application.organization.organization.create(fixture.owner.actor, {
-          metadata: { name: "Second" },
-          slug: "second",
-        });
-        expect(
-          yield* application.organization.invitation
-            .revoke(fixture.owner.actor, another.organization.id, replacement.invitation.id)
-            .pipe(Effect.flip),
-        ).toMatchObject({ _tag: "InvitationError", code: "INVITATION_NOT_FOUND" });
-        const foreignRole = yield* repository.organization.role.findByKey(
-          another.organization.id,
-          "member",
-        );
-        if (foreignRole === undefined) throw new Error("Expected member role");
-        expect(
-          yield* application.organization.invitation
-            .create(fixture.owner.actor, fixture.organization.id, {
-              email: "cross@example.test",
-              roleIds: [foreignRole.id],
-            })
-            .pipe(Effect.flip),
-        ).toMatchObject({ _tag: "InvitationError", code: "ASSIGNMENT_UNAVAILABLE" });
         yield* TestClock.adjust("7 days");
         expect(
           yield* application.organization.invitation.inspect(replacement.input).pipe(Effect.flip),

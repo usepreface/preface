@@ -4,6 +4,10 @@ import * as schema from "#/schema/index";
 
 export const instanceRelations = defineRelationsPart(schema, (r) => ({
   installation: {
+    organization: r.one.organization({
+      from: r.installation.id,
+      to: r.organization.installationId,
+    }),
     bootstrapChallenge: r.one.bootstrapChallenge({
       from: r.installation.id,
       to: r.bootstrapChallenge.installationId,

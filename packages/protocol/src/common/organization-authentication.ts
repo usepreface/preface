@@ -7,7 +7,6 @@ export const SsoMaxAgeSeconds = Schema.Int.check(
 export const SsoReadinessBlocker = Schema.Literals([
   "NO_ACTIVE_APPROVED_CONNECTION",
   "OWNER_ACCOUNT_NOT_LINKED",
-  "RECENT_EMAIL_REQUIRED",
-  "RECENT_SSO_REQUIRED",
+  "SSO_AUTHENTICATION_REQUIRED",
   "RECOVERY_CREDENTIAL_REQUIRED",
 ]);

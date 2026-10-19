@@ -3,15 +3,15 @@ import { InviteSentIllustration, SelfHostedIllustration } from "@usepreface/ui/i
 
 import { AuthAside } from "#/components/auth/auth-aside";
 
-/** The setup steps, shared by the three setup screens. */
-export const setupSteps = ["Instance", "Verify email", "Organization"];
+/** The setup steps, shared by both setup screens. */
+export const setupSteps = ["Organization", "Verify email"];
 
 export function InstanceAside() {
   return (
     <AuthAside
       art={<SelfHostedIllustration className="h-64 w-auto" />}
       title="Your knowledge, on your servers"
-      description="This instance runs on infrastructure you control. The owner you add now can create organizations and invite everyone else."
+      description="This instance runs on infrastructure you control. The owner you add now manages your organization and invites everyone else."
       points={[
         [
           ServerIcon,
@@ -22,7 +22,7 @@ export function InstanceAside() {
         [
           ShieldIcon,
           "SSO when you’re ready",
-          "Each organization can add Okta, Entra ID or any OIDC or SAML provider.",
+          "Your organization can add Okta, Entra ID or any OIDC or SAML provider.",
         ],
       ]}
     />

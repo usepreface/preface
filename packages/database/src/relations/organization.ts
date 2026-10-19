@@ -32,6 +32,11 @@ export const organizationRelations = defineRelationsPart(schema, (r) => ({
     }),
   },
   organization: {
+    installation: r.one.installation({
+      from: r.organization.installationId,
+      to: r.installation.id,
+      optional: false,
+    }),
     createdBy: r.one.user({ from: r.organization.createdByUserId, to: r.user.id, optional: false }),
     members: r.many.organizationMember({
       from: r.organization.id,

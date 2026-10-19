@@ -22,7 +22,7 @@ function AuthError() {
       </AuthHeading>
       <Notice tone="warning">{apiErrorMessage({ code })}</Notice>
       <Link to="/sign-in">Try signing in again</Link>
-      <Link to="/organizations">Your organizations</Link>
+      <Link to="/">Your organizations</Link>
     </StatusPage>
   );
 }

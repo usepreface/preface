@@ -22,11 +22,11 @@ export function isAccessRejection(error: unknown): boolean {
 const messages: Readonly<Record<string, string>> = {
   UNAUTHENTICATED: "Your session has expired. Sign in again.",
 
-  REAUTHENTICATION_REQUIRED: "Confirm your email again before making this change.",
   ALREADY_COMPLETED: "This instance is already set up. Sign in to continue.",
   INVALID_CODE: "That code does not match or has expired. Use the latest email or resend it.",
   VERIFICATION_RATE_LIMITED: "Wait until the resend cooldown ends before requesting another code.",
-  RECENT_SSO_REQUIRED: "Confirm your enterprise SSO account before making this change.",
+  SSO_AUTHENTICATION_REQUIRED:
+    "Sign in with an approved SSO connection to satisfy the login policy.",
   AUTHENTICATION_REQUIRED: "Complete the organization’s required authentication before continuing.",
   INVALID_RECOVERY_CREDENTIAL: "This recovery credential is invalid, revoked or already consumed.",
   RECOVERY_CREDENTIAL_REQUIRED: "Prepare and supply an offline recovery credential first.",
@@ -42,10 +42,8 @@ const messages: Readonly<Record<string, string>> = {
   SLUG_UNAVAILABLE: "That URL is already in use. Choose another one.",
   REVISION_CONFLICT: "This configuration changed. Refresh and try again.",
   ALREADY_AUTHENTICATED:
-    "You are already signed in. Continue to your organizations or sign out to use another account.",
+    "You are already signed in. Continue to the dashboard or sign out to use another account.",
   ACCOUNT_MISMATCH: "This invitation belongs to a different account. Sign out and open it again.",
-  ORGANIZATION_ARCHIVED:
-    "This organization is archived. An owner can restore it from the organization picker.",
   MEMBER_NOT_ACTIVE: "Your organization membership is suspended or removed.",
   DOMAIN_VERIFICATION_FAILED:
     "The exact DNS TXT record was not found. Check the record and allow time for propagation.",
@@ -65,16 +63,5 @@ export function apiErrorMessage(error: unknown): string {
 export function showApiError(error: unknown) {
   toast.error("Couldn’t complete the request", {
     description: apiErrorMessage(error),
-    ...(errorCode(error) === "REAUTHENTICATION_REQUIRED"
-      ? {
-          action: {
-            label: "Confirm email",
-            onClick: () =>
-              window.location.assign(
-                `/auth/reauthenticate?returnTo=${encodeURIComponent(window.location.pathname)}`,
-              ),
-          },
-        }
-      : {}),
   });
 }

@@ -5,6 +5,7 @@ import { CurrentActor, PrefaceApi } from "@usepreface/api";
 import { Application } from "@usepreface/application";
 
 import { mapInfrastructureError } from "#/http/errors";
+import { currentOrganizationId } from "#/http/organization";
 
 export const OrganizationOwnershipRoutes = HttpApiBuilder.group(
   PrefaceApi,
@@ -15,17 +16,17 @@ export const OrganizationOwnershipRoutes = HttpApiBuilder.group(
       return handlers.handleAll({
         grant: Effect.fn("http.organizationOwnership.grant")(function* ({ params }) {
           return yield* workflow
-            .grant(yield* CurrentActor, params.organizationId, params.memberId)
+            .grant(yield* CurrentActor, yield* currentOrganizationId, params.memberId)
             .pipe(mapInfrastructureError);
         }),
         revoke: Effect.fn("http.organizationOwnership.revoke")(function* ({ params }) {
           return yield* workflow
-            .revoke(yield* CurrentActor, params.organizationId, params.memberId)
+            .revoke(yield* CurrentActor, yield* currentOrganizationId, params.memberId)
             .pipe(mapInfrastructureError);
         }),
-        transfer: Effect.fn("http.organizationOwnership.transfer")(function* ({ params, payload }) {
+        transfer: Effect.fn("http.organizationOwnership.transfer")(function* ({ payload }) {
           return yield* workflow
-            .transfer(yield* CurrentActor, params.organizationId, payload.targetMemberId)
+            .transfer(yield* CurrentActor, yield* currentOrganizationId, payload.targetMemberId)
             .pipe(mapInfrastructureError);
         }),
       });

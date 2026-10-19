@@ -5,7 +5,7 @@ and the shared PostgreSQL services from `@usepreface/database`. Supports Resend,
 Inbound, Amazon SES v2 and SMTP through their respective SDKs/libraries.
 
 The server uses `AuthenticationEmailRenderer.layer` for minimal operational setup
-and sign-in/reauthentication code/link messages, organization invitations and invitation verification
+and sign-in code/link messages, organization invitations and invitation verification
 messages, and starts a scoped delivery worker. React Email
 presentation is not included. `SetupEmailRenderer.layer` supplies setup messages
 when composed separately. Invitation names and links are escaped in HTML.
@@ -32,7 +32,7 @@ export const enqueueEmail = Effect.fn("enqueueEmail")(function* (input: EnqueueE
 
 `EnqueueEmail` is a discriminated union: `type` selects the exact `variables`.
 Supported payload contracts are `instance-setup`, `sign-in`, `organization-invitation`,
-`invitation-verification`, `email-reauthentication`, `identity-verification` and
+`invitation-verification`, `identity-verification` and
 `organization-security`, exported from `@usepreface/protocol/model`. Each payload is wired
 to application workflows and a minimal operational renderer.
 

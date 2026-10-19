@@ -22,17 +22,10 @@ export const makeAccountApplication = Effect.gen(function* () {
         account.identityConnectionId,
       );
       if (connection === undefined) continue;
-      const member =
-        connection.provider !== "google"
-          ? yield* repository.organization.member.findByUserId(
-              connection.organizationId,
-              actor.user.id,
-            )
-          : undefined;
-      const organization =
-        connection.provider !== "google"
-          ? yield* repository.organization.organization.findById(connection.organizationId)
-          : undefined;
+      const member = yield* repository.organization.member.findByUserId(
+        connection.organizationId,
+        actor.user.id,
+      );
       summaries.push({
         id: account.id,
         provider: connection.provider,
@@ -42,11 +35,9 @@ export const makeAccountApplication = Effect.gen(function* () {
         providerEmailVerified: account.providerEmailVerified,
         connectionAvailable:
           connection.status === "active" &&
-          (connection.provider === "google" ||
-            (member !== undefined &&
-              member.removedAt === null &&
-              member.suspendedAt === null &&
-              organization?.archivedAt === null)),
+          member !== undefined &&
+          member.removedAt === null &&
+          member.suspendedAt === null,
         linkedAt: account.createdAt,
         lastUsedAt: account.lastUsedAt,
         unlinkedAt: account.unlinkedAt,
@@ -69,7 +60,7 @@ export const makeAccountApplication = Effect.gen(function* () {
         if (connection?.organizationId !== null && connection?.organizationId !== undefined)
           yield* repository.organization.organization.lockById(connection.organizationId);
         yield* repository.auth.user.lockById(actor.user.id);
-        yield* access.requireRecentEmail(actor);
+        yield* access.requireVerifiedEmail(actor);
         const account = yield* repository.auth.account.unlink(id, actor.user.id);
         if (account === undefined) return;
         if (connection?.organizationId !== null && connection?.organizationId !== undefined)

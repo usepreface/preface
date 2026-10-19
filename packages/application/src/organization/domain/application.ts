@@ -105,7 +105,7 @@ export const makeDomainApplication = Effect.gen(function* () {
     return yield* transaction.run(
       Effect.gen(function* () {
         yield* access.requireOwner(actor, organizationId, { lock: true });
-        yield* identityAccess.requireRecentEmail(actor);
+        yield* identityAccess.requireVerifiedEmail(actor);
         const domains = yield* repository.organization.domain.list(organizationId);
         const existing = domains.find((entry) => entry.domain === decoded.domain);
         if (existing !== undefined) return publicDomain(existing);
@@ -142,7 +142,7 @@ export const makeDomainApplication = Effect.gen(function* () {
     return yield* transaction.run(
       Effect.gen(function* () {
         yield* access.requireOwner(actor, organizationId, { lock: true });
-        yield* identityAccess.requireRecentEmail(actor);
+        yield* identityAccess.requireVerifiedEmail(actor);
         const domain = yield* requireDomain(organizationId, id, revision);
         const expiresAt = DateTime.addDuration(yield* DateTime.now, "30 minutes");
         const changed = yield* repository.organization.domain.update(
@@ -176,7 +176,7 @@ export const makeDomainApplication = Effect.gen(function* () {
     if (method === "operator") yield* identityAccess.requireInstanceOwner(actor);
     else {
       yield* access.requireOwner(actor, organizationId);
-      yield* identityAccess.requireRecentEmail(actor);
+      yield* identityAccess.requireVerifiedEmail(actor);
     }
     const observed = yield* requireDomain(organizationId, id, revision);
     if (method === "dns") {
@@ -204,12 +204,12 @@ export const makeDomainApplication = Effect.gen(function* () {
     return yield* transaction.run(
       Effect.gen(function* () {
         const organization = yield* repository.organization.organization.lockById(organizationId);
-        if (organization === undefined || organization.archivedAt !== null)
+        if (organization === undefined)
           return yield* new IdentityError({ code: "CONNECTION_UNAVAILABLE" });
         if (method === "operator") yield* identityAccess.requireInstanceOwner(actor);
         else {
           yield* access.requireOwner(actor, organizationId);
-          yield* identityAccess.requireRecentEmail(actor);
+          yield* identityAccess.requireVerifiedEmail(actor);
         }
         const current = yield* requireDomain(organizationId, id, revision);
         const now = yield* DateTime.now;
@@ -255,7 +255,7 @@ export const makeDomainApplication = Effect.gen(function* () {
           yield* identityAccess.requireInstanceOwner(actor);
         } else {
           yield* access.requireOwner(actor, organizationId, { lock: true });
-          yield* identityAccess.requireRecentEmail(actor);
+          yield* identityAccess.requireVerifiedEmail(actor);
         }
         const domain = yield* requireDomain(organizationId, id, revision);
         if (operator && domain.verificationMethod !== "operator")
@@ -319,7 +319,7 @@ export const makeDomainApplication = Effect.gen(function* () {
         )
           return yield* new IdentityError({ code: "CONNECTION_UNAVAILABLE" });
         yield* access.requireOwner(actor, organizationId, { lock: true });
-        yield* identityAccess.requireRecentEmail(actor);
+        yield* identityAccess.requireVerifiedEmail(actor);
         if (connection.revision !== input.expectedRevision)
           return yield* new IdentityError({ code: "REVISION_CONFLICT" });
         if (input.domainIds.length > 20 || new Set(input.domainIds).size !== input.domainIds.length)

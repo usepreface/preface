@@ -1,6 +1,6 @@
 import { Context, Effect, Layer } from "effect";
 
-import { DatabaseMigration, DatabaseRepository } from "@usepreface/database";
+import { DatabaseMigration } from "@usepreface/database";
 import type { IdentityConnectionId, OrganizationId } from "@usepreface/protocol";
 import type { SessionActor } from "@usepreface/protocol/dto";
 import type { GoogleStartInput } from "@usepreface/protocol/input";
@@ -8,7 +8,6 @@ import type { GoogleStartInput } from "@usepreface/protocol/input";
 import { makeAuditHistory } from "#/audit/history";
 import { makeAccountApplication } from "#/auth/account";
 import { makeAuthenticationDiscovery } from "#/auth/discovery";
-import { makeEmailReauthenticationApplication } from "#/auth/email-reauthentication";
 import { makeEmailSignInApplication } from "#/auth/email-sign-in";
 import { makeExternalContinuation } from "#/auth/external/continuation";
 import { makeInvitationAuthentication } from "#/auth/external/invitation";
@@ -44,6 +43,7 @@ const makeApplication = Effect.gen(function* () {
   const samlConnections = yield* makeSamlConnectionApplication;
   const startSaml = yield* makeSamlFlowStart;
   const samlCallback = yield* makeSamlFlowCallback;
+  const discover = yield* makeAuthenticationDiscovery;
   return {
     audit: yield* makeAuditHistory,
     instance: {
@@ -59,7 +59,7 @@ const makeApplication = Effect.gen(function* () {
     },
     auth: {
       connectionMaintenance: yield* makeConnectionMaintenance,
-      discover: yield* makeAuthenticationDiscovery,
+      discover,
       external: {
         ...(yield* makeExternalContinuation),
         invitation: yield* makeInvitationAuthentication,
@@ -71,11 +71,6 @@ const makeApplication = Effect.gen(function* () {
         ...(yield* makeAccountApplication),
         startGoogle: (actor: SessionActor, input: GoogleStartInput = {}) =>
           start("link", actor, input),
-      },
-      reauthentication: {
-        email: yield* makeEmailReauthenticationApplication,
-        google: (actor: SessionActor, input: GoogleStartInput = {}) =>
-          start("reauthenticate", actor, input),
       },
       saml: {
         ...samlCallback,
@@ -126,8 +121,8 @@ const makeApplication = Effect.gen(function* () {
         callback: yield* makeGoogleFlowCallback,
       },
       methods: Effect.fn("Application.auth.methods")(function* () {
-        const connection = yield* (yield* DatabaseRepository).auth.identityConnection.findGoogle();
-        return { email: true as const, google: connection?.status === "active" };
+        const methods = yield* discover();
+        return { email: true as const, google: methods.google };
       }),
     },
     organization: {

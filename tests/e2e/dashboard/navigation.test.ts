@@ -1,4 +1,4 @@
-import { createOrganization, onboardOwner } from "../fixtures/onboarding.js";
+import { currentOrganization, onboardOwner } from "../fixtures/onboarding.js";
 import { test, expect } from "../fixtures/test.js";
 
 test.use({ dashboardUI: true });
@@ -10,8 +10,8 @@ test("navigation retains the shell while route code and page data load independe
   mailbox,
 }) => {
   await onboardOwner(api, backend, mailbox);
-  await createOrganization(api);
-  await page.goto(`${backend.dashboard}/org/company/settings/general`);
+  await currentOrganization(api);
+  await page.goto(`${backend.dashboard}/settings/general`);
   await expect(page.getByRole("form", { name: "Organization details" })).toBeVisible();
   const sidebar = page.getByRole("navigation", { name: "Fixture Company", exact: true });
   await sidebar.evaluate((element) => element.setAttribute("data-navigation-marker", "retained"));
@@ -26,7 +26,7 @@ test("navigation retains the shell while route code and page data load independe
     await codeReady.promise;
     await route.continue();
   });
-  await page.route("**/api/v1/organizations/*/teams?*", async (route) => {
+  await page.route("**/api/v1/organization/teams?*", async (route) => {
     teamsRequested.resolve();
     await teamsReady.promise;
     await route.continue();

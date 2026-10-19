@@ -13,37 +13,40 @@ import { completeTestBootstrap } from "../../fixtures/bootstrap.js";
 import { requestEmailProof } from "../../fixtures/email-sign-in.js";
 
 layer(ApplicationTestLayer)("email sign-in", (it) => {
-  it.effect(
-    "returns an idle operator to the same installation and identity without an organization",
-    () =>
-      Effect.gen(function* () {
-        yield* (yield* TestDatabase).reset;
-        const application = yield* Application;
-        const database = yield* Database;
-        const first = yield* completeTestBootstrap;
-        yield* TestClock.adjust("7 days");
-        expect(
-          yield* application.auth.session.resolve(first.sessionToken).pipe(Effect.flip),
-        ).toMatchObject({ _tag: "AuthenticationError", code: "UNAUTHENTICATED" });
+  it.effect("returns an idle operator to the existing organization and identity", () =>
+    Effect.gen(function* () {
+      yield* (yield* TestDatabase).reset;
+      const application = yield* Application;
+      const database = yield* Database;
+      const first = yield* completeTestBootstrap;
+      const organizationId = yield* application.organization.organization.currentId();
+      yield* TestClock.adjust("7 days");
+      expect(
+        yield* application.auth.session.resolve(first.sessionToken).pipe(Effect.flip),
+      ).toMatchObject({ _tag: "AuthenticationError", code: "UNAUTHENTICATED" });
 
-        const proof = yield* requestEmailProof(" Owner@Example.Test ");
-        const signedIn = yield* application.auth.emailSignIn.verify({ ...proof, method: "code" });
-        expect(signedIn.actor.user).toEqual(first.actor.user);
-        expect(signedIn.actor.session.id).not.toBe(first.actor.session.id);
-        expect(yield* application.auth.session.resolve(signedIn.sessionToken)).toEqual(
-          signedIn.actor,
-        );
-        expect(yield* application.instance.bootstrap.getStatus()).toMatchObject({ state: "ready" });
-        expect(yield* database.query.user.findMany()).toHaveLength(1);
-        expect(yield* (yield* DatabaseRepository).instance.owner.listActive()).toHaveLength(1);
-        const evidence = yield* database.query.sessionAuthentication.findMany({
-          where: { sessionId: { eq: signedIn.actor.session.id } },
-        });
-        expect(evidence).toMatchObject([{ method: "email_code", userId: first.actor.user.id }]);
-        expect(JSON.stringify(yield* database.query.verification.findMany())).not.toContain(
-          Redacted.value(proof.code),
-        );
-      }),
+      const proof = yield* requestEmailProof(" Owner@Example.Test ");
+      const signedIn = yield* application.auth.emailSignIn.verify({ ...proof, method: "code" });
+      expect(signedIn.actor.user).toEqual(first.actor.user);
+      expect(signedIn.actor.session.id).not.toBe(first.actor.session.id);
+      expect(yield* application.auth.session.resolve(signedIn.sessionToken)).toEqual(
+        signedIn.actor,
+      );
+      expect(
+        (yield* application.organization.organization.get(signedIn.actor, organizationId)).access
+          .isOwner,
+      ).toBe(true);
+      expect(yield* application.instance.bootstrap.getStatus()).toMatchObject({ state: "ready" });
+      expect(yield* database.query.user.findMany()).toHaveLength(1);
+      expect(yield* (yield* DatabaseRepository).instance.owner.listActive()).toHaveLength(1);
+      const evidence = yield* database.query.sessionAuthentication.findMany({
+        where: { sessionId: { eq: signedIn.actor.session.id } },
+      });
+      expect(evidence).toMatchObject([{ method: "email_code", userId: first.actor.user.id }]);
+      expect(JSON.stringify(yield* database.query.verification.findMany())).not.toContain(
+        Redacted.value(proof.code),
+      );
+    }),
   );
 
   it.effect(
